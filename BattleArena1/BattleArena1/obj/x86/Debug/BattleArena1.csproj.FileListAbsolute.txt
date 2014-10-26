@@ -1,0 +1,7 @@
+E:\gang\projects\BattleArena1\BattleArena1\bin\Debug\BattleArena1.exe
+E:\gang\projects\BattleArena1\BattleArena1\bin\Debug\BattleArena1.pdb
+E:\gang\projects\BattleArena1\BattleArena1\obj\x86\Debug\BattleArena1.Form1.resources
+E:\gang\projects\BattleArena1\BattleArena1\obj\x86\Debug\BattleArena1.Properties.Resources.resources
+E:\gang\projects\BattleArena1\BattleArena1\obj\x86\Debug\BattleArena1.exe
+E:\gang\projects\BattleArena1\BattleArena1\obj\x86\Debug\BattleArena1.pdb
+E:\gang\projects\BattleArena1\BattleArena1\obj\x86\Debug\BattleArena1.csproj.GenerateResource.Cache

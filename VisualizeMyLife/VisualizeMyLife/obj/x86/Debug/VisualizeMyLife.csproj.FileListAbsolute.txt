@@ -1,0 +1,11 @@
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\bin\Debug\VisualizeMyLife.exe
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\bin\Debug\VisualizeMyLife.pdb
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.Properties.Resources.resources
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.TomatoTimerForm.resources
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.csproj.GenerateResource.Cache
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.exe
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.pdb
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.MainForm.resources
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.DiagramForm.resources
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.DailyRecordForm.resources
+E:\gang\projects\VisualizeMyLife\VisualizeMyLife\obj\x86\Debug\VisualizeMyLife.csprojResolveAssemblyReference.cache

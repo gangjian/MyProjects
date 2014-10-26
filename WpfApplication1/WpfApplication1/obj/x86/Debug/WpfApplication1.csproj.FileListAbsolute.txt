@@ -1,0 +1,13 @@
+E:\gang\projects\WpfApplication1\WpfApplication1\bin\Debug\WpfApplication1.exe
+E:\gang\projects\WpfApplication1\WpfApplication1\bin\Debug\WpfApplication1.pdb
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\ResolveAssemblyReference.cache
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\MainWindow.baml
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\MainWindow.g.cs
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\App.g.cs
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\WpfApplication1_MarkupCompile.cache
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\WpfApplication1.g.resources
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\WpfApplication1.Properties.Resources.resources
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\GenerateResource.read.1.tlog
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\GenerateResource.write.1.tlog
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\WpfApplication1.exe
+E:\gang\projects\WpfApplication1\WpfApplication1\obj\x86\Debug\WpfApplication1.pdb

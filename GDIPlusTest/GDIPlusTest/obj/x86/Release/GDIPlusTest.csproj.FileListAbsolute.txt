@@ -1,0 +1,8 @@
+E:\gang\projects\GDIPlusTest\GDIPlusTest\bin\Release\GDIPlusTest.exe
+E:\gang\projects\GDIPlusTest\GDIPlusTest\bin\Release\GDIPlusTest.pdb
+E:\gang\projects\GDIPlusTest\GDIPlusTest\obj\x86\Release\GDIPlusTest.Form1.resources
+E:\gang\projects\GDIPlusTest\GDIPlusTest\obj\x86\Release\GDIPlusTest.Properties.Resources.resources
+E:\gang\projects\GDIPlusTest\GDIPlusTest\obj\x86\Release\GDIPlusTest.csproj.GenerateResource.Cache
+E:\gang\projects\GDIPlusTest\GDIPlusTest\obj\x86\Release\GDIPlusTest.exe
+E:\gang\projects\GDIPlusTest\GDIPlusTest\obj\x86\Release\GDIPlusTest.pdb
+E:\gang\projects\GDIPlusTest\GDIPlusTest\obj\x86\Release\GDIPlusTest.csprojResolveAssemblyReference.cache

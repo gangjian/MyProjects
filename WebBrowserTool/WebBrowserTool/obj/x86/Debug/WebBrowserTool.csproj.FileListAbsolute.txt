@@ -1,0 +1,7 @@
+E:\gang\projects\WebBrowserTool\WebBrowserTool\bin\Debug\WebBrowserTool.exe
+E:\gang\projects\WebBrowserTool\WebBrowserTool\bin\Debug\WebBrowserTool.pdb
+E:\gang\projects\WebBrowserTool\WebBrowserTool\obj\x86\Debug\WebBrowserTool.Form1.resources
+E:\gang\projects\WebBrowserTool\WebBrowserTool\obj\x86\Debug\WebBrowserTool.Properties.Resources.resources
+E:\gang\projects\WebBrowserTool\WebBrowserTool\obj\x86\Debug\WebBrowserTool.exe
+E:\gang\projects\WebBrowserTool\WebBrowserTool\obj\x86\Debug\WebBrowserTool.pdb
+E:\gang\projects\WebBrowserTool\WebBrowserTool\obj\x86\Debug\WebBrowserTool.csproj.GenerateResource.Cache

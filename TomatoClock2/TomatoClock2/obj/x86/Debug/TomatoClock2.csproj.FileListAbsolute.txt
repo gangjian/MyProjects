@@ -1,0 +1,9 @@
+E:\gang\projects\TomatoClock2\TomatoClock2\bin\Debug\TomatoClock2.exe
+E:\gang\projects\TomatoClock2\TomatoClock2\bin\Debug\TomatoClock2.pdb
+E:\gang\projects\TomatoClock2\TomatoClock2\obj\x86\Debug\ResolveAssemblyReference.cache
+E:\gang\projects\TomatoClock2\TomatoClock2\obj\x86\Debug\TomatoClock2.Form1.resources
+E:\gang\projects\TomatoClock2\TomatoClock2\obj\x86\Debug\TomatoClock2.Properties.Resources.resources
+E:\gang\projects\TomatoClock2\TomatoClock2\obj\x86\Debug\GenerateResource.read.1.tlog
+E:\gang\projects\TomatoClock2\TomatoClock2\obj\x86\Debug\GenerateResource.write.1.tlog
+E:\gang\projects\TomatoClock2\TomatoClock2\obj\x86\Debug\TomatoClock2.exe
+E:\gang\projects\TomatoClock2\TomatoClock2\obj\x86\Debug\TomatoClock2.pdb
