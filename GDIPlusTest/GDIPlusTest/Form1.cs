@@ -74,7 +74,7 @@ namespace GDIPlusTest
             worker.Start();
         }
 
-        private delegate void workFinishDelegate();
+        private delegate void workerFinishDelegate();
         private List<FoundPosition> m_totalResultList;
 
         private enum E_STATUS
@@ -86,10 +86,14 @@ namespace GDIPlusTest
 
         private E_STATUS m_status = E_STATUS.E_STATUS_IDLE;
 
+        /// <summary>
+        /// 工作线程开始函数
+        /// </summary>
         private void workerStart()
         {
             m_totalResultList = new List<FoundPosition>();
-            workFinishDelegate workerfinishDelegate = workFinish;
+            // 工作完成后的通知代理
+            workerFinishDelegate workerfinishDelegate = workerFinish;
 
             DateTime startTime = DateTime.Now;
             BitmapProcess bp = new BitmapProcess(m_srcBitmap, m_subImgList);
@@ -102,16 +106,25 @@ namespace GDIPlusTest
                 {
                     foreach (FoundPosition fPos in foundPosList)
                     {
+                        // 在原图上画红框
                         Graphics g = this.pictureBox1.CreateGraphics();
                         g.DrawRectangle(new Pen(Color.Red, 2), fPos.X, fPos.Y, m_subImgList[i].Width, m_subImgList[i].Height);
                         //g.DrawLine(new Pen(Color.Red, 2), fPos.X, fPos.Y, fPos.X + m_subImgList[i].Width, fPos.Y + m_subImgList[i].Height);
                         //g.DrawLine(new Pen(Color.Red, 2), fPos.X + m_subImgList[i].Width, fPos.Y, fPos.X, fPos.Y + m_subImgList[i].Height);
+                        // 画区块的编号
                         g.DrawString(fPos.subImgInfo.subIdx.ToString(), new Font("Verdana", 11), new SolidBrush(Color.Black), fPos.X, fPos.Y);
                     }
                 }
             }
+
+            // 计算工作用时
             DateTime finishTime = DateTime.Now;
             TimeSpan span = (finishTime - startTime);
+
+            // 在这里对找到的区块数据(起始点, size)进行矩阵化(统一转换成矩阵的数学模型: 区块行列编号)
+            double avWidth = LianLianKanLogic.Matrixing(ref m_totalResultList);
+            string msg = string.Format("average width is {0}!", avWidth);
+            MessageBox.Show(msg);
 
             workerfinishDelegate();
             //MessageBox.Show("Found: " + foundPosList.Count.ToString() + " in " + span.TotalSeconds.ToString() + " seconds!");
@@ -141,7 +154,7 @@ namespace GDIPlusTest
             }
         }
 
-        private void workFinish()
+        private void workerFinish()
         {
             if (E_STATUS.E_STATUS_FIND_START_POS == m_status)
             {
@@ -162,7 +175,7 @@ namespace GDIPlusTest
             {
                 if (0 != m_totalResultList.Count)
                 {
-                    MessageBox.Show("workFinish! totalResultList.Count = " + m_totalResultList.Count.ToString());
+                    MessageBox.Show("workerFinish! totalResultList.Count = " + m_totalResultList.Count.ToString());
                 }
                 m_status = E_STATUS.E_STATUS_IDLE;
             }
