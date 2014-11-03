@@ -21,45 +21,29 @@ namespace GDIPlusTest
         }
 
         // 区块位置矩阵化阈值系数
-        private const double THRESHOLD_MODULUS = 0.2;
+        private const double THRESHOLD_MODULUS = 0.3;
 
         /// <summary>
         /// 区块位置矩阵化处理
         /// </summary>
         public static double Matrixing(ref List<FoundPosition> layoutList)
         {
-            // 求区块平均宽高
-            double averWidthVal, averHeightVal;
-            GetAverageWidthAndHeight(layoutList, out averWidthVal, out averHeightVal);
+            // 求所有区块的平均宽高
+            double averageWidthVal = 0, averageHeightVal = 0;
+            GetAverageWidthAndHeight(layoutList, out averageWidthVal, out averageHeightVal);
 
             // 异常检测
-            System.Diagnostics.Trace.Assert((0 != averWidthVal) && (0 != averHeightVal));
+            System.Diagnostics.Trace.Assert((0 != averageWidthVal) && (0 != averageHeightVal));
 
             // 根据平均值结果设定阈值
-            double threshold_h = averWidthVal * THRESHOLD_MODULUS;
-            double threshold_v = averHeightVal * THRESHOLD_MODULUS;
+            double threshold_h = averageWidthVal * THRESHOLD_MODULUS;
+            double threshold_v = averageHeightVal * THRESHOLD_MODULUS;
 
             // 排定各区块的行列号
-            //  1.找到第一个(最上面)未确定行列号的区块
-            int firstIdx = -1;
-            // 直到找不到, 说明所有区块都已确定行列号
-            while (-1 != (firstIdx = FindFirstUnconfirmedBlock(E_ROW_OR_COL.E_ROW, layoutList)))
-            {
-                // 确定它的行号
-                    // 找到最后一个确定行列号的区块, 算出它们之间的行列数之差
+            DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL.E_ROW, layoutList, averageHeightVal, threshold_v);
+            DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL.E_COL, layoutList, averageWidthVal, threshold_h);
 
-                // 确定跟它处于同一行的其它各区块
-                for (int i = 0; i < layoutList.Count; i++)
-                {
-                }
-            }
-            while (-1 != (firstIdx = FindFirstUnconfirmedBlock(E_ROW_OR_COL.E_COL, layoutList)))
-            {
-                // 确定它的列号
-                // 确定跟它处于同一列的其它各区块
-            }
-
-            return averWidthVal;
+            return averageWidthVal;
         }
 
 //////////////////////////////////////////////////////以下都是子函数////////////////////////////////////////////////////
@@ -112,12 +96,12 @@ namespace GDIPlusTest
                     {
                         if (-1 == firstVal)
                         {
-                            firstVal = fp.X;
+                            firstVal = fp.Y;
                             idx = i;
                         }
-                        else if (fp.X < firstVal)   // 判断如果X方向位置更靠左就更新返回索引
+                        else if (fp.Y < firstVal)   // 判断如果X方向位置更靠左就更新返回索引
                         {
-                            firstVal = fp.X;
+                            firstVal = fp.Y;
                             idx = i;
                         }
                     }
@@ -128,18 +112,19 @@ namespace GDIPlusTest
                     {
                         if (-1 == firstVal)
                         {
-                            firstVal = fp.Y;
+                            firstVal = fp.X;
                             idx = i;
                         }
-                        else if (fp.Y < firstVal)   // 判断如果Y方向位置更靠上就更新返回索引
+                        else if (fp.X < firstVal)   // 判断如果Y方向位置更靠上就更新返回索引
                         {
-                            firstVal = fp.Y;
+                            firstVal = fp.X;
                             idx = i;
                         }
                     }
                 }
                 else
                 {
+                    System.Diagnostics.Trace.Assert(false);
                 }
                 i += 1;
             }
@@ -163,12 +148,12 @@ namespace GDIPlusTest
                     {
                         if (-1 == lastVal)
                         {
-                            lastVal = fp.X;
+                            lastVal = fp.Y;
                             idx = i;
                         }
-                        else if (fp.X > lastVal)   // 判断如果X方向位置更靠右就更新返回索引
+                        else if (fp.Y > lastVal)   // 判断如果X方向位置更靠右就更新返回索引
                         {
-                            lastVal = fp.X;
+                            lastVal = fp.Y;
                             idx = i;
                         }
                     }
@@ -179,12 +164,12 @@ namespace GDIPlusTest
                     {
                         if (-1 == lastVal)
                         {
-                            lastVal = fp.Y;
+                            lastVal = fp.X;
                             idx = i;
                         }
-                        else if (fp.Y > lastVal)   // 判断如果Y方向位置更靠下就更新返回索引
+                        else if (fp.X > lastVal)   // 判断如果Y方向位置更靠下就更新返回索引
                         {
-                            lastVal = fp.Y;
+                            lastVal = fp.X;
                             idx = i;
                         }
                     }
@@ -197,47 +182,6 @@ namespace GDIPlusTest
             }
 
             return idx;
-        }
-
-        /// <summary>
-        /// 判断两个区块是否处于同一行/列
-        /// </summary>
-        /// <returns></returns>
-        static bool JudgeBlocksSameLevel(E_ROW_OR_COL mode,                     // 行或列
-                                        FoundPosition block1,                   // 区块1
-                                        FoundPosition block2,                   // 区块2
-                                        double threshold                        // 判定的阈值
-                                        )
-        {
-            if (E_ROW_OR_COL.E_ROW == mode)
-            {
-                // 如果两个区块的始点(左上角顶点)的Y坐标之差小于阈值, 就认为它们处于同一行
-                if (Math.Abs((float)block1.Y - (float)block2.Y) < threshold)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else if (E_ROW_OR_COL.E_COL == mode)
-            {
-                // 如果两个区块的始点(左上角顶点)的X坐标之差小于阈值, 就认为它们处于同一列
-                if (Math.Abs((float)block1.X - (float)block2.X) < threshold)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                System.Diagnostics.Trace.Assert(false);
-            }
-            return false;
         }
 
         /// <summary>
@@ -282,9 +226,80 @@ namespace GDIPlusTest
             else
             {
                 // 遇到麻烦了, 可能是阈值选得不合适
-                System.Diagnostics.Trace.Assert(false);
+                // System.Diagnostics.Trace.Assert(false);
                 return -1;
             }
+        }
+
+        /// <summary>
+        /// 确定所有区块的行列编号
+        /// </summary>
+        static void DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL mode, List<FoundPosition> layoutList, double meanVal, double threshold)
+        {
+            //  1.找到第一个(最上面或最左边)未确定行列号的区块
+            int firstIdx = -1;
+            int lastIdx = -1;
+            int diffCnt = -1;   // 最后一个确定的区块和第一个未确定的区块间的行列数差
+            // 直到找不到, 说明所有区块都已确定行列号
+            while (-1 != (firstIdx = FindFirstUnconfirmedBlock(mode, layoutList)))
+            {
+                // 确定它的行号
+                // 找到最后一个确定行列号的区块
+                lastIdx = FindLastConfirmedBlock(mode, layoutList);
+                if (-1 == lastIdx)
+                {
+                    // 没找到说明这是第一行/列
+                    if (E_ROW_OR_COL.E_ROW == mode)
+                    {
+                        layoutList[firstIdx].Row = 0;
+                    }
+                    else
+                    {
+                        layoutList[firstIdx].Col = 0;
+                    }
+                }
+                else
+                {
+                    // 算出它们之间的行列数之差
+                    diffCnt = Get2BlocksRowsOrColsDiff(mode, layoutList[lastIdx], layoutList[firstIdx], meanVal, threshold);
+                    if (-1 != diffCnt)
+                    {
+                        if (E_ROW_OR_COL.E_ROW == mode)
+                        {
+                            layoutList[firstIdx].Row = layoutList[lastIdx].Row + diffCnt;
+                        }
+                        else
+                        {
+                            layoutList[firstIdx].Col = layoutList[lastIdx].Col + diffCnt;
+                        }
+                    }
+                    else
+                    {
+                        // 没能正确算出行列数差, 距离太远导致误差比较大, 增加阈值再试试
+                        System.Diagnostics.Trace.Assert(false);
+                    }
+                }
+
+                // 确定跟它处于同一行的其它各区块
+                foreach (FoundPosition fp in layoutList)
+                {
+                    if ((E_ROW_OR_COL.E_ROW == mode) && (-1 == fp.Row))               // 该区块还未确定行番号
+                    {
+                        if (0 == Get2BlocksRowsOrColsDiff(mode, layoutList[firstIdx], fp, meanVal, threshold))
+                        {
+                            fp.Row = layoutList[firstIdx].Row;
+                        }
+                    }
+                    else if ((E_ROW_OR_COL.E_COL == mode) && (-1 == fp.Col))
+                    {
+                        if (0 == Get2BlocksRowsOrColsDiff(mode, layoutList[firstIdx], fp, meanVal, threshold))
+                        {
+                            fp.Col = layoutList[firstIdx].Col;
+                        }
+                    }
+                }
+            }
+
         }
     }
 }

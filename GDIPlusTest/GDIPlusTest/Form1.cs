@@ -68,7 +68,11 @@ namespace GDIPlusTest
         private void buttonStart_Click(object sender, EventArgs e)
         {
             string exePath = Application.ExecutablePath.Remove(Application.ExecutablePath.LastIndexOf("\\"));
-            loadSubImgList(exePath + "\\pics\\subbitmaps\\");
+            if (!loadSubImgList(exePath + "\\pics\\subbitmaps\\"))
+            {
+                // load子图失败
+                return;
+            }
 
             Thread worker = new Thread(new ThreadStart(workerStart));
             worker.Start();
@@ -123,8 +127,7 @@ namespace GDIPlusTest
 
             // 在这里对找到的区块数据(起始点, size)进行矩阵化(统一转换成矩阵的数学模型: 区块行列编号)
             double avWidth = LianLianKanLogic.Matrixing(ref m_totalResultList);
-            string msg = string.Format("average width is {0}!", avWidth);
-            MessageBox.Show(msg);
+            PrintMatrix();
 
             workerfinishDelegate();
             //MessageBox.Show("Found: " + foundPosList.Count.ToString() + " in " + span.TotalSeconds.ToString() + " seconds!");
@@ -205,7 +208,11 @@ namespace GDIPlusTest
 
                 m_srcBitmap = new Bitmap(scrCap);
                 string exePath = Application.ExecutablePath.Remove(Application.ExecutablePath.LastIndexOf("\\"));
-                loadSubImgList(exePath + "\\pics\\subbitmaps\\");
+                if (!loadSubImgList(exePath + "\\pics\\subbitmaps\\"))
+                {
+                    // load子图失败
+                    return;
+                }
                 setBtnEnable(buttonCapture, false);
 
                 Thread worker = new Thread(new ThreadStart(workerStart));
@@ -213,10 +220,15 @@ namespace GDIPlusTest
             }
         }
 
-        private void loadSubImgList(string fPath)
+        private bool loadSubImgList(string fPath)
         {
             m_subImgList = new List<Bitmap>();
             DirectoryInfo di = new DirectoryInfo(fPath);
+            if (!di.Exists)
+            {
+                MessageBox.Show(fPath + " is not exists!");
+                return false;
+            }
             foreach (FileInfo fi in di.GetFiles())
             {
                 if ((".png" == fi.Extension.ToLower())
@@ -226,6 +238,7 @@ namespace GDIPlusTest
                     m_subImgList.Add(subImg);
                 }
             }
+            return true;
         }
 
         // 找"level"图片在屏幕上出现的位置, 用以确定连连看游戏画面的位置
@@ -256,6 +269,41 @@ namespace GDIPlusTest
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 打印矩阵化后的区块位置分布(测试用函数)
+        /// </summary>
+        void PrintMatrix()
+        {
+            int[,] arr = new int[12, 15];
+            for (int i = 0; i < 12; i++)
+            {
+                for (int j = 0; j < 15; j++)
+                {
+                    arr[i, j] = -1;
+                }
+            }
+
+            foreach (FoundPosition fp in m_totalResultList)
+            {
+                if ((-1 != fp.Row) && (-1 != fp.Col))
+                {
+                    arr[fp.Row, fp.Col] = fp.subImgInfo.subIdx;
+                }
+            }
+
+            StreamWriter sw = new StreamWriter("d:\\LianLianKanMatrix.txt");
+            for (int i = 0; i < 12; i++)
+            {
+                string wtLine = "";
+                for (int j = 0; j < 15; j++)
+                {
+                    wtLine += " " + string.Format("{0}", arr[i,j]).PadLeft(2, '0');
+                }
+                sw.WriteLine(wtLine);
+            }
+            sw.Close();
         }
     }
 }
