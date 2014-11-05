@@ -272,7 +272,7 @@ namespace GDIPlusTest
         }
 
         /// <summary>
-        /// 打印矩阵化后的区块位置分布(测试用函数)
+        /// 打印矩阵化后的区块位置分布(临时测试用函数)
         /// </summary>
         void PrintMatrix()
         {
@@ -304,6 +304,51 @@ namespace GDIPlusTest
                 sw.WriteLine(wtLine);
             }
             sw.Close();
+        }
+
+        /// <summary>
+        /// 这个按钮用于试验网页相关的动作
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnWebTest_Click(object sender, EventArgs e)
+        {
+            DateTime time_s = DateTime.Now;
+            List<Bitmap> subImgList = new List<Bitmap>();
+            string subImgPath = ".\\pics\\DengLuBtn.PNG";
+            FileInfo fi = new FileInfo(subImgPath);
+            if (!fi.Exists)
+            {
+                return;
+            }
+            Bitmap subImgDengLuBtn = new Bitmap(subImgPath);
+            subImgList.Add(subImgDengLuBtn);
+
+            Bitmap scrCap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            Graphics g = Graphics.FromImage(scrCap);
+            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+
+//          for (int i = 0; i < 10; i++)
+//          {
+//          Point startPos = new Point(870, 290);
+            Point startPos = new Point(600, 100);
+            Point dstPos = new Point(0, 0);
+
+            // 全屏截图
+            g.CopyFromScreen(startPos, dstPos, scrCap.Size);
+            pictureBox1.Image = scrCap;
+            BitmapProcess bp = new BitmapProcess(scrCap, subImgList);
+            List<FoundPosition> foundPosList = bp.searchSubBitmap(0);
+//          }
+            g.Dispose();
+            DateTime time_e = DateTime.Now;
+            TimeSpan ts = time_e - time_s;
+            if (0 != foundPosList.Count)
+            {
+                FoundPosition fp = foundPosList[0];
+                Win32Api.mouseClick(startPos.X + fp.X + (subImgDengLuBtn.Width / 2), startPos.Y + fp.Y + (subImgDengLuBtn.Height / 2));
+                MessageBox.Show("DengLuBtn is found!(*^__^*)! " + ts.TotalMilliseconds.ToString());
+            }
         }
     }
 }
