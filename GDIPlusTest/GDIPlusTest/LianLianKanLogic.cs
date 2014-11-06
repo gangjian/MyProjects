@@ -20,6 +20,13 @@ namespace GDIPlusTest
             // 区分列
         }
 
+        // 连连看矩阵的最大行列数定义
+        public const int ROW_NUM = 12;
+        public const int COL_NUM = 15;
+
+        // 空的区块定义序号为-1
+        public const int EMPTY_BLOCK = -1;
+
         // 区块位置矩阵化阈值系数
         private const double THRESHOLD_MODULUS = 0.3;
 
@@ -44,6 +51,59 @@ namespace GDIPlusTest
             DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL.E_COL, layoutList, averageWidthVal, threshold_h);
 
             return averageWidthVal;
+        }
+
+        /// <summary>
+        /// 判断指定的两个区块是否可以被消除
+        /// </summary>
+        /// <param name="arr">矩阵化后的区块编号数组</param>
+        /// <param name="row1">区块1的行号</param>
+        /// <param name="col1">区块1的列号</param>
+        /// <param name="row2">区块2的行号</param>
+        /// <param name="col2">区块2的列号</param>
+        public static void BlocksCanBeEliminated(int[,] arr, int row1, int col1, int row2, int col2)
+        {
+            int row_s;  // 扫描开始行序号
+            int row_e;  // 扫描结束行序号
+            int col_s;  // 扫描开始列序号
+            int col_e;  // 扫描结束列序号
+
+            // 横向扫描(, 第ROW_NUM同理也是位于框外)
+            for (int i = -1; i <= ROW_NUM; i++)
+            {
+                row_s = i + 1;
+                if (-1 == i)            // 从第-1行开始, -1表示第0行之上, 连连看图像区域框外的位置
+                {
+                }
+                else if (ROW_NUM == i)  // 表示最后一行(ROW_NUM - 1)之下, 框外的位置
+                {
+                    ;
+                }
+                else
+                {
+                    if (row1 == i)
+                    {
+                    }
+                    else if (row1 > i)
+                    {
+                    }
+                    else
+                    {
+                    }
+                    if (row2 == i)
+                    {
+                    }
+                    else if (row2 > i)
+                    {
+                    }
+                    else
+                    {
+                    }
+                }
+                // 判断两个区块垂直投影方向各区块是否都为空
+                // 判断水平方向连线各区块是否都为空
+            }
+            // 纵向扫描
         }
 
 //////////////////////////////////////////////////////以下都是子函数////////////////////////////////////////////////////
@@ -300,6 +360,55 @@ namespace GDIPlusTest
                 }
             }
 
+        }
+
+        /// <summary>
+        /// 判断纵向连续若干区块是否都为空
+        /// </summary>
+        /// <param name="row_s">起始行序号</param>
+        /// <param name="row_e">结束行序号</param>
+        /// <param name="col">列序号</param>
+        /// <param name="arr">区块序号矩阵</param>
+        static bool VerticalBlocksAllEmpty(int row_s, int row_e, int col, int[,] arr)
+        {
+            System.Diagnostics.Trace.Assert(null != arr);
+            int max_rows = arr.GetLength(0);
+            int max_cols = arr.GetLength(1);
+            System.Diagnostics.Trace.Assert((row_s >= 0) && (row_s <= row_e) && (row_e <= max_rows) && (col >= 0) && (col <= max_cols));
+
+            for (int i = row_s; i <= row_e; i++)
+            {
+                if (EMPTY_BLOCK != arr[i, col])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="row">行序号</param>
+        /// <param name="col_s">起始列序号</param>
+        /// <param name="col_e">结束列序号</param>
+        /// <param name="arr">区块序号矩阵</param>
+        /// <returns></returns>
+        static bool HorizontalBlocksAllEmpty(int row, int col_s, int col_e, int[,] arr)
+        {
+            System.Diagnostics.Trace.Assert(null != arr);
+            int max_rows = arr.GetLength(0);
+            int max_cols = arr.GetLength(1);
+            System.Diagnostics.Trace.Assert((col_s >= 0) && (col_s <= col_e) && (col_e <= max_cols) && (row >= 0) && (row <= max_cols));
+
+            for (int i = col_s; i <= col_e; i++)
+            {
+                if (EMPTY_BLOCK != arr[row, i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
