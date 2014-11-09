@@ -350,5 +350,11 @@ namespace GDIPlusTest
                 MessageBox.Show("DengLuBtn is found!(*^__^*)! " + ts.TotalMilliseconds.ToString());
             }
         }
+
+        private void btnGameRobot_Click(object sender, EventArgs e)
+        {
+            FormGameRobot fgr = new FormGameRobot();
+            fgr.Show();
+        }
     }
 }

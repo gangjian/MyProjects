@@ -32,10 +32,11 @@
             this.buttonOpen = new System.Windows.Forms.Button();
             this.buttonOpenSub = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnWebTest = new System.Windows.Forms.Button();
             this.buttonCapture = new System.Windows.Forms.Button();
             this.buttonStart = new System.Windows.Forms.Button();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.btnWebTest = new System.Windows.Forms.Button();
+            this.btnGameRobot = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -74,6 +75,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.btnGameRobot);
             this.panel1.Controls.Add(this.btnWebTest);
             this.panel1.Controls.Add(this.buttonCapture);
             this.panel1.Controls.Add(this.buttonStart);
@@ -87,6 +89,16 @@
             this.panel1.Size = new System.Drawing.Size(939, 511);
             this.panel1.TabIndex = 0;
             // 
+            // btnWebTest
+            // 
+            this.btnWebTest.Location = new System.Drawing.Point(850, 218);
+            this.btnWebTest.Name = "btnWebTest";
+            this.btnWebTest.Size = new System.Drawing.Size(80, 30);
+            this.btnWebTest.TabIndex = 6;
+            this.btnWebTest.Text = "WebTest";
+            this.btnWebTest.UseVisualStyleBackColor = true;
+            this.btnWebTest.Click += new System.EventHandler(this.btnWebTest_Click);
+            // 
             // buttonCapture
             // 
             this.buttonCapture.Font = new System.Drawing.Font("SimHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -95,7 +107,7 @@
             this.buttonCapture.Name = "buttonCapture";
             this.buttonCapture.Size = new System.Drawing.Size(80, 30);
             this.buttonCapture.TabIndex = 5;
-            this.buttonCapture.Text = "截图";
+            this.buttonCapture.Text = "Capture";
             this.buttonCapture.UseVisualStyleBackColor = true;
             this.buttonCapture.Click += new System.EventHandler(this.buttonCapture_Click);
             // 
@@ -119,15 +131,15 @@
             this.pictureBox2.TabIndex = 3;
             this.pictureBox2.TabStop = false;
             // 
-            // btnWebTest
+            // btnGameRobot
             // 
-            this.btnWebTest.Location = new System.Drawing.Point(850, 218);
-            this.btnWebTest.Name = "btnWebTest";
-            this.btnWebTest.Size = new System.Drawing.Size(80, 30);
-            this.btnWebTest.TabIndex = 6;
-            this.btnWebTest.Text = "WebTest";
-            this.btnWebTest.UseVisualStyleBackColor = true;
-            this.btnWebTest.Click += new System.EventHandler(this.btnWebTest_Click);
+            this.btnGameRobot.Location = new System.Drawing.Point(850, 272);
+            this.btnGameRobot.Name = "btnGameRobot";
+            this.btnGameRobot.Size = new System.Drawing.Size(80, 30);
+            this.btnGameRobot.TabIndex = 7;
+            this.btnGameRobot.Text = "GameRobot";
+            this.btnGameRobot.UseVisualStyleBackColor = true;
+            this.btnGameRobot.Click += new System.EventHandler(this.btnGameRobot_Click);
             // 
             // Form1
             // 
@@ -158,6 +170,7 @@
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Button buttonCapture;
         private System.Windows.Forms.Button btnWebTest;
+        private System.Windows.Forms.Button btnGameRobot;
 
     }
 }
