@@ -126,7 +126,7 @@ namespace GDIPlusTest
             TimeSpan span = (finishTime - startTime);
 
             // 在这里对找到的区块数据(起始点, size)进行矩阵化(统一转换成矩阵的数学模型: 区块行列编号)
-            double avWidth = LianLianKanLogic.Matrixing(ref m_totalResultList);
+            LianLianKanLogic.Matrixing(ref m_totalResultList);
             PrintMatrix();
 
             workerfinishDelegate();
@@ -334,7 +334,6 @@ namespace GDIPlusTest
             Point startPos = new Point(600, 100);
             Point dstPos = new Point(0, 0);
 
-            // 全屏截图
             g.CopyFromScreen(startPos, dstPos, scrCap.Size);
             pictureBox1.Image = scrCap;
             BitmapProcess bp = new BitmapProcess(scrCap, subImgList);

@@ -33,7 +33,7 @@ namespace GDIPlusTest
         /// <summary>
         /// 区块位置矩阵化处理
         /// </summary>
-        public static double Matrixing(ref List<FoundPosition> layoutList)
+        public static void Matrixing(ref List<FoundPosition> layoutList)
         {
             // 求所有区块的平均宽高
             double averageWidthVal = 0, averageHeightVal = 0;
@@ -49,8 +49,6 @@ namespace GDIPlusTest
             // 排定各区块的行列号
             DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL.E_ROW, layoutList, averageHeightVal, threshold_v);
             DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL.E_COL, layoutList, averageWidthVal, threshold_h);
-
-            return averageWidthVal;
         }
 
         /// <summary>

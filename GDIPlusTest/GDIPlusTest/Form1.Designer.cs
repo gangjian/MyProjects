@@ -32,11 +32,11 @@
             this.buttonOpen = new System.Windows.Forms.Button();
             this.buttonOpenSub = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnGameRobot = new System.Windows.Forms.Button();
             this.btnWebTest = new System.Windows.Forms.Button();
             this.buttonCapture = new System.Windows.Forms.Button();
             this.buttonStart = new System.Windows.Forms.Button();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.btnGameRobot = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -89,6 +89,16 @@
             this.panel1.Size = new System.Drawing.Size(939, 511);
             this.panel1.TabIndex = 0;
             // 
+            // btnGameRobot
+            // 
+            this.btnGameRobot.Location = new System.Drawing.Point(850, 272);
+            this.btnGameRobot.Name = "btnGameRobot";
+            this.btnGameRobot.Size = new System.Drawing.Size(80, 30);
+            this.btnGameRobot.TabIndex = 7;
+            this.btnGameRobot.Text = "GameRobot";
+            this.btnGameRobot.UseVisualStyleBackColor = true;
+            this.btnGameRobot.Click += new System.EventHandler(this.btnGameRobot_Click);
+            // 
             // btnWebTest
             // 
             this.btnWebTest.Location = new System.Drawing.Point(850, 218);
@@ -131,16 +141,6 @@
             this.pictureBox2.TabIndex = 3;
             this.pictureBox2.TabStop = false;
             // 
-            // btnGameRobot
-            // 
-            this.btnGameRobot.Location = new System.Drawing.Point(850, 272);
-            this.btnGameRobot.Name = "btnGameRobot";
-            this.btnGameRobot.Size = new System.Drawing.Size(80, 30);
-            this.btnGameRobot.TabIndex = 7;
-            this.btnGameRobot.Text = "GameRobot";
-            this.btnGameRobot.UseVisualStyleBackColor = true;
-            this.btnGameRobot.Click += new System.EventHandler(this.btnGameRobot_Click);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -148,6 +148,7 @@
             this.ClientSize = new System.Drawing.Size(942, 535);
             this.Controls.Add(this.panel1);
             this.DoubleBuffered = true;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.Name = "Form1";

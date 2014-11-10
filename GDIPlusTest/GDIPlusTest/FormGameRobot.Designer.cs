@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.button1 = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.tbxLogOutPut = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // button1
@@ -42,26 +42,29 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // textBox1
+            // tbxLogOutPut
             // 
-            this.textBox1.Location = new System.Drawing.Point(12, 14);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(193, 214);
-            this.textBox1.TabIndex = 1;
+            this.tbxLogOutPut.Location = new System.Drawing.Point(12, 14);
+            this.tbxLogOutPut.Multiline = true;
+            this.tbxLogOutPut.Name = "tbxLogOutPut";
+            this.tbxLogOutPut.ReadOnly = true;
+            this.tbxLogOutPut.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.tbxLogOutPut.Size = new System.Drawing.Size(193, 320);
+            this.tbxLogOutPut.TabIndex = 1;
             // 
             // FormGameRobot
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(292, 266);
-            this.Controls.Add(this.textBox1);
+            this.ClientSize = new System.Drawing.Size(292, 353);
+            this.Controls.Add(this.tbxLogOutPut);
             this.Controls.Add(this.button1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "FormGameRobot";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "GameRobot";
+            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -70,6 +73,6 @@
         #endregion
 
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox tbxLogOutPut;
     }
 }
