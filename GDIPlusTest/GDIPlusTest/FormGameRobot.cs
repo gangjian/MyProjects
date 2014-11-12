@@ -85,6 +85,8 @@ namespace GDIPlusTest
             LogAppend("走到这儿说明区块矩阵化的结果没问题!");
             // 根据矩阵化的结果, 开始进行区块消除动作
             LogAppend("下面该开始进行区块消除了...Let's do it!");
+
+            LianLianKanBlocksElimination(pt, foundBlocksList);
         }
 
         /// <summary>
@@ -202,8 +204,94 @@ namespace GDIPlusTest
         /// <summary>
         /// 连连看区块消除处理动作(以后应该整理移到LianLianKanLogic类里去)
         /// </summary>
-        void LianLianKanBlocsElimination(List<FoundPosition> foundList)
+        void LianLianKanBlocksElimination(Point startPt, List<FoundPosition> foundList)
         {
+            // 首先要将区块列表里的行列序号整理成二维数组(第三维多出的位置用来保存对应foundList的索引)
+            int[,,] arr = new int[LianLianKanLogic.ROW_NUM, LianLianKanLogic.COL_NUM, 2];
+            // 现将数组全部初始化成-1
+            for (int i = 0; i < LianLianKanLogic.ROW_NUM; i++)
+            {
+                for (int j = 0; j < LianLianKanLogic.COL_NUM; j++)
+                {
+                    arr[i, j, 0] = -1;
+                    arr[i, j, 1] = -1;
+                }
+            }
+            // 将区块列表里对应数组行列序号的区块序号填到数组对应位置里去
+            int idx = 0;
+            foreach (FoundPosition fp in foundList)
+            {
+                System.Diagnostics.Trace.Assert((-1 != fp.Row) && (-1 != fp.Col));
+                arr[fp.Row, fp.Col, 0] = fp.subImgInfo.subIdx;
+                arr[fp.Row, fp.Col, 1] = idx;
+                idx++;
+            }
+
+            // 根据整理好的数组计算得出消除区块的顺序列表
+            List<int[]> elmSeq = GetEliminationSequence(arr);
+
+            // 根据消去序列表,按顺序消除各个区块
+            for (int i = 0; i < elmSeq.Count; i++)
+            {
+                // 分别取得将要消去的两个区块的索引值
+                int[] idx_arr = elmSeq[i];
+                System.Diagnostics.Trace.Assert(4 == idx_arr.Length);
+                int r1, r2, c1, c2;
+                r1 = idx_arr[0];
+                c1 = idx_arr[1];
+                r2 = idx_arr[2];
+                c2 = idx_arr[3];
+                int idx1 = arr[r1, c1, 1];
+                int idx2 = arr[r2, c2, 1];
+                // 根据索引值取得两个区块的屏幕位置
+                FoundPosition fp1 = foundList[idx1];
+                FoundPosition fp2 = foundList[idx2];
+
+                //
+                Win32Api.mouseClick(startPt.X + fp1.X + (fp1.subImgInfo.subWidth / 2), startPt.Y + fp1.Y + (fp1.subImgInfo.subHeight / 2));
+                // 这里应该起个timer停几秒, 暂时姑且用Sleep代替一下看能不能凑合着用
+                System.Threading.Thread.Sleep(1000);
+                Win32Api.mouseClick(startPt.X + fp2.X + (fp2.subImgInfo.subWidth / 2), startPt.Y + fp2.Y + (fp2.subImgInfo.subHeight / 2));
+
+                // 每次消去后, 这里还应该起个timer等动画消失才能进行下一次消去动作
+                System.Threading.Thread.Sleep(3000);
+
+                // ToDo:明天继续
+            }
+        }
+
+        /// <summary>
+        /// 取得消去操作的序列
+        /// </summary>
+        List<int[]> GetEliminationSequence(int[,,] arr)
+        {
+            List<int[]> retSeq = new List<int[]>();
+
+            // 暂时先只是消去紧挨着的相邻区块
+            for (int i = 0; i < LianLianKanLogic.ROW_NUM - 1; i++)
+            {
+                for (int j = 0; j < LianLianKanLogic.COL_NUM - 1; j++)
+                {
+                    // 分别跟右和下方的区块比较, 是否一样, 一样表示可以消去, 将位置添加到序列里
+                    // 注意别忘了消去后要修改数组的内容
+                    if (arr[i, j, 0] == arr[i, j + 1, 0])
+                    {
+                        int[] pos = new int[4] { i, j, i, j + 1};
+                        retSeq.Add(pos);
+                        arr[i, j, 0] = -1;
+                        arr[i, j + 1, 0] = -1;
+                    }
+                    if (arr[i, j, 0] == arr[i + 1, j, 0])
+                    {
+                        int[] pos = new int[4] { i, j, i + 1, j };
+                        retSeq.Add(pos);
+                        arr[i, j, 0] = -1;
+                        arr[i + 1, j, 0] = -1;
+                    }
+                }
+            }
+
+            return retSeq;
         }
     }
 }
