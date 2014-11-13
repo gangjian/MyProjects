@@ -47,61 +47,47 @@ namespace GDIPlusTest
             double threshold_v = averageHeightVal * THRESHOLD_MODULUS;
 
             // 排定各区块的行列号
-            DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL.E_ROW, layoutList, averageHeightVal, threshold_v);
-            DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL.E_COL, layoutList, averageWidthVal, threshold_h);
+            DeterminateAllRowsOrColsIdxs(E_OP_MODE.E_ROW_OP, layoutList, averageHeightVal, threshold_v);
+            DeterminateAllRowsOrColsIdxs(E_OP_MODE.E_COL_OP, layoutList, averageWidthVal, threshold_h);
         }
 
         /// <summary>
-        /// 判断指定的两个区块是否可以被消除
+        /// 取得当前局面下, 所有可以消去的区块对
         /// </summary>
-        /// <param name="arr">矩阵化后的区块编号数组</param>
-        /// <param name="row1">区块1的行号</param>
-        /// <param name="col1">区块1的列号</param>
-        /// <param name="row2">区块2的行号</param>
-        /// <param name="col2">区块2的列号</param>
-        public static void BlocksCanBeEliminated(int[,] arr, int row1, int col1, int row2, int col2)
+        public static void GetAllEliminablePairs(int [,] arr)
         {
-            int row_s;  // 扫描开始行序号
-            int row_e;  // 扫描结束行序号
-            int col_s;  // 扫描开始列序号
-            int col_e;  // 扫描结束列序号
-
-            // 横向扫描(, 第ROW_NUM同理也是位于框外)
-            for (int i = -1; i <= ROW_NUM; i++)
+            int row_num = arr.GetLength(0);
+            int col_num = arr.GetLength(1);
+            for (int i = 0; i < row_num; i++)
             {
-                row_s = i + 1;
-                if (-1 == i)            // 从第-1行开始, -1表示第0行之上, 连连看图像区域框外的位置
+                for (int j = 0; j < col_num; j++)
                 {
-                }
-                else if (ROW_NUM == i)  // 表示最后一行(ROW_NUM - 1)之下, 框外的位置
-                {
-                    ;
-                }
-                else
-                {
-                    if (row1 == i)
+                    // 如果该区块非空
+                    if (EMPTY_BLOCK != arr[i, j])
                     {
-                    }
-                    else if (row1 > i)
-                    {
-                    }
-                    else
-                    {
-                    }
-                    if (row2 == i)
-                    {
-                    }
-                    else if (row2 > i)
-                    {
-                    }
-                    else
-                    {
+                        int next_r = i;
+                        int next_c = j + 1;
+                        if (col_num - 1 == j)
+                        {
+                            next_r = i + 1;
+                            next_c = 0;
+                        }
+                        // 依次向下寻找可以消去的另一个区块
+                        for (int m = next_r; m < row_num; m++)
+                        {
+                            for (int n = next_c; n < col_num; n++)
+                            {
+                                // 如果这两个区块可以消去
+                                if ((arr[m, n] == arr[i, j])                        // 首先这两区块得是同样的
+                                    && IsBlocksCanBeEliminated(arr, i, j, m, n))    // 其次符合消去的联通路径条件
+                                {
+                                    // 那么将这一对添加到返回列表里去
+                                }
+                            }
+                        }
                     }
                 }
-                // 判断两个区块垂直投影方向各区块是否都为空
-                // 判断水平方向连线各区块是否都为空
             }
-            // 纵向扫描
         }
 
 //////////////////////////////////////////////////////以下都是子函数////////////////////////////////////////////////////
@@ -132,23 +118,23 @@ namespace GDIPlusTest
         }
 
         // 行处理or列处理
-        enum E_ROW_OR_COL
+        enum E_OP_MODE
         {
-            E_ROW,
-            E_COL
+            E_ROW_OP,
+            E_COL_OP
         };
 
         /// <summary>
         /// 找出第一个(最上侧/最左侧)未被确定行列号的区块
         /// </summary>
-        static int FindFirstUnconfirmedBlock(E_ROW_OR_COL mode, List<FoundPosition> layoutList)
+        static int FindFirstUnconfirmedBlock(E_OP_MODE op_mode, List<FoundPosition> layoutList)
         {
             int idx = -1;       // 返回找到区块在list中的索引值
             int firstVal = -1;  // 最值
             int i = 0;
             foreach (FoundPosition fp in layoutList)
             {
-                if (E_ROW_OR_COL.E_ROW == mode)
+                if (E_OP_MODE.E_ROW_OP == op_mode)
                 {
                     if (-1 == fp.Row)               // 该区块还未确定行番号
                     {
@@ -164,7 +150,7 @@ namespace GDIPlusTest
                         }
                     }
                 }
-                else if (E_ROW_OR_COL.E_COL == mode) // E_ROW_OR_COL.E_COL
+                else if (E_OP_MODE.E_COL_OP == op_mode) // E_OP_MODE.E_COL_OP
                 {
                     if (-1 == fp.Col)               // 该区块还未确定列番号
                     {
@@ -193,14 +179,14 @@ namespace GDIPlusTest
         /// <summary>
         /// 找出最后一个(最下侧/最右侧)已被确定行列号的区块
         /// </summary>
-        static int FindLastConfirmedBlock(E_ROW_OR_COL mode, List<FoundPosition> layoutList)
+        static int FindLastConfirmedBlock(E_OP_MODE op_mode, List<FoundPosition> layoutList)
         {
             int idx = -1;
             int lastVal = -1;  // 最值
             int i = 0;
             foreach (FoundPosition fp in layoutList)
             {
-                if (E_ROW_OR_COL.E_ROW == mode)
+                if (E_OP_MODE.E_ROW_OP == op_mode)
                 {
                     if (-1 != fp.Row)               // 该区块已经确定行番号
                     {
@@ -216,7 +202,7 @@ namespace GDIPlusTest
                         }
                     }
                 }
-                else if (E_ROW_OR_COL.E_COL == mode) // E_ROW_OR_COL.E_COL
+                else if (E_OP_MODE.E_COL_OP == op_mode) // E_OP_MODE.E_COL_OP
                 {
                     if (-1 != fp.Col)               // 该区块已经确定列番号
                     {
@@ -246,7 +232,7 @@ namespace GDIPlusTest
         /// 取得两个区块间的行/列数的差值
         /// </summary>
         /// <returns></returns>
-        static int Get2BlocksRowsOrColsDiff(E_ROW_OR_COL mode,                     // 行或列
+        static int Get2BlocksRowsOrColsDiff(E_OP_MODE op_mode,                     // 行或列
                                             FoundPosition block1,                   // 区块1
                                             FoundPosition block2,                   // 区块2
                                             double meanVal,                         // 平均值
@@ -256,11 +242,11 @@ namespace GDIPlusTest
             double diffVal = 0;                     // 区块间距离差值
             int diffCount = 0;                      // 相差的行列数的整数部分
             double remainder1 = 0, remainder2 = 0;  // 余数部分(分别是以第n和第n+1行/列为基准的余数)
-            if (E_ROW_OR_COL.E_ROW == mode)
+            if (E_OP_MODE.E_ROW_OP == op_mode)
             {
                 diffVal = Math.Abs((double)block1.Y - (double)block2.Y);
             }
-            else if (E_ROW_OR_COL.E_COL == mode)
+            else if (E_OP_MODE.E_COL_OP == op_mode)
             {
                 diffVal = Math.Abs((double)block1.X - (double)block2.X);
             }
@@ -292,22 +278,22 @@ namespace GDIPlusTest
         /// <summary>
         /// 确定所有区块的行列编号
         /// </summary>
-        static void DeterminateAllRowsOrColsIdxs(E_ROW_OR_COL mode, List<FoundPosition> layoutList, double meanVal, double threshold)
+        static void DeterminateAllRowsOrColsIdxs(E_OP_MODE op_mode, List<FoundPosition> layoutList, double meanVal, double threshold)
         {
             //  1.找到第一个(最上面或最左边)未确定行列号的区块
             int firstIdx = -1;
             int lastIdx = -1;
             int diffCnt = -1;   // 最后一个确定的区块和第一个未确定的区块间的行列数差
             // 直到找不到, 说明所有区块都已确定行列号
-            while (-1 != (firstIdx = FindFirstUnconfirmedBlock(mode, layoutList)))
+            while (-1 != (firstIdx = FindFirstUnconfirmedBlock(op_mode, layoutList)))
             {
                 // 确定它的行号
                 // 找到最后一个确定行列号的区块
-                lastIdx = FindLastConfirmedBlock(mode, layoutList);
+                lastIdx = FindLastConfirmedBlock(op_mode, layoutList);
                 if (-1 == lastIdx)
                 {
                     // 没找到说明这是第一行/列
-                    if (E_ROW_OR_COL.E_ROW == mode)
+                    if (E_OP_MODE.E_ROW_OP == op_mode)
                     {
                         layoutList[firstIdx].Row = 0;
                     }
@@ -319,10 +305,10 @@ namespace GDIPlusTest
                 else
                 {
                     // 算出它们之间的行列数之差
-                    diffCnt = Get2BlocksRowsOrColsDiff(mode, layoutList[lastIdx], layoutList[firstIdx], meanVal, threshold);
+                    diffCnt = Get2BlocksRowsOrColsDiff(op_mode, layoutList[lastIdx], layoutList[firstIdx], meanVal, threshold);
                     if (-1 != diffCnt)
                     {
-                        if (E_ROW_OR_COL.E_ROW == mode)
+                        if (E_OP_MODE.E_ROW_OP == op_mode)
                         {
                             layoutList[firstIdx].Row = layoutList[lastIdx].Row + diffCnt;
                         }
@@ -341,16 +327,16 @@ namespace GDIPlusTest
                 // 确定跟它处于同一行的其它各区块
                 foreach (FoundPosition fp in layoutList)
                 {
-                    if ((E_ROW_OR_COL.E_ROW == mode) && (-1 == fp.Row))               // 该区块还未确定行番号
+                    if ((E_OP_MODE.E_ROW_OP == op_mode) && (-1 == fp.Row))               // 该区块还未确定行番号
                     {
-                        if (0 == Get2BlocksRowsOrColsDiff(mode, layoutList[firstIdx], fp, meanVal, threshold))
+                        if (0 == Get2BlocksRowsOrColsDiff(op_mode, layoutList[firstIdx], fp, meanVal, threshold))
                         {
                             fp.Row = layoutList[firstIdx].Row;
                         }
                     }
-                    else if ((E_ROW_OR_COL.E_COL == mode) && (-1 == fp.Col))
+                    else if ((E_OP_MODE.E_COL_OP == op_mode) && (-1 == fp.Col))
                     {
-                        if (0 == Get2BlocksRowsOrColsDiff(mode, layoutList[firstIdx], fp, meanVal, threshold))
+                        if (0 == Get2BlocksRowsOrColsDiff(op_mode, layoutList[firstIdx], fp, meanVal, threshold))
                         {
                             fp.Col = layoutList[firstIdx].Col;
                         }
@@ -361,7 +347,7 @@ namespace GDIPlusTest
         }
 
         /// <summary>
-        /// 判断纵向连续若干区块是否都为空
+        /// 判断纵向连续若干区块(不包括端点)是否都为空
         /// </summary>
         /// <param name="row_s">起始行序号</param>
         /// <param name="row_e">结束行序号</param>
@@ -370,11 +356,13 @@ namespace GDIPlusTest
         static bool VerticalBlocksAllEmpty(int row_s, int row_e, int col, int[,] arr)
         {
             System.Diagnostics.Trace.Assert(null != arr);
-            int max_rows = arr.GetLength(0);
-            int max_cols = arr.GetLength(1);
-            System.Diagnostics.Trace.Assert((row_s >= 0) && (row_s <= row_e) && (row_e <= max_rows) && (col >= 0) && (col <= max_cols));
-
-            for (int i = row_s; i <= row_e; i++)
+            if (row_s > row_e)
+            {
+                int tmp = row_s;
+                row_s = row_e;
+                row_e = tmp;
+            }
+            for (int i = row_s + 1; i < row_e; i++)
             {
                 if (EMPTY_BLOCK != arr[i, col])
                 {
@@ -385,7 +373,7 @@ namespace GDIPlusTest
         }
 
         /// <summary>
-        /// 
+        /// 判断横向连续若干区块(不包括端点)是否都为空
         /// </summary>
         /// <param name="row">行序号</param>
         /// <param name="col_s">起始列序号</param>
@@ -395,11 +383,13 @@ namespace GDIPlusTest
         static bool HorizontalBlocksAllEmpty(int row, int col_s, int col_e, int[,] arr)
         {
             System.Diagnostics.Trace.Assert(null != arr);
-            int max_rows = arr.GetLength(0);
-            int max_cols = arr.GetLength(1);
-            System.Diagnostics.Trace.Assert((col_s >= 0) && (col_s <= col_e) && (col_e <= max_cols) && (row >= 0) && (row <= max_cols));
-
-            for (int i = col_s; i <= col_e; i++)
+            if (col_s > col_e)
+            {
+                int tmp = col_s;
+                col_s = col_e;
+                col_e = tmp;
+            }
+            for (int i = col_s + 1; i < col_e; i++)
             {
                 if (EMPTY_BLOCK != arr[row, i])
                 {
@@ -408,5 +398,78 @@ namespace GDIPlusTest
             }
             return true;
         }
+
+        /// <summary>
+        /// 判断指定的两个区块是否可以被消除
+        /// </summary>
+        /// <param name="arr">矩阵化后的区块编号数组</param>
+        /// <param name="row1">区块1的行号</param>
+        /// <param name="col1">区块1的列号</param>
+        /// <param name="row2">区块2的行号</param>
+        /// <param name="col2">区块2的列号</param>
+        public static bool IsBlocksCanBeEliminated(int[,] arr, int row1, int col1, int row2, int col2)
+        {
+            // 横向扫描
+            for (int i = -1; i <= ROW_NUM; i++)
+            {
+                // 判断两个区块垂直投影方向各区块是否都为空
+                if (!VerticalBlocksAllEmpty(i, row1, col1, arr)
+                    || !VerticalBlocksAllEmpty(i, row2, col2, arr))
+                {
+                    continue;
+                }
+                if ((-1 == i) || (ROW_NUM == i))
+                {
+                    return true;
+                }
+                // 判断水平方向连线各区块是否都为空
+                if (!HorizontalBlocksAllEmpty(i, col1, col2, arr))
+                {
+                    continue;
+                }
+                // 还要判断投影点是否是指定的区块本身, 不是的话也要为空
+                if ((i != row1) && (EMPTY_BLOCK != arr[i, col1]))
+                {
+                    continue;
+                }
+                if ((i != row2) && (EMPTY_BLOCK != arr[i, col2]))
+                {
+                    continue;
+                }
+                return true;
+            }
+            // 纵向扫描
+            for (int j = -1; j <= COL_NUM; j++)
+            {
+                // 判断两个区块水平投影方向各区块是否都为空
+                if (!HorizontalBlocksAllEmpty(row1, j, col1, arr)
+                    || !HorizontalBlocksAllEmpty(row2, j, col2, arr))
+                {
+                    continue;
+                }
+                if (-1 == j || COL_NUM == j)
+                {
+                    return true;
+                }
+                // 判断垂直方向连线各区块是否都为空
+                if (!VerticalBlocksAllEmpty(row1, row2, j, arr))
+                {
+                    continue;
+                }
+                // 还有判断投影点是否是指定的区块本身, 不是的话也要为空
+                if ((j != col1) && (EMPTY_BLOCK != arr[row1, j]))
+                {
+                    continue;
+                }
+                if ((j != col2) && (EMPTY_BLOCK != arr[row2, j]))
+                {
+                    continue;
+                }
+                return true;
+            }
+
+            return false;
+        }
+
     }
 }

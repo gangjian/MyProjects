@@ -33,7 +33,7 @@ namespace GDIPlusTest
         {
             // 开始在屏幕上找"level"的位置
             LogAppend("开始在屏幕上找level的位置...");
-            Point pt = FindLevel();
+            Point pt = FindLevelPosition();
             if ((-1 != pt.X) && (-1 != pt.Y))
             {
                 LogAppend("找到了!");
@@ -87,12 +87,13 @@ namespace GDIPlusTest
             LogAppend("下面该开始进行区块消除了...Let's do it!");
 
             LianLianKanBlocksElimination(pt, foundBlocksList);
+            LogAppend("OK, 能消的我都消了...");
         }
 
         /// <summary>
         /// 找"level"是否出现在屏幕上
         /// </summary>
-        Point FindLevel()
+        Point FindLevelPosition()
         {
             Point retPt = new Point(-1, -1);    // 返回找到的位置, 初始化值-1表示没找到
             List<Bitmap> subImgList = new List<Bitmap>();
@@ -106,23 +107,27 @@ namespace GDIPlusTest
             subImgList.Add(subImgLevel);
 
             // 全屏截图, 找"Level", 现在只对应"主屏幕(PrimaryScreen)", 以后要在所有屏幕(AllScreens)范围内找
-            Rectangle scrRect = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
-            Bitmap scrCapture = new Bitmap(scrRect.Width, scrRect.Height);
-            Graphics g = Graphics.FromImage(scrCapture);
-            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
-            g.CopyFromScreen(0, 0, 0, 0, scrRect.Size);
-            g.Dispose();
+            foreach (Screen scr in System.Windows.Forms.Screen.AllScreens)
+            {
+                Rectangle scrRect = scr.Bounds;
+                Bitmap scrCapture = new Bitmap(scrRect.Width, scrRect.Height);
+                Graphics g = Graphics.FromImage(scrCapture);
+                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+                g.CopyFromScreen(0, 0, 0, 0, scrRect.Size);
+                g.Dispose();
 
-            BitmapProcess bp = new BitmapProcess(scrCapture, subImgList);
-            List<FoundPosition> foundPosList = bp.searchSubBitmap(0);
-            if (0 != foundPosList.Count)
-            {
-                // 找到了
-                retPt.X = foundPosList[0].X;
-                retPt.Y = foundPosList[0].Y;
-            }
-            else
-            {
+                BitmapProcess bp = new BitmapProcess(scrCapture, subImgList);
+                List<FoundPosition> foundPosList = bp.searchSubBitmap(0);
+                if (0 != foundPosList.Count)
+                {
+                    // 找到了
+                    retPt.X = foundPosList[0].X;
+                    retPt.Y = foundPosList[0].Y;
+                    break;
+                }
+                else
+                {
+                }
             }
             return retPt;
         }
@@ -142,7 +147,7 @@ namespace GDIPlusTest
             }
             else
             {
-                tbxLogOutPut.Text += (logStr + "\r\n");
+                tbxLogOutPut.AppendText(logStr + "\r\n");
             }
         }
 
@@ -227,6 +232,10 @@ namespace GDIPlusTest
                 idx++;
             }
 
+            // 将整理好的数组内容打印到log里
+            LogAppend("打印矩阵化后的数组内容:");
+            LogOutMatrix(arr);
+
             // 根据整理好的数组计算得出消除区块的顺序列表
             List<int[]> elmSeq = GetEliminationSequence(arr);
 
@@ -243,20 +252,21 @@ namespace GDIPlusTest
                 c2 = idx_arr[3];
                 int idx1 = arr[r1, c1, 1];
                 int idx2 = arr[r2, c2, 1];
+                System.Diagnostics.Trace.Assert((idx1 >= 0 && idx1 < foundList.Count) && (idx2 >= 0 && idx2 < foundList.Count));
                 // 根据索引值取得两个区块的屏幕位置
                 FoundPosition fp1 = foundList[idx1];
                 FoundPosition fp2 = foundList[idx2];
 
-                //
-                Win32Api.mouseClick(startPt.X + fp1.X + (fp1.subImgInfo.subWidth / 2), startPt.Y + fp1.Y + (fp1.subImgInfo.subHeight / 2));
+                // 为防止点不上, 保险起见, 用双击点选区块
+                LogAppend("我选: " + r1.ToString() + ", " + c1.ToString());
+                Win32Api.MouseDoubleClick(startPt.X + fp1.X + (fp1.subImgInfo.subWidth / 2), startPt.Y + fp1.Y + (fp1.subImgInfo.subHeight / 2));
                 // 这里应该起个timer停几秒, 暂时姑且用Sleep代替一下看能不能凑合着用
                 System.Threading.Thread.Sleep(1000);
-                Win32Api.mouseClick(startPt.X + fp2.X + (fp2.subImgInfo.subWidth / 2), startPt.Y + fp2.Y + (fp2.subImgInfo.subHeight / 2));
+                LogAppend("我消: " + r2.ToString() + ", " + c2.ToString());
+                Win32Api.MouseDoubleClick(startPt.X + fp2.X + (fp2.subImgInfo.subWidth / 2), startPt.Y + fp2.Y + (fp2.subImgInfo.subHeight / 2));
 
                 // 每次消去后, 这里还应该起个timer等动画消失才能进行下一次消去动作
-                System.Threading.Thread.Sleep(3000);
-
-                // ToDo:明天继续
+                System.Threading.Thread.Sleep(1500);
             }
         }
 
@@ -272,16 +282,20 @@ namespace GDIPlusTest
             {
                 for (int j = 0; j < LianLianKanLogic.COL_NUM - 1; j++)
                 {
+                    if (-1 == arr[i, j, 0])
+                    {   // 如果该位置是空的(没有区块),就跳到下一个
+                        continue;
+                    }
                     // 分别跟右和下方的区块比较, 是否一样, 一样表示可以消去, 将位置添加到序列里
                     // 注意别忘了消去后要修改数组的内容
-                    if (arr[i, j, 0] == arr[i, j + 1, 0])
+                    else if (arr[i, j, 0] == arr[i, j + 1, 0])
                     {
                         int[] pos = new int[4] { i, j, i, j + 1};
                         retSeq.Add(pos);
                         arr[i, j, 0] = -1;
                         arr[i, j + 1, 0] = -1;
                     }
-                    if (arr[i, j, 0] == arr[i + 1, j, 0])
+                    else if (arr[i, j, 0] == arr[i + 1, j, 0])
                     {
                         int[] pos = new int[4] { i, j, i + 1, j };
                         retSeq.Add(pos);
@@ -292,6 +306,33 @@ namespace GDIPlusTest
             }
 
             return retSeq;
+        }
+
+        /// <summary>
+        /// 在log里打印矩阵化后的数组内容
+        /// </summary>
+        void LogOutMatrix(int[, ,] arr)
+        {
+            for (int i = 0; i < LianLianKanLogic.ROW_NUM - 1; i++)
+            {
+                string str = "";
+                for (int j = 0; j < LianLianKanLogic.COL_NUM - 1; j++)
+                {
+                    if ("" != str)
+                    {
+                        str += ",";
+                    }
+                    if (-1 == arr[i, j, 0])
+                    {
+                        str += " X";
+                    }
+                    else
+                    {
+                        str += arr[i, j, 0].ToString().PadLeft(2, ' ');
+                    }
+                }
+                LogAppend(str);
+            }
         }
     }
 }

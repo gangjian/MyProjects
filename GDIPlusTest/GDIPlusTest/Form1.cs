@@ -134,7 +134,7 @@ namespace GDIPlusTest
             //if (0 != foundPosList.Count)
             //{
             //    FoundPosition fp = foundPosList[0];
-            //    Win32Api.mouseClick(fp.X + (m_subBitmap.Width / 2), fp.Y + (m_subBitmap.Height / 2));
+            //    Win32Api.MouseClick(fp.X + (m_subBitmap.Width / 2), fp.Y + (m_subBitmap.Height / 2));
             //}
         }
 
@@ -345,7 +345,7 @@ namespace GDIPlusTest
             if (0 != foundPosList.Count)
             {
                 FoundPosition fp = foundPosList[0];
-                Win32Api.mouseClick(startPos.X + fp.X + (subImgDengLuBtn.Width / 2), startPos.Y + fp.Y + (subImgDengLuBtn.Height / 2));
+                Win32Api.MouseClick(startPos.X + fp.X + (subImgDengLuBtn.Width / 2), startPos.Y + fp.Y + (subImgDengLuBtn.Height / 2));
                 MessageBox.Show("DengLuBtn is found!(*^__^*)! " + ts.TotalMilliseconds.ToString());
             }
         }

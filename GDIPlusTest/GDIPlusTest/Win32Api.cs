@@ -25,7 +25,12 @@ namespace GDIPlusTest
         const int MOUSEEVENTF_LEFTUP = 0x0004;
         const int MOUSEEVENTF_ABSOLUTE = 0x8000;
 
-        public static void mouseClick(int x, int y)
+        /// <summary>
+        /// 鼠标单击
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public static void MouseClick(int x, int y)
         {
             int scrWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
             int scrHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
@@ -34,6 +39,19 @@ namespace GDIPlusTest
             mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, dx, dy, 0, 0);
             mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
             mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+        }
+
+        /// <summary>
+        /// 鼠标双击
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="interval">双击间隔(默认100毫秒)</param>
+        public static void MouseDoubleClick(int x, int y, int interval = 100)
+        {
+            MouseClick(x, y);
+            System.Threading.Thread.Sleep(interval);
+            MouseClick(x, y);
         }
     }
 }
