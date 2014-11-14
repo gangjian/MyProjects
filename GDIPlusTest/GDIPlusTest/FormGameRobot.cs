@@ -276,33 +276,48 @@ namespace GDIPlusTest
         List<int[]> GetEliminationSequence(int[,,] arr)
         {
             List<int[]> retSeq = new List<int[]>();
-
-            // 暂时先只是消去紧挨着的相邻区块
-            for (int i = 0; i < LianLianKanLogic.ROW_NUM - 1; i++)
+            // 先根据传入三维数组的前两维做成一个只包含区块序号的二维数组
+            int[,] arr2 = new int[LianLianKanLogic.ROW_NUM, LianLianKanLogic.COL_NUM];
+            for (int i = 0; i < LianLianKanLogic.ROW_NUM; i++)
             {
-                for (int j = 0; j < LianLianKanLogic.COL_NUM - 1; j++)
+                for (int j = 0; j < LianLianKanLogic.COL_NUM; j++)
                 {
-                    if (-1 == arr[i, j, 0])
-                    {   // 如果该位置是空的(没有区块),就跳到下一个
-                        continue;
-                    }
-                    // 分别跟右和下方的区块比较, 是否一样, 一样表示可以消去, 将位置添加到序列里
-                    // 注意别忘了消去后要修改数组的内容
-                    else if (arr[i, j, 0] == arr[i, j + 1, 0])
-                    {
-                        int[] pos = new int[4] { i, j, i, j + 1};
-                        retSeq.Add(pos);
-                        arr[i, j, 0] = -1;
-                        arr[i, j + 1, 0] = -1;
-                    }
-                    else if (arr[i, j, 0] == arr[i + 1, j, 0])
-                    {
-                        int[] pos = new int[4] { i, j, i + 1, j };
-                        retSeq.Add(pos);
-                        arr[i, j, 0] = -1;
-                        arr[i + 1, j, 0] = -1;
-                    }
+                    arr2[i, j] = arr[i, j, 0];
                 }
+            }
+            BlockInfo[] biArray = LianLianKanLogic.MatrixArrangement(arr2);
+            int[] retArr;
+            while (null != (retArr = LianLianKanLogic.FindEliminablePairs(biArray, arr2)))
+            {
+                System.Diagnostics.Trace.Assert(4 == retArr.Length);
+                retSeq.Add(retArr);
+
+                // 记得要把将要消去的两块从矩阵和区块情报列表里去掉, 才能继续进行下一轮查找
+                BlockInfo bi = biArray[arr2[retArr[0], retArr[1]]];
+                int idx1 = -1, idx2 = -1;
+                int i = 0;
+                foreach (int[] pos in bi.posList)
+                {
+                    if (retArr[0] == pos[0] && retArr[1] == pos[1])
+                    {
+                        idx1 = i;
+                    }
+                    else if (retArr[2] == pos[0] && retArr[3] == pos[1])
+                    {
+                        idx2 = i;
+                    }
+                    i++;
+                }
+                if (idx1 > idx2)
+                {
+                    int tmp = idx1;
+                    idx1 = idx2;
+                    idx2 = tmp;
+                }
+                bi.posList.RemoveAt(idx2);
+                bi.posList.RemoveAt(idx1);
+                arr2[retArr[0], retArr[1]] = LianLianKanLogic.EMPTY_BLOCK;
+                arr2[retArr[2], retArr[3]] = LianLianKanLogic.EMPTY_BLOCK;
             }
 
             return retSeq;

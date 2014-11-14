@@ -5,6 +5,14 @@ using System.Text;
 
 namespace GDIPlusTest
 {
+    /// <summary>
+    /// 区块情报
+    /// </summary>
+    public class BlockInfo
+    {
+        public List<int[]> posList = new List<int[]>();    // 矩阵里所有相同图案区块的位置列表
+    }
+
     class LianLianKanLogic
     {
         /// <summary>
@@ -23,6 +31,9 @@ namespace GDIPlusTest
         // 连连看矩阵的最大行列数定义
         public const int ROW_NUM = 12;
         public const int COL_NUM = 15;
+
+        // 连连看区块图案种类最大数
+        public const int MAX_BLOCK_TYPE_COUNT = 100;
 
         // 空的区块定义序号为-1
         public const int EMPTY_BLOCK = -1;
@@ -52,42 +63,63 @@ namespace GDIPlusTest
         }
 
         /// <summary>
-        /// 取得当前局面下, 所有可以消去的区块对
+        /// 矩阵区块整理, 同样图案的区块位置放到一起做成list
         /// </summary>
-        public static void GetAllEliminablePairs(int [,] arr)
+        public static BlockInfo[] MatrixArrangement(int[,] arr)
         {
+            BlockInfo[] blockInfoArray = new BlockInfo[MAX_BLOCK_TYPE_COUNT];
+            for (int i = 0; i < MAX_BLOCK_TYPE_COUNT; i++)
+            {
+                blockInfoArray[i] = new BlockInfo();
+            }
             int row_num = arr.GetLength(0);
             int col_num = arr.GetLength(1);
             for (int i = 0; i < row_num; i++)
             {
                 for (int j = 0; j < col_num; j++)
                 {
-                    // 如果该区块非空
-                    if (EMPTY_BLOCK != arr[i, j])
+                    if (EMPTY_BLOCK == arr[i, j])
                     {
-                        int next_r = i;
-                        int next_c = j + 1;
-                        if (col_num - 1 == j)
+                        continue;
+                    }
+                    int subImgIdx = arr[i, j];
+                    System.Diagnostics.Trace.Assert((subImgIdx >= 0) && (subImgIdx < MAX_BLOCK_TYPE_COUNT));
+                    BlockInfo bi = blockInfoArray[subImgIdx];
+                    bi.posList.Add(new int[] { i, j });
+                }
+            }
+
+            return blockInfoArray;
+        }
+
+        /// <summary>
+        /// 找到一组可以消去的区块
+        /// </summary>
+        public static int[] FindEliminablePairs(BlockInfo[] blockInfoArray, int[,] arr)
+        {
+            System.Diagnostics.Trace.Assert(blockInfoArray.Length == MAX_BLOCK_TYPE_COUNT);
+            for (int i = 0; i < MAX_BLOCK_TYPE_COUNT; i++)
+            {
+                BlockInfo bi = blockInfoArray[i];
+                if (0 != bi.posList.Count)
+                {
+                    System.Diagnostics.Trace.Assert(bi.posList.Count >= 2);
+                    for (int m = 0; m < bi.posList.Count - 2; m++)
+                    {
+                        for (int n = m + 1; n < bi.posList.Count - 1; n++)
                         {
-                            next_r = i + 1;
-                            next_c = 0;
-                        }
-                        // 依次向下寻找可以消去的另一个区块
-                        for (int m = next_r; m < row_num; m++)
-                        {
-                            for (int n = next_c; n < col_num; n++)
+                            // 判断两个区块是否可以消去
+                            if (IsBlocksEliminable(arr, bi.posList[m][0], bi.posList[m][1], bi.posList[n][0], bi.posList[n][1]))
                             {
-                                // 如果这两个区块可以消去
-                                if ((arr[m, n] == arr[i, j])                        // 首先这两区块得是同样的
-                                    && IsBlocksCanBeEliminated(arr, i, j, m, n))    // 其次符合消去的联通路径条件
-                                {
-                                    // 那么将这一对添加到返回列表里去
-                                }
+                                int[] retArr = new int[4] { bi.posList[m][0], bi.posList[m][1], bi.posList[n][0], bi.posList[n][1] };
+                                return retArr;
                             }
                         }
                     }
                 }
             }
+
+            return null;
         }
 
 //////////////////////////////////////////////////////以下都是子函数////////////////////////////////////////////////////
@@ -407,7 +439,7 @@ namespace GDIPlusTest
         /// <param name="col1">区块1的列号</param>
         /// <param name="row2">区块2的行号</param>
         /// <param name="col2">区块2的列号</param>
-        public static bool IsBlocksCanBeEliminated(int[,] arr, int row1, int col1, int row2, int col2)
+        public static bool IsBlocksEliminable(int[,] arr, int row1, int col1, int row2, int col2)
         {
             // 横向扫描
             for (int i = -1; i <= ROW_NUM; i++)
