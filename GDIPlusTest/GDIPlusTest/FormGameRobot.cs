@@ -261,12 +261,12 @@ namespace GDIPlusTest
                 LogAppend("我选: " + r1.ToString() + ", " + c1.ToString());
                 Win32Api.MouseDoubleClick(startPt.X + fp1.X + (fp1.subImgInfo.subWidth / 2), startPt.Y + fp1.Y + (fp1.subImgInfo.subHeight / 2));
                 // 这里应该起个timer停几秒, 暂时姑且用Sleep代替一下看能不能凑合着用
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(600);
                 LogAppend("我消: " + r2.ToString() + ", " + c2.ToString());
                 Win32Api.MouseDoubleClick(startPt.X + fp2.X + (fp2.subImgInfo.subWidth / 2), startPt.Y + fp2.Y + (fp2.subImgInfo.subHeight / 2));
 
                 // 每次消去后, 这里还应该起个timer等动画消失才能进行下一次消去动作
-                System.Threading.Thread.Sleep(1500);
+                System.Threading.Thread.Sleep(1200);
             }
         }
 
@@ -328,10 +328,10 @@ namespace GDIPlusTest
         /// </summary>
         void LogOutMatrix(int[, ,] arr)
         {
-            for (int i = 0; i < LianLianKanLogic.ROW_NUM - 1; i++)
+            for (int i = 0; i < LianLianKanLogic.ROW_NUM; i++)
             {
                 string str = "";
-                for (int j = 0; j < LianLianKanLogic.COL_NUM - 1; j++)
+                for (int j = 0; j < LianLianKanLogic.COL_NUM; j++)
                 {
                     if ("" != str)
                     {

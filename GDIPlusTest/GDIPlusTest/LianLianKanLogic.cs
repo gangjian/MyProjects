@@ -101,12 +101,11 @@ namespace GDIPlusTest
             for (int i = 0; i < MAX_BLOCK_TYPE_COUNT; i++)
             {
                 BlockInfo bi = blockInfoArray[i];
-                if (0 != bi.posList.Count)
+                if (bi.posList.Count >= 2)
                 {
-                    System.Diagnostics.Trace.Assert(bi.posList.Count >= 2);
-                    for (int m = 0; m < bi.posList.Count - 2; m++)
+                    for (int m = 0; m < bi.posList.Count - 1; m++)
                     {
-                        for (int n = m + 1; n < bi.posList.Count - 1; n++)
+                        for (int n = m + 1; n < bi.posList.Count; n++)
                         {
                             // 判断两个区块是否可以消去
                             if (IsBlocksEliminable(arr, bi.posList[m][0], bi.posList[m][1], bi.posList[n][0], bi.posList[n][1]))
@@ -303,7 +302,15 @@ namespace GDIPlusTest
             {
                 // 遇到麻烦了, 可能是阈值选得不合适
                 // System.Diagnostics.Trace.Assert(false);
-                return -1;
+                // return -1;
+                if (remainder1 < remainder2)
+                {
+                    return diffCount;
+                }
+                else
+                {
+                    return (diffCount + 1);
+                }
             }
         }
 
@@ -352,7 +359,7 @@ namespace GDIPlusTest
                     else
                     {
                         // 没能正确算出行列数差, 距离太远导致误差比较大, 增加阈值再试试
-                        System.Diagnostics.Trace.Assert(false);
+                        // System.Diagnostics.Trace.Assert(false);
                     }
                 }
 
