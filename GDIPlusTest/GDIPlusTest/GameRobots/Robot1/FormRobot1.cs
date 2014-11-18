@@ -10,9 +10,9 @@ using System.IO;
 
 namespace GDIPlusTest
 {
-    public partial class FormGameRobot : Form
+    public partial class FormRobot1 : Form
     {
-        public FormGameRobot()
+        public FormRobot1()
         {
             InitializeComponent();
             LogAppend("Hi, what's up?");
@@ -348,6 +348,16 @@ namespace GDIPlusTest
                 }
                 LogAppend(str);
             }
+        }
+
+        private void btnKeyDown_Click(object sender, EventArgs e)
+        {
+            Win32Api.KeyboardKeyDown(Win32Api.VK_LEFT);
+        }
+
+        private void btnKeyUp_Click(object sender, EventArgs e)
+        {
+            Win32Api.KeyboardKeyUp(Win32Api.VK_LEFT);
         }
     }
 }

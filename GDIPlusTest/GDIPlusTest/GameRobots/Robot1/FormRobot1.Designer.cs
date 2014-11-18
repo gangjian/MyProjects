@@ -1,6 +1,6 @@
 ﻿namespace GDIPlusTest
 {
-    partial class FormGameRobot
+    partial class FormRobot1
     {
         /// <summary>
         /// Required designer variable.
@@ -30,6 +30,8 @@
         {
             this.button1 = new System.Windows.Forms.Button();
             this.tbxLogOutPut = new System.Windows.Forms.TextBox();
+            this.btnKeyDown = new System.Windows.Forms.Button();
+            this.btnKeyUp = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
@@ -52,11 +54,33 @@
             this.tbxLogOutPut.Size = new System.Drawing.Size(193, 320);
             this.tbxLogOutPut.TabIndex = 1;
             // 
+            // btnKeyDown
+            // 
+            this.btnKeyDown.Location = new System.Drawing.Point(214, 70);
+            this.btnKeyDown.Name = "btnKeyDown";
+            this.btnKeyDown.Size = new System.Drawing.Size(75, 23);
+            this.btnKeyDown.TabIndex = 2;
+            this.btnKeyDown.Text = "keydown";
+            this.btnKeyDown.UseVisualStyleBackColor = true;
+            this.btnKeyDown.Click += new System.EventHandler(this.btnKeyDown_Click);
+            // 
+            // btnKeyUp
+            // 
+            this.btnKeyUp.Location = new System.Drawing.Point(214, 117);
+            this.btnKeyUp.Name = "btnKeyUp";
+            this.btnKeyUp.Size = new System.Drawing.Size(75, 23);
+            this.btnKeyUp.TabIndex = 3;
+            this.btnKeyUp.Text = "keyup";
+            this.btnKeyUp.UseVisualStyleBackColor = true;
+            this.btnKeyUp.Click += new System.EventHandler(this.btnKeyUp_Click);
+            // 
             // FormGameRobot
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(292, 353);
+            this.Controls.Add(this.btnKeyUp);
+            this.Controls.Add(this.btnKeyDown);
             this.Controls.Add(this.tbxLogOutPut);
             this.Controls.Add(this.button1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -74,5 +98,7 @@
 
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox tbxLogOutPut;
+        private System.Windows.Forms.Button btnKeyDown;
+        private System.Windows.Forms.Button btnKeyUp;
     }
 }

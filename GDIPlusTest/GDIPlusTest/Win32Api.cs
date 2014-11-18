@@ -25,6 +25,18 @@ namespace GDIPlusTest
         const int MOUSEEVENTF_LEFTUP = 0x0004;
         const int MOUSEEVENTF_ABSOLUTE = 0x8000;
 
+        [DllImport("User32.dll")]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, uint dwExtraInfo);
+        const uint KEYEVENTF_KEYDOWN = 0x0;
+        const uint KEYEVENTF_KEYUP = 0x2;
+        const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+
+        public const int VK_CONTROL = 0x11;
+        public const int VK_UP      = 0x26;
+        public const int VK_LEFT    = 0x25;
+        public const int VK_DOWN    = 0x28;
+        public const int VK_RIGHT   = 0x27;
+
         /// <summary>
         /// 鼠标单击
         /// </summary>
@@ -52,6 +64,20 @@ namespace GDIPlusTest
             MouseClick(x, y);
             System.Threading.Thread.Sleep(interval);
             MouseClick(x, y);
+        }
+
+        public static void KeyboardKeyDown(int vk)
+        {
+            for (int i = 0; i < 500; i++)
+            {
+                keybd_event((byte)vk, 0, KEYEVENTF_KEYDOWN, 0);
+                System.Threading.Thread.Sleep(10);
+            }
+        }
+
+        public static void KeyboardKeyUp(int vk)
+        {
+            keybd_event((byte)vk, 0, KEYEVENTF_KEYUP, 0);
         }
     }
 }

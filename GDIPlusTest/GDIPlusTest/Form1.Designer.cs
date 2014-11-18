@@ -32,7 +32,7 @@
             this.buttonOpen = new System.Windows.Forms.Button();
             this.buttonOpenSub = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btnGameRobot = new System.Windows.Forms.Button();
+            this.btnRobot1 = new System.Windows.Forms.Button();
             this.btnWebTest = new System.Windows.Forms.Button();
             this.buttonCapture = new System.Windows.Forms.Button();
             this.buttonStart = new System.Windows.Forms.Button();
@@ -75,7 +75,7 @@
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.btnGameRobot);
+            this.panel1.Controls.Add(this.btnRobot1);
             this.panel1.Controls.Add(this.btnWebTest);
             this.panel1.Controls.Add(this.buttonCapture);
             this.panel1.Controls.Add(this.buttonStart);
@@ -89,15 +89,15 @@
             this.panel1.Size = new System.Drawing.Size(939, 511);
             this.panel1.TabIndex = 0;
             // 
-            // btnGameRobot
+            // btnRobot1
             // 
-            this.btnGameRobot.Location = new System.Drawing.Point(850, 272);
-            this.btnGameRobot.Name = "btnGameRobot";
-            this.btnGameRobot.Size = new System.Drawing.Size(80, 30);
-            this.btnGameRobot.TabIndex = 7;
-            this.btnGameRobot.Text = "GameRobot";
-            this.btnGameRobot.UseVisualStyleBackColor = true;
-            this.btnGameRobot.Click += new System.EventHandler(this.btnGameRobot_Click);
+            this.btnRobot1.Location = new System.Drawing.Point(850, 272);
+            this.btnRobot1.Name = "btnRobot1";
+            this.btnRobot1.Size = new System.Drawing.Size(80, 30);
+            this.btnRobot1.TabIndex = 7;
+            this.btnRobot1.Text = "Robot1";
+            this.btnRobot1.UseVisualStyleBackColor = true;
+            this.btnRobot1.Click += new System.EventHandler(this.btnRobot1_Click);
             // 
             // btnWebTest
             // 
@@ -171,7 +171,7 @@
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Button buttonCapture;
         private System.Windows.Forms.Button btnWebTest;
-        private System.Windows.Forms.Button btnGameRobot;
+        private System.Windows.Forms.Button btnRobot1;
 
     }
 }
