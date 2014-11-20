@@ -24,9 +24,53 @@ namespace GDIPlusTest
             Bitmap srcBitmap = openBitmapFile();
             if (null != srcBitmap)
             {
-                this.pictureBox1.Width = srcBitmap.Width;
-                this.pictureBox1.Height = srcBitmap.Height;
-                this.pictureBox1.Image = srcBitmap;
+                if ((srcBitmap.Width > pictureBox1.Width)
+                    || (srcBitmap.Height > pictureBox1.Height))
+                {
+                    MessageBox.Show("Opened image's size is bigger than the picturebox!");
+                    return;
+                }
+                int mag = 0;
+                if (srcBitmap.Width > srcBitmap.Height)
+                {
+                    mag = pictureBox1.Width / srcBitmap.Width;
+                }
+                else
+                {
+                    mag = pictureBox1.Height / srcBitmap.Height;
+                }
+                Bitmap dstBitmap = new Bitmap(mag * srcBitmap.Width, mag * srcBitmap.Height);
+                Graphics g = Graphics.FromImage(dstBitmap);
+                int last_x = 0, last_y = 0;
+                for (int i = 0; i < dstBitmap.Height; i++)
+                {
+                    for (int j = 0; j < dstBitmap.Width; j++)
+                    {
+                        int src_x = j / mag;
+                        int src_y = i / mag;
+                        Color color = srcBitmap.GetPixel(src_x, src_y);
+                        dstBitmap.SetPixel(j, i, color);
+                        // 以下画原图像素的网格线, 太密了的话看不清楚, 就干脆不画了
+                        if (mag > 10)
+                        {
+                            Pen p = new Pen(new SolidBrush(Color.Gray));
+                            p.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                            if (src_x != last_x)
+                            {
+                                last_x = src_x;
+                                p.Width = 1;
+                                g.DrawLine(p, j, 0, j, dstBitmap.Height);
+                            }
+                            if (src_y != last_y)
+                            {
+                                last_y = src_y;
+                                p.Width = 2;
+                                g.DrawLine(p, 0, i, dstBitmap.Width, i);
+                            }
+                        }
+                    }
+                }
+                pictureBox1.Image = dstBitmap;
             }
         }
 
@@ -126,8 +170,29 @@ namespace GDIPlusTest
 
         private void btnRobot1_Click(object sender, EventArgs e)
         {
-            FormRobot1 fgr = new FormRobot1();
-            fgr.Show();
+            FormRobot1 fgr1 = new FormRobot1();
+            fgr1.Show();
+        }
+
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (null == pictureBox1.Image)
+            {
+                return;
+            }
+            Bitmap dstBitmap = (Bitmap)pictureBox1.Image;
+            Point mouse_pt = MousePosition;
+            Point picbx_pt = pictureBox1.PointToScreen(new Point(pictureBox1.Left - pictureBox1.Bounds.Left,
+                                                    pictureBox1.Top - pictureBox1.Bounds.Top));
+            int pos_x = mouse_pt.X - picbx_pt.X;
+            int pos_y = mouse_pt.Y - picbx_pt.Y;
+            if (    (pos_x >= dstBitmap.Width)
+                ||  (pos_y >= dstBitmap.Height))
+            {
+                return;
+            }
+            Color color = dstBitmap.GetPixel(pos_x, pos_y);
+            label1.Text = " R:" + color.R.ToString().PadLeft(3, '0') + " G:" + color.G.ToString().PadLeft(3, '0') + " B:" + color.B.ToString().PadLeft(3, '0');
         }
     }
 }
