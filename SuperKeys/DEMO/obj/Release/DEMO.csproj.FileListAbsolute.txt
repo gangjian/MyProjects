@@ -1,0 +1,8 @@
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\bin\DEMO.exe
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\bin\DEMO.pdb
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\obj\Release\ResolveAssemblyReference.cache
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\obj\Release\DEMO.MainForm.resources
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\obj\Release\DEMO.Properties.Resources.resources
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\obj\Release\DEMO.csproj.GenerateResource.Cache
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\obj\Release\DEMO.exe
+F:\CiCiStudioCode\SuperKeys\DEMO\DEMO\obj\Release\DEMO.pdb
