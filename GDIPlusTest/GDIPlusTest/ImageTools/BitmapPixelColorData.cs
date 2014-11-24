@@ -6,7 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
-namespace GDIPlusTest
+namespace GDIPlusTest.ImageTools
 {
     class BitmapPixelColorData
     {

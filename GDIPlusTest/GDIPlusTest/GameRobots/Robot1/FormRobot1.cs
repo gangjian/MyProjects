@@ -8,7 +8,9 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 
-namespace GDIPlusTest
+using GDIPlusTest.ImageTools;
+
+namespace GDIPlusTest.GameRobots.Robot1
 {
     public partial class FormRobot1 : Form
     {

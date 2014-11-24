@@ -1,4 +1,4 @@
-﻿namespace GDIPlusTest
+﻿namespace GDIPlusTest.GameRobots.Robot1
 {
     partial class FormRobot1
     {

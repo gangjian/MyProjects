@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GDIPlusTest
+namespace GDIPlusTest.GameRobots.Robot1
 {
     /// <summary>
     /// 区块情报

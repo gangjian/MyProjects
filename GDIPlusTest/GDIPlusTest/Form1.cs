@@ -10,6 +10,12 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.IO;
 
+using SuperKeys;
+
+using GDIPlusTest.ImageTools;
+using GDIPlusTest.GameRobots.Robot1;
+using GDIPlusTest.GameRobots.Robot2;
+
 namespace GDIPlusTest
 {
     public partial class Form1 : Form
@@ -28,6 +34,7 @@ namespace GDIPlusTest
                     || (srcBitmap.Height > pictureBox1.Height))
                 {
                     MessageBox.Show("Opened image's size is bigger than the picturebox!");
+                    srcBitmap.Dispose();
                     return;
                 }
                 int mag = 0;
@@ -71,6 +78,7 @@ namespace GDIPlusTest
                     }
                 }
                 pictureBox1.Image = dstBitmap;
+                srcBitmap.Dispose();
             }
         }
 
@@ -193,6 +201,12 @@ namespace GDIPlusTest
             }
             Color color = dstBitmap.GetPixel(pos_x, pos_y);
             label1.Text = " R:" + color.R.ToString().PadLeft(3, '0') + " G:" + color.G.ToString().PadLeft(3, '0') + " B:" + color.B.ToString().PadLeft(3, '0');
+        }
+
+        private void btnRobot2_Click(object sender, EventArgs e)
+        {
+            FormRobot2 fgr2 = new FormRobot2();
+            fgr2.Show();
         }
     }
 }

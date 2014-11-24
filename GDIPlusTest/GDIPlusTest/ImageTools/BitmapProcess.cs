@@ -5,7 +5,9 @@ using System.Text;
 using System.Drawing;
 using System.IO;
 
-namespace GDIPlusTest
+using GDIPlusTest.GameRobots.Robot1;
+
+namespace GDIPlusTest.ImageTools
 {
     class BitmapProcess
     {
