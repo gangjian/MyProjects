@@ -260,15 +260,24 @@ namespace GDIPlusTest.GameRobots.Robot1
                 FoundPosition fp2 = foundList[idx2];
 
                 // 为防止点不上, 保险起见, 用双击点选区块
-                LogAppend("我选: " + r1.ToString() + ", " + c1.ToString());
+                string logStr = "{" + r1.ToString().PadLeft(2, '0') + ", " + c1.ToString().PadLeft(2, '0') + "<---->"
+                                    + r2.ToString().PadLeft(2, '0') + ", " + c2.ToString().PadLeft(2, '0') + "}";
+                LogAppend(logStr);
                 Win32Api.MouseDoubleClick(startPt.X + fp1.X + (fp1.subImgInfo.subWidth / 2), startPt.Y + fp1.Y + (fp1.subImgInfo.subHeight / 2));
                 // 这里应该起个timer停几秒, 暂时姑且用Sleep代替一下看能不能凑合着用
-                System.Threading.Thread.Sleep(600);
-                LogAppend("我消: " + r2.ToString() + ", " + c2.ToString());
-                Win32Api.MouseDoubleClick(startPt.X + fp2.X + (fp2.subImgInfo.subWidth / 2), startPt.Y + fp2.Y + (fp2.subImgInfo.subHeight / 2));
+                if (i != elmSeq.Count - 1)
+                {
+                    System.Threading.Thread.Sleep(500);
+                    Win32Api.MouseDoubleClick(startPt.X + fp2.X + (fp2.subImgInfo.subWidth / 2), startPt.Y + fp2.Y + (fp2.subImgInfo.subHeight / 2));
+                }
+                else
+                {
+                    System.Threading.Thread.Sleep(800);
+                    Win32Api.MouseClick(startPt.X + fp2.X + (fp2.subImgInfo.subWidth / 2), startPt.Y + fp2.Y + (fp2.subImgInfo.subHeight / 2));
+                }
 
                 // 每次消去后, 这里还应该起个timer等动画消失才能进行下一次消去动作
-                System.Threading.Thread.Sleep(1200);
+                System.Threading.Thread.Sleep(1150);
             }
         }
 
@@ -350,16 +359,6 @@ namespace GDIPlusTest.GameRobots.Robot1
                 }
                 LogAppend(str);
             }
-        }
-
-        private void btnKeyDown_Click(object sender, EventArgs e)
-        {
-            Win32Api.KeyboardKeyDown(Win32Api.VK_LEFT);
-        }
-
-        private void btnKeyUp_Click(object sender, EventArgs e)
-        {
-            Win32Api.KeyboardKeyUp(Win32Api.VK_LEFT);
         }
     }
 }
