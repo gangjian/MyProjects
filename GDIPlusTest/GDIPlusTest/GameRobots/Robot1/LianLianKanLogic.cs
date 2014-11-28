@@ -6,11 +6,28 @@ using System.Text;
 namespace GDIPlusTest.GameRobots.Robot1
 {
     /// <summary>
-    /// 区块情报
+    /// 单个区块位于矩阵内的情报信息
     /// </summary>
-    public class BlockInfo
+    public class BlockLayoutInfo
     {
-        public List<int[]> posList = new List<int[]>();    // 矩阵里所有相同图案区块的位置列表
+        public int row = -1;                // 行号
+        public int col = -1;                // 列号
+        public bool isEliminated = false;   // 是否已经被消掉了?
+
+        public BlockLayoutInfo(int r, int c, bool ie = false)
+        {
+            row = r;
+            col = c;
+            isEliminated = ie;
+        }
+    }
+
+    /// <summary>
+    /// 区块按序号排列后的集合
+    /// </summary>
+    public class BlocksLayoutSet
+    {
+        public List<BlockLayoutInfo> layoutList = new List<BlockLayoutInfo>();      // 同一种图案区块的位置情报列表
     }
 
     class LianLianKanLogic
@@ -63,14 +80,14 @@ namespace GDIPlusTest.GameRobots.Robot1
         }
 
         /// <summary>
-        /// 矩阵区块整理, 同样图案的区块位置放到一起做成list
+        /// 矩阵区块整理, 同样图案的区块位置信息放到一起做成list
         /// </summary>
-        public static BlockInfo[] MatrixArrangement(int[,] arr)
+        public static BlocksLayoutSet[] MatrixArrangement(int[,] arr)
         {
-            BlockInfo[] blockInfoArray = new BlockInfo[MAX_BLOCK_TYPE_COUNT];
+            BlocksLayoutSet[] blockInfoArray = new BlocksLayoutSet[MAX_BLOCK_TYPE_COUNT];
             for (int i = 0; i < MAX_BLOCK_TYPE_COUNT; i++)
             {
-                blockInfoArray[i] = new BlockInfo();
+                blockInfoArray[i] = new BlocksLayoutSet();
             }
             int row_num = arr.GetLength(0);
             int col_num = arr.GetLength(1);
@@ -84,8 +101,9 @@ namespace GDIPlusTest.GameRobots.Robot1
                     }
                     int subImgIdx = arr[i, j];
                     System.Diagnostics.Trace.Assert((subImgIdx >= 0) && (subImgIdx < MAX_BLOCK_TYPE_COUNT));
-                    BlockInfo bi = blockInfoArray[subImgIdx];
-                    bi.posList.Add(new int[] { i, j });
+                    BlocksLayoutSet bls = blockInfoArray[subImgIdx];
+                    BlockLayoutInfo bli = new BlockLayoutInfo(i, j);
+                    bls.layoutList.Add(bli);
                 }
             }
 
@@ -93,24 +111,35 @@ namespace GDIPlusTest.GameRobots.Robot1
         }
 
         /// <summary>
-        /// 找到一组可以消去的区块
+        /// 找到第一组可以消去的区块对
         /// </summary>
-        public static int[] FindEliminablePairs(BlockInfo[] blockInfoArray, int[,] arr)
+        public static int[] FindFirstEliminablePairs(BlocksLayoutSet[] blocksSetArray, int[,] arr)
         {
-            System.Diagnostics.Trace.Assert(blockInfoArray.Length == MAX_BLOCK_TYPE_COUNT);
+            System.Diagnostics.Trace.Assert(blocksSetArray.Length == MAX_BLOCK_TYPE_COUNT);
             for (int i = 0; i < MAX_BLOCK_TYPE_COUNT; i++)
             {
-                BlockInfo bi = blockInfoArray[i];
-                if (bi.posList.Count >= 2)
+                BlocksLayoutSet bls = blocksSetArray[i];
+                if (bls.layoutList.Count >= 2)
                 {
-                    for (int m = 0; m < bi.posList.Count - 1; m++)
+                    for (int m = 0; m < bls.layoutList.Count - 1; m++)
                     {
-                        for (int n = m + 1; n < bi.posList.Count; n++)
+                        // 找到第一个未被消去的区块
+                        if (bls.layoutList[m].isEliminated)
                         {
-                            // 判断两个区块是否可以消去
-                            if (IsBlocksEliminable(arr, bi.posList[m][0], bi.posList[m][1], bi.posList[n][0], bi.posList[n][1]))
+                            continue;
+                        }
+                        for (int n = m + 1; n < bls.layoutList.Count; n++)
+                        {
+                            if (bls.layoutList[n].isEliminated)
                             {
-                                int[] retArr = new int[4] { bi.posList[m][0], bi.posList[m][1], bi.posList[n][0], bi.posList[n][1] };
+                                continue;
+                            }
+                            // 判断两个区块是否可以消去
+                            if (IsBlocksEliminable(arr, bls.layoutList[m].row, bls.layoutList[m].col,
+                                                        bls.layoutList[n].row, bls.layoutList[n].col))
+                            {
+                                int[] retArr = new int[4] { bls.layoutList[m].row, bls.layoutList[m].col,
+                                                            bls.layoutList[n].row, bls.layoutList[n].col};
                                 return retArr;
                             }
                         }
@@ -118,6 +147,19 @@ namespace GDIPlusTest.GameRobots.Robot1
                 }
             }
 
+            return null;
+        }
+
+        /// <summary>
+        /// 找到下一组(相对于lastPairs)可消去的区块对
+        /// </summary>
+        /// <param name="blocksSetArray"></param>
+        /// <param name="arr"></param>
+        /// <param name="lastPairs"></param>
+        /// <returns></returns>
+        public static int[] FindNextEliminablePairs(BlocksLayoutSet[] blocksSetArray, int[,] arr, int[] lastPairs)
+        {
+            // TODO
             return null;
         }
 

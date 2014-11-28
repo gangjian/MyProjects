@@ -239,7 +239,7 @@ namespace GDIPlusTest.GameRobots.Robot1
             LogOutMatrix(arr);
 
             // 根据整理好的数组计算得出消除区块的顺序列表
-            List<int[]> elmSeq = GetEliminationSequence(arr);
+            List<int[]> elmSeq = GetEliminateSeqDeep(arr);
 
             // 根据消去序列表,按顺序消除各个区块
             for (int i = 0; i < elmSeq.Count; i++)
@@ -284,36 +284,28 @@ namespace GDIPlusTest.GameRobots.Robot1
         /// <summary>
         /// 取得消去操作的序列
         /// </summary>
-        List<int[]> GetEliminationSequence(int[,,] arr)
+        List<int[]> GetFirstEliminateSeq(ref int[,] arr2, ref BlocksLayoutSet[] blsArray)
         {
             List<int[]> retSeq = new List<int[]>();
-            // 先根据传入三维数组的前两维做成一个只包含区块序号的二维数组
-            int[,] arr2 = new int[LianLianKanLogic.ROW_NUM, LianLianKanLogic.COL_NUM];
-            for (int i = 0; i < LianLianKanLogic.ROW_NUM; i++)
-            {
-                for (int j = 0; j < LianLianKanLogic.COL_NUM; j++)
-                {
-                    arr2[i, j] = arr[i, j, 0];
-                }
-            }
-            BlockInfo[] biArray = LianLianKanLogic.MatrixArrangement(arr2);
             int[] retArr;
-            while (null != (retArr = LianLianKanLogic.FindEliminablePairs(biArray, arr2)))
+            while (null != (retArr = LianLianKanLogic.FindFirstEliminablePairs(blsArray, arr2)))
             {
                 System.Diagnostics.Trace.Assert(4 == retArr.Length);
                 retSeq.Add(retArr);
 
                 // 记得要把将要消去的两块从矩阵和区块情报列表里去掉, 才能继续进行下一轮查找
-                BlockInfo bi = biArray[arr2[retArr[0], retArr[1]]];
+                BlocksLayoutSet bls = blsArray[arr2[retArr[0], retArr[1]]];
                 int idx1 = -1, idx2 = -1;
                 int i = 0;
-                foreach (int[] pos in bi.posList)
+                foreach (BlockLayoutInfo bli in bls.layoutList)
                 {
-                    if (retArr[0] == pos[0] && retArr[1] == pos[1])
+                    if (    (retArr[0] == bli.row)
+                        &&  (retArr[1] == bli.col))
                     {
                         idx1 = i;
                     }
-                    else if (retArr[2] == pos[0] && retArr[3] == pos[1])
+                    else if (   (retArr[2] == bli.row)
+                             && (retArr[3] == bli.col))
                     {
                         idx2 = i;
                     }
@@ -325,11 +317,101 @@ namespace GDIPlusTest.GameRobots.Robot1
                     idx1 = idx2;
                     idx2 = tmp;
                 }
-                bi.posList.RemoveAt(idx2);
-                bi.posList.RemoveAt(idx1);
+                bls.layoutList[idx2].isEliminated = true;
+                bls.layoutList[idx1].isEliminated = true;
                 arr2[retArr[0], retArr[1]] = LianLianKanLogic.EMPTY_BLOCK;
                 arr2[retArr[2], retArr[3]] = LianLianKanLogic.EMPTY_BLOCK;
             }
+
+            return retSeq;
+        }
+
+        /// <summary>
+        /// 恢复一组被消掉的区块
+        /// </summary>
+        /// <param name="r1"></param>
+        /// <param name="c1"></param>
+        /// <param name="r2"></param>
+        /// <param name="c2"></param>
+        /// <param name="arr2"></param>
+        /// <param name="blsArray"></param>
+        void RecoverEliminatedBlocks(int r1, int c1, int r2, int c2, ref int[,] arr2, ref BlocksLayoutSet[] blsArray)
+        {
+            int idx = 0;
+            foreach (BlocksLayoutSet bls in blsArray)
+            {
+                foreach (BlockLayoutInfo bli in bls.layoutList)
+                {
+                    if (    (r1 == bli.row && c1 == bli.col)
+                        ||  (r2 == bli.row && c2 == bli.col))
+                    {
+                        System.Diagnostics.Trace.Assert(bli.isEliminated);
+                        bli.isEliminated = false;
+                        arr2[bli.row, bli.col] = idx;
+                    }
+                }
+                idx += 1;
+            }
+        }
+
+        List<int[]> GetNextEliminateSeq(ref int[,] arr2, ref BlocksLayoutSet[] blsArray, List<int[]> lastSeq)
+        {
+            List<int[]> retSeq = new List<int[]>();
+            System.Diagnostics.Trace.Assert(0 != lastSeq.Count);
+
+            // 去掉最后一个节点
+            int[] lastNode = lastSeq[lastSeq.Count - 1];
+            RecoverEliminatedBlocks(lastNode[0], lastNode[1], lastNode[2], lastNode[3], ref arr2, ref blsArray);
+            lastSeq.RemoveAt(lastSeq.Count - 1);
+
+            // 剩下的最后一个节点
+            lastNode = lastSeq[lastSeq.Count - 1];
+
+            return null;
+        }
+
+        /// <summary>
+        /// 找出最深的(尽可能消去最多区块的)消去序列路径
+        /// </summary>
+        /// <param name="arr"></param>
+        /// <returns></returns>
+        List<int[]> GetEliminateSeqDeep(int[,,] arr)
+        {
+            List<int[]> retSeq = null;
+            int[,] arr2 = null;
+            int routeCnt = 0;
+            int leftBlocksCnt = 0;
+            // 先根据传入三维数组的前两维做成一个只包含区块序号的二维数组
+            arr2 = new int[LianLianKanLogic.ROW_NUM, LianLianKanLogic.COL_NUM];
+            for (int i = 0; i < LianLianKanLogic.ROW_NUM; i++)
+            {
+                for (int j = 0; j < LianLianKanLogic.COL_NUM; j++)
+                {
+                    arr2[i, j] = arr[i, j, 0];
+                }
+            }
+            BlocksLayoutSet[] blsArray = LianLianKanLogic.MatrixArrangement(arr2);
+            do
+            {
+                if (null == retSeq)
+                {
+                    // 取得第一条消去路径
+                    retSeq = GetFirstEliminateSeq(ref arr2, ref blsArray);
+                }
+                else
+                {
+                    retSeq = GetNextEliminateSeq(ref arr2, ref blsArray, retSeq);
+                    if (null == retSeq)
+                    {
+                        MessageBox.Show("所有可能的路径都遍历完了!");
+                        break;
+                    }
+                }
+                leftBlocksCnt = GetLeftBlocksNum(arr2);
+                routeCnt += 1;
+                LogAppend("取得第 " + routeCnt.ToString() + " 条消去路线, 剩下 " + leftBlocksCnt.ToString() + " 个区块未消去!");
+                // 如果没能消完所有的区块
+            } while (0 != leftBlocksCnt);
 
             return retSeq;
         }
@@ -359,6 +441,28 @@ namespace GDIPlusTest.GameRobots.Robot1
                 }
                 LogAppend(str);
             }
+        }
+
+        /// <summary>
+        /// 检查是否所有的区块都被消除了
+        /// </summary>
+        /// <returns></returns>
+        int GetLeftBlocksNum(int[,] arr)
+        {
+            int retNum = 0;
+            int rowNum = arr.GetLength(0);
+            int colNum = arr.GetLength(1);
+            for (int i = 0; i < rowNum; i++)
+            {
+                for (int j = 0; j < colNum; j++)
+                {
+                    if (LianLianKanLogic.EMPTY_BLOCK != arr[i, j])
+                    {
+                        retNum += 1;
+                    }
+                }
+            }
+            return retNum;
         }
     }
 }
