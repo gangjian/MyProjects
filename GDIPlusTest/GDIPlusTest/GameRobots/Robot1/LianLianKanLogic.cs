@@ -111,11 +111,15 @@ namespace GDIPlusTest.GameRobots.Robot1
         }
 
         /// <summary>
-        /// 找到第一组可以消去的区块对
+        /// 找出所有可消去的区块对
         /// </summary>
-        public static int[] FindFirstEliminablePairs(BlocksLayoutSet[] blocksSetArray, int[,] arr)
+        /// <param name="blocksSetArray"></param>
+        /// <param name="arr"></param>
+        /// <returns></returns>
+        public static List<int[]> GetAllEliminablePairs(BlocksLayoutSet[] blocksSetArray, int[,] arr)
         {
-            System.Diagnostics.Trace.Assert(blocksSetArray.Length == MAX_BLOCK_TYPE_COUNT);
+            List<int[]> retList = null;
+
             for (int i = 0; i < MAX_BLOCK_TYPE_COUNT; i++)
             {
                 BlocksLayoutSet bls = blocksSetArray[i];
@@ -138,16 +142,34 @@ namespace GDIPlusTest.GameRobots.Robot1
                             if (IsBlocksEliminable(arr, bls.layoutList[m].row, bls.layoutList[m].col,
                                                         bls.layoutList[n].row, bls.layoutList[n].col))
                             {
-                                int[] retArr = new int[4] { bls.layoutList[m].row, bls.layoutList[m].col,
+                                int[] findArr = new int[4] { bls.layoutList[m].row, bls.layoutList[m].col,
                                                             bls.layoutList[n].row, bls.layoutList[n].col};
-                                return retArr;
+                                if (null == retList)
+                                {
+                                    retList = new List<int[]>();
+                                }
+                                retList.Add(findArr);
                             }
                         }
                     }
                 }
             }
 
-            return null;
+            return retList;
+        }
+
+        /// <summary>
+        /// 找到第一组可以消去的区块对
+        /// </summary>
+        public static int[] GetFirstEliminablePairs(BlocksLayoutSet[] blocksSetArray, int[,] arr)
+        {
+            System.Diagnostics.Trace.Assert(blocksSetArray.Length == MAX_BLOCK_TYPE_COUNT);
+            List<int[]> findList = GetAllEliminablePairs(blocksSetArray, arr);
+            if (null == findList)
+            {
+                return null;
+            }
+            return findList[0];
         }
 
         /// <summary>
@@ -157,9 +179,133 @@ namespace GDIPlusTest.GameRobots.Robot1
         /// <param name="arr"></param>
         /// <param name="lastPairs"></param>
         /// <returns></returns>
-        public static int[] FindNextEliminablePairs(BlocksLayoutSet[] blocksSetArray, int[,] arr, int[] lastPairs)
+        public static List<int[]> FindNextEliminatePath(ref BlocksLayoutSet[] blocksSetArray, ref int[,] arr, int[] lastPairs)
         {
-            // TODO
+            // 列出当前所有可消去的区块对, 找到等于lastPairs的区块对, 再找它的下一对
+            List<int[]> findList = GetAllEliminablePairs(blocksSetArray, arr);
+            if (null == findList)
+            {
+                return null;
+            }
+            for (int i = 0; i < findList.Count; i++)
+            {
+                if ((       findList[i][0] == lastPairs[0]
+                        &&  findList[i][1] == lastPairs[1]
+                        &&  findList[i][2] == lastPairs[2]
+                        &&  findList[i][3] == lastPairs[3])
+                    && (i < findList.Count - 1))
+                {
+                    // 找到下一对可消去的区块对
+                    int[] nextPairs = findList[i + 1];
+                    // 将其消去
+                    DeleteEliminatableBlocks(nextPairs[0], nextPairs[0], nextPairs[0], nextPairs[0], ref arr, ref blocksSetArray);
+                    // 剩余的区块取第一条路径, 与前面消去的区块对一并作为路径返回
+                    List<int[]> newPath = GetFirstEliminateSeq(ref arr, ref blocksSetArray);
+                    newPath.Insert(0, nextPairs);
+
+                    return newPath;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// (在矩阵里)去掉一组被消掉的区块
+        /// </summary>
+        public static void DeleteEliminatableBlocks(int r1, int c1, int r2, int c2, ref int[,] arr2, ref BlocksLayoutSet[] blsArray)
+        {
+            int idx = 0;
+            foreach (BlocksLayoutSet bls in blsArray)
+            {
+                foreach (BlockLayoutInfo bli in bls.layoutList)
+                {
+                    if ((r1 == bli.row && c1 == bli.col)
+                        || (r2 == bli.row && c2 == bli.col))
+                    {
+                        // System.Diagnostics.Trace.Assert(false == bli.isEliminated);
+                        bli.isEliminated = true;
+                        arr2[bli.row, bli.col] = LianLianKanLogic.EMPTY_BLOCK;
+                    }
+                }
+                idx += 1;
+            }
+        }
+
+        /// <summary>
+        /// (在矩阵里)恢复一组被消掉的区块
+        /// </summary>
+        public static void RecoverEliminatedBlocks(int r1, int c1, int r2, int c2, ref int[,] arr2, ref BlocksLayoutSet[] blsArray)
+        {
+            int idx = 0;
+            foreach (BlocksLayoutSet bls in blsArray)
+            {
+                foreach (BlockLayoutInfo bli in bls.layoutList)
+                {
+                    if ((r1 == bli.row && c1 == bli.col)
+                        || (r2 == bli.row && c2 == bli.col))
+                    {
+                        // System.Diagnostics.Trace.Assert(bli.isEliminated);
+                        bli.isEliminated = false;
+                        arr2[bli.row, bli.col] = idx;
+                    }
+                }
+                idx += 1;
+            }
+        }
+
+        /// <summary>
+        /// 取得第一条(最优先)消去操作的序列
+        /// </summary>
+        public static List<int[]> GetFirstEliminateSeq(ref int[,] arr2, ref BlocksLayoutSet[] blsArray)
+        {
+            List<int[]> retSeq = new List<int[]>();
+            int[] retArr;
+            while (null != (retArr = GetFirstEliminablePairs(blsArray, arr2)))
+            {
+                System.Diagnostics.Trace.Assert(4 == retArr.Length);
+                retSeq.Add(retArr);
+
+                // 记得要把将要消去的两块从矩阵和区块情报列表里去掉, 才能继续进行下一轮查找
+                DeleteEliminatableBlocks(retArr[0], retArr[1], retArr[2], retArr[3], ref arr2, ref blsArray);
+            }
+
+            return retSeq;
+        }
+
+        public static List<int[]> GetNextEliminateSeq(ref int[,] arr2, ref BlocksLayoutSet[] blsArray, List<int[]> lastSeq)
+        {
+            List<int[]> retSeq = new List<int[]>();
+            System.Diagnostics.Trace.Assert(0 != lastSeq.Count);
+            List<int[]> nextPath = null;
+
+            do
+            {
+                if (1 == lastSeq.Count)
+                {
+                    //MessageBox.Show("已经退到最上一层节点了, 应该不会发生这样的情况吧?");
+                    break;
+                }
+                // 去掉最后一个节点(dead end, 死胡同)
+                int[] lastNode = lastSeq[lastSeq.Count - 1];
+                // 恢复该节点消掉的区块
+                RecoverEliminatedBlocks(lastNode[0], lastNode[1], lastNode[2], lastNode[3], ref arr2, ref blsArray);
+                lastSeq.RemoveAt(lastSeq.Count - 1);
+
+                // 剩下的最后一个节点
+                lastNode = lastSeq[lastSeq.Count - 1];
+                RecoverEliminatedBlocks(lastNode[0], lastNode[1], lastNode[2], lastNode[3], ref arr2, ref blsArray);
+                nextPath = FindNextEliminatePath(ref blsArray, ref arr2, lastNode);
+                if (null != nextPath)
+                {
+                    // 去掉现在的最后一个节点
+                    lastSeq.RemoveAt(lastSeq.Count - 1);
+                    // 将lastSeq与nextPath相接
+                    lastSeq.AddRange(nextPath);
+                    return lastSeq;
+                }
+            } while (null == nextPath);
+
             return null;
         }
 
