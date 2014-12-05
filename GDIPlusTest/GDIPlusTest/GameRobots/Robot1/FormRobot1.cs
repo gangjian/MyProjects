@@ -326,6 +326,14 @@ namespace GDIPlusTest.GameRobots.Robot1
                 routeCnt += 1;
                 LogAppend("取得第 " + routeCnt.ToString() + " 条消去路线, 剩下 " + leftBlocksCnt.ToString() + " 个区块未消去!");
                 // 如果没能消完所有的区块
+                if (routeCnt < 30)
+                {
+                    PrintEliminatePath(retSeq);
+                }
+                else
+                {
+                    break;
+                }
             } while (0 != leftBlocksCnt);
 
             return retSeq;
@@ -378,6 +386,19 @@ namespace GDIPlusTest.GameRobots.Robot1
                 }
             }
             return retNum;
+        }
+
+        void PrintEliminatePath(List<int[]> path)
+        {
+            string str = "\r\n";
+            foreach (int[] dp in path)
+            {
+                str += ("{"     + dp[0].ToString().PadLeft(2, '0') + ","
+                                + dp[1].ToString().PadLeft(2, '0') + ","
+                                + dp[2].ToString().PadLeft(2, '0') + ","
+                                + dp[3].ToString().PadLeft(2, '0') + "}");
+            }
+            LogAppend(str + "\r\n");
         }
     }
 }

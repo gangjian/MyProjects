@@ -198,7 +198,7 @@ namespace GDIPlusTest.GameRobots.Robot1
                     // 找到下一对可消去的区块对
                     int[] nextPairs = findList[i + 1];
                     // 将其消去
-                    DeleteEliminatableBlocks(nextPairs[0], nextPairs[0], nextPairs[0], nextPairs[0], ref arr, ref blocksSetArray);
+                    DeleteEliminatableBlocks(nextPairs[0], nextPairs[1], nextPairs[2], nextPairs[3], ref arr, ref blocksSetArray);
                     // 剩余的区块取第一条路径, 与前面消去的区块对一并作为路径返回
                     List<int[]> newPath = GetFirstEliminateSeq(ref arr, ref blocksSetArray);
                     newPath.Insert(0, nextPairs);
