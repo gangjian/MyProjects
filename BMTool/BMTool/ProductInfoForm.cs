@@ -98,6 +98,7 @@ namespace BMTool
         public ProductInfoForm()
         {
             InitializeComponent();
+            tbx日期.Text = DateTime.Now.ToShortDateString();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -105,7 +106,7 @@ namespace BMTool
             if ("" != tbx名称.Text)
             {
                 this.m_名称 = tbx名称.Text;
-                if (DateTime.TryParse(tbx日期.Text, out this.m_日期))
+                if (!DateTime.TryParse(tbx日期.Text, out this.m_日期))
                 {
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                     return;
