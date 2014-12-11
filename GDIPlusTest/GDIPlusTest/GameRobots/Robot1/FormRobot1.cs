@@ -22,6 +22,7 @@ namespace GDIPlusTest.GameRobots.Robot1
 
         private void button1_Click(object sender, EventArgs e)
         {
+            tbxLogOutPut.Clear();
             System.Threading.Thread thWorker = new System.Threading.Thread(WorkerStart);
             thWorker.Start();
 //            thWorker.Join();
@@ -34,14 +35,15 @@ namespace GDIPlusTest.GameRobots.Robot1
         void WorkerStart()
         {
             int leftBlocsNum = 0;
+            int level = 0;
             do
             {
                 // 开始在屏幕上找"level"的位置
                 LogAppend("开始在屏幕上找level的位置...");
-                Point pt = FindLevelPosition();
+                Point pt = FindLevelPosition(out level);
                 if ((-1 != pt.X) && (-1 != pt.Y))
                 {
-                    LogAppend("找到了!");
+                    LogAppend("找到了!" + " 现在是level " + level.ToString());
                     LogAppend("X = " + pt.X.ToString() + "\r\nY = " + pt.Y.ToString());
                 }
                 else
@@ -94,21 +96,28 @@ namespace GDIPlusTest.GameRobots.Robot1
                 leftBlocsNum = LianLianKanBlocksElimination(pt, foundBlocksList);
                 if (0 == leftBlocsNum)
                 {
-                    LogAppend("都消完了...");
+                    LogAppend("level " + level.ToString() + " 都消完了...");
+
+                    if ((level >= 1) && (level <= 3))
+                    {
+                        LogAppend("接下来等一会儿进入level " + (level + 1).ToString());
+                        System.Threading.Thread.Sleep(4500);
+                    }
                 }
                 else
                 {
                     LogAppend("还剩" + leftBlocsNum.ToString() + "个没消完, 等待一会儿后重新扫描!");
-                    System.Threading.Thread.Sleep(3000);
+                    System.Threading.Thread.Sleep(1000);
                 }
-            } while (0 != leftBlocsNum);
+            } while (0 != leftBlocsNum || ((level >= 1) && (level <= 3)));
         }
 
         /// <summary>
         /// 找"level"是否出现在屏幕上
         /// </summary>
-        Point FindLevelPosition()
+        Point FindLevelPosition(out int level)
         {
+            level = 0;
             Point retPt = new Point(-1, -1);    // 返回找到的位置, 初始化值-1表示没找到
             List<Bitmap> subImgList = new List<Bitmap>();
             string subImgPath = ".\\pics\\level.PNG";
@@ -137,6 +146,32 @@ namespace GDIPlusTest.GameRobots.Robot1
                     // 找到了
                     retPt.X = foundPosList[0].X;
                     retPt.Y = foundPosList[0].Y;
+
+                    // 接下来确定level的数值
+                    subImgList = new List<Bitmap>();
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        subImgPath = ".\\pics\\level" + i.ToString() + ".PNG";
+                        fi = new FileInfo(subImgPath);
+                        if (!fi.Exists)
+                        {
+                            break;
+                        }
+                        subImgLevel = new Bitmap(subImgPath);
+                        subImgList.Add(subImgLevel);
+                    }
+                    bp = new BitmapProcess(scrCapture, subImgList);
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        foundPosList = bp.searchSubBitmap(i - 1);
+                        if (0 != foundPosList.Count)
+                        {
+                            // 确定是level几
+                            level = i;
+                            break;
+                        }
+                    }
+
                     break;
                 }
                 else
@@ -299,6 +334,8 @@ namespace GDIPlusTest.GameRobots.Robot1
                 // 每次消去后, 这里还应该起个timer等动画消失才能进行下一次消去动作
                 System.Threading.Thread.Sleep(1150);
             }
+            // 将鼠标移开, 防止未全部消去时, 重新布局后, 鼠标悬停于某一区块上, 导致该区块颜色发生变化, 影响下一轮识别
+            Win32Api.MouseMove(0, 0);
 
             return leftBlocsNum;
         }

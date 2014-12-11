@@ -66,6 +66,15 @@ namespace GDIPlusTest
             MouseClick(x, y);
         }
 
+        public static void MouseMove(int x, int y)
+        {
+            int scrWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+            int scrHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+            int dx = x * 65536 / scrWidth;
+            int dy = y * 65536 / scrHeight;
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, dx, dy, 0, 0);
+        }
+
         public static void KeyboardKeyDown(int vk)
         {
             for (int i = 0; i < 500; i++)
