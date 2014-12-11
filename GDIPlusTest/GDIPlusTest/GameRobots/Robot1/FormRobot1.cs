@@ -33,63 +33,75 @@ namespace GDIPlusTest.GameRobots.Robot1
         /// </summary>
         void WorkerStart()
         {
-            // 开始在屏幕上找"level"的位置
-            LogAppend("开始在屏幕上找level的位置...");
-            Point pt = FindLevelPosition();
-            if ((-1 != pt.X) && (-1 != pt.Y))
+            int leftBlocsNum = 0;
+            do
             {
-                LogAppend("找到了!");
-                LogAppend("X = " + pt.X.ToString() + "\r\nY = " + pt.Y.ToString());
-            }
-            else
-            {
-                LogAppend("啥也没找到!");
-                return;
-            }
-
-            LogAppend("开始截取连连看的游戏画面");
-            Bitmap game_img = CaptureGameImage(pt);
-            if (null != game_img)
-            {
-                LogAppend("OK, 截图成功了!(*^__^*) !");
-            }
-            else
-            {
-                LogAppend("TMD, 截图失败了...(┬＿┬)");
-                return;
-            }
-
-            LogAppend("开始对游戏画面进行区块识别...");
-            List<FoundPosition> foundBlocksList = GameBlocksIdentify(game_img);
-            if (0 != foundBlocksList.Count)
-            {
-                LogAppend("还行, 区块识别也OK了...");
-            }
-            else
-            {
-                LogAppend("不妙啊, 区块识别个数为0..., 什么原因?");
-                return;
-            }
-
-            // 根据识别后的区块位置列表, 进行矩阵化
-            LianLianKanLogic.Matrixing(ref foundBlocksList);
-            LogAppend("区块矩阵化也完成了...");
-            LogAppend("接着检查一下矩阵化的结果...");
-            for (int i = 0; i < foundBlocksList.Count; i++)
-            {
-                FoundPosition fp = foundBlocksList[i];
-                if ((-1 == fp.Row) || (-1 == fp.Col))
+                // 开始在屏幕上找"level"的位置
+                LogAppend("开始在屏幕上找level的位置...");
+                Point pt = FindLevelPosition();
+                if ((-1 != pt.X) && (-1 != pt.Y))
                 {
-                    LogAppend("区块矩阵化第: " + i.ToString() + "个结果不对, 行序号或者列序号为-1!");
+                    LogAppend("找到了!");
+                    LogAppend("X = " + pt.X.ToString() + "\r\nY = " + pt.Y.ToString());
+                }
+                else
+                {
+                    LogAppend("啥也没找到!");
                     return;
                 }
-            }
-            LogAppend("走到这儿说明区块矩阵化的结果没问题!");
-            // 根据矩阵化的结果, 开始进行区块消除动作
-            LogAppend("下面该开始进行区块消除了...Let's do it!");
 
-            LianLianKanBlocksElimination(pt, foundBlocksList);
-            LogAppend("OK, 能消的我都消了...");
+                LogAppend("开始截取连连看的游戏画面");
+                Bitmap game_img = CaptureGameImage(pt);
+                if (null != game_img)
+                {
+                    LogAppend("OK, 截图成功了!(*^__^*) !");
+                }
+                else
+                {
+                    LogAppend("TMD, 截图失败了...(┬＿┬)");
+                    return;
+                }
+
+                LogAppend("开始对游戏画面进行区块识别...");
+                List<FoundPosition> foundBlocksList = GameBlocksIdentify(game_img);
+                if (0 != foundBlocksList.Count)
+                {
+                    LogAppend("还行, 区块识别也OK了...");
+                }
+                else
+                {
+                    LogAppend("不妙啊, 区块识别个数为0..., 什么原因?");
+                    return;
+                }
+
+                // 根据识别后的区块位置列表, 进行矩阵化
+                LianLianKanLogic.Matrixing(ref foundBlocksList);
+                LogAppend("区块矩阵化也完成了...");
+                LogAppend("接着检查一下矩阵化的结果...");
+                for (int i = 0; i < foundBlocksList.Count; i++)
+                {
+                    FoundPosition fp = foundBlocksList[i];
+                    if ((-1 == fp.Row) || (-1 == fp.Col))
+                    {
+                        LogAppend("区块矩阵化第: " + i.ToString() + "个结果不对, 行序号或者列序号为-1!");
+                        return;
+                    }
+                }
+                LogAppend("走到这儿说明区块矩阵化的结果没问题!");
+                // 根据矩阵化的结果, 开始进行区块消除动作
+                LogAppend("下面该开始进行区块消除了...Let's do it!");
+
+                leftBlocsNum = LianLianKanBlocksElimination(pt, foundBlocksList);
+                if (0 == leftBlocsNum)
+                {
+                    LogAppend("都消完了...");
+                }
+                else
+                {
+                    LogAppend("还剩" + leftBlocsNum.ToString() + "个没消完, 等待一会儿后重新扫描!");
+                    System.Threading.Thread.Sleep(3000);
+                }
+            } while (0 != leftBlocsNum);
         }
 
         /// <summary>
@@ -211,7 +223,7 @@ namespace GDIPlusTest.GameRobots.Robot1
         /// <summary>
         /// 连连看区块消除处理动作(以后应该整理移到LianLianKanLogic类里去)
         /// </summary>
-        void LianLianKanBlocksElimination(Point startPt, List<FoundPosition> foundList)
+        int LianLianKanBlocksElimination(Point startPt, List<FoundPosition> foundList)
         {
             // 首先要将区块列表里的行列序号整理成二维数组(第三维多出的位置用来保存对应foundList的索引)
             int[,,] arr = new int[LianLianKanLogic.ROW_NUM, LianLianKanLogic.COL_NUM, 2];
@@ -239,10 +251,14 @@ namespace GDIPlusTest.GameRobots.Robot1
             LogOutMatrix(arr);
 
             // 根据整理好的数组计算得出消除区块的顺序列表
-            List<int[]> elmSeq = GetEliminateSeqDeep(arr);
+            // 深度优先遍历算法
+//          List<int[]> elmSeq = GetEliminateSeqDeep(arr);
+            // 探索算法
+            int leftBlocsNum = 0;
+            List<int[]> elmSeq = GetEliminateSeqExplore(arr, out leftBlocsNum);
             if (null == elmSeq)
             {
-                return;
+                return 0;
             }
 
             // 根据消去序列表,按顺序消除各个区块
@@ -283,10 +299,12 @@ namespace GDIPlusTest.GameRobots.Robot1
                 // 每次消去后, 这里还应该起个timer等动画消失才能进行下一次消去动作
                 System.Threading.Thread.Sleep(1150);
             }
+
+            return leftBlocsNum;
         }
 
         /// <summary>
-        /// 找出最深的(尽可能消去最多区块的)消去序列路径
+        /// 取得消去序列(深度优先遍历算法)
         /// </summary>
         /// <param name="arr"></param>
         /// <returns></returns>
@@ -322,7 +340,7 @@ namespace GDIPlusTest.GameRobots.Robot1
                         break;
                     }
                 }
-                leftBlocksCnt = GetLeftBlocksNum(arr2);
+                leftBlocksCnt = LianLianKanLogic.GetLeftBlocksNum(arr2);
                 routeCnt += 1;
                 LogAppend("取得第 " + routeCnt.ToString() + " 条消去路线, 剩下 " + leftBlocksCnt.ToString() + " 个区块未消去!");
                 // 如果没能消完所有的区块
@@ -366,28 +384,6 @@ namespace GDIPlusTest.GameRobots.Robot1
             }
         }
 
-        /// <summary>
-        /// 检查是否所有的区块都被消除了
-        /// </summary>
-        /// <returns></returns>
-        int GetLeftBlocksNum(int[,] arr)
-        {
-            int retNum = 0;
-            int rowNum = arr.GetLength(0);
-            int colNum = arr.GetLength(1);
-            for (int i = 0; i < rowNum; i++)
-            {
-                for (int j = 0; j < colNum; j++)
-                {
-                    if (LianLianKanLogic.EMPTY_BLOCK != arr[i, j])
-                    {
-                        retNum += 1;
-                    }
-                }
-            }
-            return retNum;
-        }
-
         void PrintEliminatePath(List<int[]> path)
         {
             string str = "\r\n";
@@ -399,6 +395,46 @@ namespace GDIPlusTest.GameRobots.Robot1
                                 + dp[3].ToString().PadLeft(2, '0') + "}");
             }
             LogAppend(str + "\r\n");
+        }
+
+        /// <summary>
+        /// 取得消去路径(探索算法)
+        /// </summary>
+        /// <param name="arr"></param>
+        /// <returns></returns>
+        List<int[]> GetEliminateSeqExplore(int[, ,] arr, out int leftBlocsNum)
+        {
+            List<int[]> retSeq = new List<int[]>();
+            int[,] arr2 = null;
+            // 先根据传入三维数组的前两维做成一个只包含区块序号的二维数组
+            arr2 = new int[LianLianKanLogic.ROW_NUM, LianLianKanLogic.COL_NUM];
+            for (int i = 0; i < LianLianKanLogic.ROW_NUM; i++)
+            {
+                for (int j = 0; j < LianLianKanLogic.COL_NUM; j++)
+                {
+                    arr2[i, j] = arr[i, j, 0];
+                }
+            }
+            // 取得区块管理表
+            BlocksLayoutSet[] blsArray = LianLianKanLogic.MatrixArrangement(arr2);
+
+            do
+            {
+                int[] nextPairs = LianLianKanLogic.FindOptimalEliminatePairs(arr2, blsArray);
+                if (null == nextPairs)
+                {
+                    break;
+                }
+                else
+                {
+                    LianLianKanLogic.DeleteEliminatableBlocks(nextPairs[0], nextPairs[1], nextPairs[2], nextPairs[3],
+                                                                ref arr2, ref blsArray);
+                    retSeq.Add(nextPairs);
+                }
+            } while (true);
+            leftBlocsNum = LianLianKanLogic.GetLeftBlocksNum(arr2);
+
+            return retSeq;
         }
     }
 }

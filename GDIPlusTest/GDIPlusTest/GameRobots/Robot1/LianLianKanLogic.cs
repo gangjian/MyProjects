@@ -309,6 +309,57 @@ namespace GDIPlusTest.GameRobots.Robot1
             return null;
         }
 
+        /// <summary>
+        /// 找出当前局面下最优的(出口最多的)消去对
+        /// </summary>
+        static public int[] FindOptimalEliminatePairs(int[,] arr2, BlocksLayoutSet[] blsArray)
+        {
+            // 得到当前所有可消去的区块对
+            List<int[]> optList = LianLianKanLogic.GetAllEliminablePairs(blsArray, arr2);
+            if (null == optList)
+            {
+                return null;
+            }
+            // 评估每一种选项消去后, 下一步的出口数量(可消去区块对数), 每次只选出口最多的
+            // 暂时先只考虑最简单的情况, 只判断下一步的出口数(以后要实现对下n步的判断), 并保留出口最多的m条路径
+            int maxOptCnt = 0;
+            int maxOptIdx = 0;
+            for (int i = 0; i < optList.Count; i++)
+            {
+                int[] opt = optList[i];
+                int[,] arrTmp = (int[,])arr2.Clone();
+                BlocksLayoutSet[] blsArrTmp = blsArrDeepCopy(blsArray);
+
+                LianLianKanLogic.DeleteEliminatableBlocks(opt[0], opt[1], opt[2], opt[3], ref arrTmp, ref blsArrTmp);
+                List<int[]> optNextList = LianLianKanLogic.GetAllEliminablePairs(blsArrTmp, arrTmp);
+                if (null == optNextList)
+                {
+                    // 下一步没有可消去的区块了
+                    // 可能是都消完了, 结束了
+                    if (0 == GetLeftBlocksNum(arrTmp))
+                    {
+                        return optList[i];
+                    }
+                    // 也可能是走到死胡同里了
+                    else
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    int nextOptCnt = optNextList.Count;
+                    if (nextOptCnt > maxOptCnt)
+                    {
+                        maxOptCnt = nextOptCnt;
+                        maxOptIdx = i;
+                    }
+                }
+            }
+
+            return optList[maxOptIdx];
+        }
+
 //////////////////////////////////////////////////////以下都是子函数////////////////////////////////////////////////////
 
         /// <summary>
@@ -696,6 +747,46 @@ namespace GDIPlusTest.GameRobots.Robot1
             }
 
             return false;
+        }
+
+        static BlocksLayoutSet[] blsArrDeepCopy(BlocksLayoutSet[] arr_in)
+        {
+            BlocksLayoutSet[] arr_out = new BlocksLayoutSet[arr_in.Length];
+            int idx = 0;
+            foreach (BlocksLayoutSet bls in arr_in)
+            {
+                arr_out[idx] = new BlocksLayoutSet();
+                foreach (BlockLayoutInfo bli in arr_in[idx].layoutList)
+                {
+                    BlockLayoutInfo bli_new = new BlockLayoutInfo(bli.row, bli.col, bli.isEliminated);
+                    arr_out[idx].layoutList.Add(bli_new);
+                }
+                idx++;
+            }
+
+            return arr_out;
+        }
+
+        /// <summary>
+        /// 检查是否所有的区块都被消除了
+        /// </summary>
+        /// <returns></returns>
+        public static int GetLeftBlocksNum(int[,] arr)
+        {
+            int retNum = 0;
+            int rowNum = arr.GetLength(0);
+            int colNum = arr.GetLength(1);
+            for (int i = 0; i < rowNum; i++)
+            {
+                for (int j = 0; j < colNum; j++)
+                {
+                    if (LianLianKanLogic.EMPTY_BLOCK != arr[i, j])
+                    {
+                        retNum += 1;
+                    }
+                }
+            }
+            return retNum;
         }
 
     }
