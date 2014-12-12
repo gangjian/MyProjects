@@ -22,6 +22,22 @@ namespace BMTool
     {
         private E_FORM_MODE m_mode;
         private static string m_打开文件名 = "";
+        public const string S_MODE_1_TITLE = @"商品登记";
+        public const string S_MODE_2_TITLE = @"入库";
+        public const string S_MODE_3_TITLE = @"出库";
+        public const string S_MODE_4_TITLE = @"结算";
+
+        public string DataFileName
+        {
+            get
+            {
+                return m_打开文件名;
+            }
+            set
+            {
+                m_打开文件名 = value;
+            }
+        }
 
         public DetailListForm()
         {
@@ -32,6 +48,10 @@ namespace BMTool
         {
             InitializeComponent();
             m_mode = mode;
+            if ("" != m_打开文件名)
+            {
+                this.Text = m_打开文件名;
+            }
         }
 
         public string 打开文件名
@@ -48,7 +68,7 @@ namespace BMTool
                 FileInfo fi = new FileInfo(打开文件名);
                 if (fi.Exists)
                 {
-                    读文件并在List上显示(new StreamReader(打开文件名));
+                    ReadDataFile(打开文件名);
                 }
             }
         }
@@ -58,7 +78,7 @@ namespace BMTool
             if (E_FORM_MODE.MODE_1 == m_mode)
             {
                 listView1.Columns.Add("编号", 50, HorizontalAlignment.Left);
-                listView1.Columns.Add("名称", 50, HorizontalAlignment.Left);
+                listView1.Columns.Add("名称", 80, HorizontalAlignment.Left);
                 listView1.Columns.Add("日期", 150, HorizontalAlignment.Left);
                 listView1.Columns.Add("店铺", 50, HorizontalAlignment.Left);
                 listView1.Columns.Add("型号", 50, HorizontalAlignment.Left);
@@ -71,11 +91,15 @@ namespace BMTool
                 listView1.Columns.Add("积分率", 80, HorizontalAlignment.Left);
                 listView1.Columns.Add("重量", 80, HorizontalAlignment.Left);
             }
-            else if (E_FORM_MODE.MODE_2 == m_mode)
+            else if (   E_FORM_MODE.MODE_2 == m_mode
+                     || E_FORM_MODE.MODE_3 == m_mode)
             {
-            }
-            else if (E_FORM_MODE.MODE_3 == m_mode)
-            {
+                listView1.Columns.Add("日期", 150, HorizontalAlignment.Left);
+                listView1.Columns.Add("名称", 80, HorizontalAlignment.Left);
+                listView1.Columns.Add("单价", 60, HorizontalAlignment.Left);
+                listView1.Columns.Add("数量", 60, HorizontalAlignment.Left);
+                listView1.Columns.Add("优惠率", 80, HorizontalAlignment.Left);
+                listView1.Columns.Add("均摊运费", 80, HorizontalAlignment.Left);
             }
             else if (E_FORM_MODE.MODE_4 == m_mode)
             {
@@ -84,41 +108,35 @@ namespace BMTool
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            商品信息编辑();
+            InfoEdit();
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            ProductInfoForm pif = new ProductInfoForm();
-            if (DialogResult.OK == pif.ShowDialog())
+            if (E_FORM_MODE.MODE_1 == m_mode)
             {
-                ListViewItem lvi = new ListViewItem((listView1.Items.Count + 1).ToString());
-                string str = pif.名称;
-                lvi.SubItems.Add(str);
-                str = pif.日期.ToString();
-                lvi.SubItems.Add(str);
-                str = pif.店铺;
-                lvi.SubItems.Add(str);
-                str = pif.型号;
-                lvi.SubItems.Add(str);
-                str = pif.货号;
-                lvi.SubItems.Add(str);
-                str = pif.单价.ToString();
-                lvi.SubItems.Add(str);
-                str = pif.税率.ToString();
-                lvi.SubItems.Add(str);
-                str = pif.税后单价.ToString();
-                lvi.SubItems.Add(str);
-                str = pif.汇率.ToString();
-                lvi.SubItems.Add(str);
-                str = pif.人民币单价.ToString();
-                lvi.SubItems.Add(str);
-                str = pif.积分率.ToString();
-                lvi.SubItems.Add(str);
-                str = pif.重量.ToString();
-                lvi.SubItems.Add(str);
-
-                listView1.Items.Add(lvi);
+                ProductInfoForm pif = new ProductInfoForm();
+                if (DialogResult.OK == pif.ShowDialog())
+                {
+                    ListViewItem lvi = new ListViewItem((listView1.Items.Count + 1).ToString());
+                    List<string> dataList = pif.GetDataStringList();
+                    foreach (string str in dataList)
+                    {
+                        lvi.SubItems.Add(str);
+                    }
+                    listView1.Items.Add(lvi);
+                }
+            }
+            else if (   (E_FORM_MODE.MODE_2 == m_mode)
+                     || (E_FORM_MODE.MODE_3 == m_mode))
+            {
+                InputOutputInfoForm ioif = new InputOutputInfoForm();
+                if (DialogResult.OK == ioif.ShowDialog())
+                {
+                }
+            }
+            else if (E_FORM_MODE.MODE_4 == m_mode)
+            {
             }
         }
 
@@ -135,8 +153,30 @@ namespace BMTool
             }
         }
 
-        private void btbSave_Click(object sender, EventArgs e)
+        private void btnSave_Click(object sender, EventArgs e)
         {
+            if (0 == listView1.Items.Count)
+            {
+                return;
+            }
+            if ("" != m_打开文件名)
+            {
+                SaveToFile(m_打开文件名);
+            }
+            else
+            {
+                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+
+                saveFileDialog1.Filter = "csv files(*.csv)|*.csv";
+                saveFileDialog1.FilterIndex = 1;
+                saveFileDialog1.RestoreDirectory = true;
+
+                if (DialogResult.OK == saveFileDialog1.ShowDialog())
+                {
+                    string fileName = saveFileDialog1.FileName;
+                    SaveToFile(fileName);
+                }
+            }
         }
 
         private void btnSaveAs_Click(object sender, EventArgs e)
@@ -146,7 +186,6 @@ namespace BMTool
                 return;
             }
 
-            Stream myStream;
             SaveFileDialog saveFileDialog1 = new SaveFileDialog();
 
             saveFileDialog1.Filter = "csv files(*.csv)|*.csv";
@@ -155,29 +194,122 @@ namespace BMTool
 
             if (DialogResult.OK == saveFileDialog1.ShowDialog())
             {
-                try
-                {
-                    if (null != (myStream = saveFileDialog1.OpenFile()))
-                    {
-                        using (StreamWriter sw = new StreamWriter(myStream))
-                        {
-                            foreach (ListViewItem lvi in listView1.Items)
-                            {
-                                foreach (ListViewItem.ListViewSubItem subItm in lvi.SubItems)
-                                {
-                                    sw.Write(subItm.Text + ",");
-                                }
-                                sw.Write("\r\n");
-                            }
-                        }
+                string fileName = saveFileDialog1.FileName;
+                SaveToFile(fileName);
+            }
+        }
 
-                        myStream.Close();
+        private void SaveToFile(string fileName)
+        {
+            try
+            {
+                StreamReader sr = new StreamReader(fileName);
+                List<string> wtList = new List<string>();
+
+                string rdline = "";
+                bool wtFlag = true;
+                bool savedFlag = false;
+                while (null != (rdline = sr.ReadLine()))
+                {
+                    rdline = rdline.Trim();
+                    if (S_MODE_1_TITLE == rdline)
+                    {
+                        if (E_FORM_MODE.MODE_1 == m_mode)
+                        {
+                            wtList.Add(rdline);
+                            wtFlag = false;
+                            wtList.AddRange(GetListViewData());
+                            savedFlag = true;
+                        }
+                        else
+                        {
+                            wtFlag = true;
+                        }
+                    }
+                    else if (S_MODE_2_TITLE == rdline)
+                    {
+                        if (E_FORM_MODE.MODE_2 == m_mode)
+                        {
+                            wtList.Add(rdline);
+                            wtFlag = false;
+                            wtList.AddRange(GetListViewData());
+                            savedFlag = true;
+                        }
+                        else
+                        {
+                            wtFlag = true;
+                        }
+                    }
+                    else if (S_MODE_3_TITLE == rdline)
+                    {
+                        if (E_FORM_MODE.MODE_3 == m_mode)
+                        {
+                            wtList.Add(rdline);
+                            wtFlag = false;
+                            wtList.AddRange(GetListViewData());
+                            savedFlag = true;
+                        }
+                        else
+                        {
+                            wtFlag = true;
+                        }
+                    }
+                    else if (S_MODE_4_TITLE == rdline)
+                    {
+                        if (E_FORM_MODE.MODE_4 == m_mode)
+                        {
+                            wtList.Add(rdline);
+                            wtFlag = false;
+                            wtList.AddRange(GetListViewData());
+                            savedFlag = true;
+                        }
+                        else
+                        {
+                            wtFlag = true;
+                        }
+                    }
+
+                    if (wtFlag)
+                    {
+                        wtList.Add(rdline);
                     }
                 }
-                catch (Exception ex)
+                sr.Close();
+                if (false == savedFlag)
                 {
-                    MessageBox.Show(ex.ToString());
+                    string wtTitle = "";
+                    switch (m_mode)
+                    {
+                        case E_FORM_MODE.MODE_1:
+                            wtTitle = S_MODE_1_TITLE;
+                            break;
+                        case E_FORM_MODE.MODE_2:
+                            wtTitle = S_MODE_2_TITLE;
+                            break;
+                        case E_FORM_MODE.MODE_3:
+                            wtTitle = S_MODE_3_TITLE;
+                            break;
+                        case E_FORM_MODE.MODE_4:
+                            wtTitle = S_MODE_4_TITLE;
+                            break;
+                    }
+                    wtList.Add(wtTitle);
+                    wtList.AddRange(GetListViewData());
+                    savedFlag = true;
                 }
+                StreamWriter sw = new StreamWriter(fileName);
+
+                foreach (string str in wtList)
+                {
+                    sw.WriteLine(str);
+                }
+                sw.Close();
+                m_打开文件名 = fileName;
+                MessageBox.Show("保存成功!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
         }
 
@@ -189,108 +321,99 @@ namespace BMTool
             openFileDialog.FilterIndex = 1;
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                Stream myStream = openFileDialog.OpenFile();
-                if (null == myStream)
-                {
-                    myStream.Close();
-                    return;
-                }
-                读文件并在List上显示(new StreamReader(myStream));
-                myStream.Close();
+                ReadDataFile(openFileDialog.FileName);
                 打开文件名 = openFileDialog.FileName;
                 this.Text = 打开文件名;
+                openFileDialog.Dispose();
             }
         }
 
         private void listView1_DoubleClick(object sender, EventArgs e)
         {
-            商品信息编辑();
+            InfoEdit();
         }
 
 
-        void 商品信息编辑()
+        void InfoEdit()
         {
             if (0 == listView1.SelectedItems.Count)
             {
                 return;
             }
             ListViewItem selectItem = listView1.SelectedItems[0];
-            ProductInfoForm pif = new ProductInfoForm();
 
             try
             {
-                pif.名称 = selectItem.SubItems[1].Text;
-                DateTime outDateTime;
-                DateTime.TryParse(selectItem.SubItems[2].Text, out outDateTime);
-                pif.日期 = outDateTime;
-                pif.店铺 = selectItem.SubItems[3].Text;
-                pif.型号 = selectItem.SubItems[4].Text;
-                pif.货号 = selectItem.SubItems[5].Text;
-                decimal outVal;
-                decimal.TryParse(selectItem.SubItems[6].Text, out outVal);
-                pif.单价 = outVal;
-                decimal.TryParse(selectItem.SubItems[7].Text, out outVal);
-                pif.税率 = outVal;
-                decimal.TryParse(selectItem.SubItems[8].Text, out outVal);
-                pif.税后单价 = outVal;
-                decimal.TryParse(selectItem.SubItems[9].Text, out outVal);
-                pif.汇率 = outVal;
-                decimal.TryParse(selectItem.SubItems[10].Text, out outVal);
-                pif.人民币单价 = outVal;
-                decimal.TryParse(selectItem.SubItems[11].Text, out outVal);
-                pif.积分率 = outVal;
-                decimal.TryParse(selectItem.SubItems[12].Text, out outVal);
-                pif.重量 = outVal;
+                List<string> dataList = new List<string>();
+                for (int i = 0; i < selectItem.SubItems.Count; i++)
+                {
+                    dataList.Add(selectItem.SubItems[i].Text);
+                }
+                if (E_FORM_MODE.MODE_1 == m_mode)
+                {
+                    ProductInfoForm pif = new ProductInfoForm();
+                    pif.SetDataStringList(dataList);
+                    if (DialogResult.OK == pif.ShowDialog())
+                    {
+                        dataList = pif.GetDataStringList();
+                        for (int i = 0; i < dataList.Count; i++)
+                        {
+                            selectItem.SubItems[i + 1].Text = dataList[i];
+                        }
+                    }
+                }
+                else if (   (E_FORM_MODE.MODE_2 == m_mode)
+                         || (E_FORM_MODE.MODE_3 == m_mode))
+                {
+                }
+                else if (E_FORM_MODE.MODE_4 == m_mode)
+                {
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
-            if (DialogResult.OK == pif.ShowDialog())
-            {
-                string str = pif.名称;
-                selectItem.SubItems[1].Text = str;
-                str = pif.日期.ToShortDateString();
-                selectItem.SubItems[2].Text = str;
-                str = pif.店铺;
-                selectItem.SubItems[3].Text = str;
-                str = pif.型号;
-                selectItem.SubItems[4].Text = str;
-                str = pif.货号;
-                selectItem.SubItems[5].Text = str;
-                str = pif.单价.ToString();
-                selectItem.SubItems[6].Text = str;
-                str = pif.税率.ToString();
-                selectItem.SubItems[7].Text = str;
-                str = pif.税后单价.ToString();
-                selectItem.SubItems[8].Text = str;
-                str = pif.汇率.ToString();
-                selectItem.SubItems[9].Text = str;
-                str = pif.人民币单价.ToString();
-                selectItem.SubItems[10].Text = str;
-                str = pif.积分率.ToString();
-                selectItem.SubItems[11].Text = str;
-                str = pif.重量.ToString();
-                selectItem.SubItems[12].Text = str;
-            }
         }
 
-        void 读文件并在List上显示(StreamReader sr)
+        void ReadDataFile(string fileName)
         {
+            StreamReader sr = new StreamReader(fileName);
             if (null == sr)
             {
                 return;
             }
             listView1.Items.Clear();
 
-            string rdLine = "";
-            while (null != (rdLine = sr.ReadLine()))
+            string rdline = "";
+            bool rdflag = false;
+            while (null != (rdline = sr.ReadLine()))
             {
-                if ("" == rdLine.Trim())
+                if ("" == rdline.Trim())
                 {
                     continue;
                 }
-                string[] rdArr = rdLine.Split(',');
+                if (S_MODE_1_TITLE == rdline)
+                {
+                    rdflag = ((E_FORM_MODE.MODE_1 == m_mode) ?  true : false);
+                }
+                else if (S_MODE_2_TITLE == rdline)
+                {
+                    rdflag = ((E_FORM_MODE.MODE_2 == m_mode) ? true : false);
+                }
+                else if (S_MODE_3_TITLE == rdline)
+                {
+                    rdflag = ((E_FORM_MODE.MODE_3 == m_mode) ? true : false);
+                }
+                else if (S_MODE_4_TITLE == rdline)
+                {
+                    rdflag = ((E_FORM_MODE.MODE_4 == m_mode) ? true : false);
+                }
+                if (!rdflag)
+                {
+                    continue;
+                }
+                string[] rdArr = rdline.Split(',');
                 if (rdArr.Length < 13)
                 {
                     continue;
@@ -303,6 +426,22 @@ namespace BMTool
                 listView1.Items.Add(lvi);
             }
             sr.Close();
+        }
+
+        List<string> GetListViewData()
+        {
+            List<string> dataList = new List<string>();
+            string dataStr = "";
+            foreach (ListViewItem lvi in listView1.Items)
+            {
+                dataStr = "";
+                foreach (ListViewItem.ListViewSubItem subItm in lvi.SubItems)
+                {
+                    dataStr += (subItm.Text + ",");
+                }
+                dataList.Add(dataStr);
+            }
+            return dataList;
         }
     }
 }

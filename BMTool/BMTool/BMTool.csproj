@@ -52,6 +52,12 @@
     <Compile Include="DetailListForm.Designer.cs">
       <DependentUpon>DetailListForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="InputOutputInfoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InputOutputInfoForm.Designer.cs">
+      <DependentUpon>InputOutputInfoForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,6 +74,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="DetailListForm.resx">
       <DependentUpon>DetailListForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputOutputInfoForm.resx">
+      <DependentUpon>InputOutputInfoForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

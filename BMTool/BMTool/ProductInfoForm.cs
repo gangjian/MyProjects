@@ -161,5 +161,63 @@ namespace BMTool
             tbx积分率.Text = 积分率.ToString();
             tbx重量.Text = 重量.ToString();
         }
+
+        public List<string> GetDataStringList()
+        {
+            List<string> dataList = new List<string>();
+            dataList.Add(this.名称);
+            string str = this.日期.ToShortDateString();
+            dataList.Add(str);
+            str = this.店铺;
+            dataList.Add(str);
+            str = this.型号;
+            dataList.Add(str);
+            str = this.货号;
+            dataList.Add(str);
+            str = this.单价.ToString();
+            dataList.Add(str);
+            str = this.税率.ToString();
+            dataList.Add(str);
+            str = this.税后单价.ToString();
+            dataList.Add(str);
+            str = this.汇率.ToString();
+            dataList.Add(str);
+            str = this.人民币单价.ToString();
+            dataList.Add(str);
+            str = this.积分率.ToString();
+            dataList.Add(str);
+            str = this.重量.ToString();
+            dataList.Add(str);
+
+            return dataList;
+        }
+
+        public void SetDataStringList(List<string> dataList)
+        {
+            System.Diagnostics.Trace.Assert(dataList.Count >= 13);
+
+            this.名称 = dataList[1];
+            DateTime outDateTime;
+            DateTime.TryParse(dataList[2], out outDateTime);
+            this.日期 = outDateTime;
+            this.店铺 = dataList[3];
+            this.型号 = dataList[4];
+            this.货号 = dataList[5];
+            decimal outVal;
+            decimal.TryParse(dataList[6], out outVal);
+            this.单价 = outVal;
+            decimal.TryParse(dataList[7], out outVal);
+            this.税率 = outVal;
+            decimal.TryParse(dataList[8], out outVal);
+            this.税后单价 = outVal;
+            decimal.TryParse(dataList[9], out outVal);
+            this.汇率 = outVal;
+            decimal.TryParse(dataList[10], out outVal);
+            this.人民币单价 = outVal;
+            decimal.TryParse(dataList[11], out outVal);
+            this.积分率 = outVal;
+            decimal.TryParse(dataList[12], out outVal);
+            this.重量 = outVal;
+        }
     }
 }

@@ -36,7 +36,7 @@
             this.btnDown = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
-            this.btbSave = new System.Windows.Forms.Button();
+            this.btnSave = new System.Windows.Forms.Button();
             this.btnSaveAs = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -127,17 +127,16 @@
             this.button7.Text = "追加";
             this.button7.UseVisualStyleBackColor = true;
             // 
-            // btbSave
+            // btnSave
             // 
-            this.btbSave.Enabled = false;
-            this.btbSave.Font = new System.Drawing.Font("SimHei", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btbSave.Location = new System.Drawing.Point(1043, 67);
-            this.btbSave.Name = "btbSave";
-            this.btbSave.Size = new System.Drawing.Size(94, 35);
-            this.btbSave.TabIndex = 1;
-            this.btbSave.Text = "保存";
-            this.btbSave.UseVisualStyleBackColor = true;
-            this.btbSave.Click += new System.EventHandler(this.btbSave_Click);
+            this.btnSave.Font = new System.Drawing.Font("SimHei", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSave.Location = new System.Drawing.Point(1043, 67);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(94, 35);
+            this.btnSave.TabIndex = 1;
+            this.btnSave.Text = "保存";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // btnSaveAs
             // 
@@ -160,7 +159,7 @@
             this.Controls.Add(this.btnEdit);
             this.Controls.Add(this.btnDel);
             this.Controls.Add(this.btnSaveAs);
-            this.Controls.Add(this.btbSave);
+            this.Controls.Add(this.btnSave);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.btnAdd);
@@ -185,7 +184,7 @@
         private System.Windows.Forms.Button btnDown;
         private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button button7;
-        private System.Windows.Forms.Button btbSave;
+        private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnSaveAs;
     }
 }
