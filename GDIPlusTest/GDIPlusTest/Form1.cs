@@ -25,60 +25,14 @@ namespace GDIPlusTest
             InitializeComponent();
         }
 
-        private void buttonOpen_Click(object sender, EventArgs e)
+        private void btnOpenSrc_Click(object sender, EventArgs e)
         {
-            Bitmap srcBitmap = openBitmapFile();
-            if (null != srcBitmap)
+            Bitmap subBitmap = openBitmapFile();
+            if (null != subBitmap)
             {
-                if ((srcBitmap.Width > pictureBox1.Width)
-                    || (srcBitmap.Height > pictureBox1.Height))
-                {
-                    MessageBox.Show("Opened image's size is bigger than the picturebox!");
-                    srcBitmap.Dispose();
-                    return;
-                }
-                int mag = 0;
-                if (srcBitmap.Width > srcBitmap.Height)
-                {
-                    mag = pictureBox1.Width / srcBitmap.Width;
-                }
-                else
-                {
-                    mag = pictureBox1.Height / srcBitmap.Height;
-                }
-                Bitmap dstBitmap = new Bitmap(mag * srcBitmap.Width, mag * srcBitmap.Height);
-                Graphics g = Graphics.FromImage(dstBitmap);
-                int last_x = 0, last_y = 0;
-                for (int i = 0; i < dstBitmap.Height; i++)
-                {
-                    for (int j = 0; j < dstBitmap.Width; j++)
-                    {
-                        int src_x = j / mag;
-                        int src_y = i / mag;
-                        Color color = srcBitmap.GetPixel(src_x, src_y);
-                        dstBitmap.SetPixel(j, i, color);
-                        // 以下画原图像素的网格线, 太密了的话看不清楚, 就干脆不画了
-                        if (mag > 10)
-                        {
-                            Pen p = new Pen(new SolidBrush(Color.Gray));
-                            p.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
-                            if (src_x != last_x)
-                            {
-                                last_x = src_x;
-                                p.Width = 1;
-                                g.DrawLine(p, j, 0, j, dstBitmap.Height);
-                            }
-                            if (src_y != last_y)
-                            {
-                                last_y = src_y;
-                                p.Width = 2;
-                                g.DrawLine(p, 0, i, dstBitmap.Width, i);
-                            }
-                        }
-                    }
-                }
-                pictureBox1.Image = dstBitmap;
-                srcBitmap.Dispose();
+                this.pbxSrcImg.Width = subBitmap.Width;
+                this.pbxSrcImg.Height = subBitmap.Height;
+                this.pbxSrcImg.Image = subBitmap;
             }
         }
 
@@ -101,14 +55,35 @@ namespace GDIPlusTest
             Bitmap subBitmap = openBitmapFile();
             if (null != subBitmap)
             {
-                this.pictureBox2.Width = subBitmap.Width;
-                this.pictureBox2.Height = subBitmap.Height;
-                this.pictureBox2.Image = subBitmap;
+                this.pbxSubImg.Width = subBitmap.Width;
+                this.pbxSubImg.Height = subBitmap.Height;
+                this.pbxSubImg.Image = subBitmap;
             }
         }
 
-        private void buttonStart_Click(object sender, EventArgs e)
+        private void btnSearch_Click(object sender, EventArgs e)
         {
+            if (    null == this.pbxSrcImg.Image
+                ||  null == this.pbxSubImg.Image)
+            {
+                return;
+            }
+            List<Bitmap> subImgList = new List<Bitmap>();
+            Bitmap subImg = (Bitmap)this.pbxSubImg.Image.Clone();
+            subImgList.Add(subImg);
+            Bitmap srcImg = (Bitmap)this.pbxSrcImg.Image.Clone();
+            BitmapProcess bp = new BitmapProcess(srcImg, subImgList);
+            List<FoundPosition> foundPosList = bp.searchSubBitmap(0);
+            if (0 != foundPosList.Count)
+            {
+                Graphics g = Graphics.FromImage(srcImg);
+                foreach (FoundPosition fp in foundPosList)
+                {
+                    g.DrawRectangle(new Pen(Color.Red, 2), fp.X, fp.Y, subImg.Width, subImg.Height);
+                }
+                this.pbxSrcImg.Image = srcImg;
+                g.Dispose();
+            }
         }
 
         private delegate void workerThreadBtnDelegate(Button btn, bool enable);
@@ -150,7 +125,7 @@ namespace GDIPlusTest
             Bitmap subImgDengLuBtn = new Bitmap(subImgPath);
             subImgList.Add(subImgDengLuBtn);
 
-            Bitmap scrCap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            Bitmap scrCap = new Bitmap(pbxSrcImg.Width, pbxSrcImg.Height);
             Graphics g = Graphics.FromImage(scrCap);
             g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
 
@@ -161,7 +136,7 @@ namespace GDIPlusTest
             Point dstPos = new Point(0, 0);
 
             g.CopyFromScreen(startPos, dstPos, scrCap.Size);
-            pictureBox1.Image = scrCap;
+            pbxSrcImg.Image = scrCap;
             BitmapProcess bp = new BitmapProcess(scrCap, subImgList);
             List<FoundPosition> foundPosList = bp.searchSubBitmap(0);
 //          }
@@ -184,14 +159,14 @@ namespace GDIPlusTest
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            if (null == pictureBox1.Image)
+            if (null == pbxSrcImg.Image)
             {
                 return;
             }
-            Bitmap dstBitmap = (Bitmap)pictureBox1.Image;
+            Bitmap dstBitmap = (Bitmap)pbxSrcImg.Image;
             Point mouse_pt = MousePosition;
-            Point picbx_pt = pictureBox1.PointToScreen(new Point(pictureBox1.Left - pictureBox1.Bounds.Left,
-                                                    pictureBox1.Top - pictureBox1.Bounds.Top));
+            Point picbx_pt = pbxSrcImg.PointToScreen(new Point(pbxSrcImg.Left - pbxSrcImg.Bounds.Left,
+                                                    pbxSrcImg.Top - pbxSrcImg.Bounds.Top));
             int pos_x = mouse_pt.X - picbx_pt.X;
             int pos_y = mouse_pt.Y - picbx_pt.Y;
             if (    (pos_x >= dstBitmap.Width)
@@ -207,6 +182,81 @@ namespace GDIPlusTest
         {
             FormRobot2 fgr2 = new FormRobot2();
             fgr2.Show();
+        }
+
+        private void btnZoom_Click(object sender, EventArgs e)
+        {
+            Bitmap srcBitmap = openBitmapFile();
+            if (null != srcBitmap)
+            {
+                if ((srcBitmap.Width > pbxSrcImg.Width)
+                    || (srcBitmap.Height > pbxSrcImg.Height))
+                {
+                    MessageBox.Show("Opened image's size is bigger than the picturebox!");
+                    srcBitmap.Dispose();
+                    return;
+                }
+                int mag = 0;
+                if (srcBitmap.Width > srcBitmap.Height)
+                {
+                    mag = pbxSrcImg.Width / srcBitmap.Width;
+                }
+                else
+                {
+                    mag = pbxSrcImg.Height / srcBitmap.Height;
+                }
+                Bitmap dstBitmap = new Bitmap(mag * srcBitmap.Width, mag * srcBitmap.Height);
+                Graphics g = Graphics.FromImage(dstBitmap);
+                int last_x = 0, last_y = 0;
+                for (int i = 0; i < dstBitmap.Height; i++)
+                {
+                    for (int j = 0; j < dstBitmap.Width; j++)
+                    {
+                        int src_x = j / mag;
+                        int src_y = i / mag;
+                        Color color = srcBitmap.GetPixel(src_x, src_y);
+                        dstBitmap.SetPixel(j, i, color);
+                        // 以下画原图像素的网格线, 太密了的话看不清楚, 就干脆不画了
+                        if (mag > 10)
+                        {
+                            Pen p = new Pen(new SolidBrush(Color.Gray));
+                            p.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                            if (src_x != last_x)
+                            {
+                                last_x = src_x;
+                                p.Width = 1;
+                                g.DrawLine(p, j, 0, j, dstBitmap.Height);
+                            }
+                            if (src_y != last_y)
+                            {
+                                last_y = src_y;
+                                p.Width = 2;
+                                g.DrawLine(p, 0, i, dstBitmap.Width, i);
+                            }
+                        }
+                    }
+                }
+                pbxSrcImg.Image = dstBitmap;
+                srcBitmap.Dispose();
+            }
+        }
+
+        private void btnDumpSubImg_Click(object sender, EventArgs e)
+        {
+            if (null == pbxSubImg.Image)
+            {
+                MessageBox.Show("pbxSubImg.Image is null!");
+                return;
+            }
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "txt files(*.txt)|*.txt";
+            sfd.FilterIndex = 0;
+            sfd.RestoreDirectory = true;
+            if (DialogResult.OK == sfd.ShowDialog())
+            {
+                Bitmap subImg = (Bitmap)pbxSubImg.Image.Clone();
+                BitmapProcess.dumpBitmap2File(subImg, 0, 0, subImg.Width, subImg.Height, sfd.FileName);
+            }
         }
     }
 }

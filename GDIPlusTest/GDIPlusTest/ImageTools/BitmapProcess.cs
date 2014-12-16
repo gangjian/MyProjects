@@ -160,7 +160,7 @@ namespace GDIPlusTest.ImageTools
             return true;
         }
 
-        public void dumpBitmap2File(Bitmap img, int x, int y, int width, int height, string fullpath)
+        public static void dumpBitmap2File(Bitmap img, int x, int y, int width, int height, string fullpath)
         {
             System.Diagnostics.Trace.Assert(((x + width) <= img.Width) && ((y + height) <= img.Height));
             StreamWriter sw = new StreamWriter(fullpath, false);

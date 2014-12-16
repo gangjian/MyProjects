@@ -28,56 +28,58 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.buttonOpen = new System.Windows.Forms.Button();
-            this.buttonOpenSub = new System.Windows.Forms.Button();
+            this.pbxSrcImg = new System.Windows.Forms.PictureBox();
+            this.btnOpenSrc = new System.Windows.Forms.Button();
+            this.btnOpenSub = new System.Windows.Forms.Button();
             this.btnRobot1 = new System.Windows.Forms.Button();
             this.btnWebTest = new System.Windows.Forms.Button();
             this.buttonCapture = new System.Windows.Forms.Button();
-            this.buttonStart = new System.Windows.Forms.Button();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.btnSearch = new System.Windows.Forms.Button();
+            this.pbxSubImg = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
             this.btnRobot2 = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.btnZoom = new System.Windows.Forms.Button();
+            this.btnDumpSubImg = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.pbxSrcImg)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbxSubImg)).BeginInit();
             this.SuspendLayout();
             // 
-            // pictureBox1
+            // pbxSrcImg
             // 
-            this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox1.Location = new System.Drawing.Point(11, 11);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(835, 683);
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
-            this.pictureBox1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseMove);
+            this.pbxSrcImg.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pbxSrcImg.Location = new System.Drawing.Point(11, 11);
+            this.pbxSrcImg.Margin = new System.Windows.Forms.Padding(2);
+            this.pbxSrcImg.Name = "pbxSrcImg";
+            this.pbxSrcImg.Size = new System.Drawing.Size(835, 683);
+            this.pbxSrcImg.TabIndex = 0;
+            this.pbxSrcImg.TabStop = false;
+            this.pbxSrcImg.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseMove);
             // 
-            // buttonOpen
+            // btnOpenSrc
             // 
-            this.buttonOpen.Location = new System.Drawing.Point(884, 11);
-            this.buttonOpen.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonOpen.Name = "buttonOpen";
-            this.buttonOpen.Size = new System.Drawing.Size(80, 30);
-            this.buttonOpen.TabIndex = 1;
-            this.buttonOpen.Text = "OpenSrcImg";
-            this.buttonOpen.UseVisualStyleBackColor = true;
-            this.buttonOpen.Click += new System.EventHandler(this.buttonOpen_Click);
+            this.btnOpenSrc.Location = new System.Drawing.Point(884, 11);
+            this.btnOpenSrc.Margin = new System.Windows.Forms.Padding(2);
+            this.btnOpenSrc.Name = "btnOpenSrc";
+            this.btnOpenSrc.Size = new System.Drawing.Size(80, 30);
+            this.btnOpenSrc.TabIndex = 1;
+            this.btnOpenSrc.Text = "OpenSrcImg";
+            this.btnOpenSrc.UseVisualStyleBackColor = true;
+            this.btnOpenSrc.Click += new System.EventHandler(this.btnOpenSrc_Click);
             // 
-            // buttonOpenSub
+            // btnOpenSub
             // 
-            this.buttonOpenSub.Location = new System.Drawing.Point(979, 11);
-            this.buttonOpenSub.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonOpenSub.Name = "buttonOpenSub";
-            this.buttonOpenSub.Size = new System.Drawing.Size(80, 30);
-            this.buttonOpenSub.TabIndex = 2;
-            this.buttonOpenSub.Text = "OpenSubImg";
-            this.buttonOpenSub.UseVisualStyleBackColor = true;
-            this.buttonOpenSub.Click += new System.EventHandler(this.buttonOpenSub_Click);
+            this.btnOpenSub.Location = new System.Drawing.Point(979, 11);
+            this.btnOpenSub.Margin = new System.Windows.Forms.Padding(2);
+            this.btnOpenSub.Name = "btnOpenSub";
+            this.btnOpenSub.Size = new System.Drawing.Size(80, 30);
+            this.btnOpenSub.TabIndex = 2;
+            this.btnOpenSub.Text = "OpenSubImg";
+            this.btnOpenSub.UseVisualStyleBackColor = true;
+            this.btnOpenSub.Click += new System.EventHandler(this.buttonOpenSub_Click);
             // 
             // btnRobot1
             // 
-            this.btnRobot1.Location = new System.Drawing.Point(884, 183);
+            this.btnRobot1.Location = new System.Drawing.Point(884, 290);
             this.btnRobot1.Name = "btnRobot1";
             this.btnRobot1.Size = new System.Drawing.Size(80, 30);
             this.btnRobot1.TabIndex = 7;
@@ -87,7 +89,7 @@
             // 
             // btnWebTest
             // 
-            this.btnWebTest.Location = new System.Drawing.Point(884, 124);
+            this.btnWebTest.Location = new System.Drawing.Point(979, 125);
             this.btnWebTest.Name = "btnWebTest";
             this.btnWebTest.Size = new System.Drawing.Size(80, 30);
             this.btnWebTest.TabIndex = 6;
@@ -98,7 +100,7 @@
             // buttonCapture
             // 
             this.buttonCapture.Font = new System.Drawing.Font("SimHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.buttonCapture.Location = new System.Drawing.Point(979, 56);
+            this.buttonCapture.Location = new System.Drawing.Point(979, 80);
             this.buttonCapture.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCapture.Name = "buttonCapture";
             this.buttonCapture.Size = new System.Drawing.Size(80, 30);
@@ -107,37 +109,37 @@
             this.buttonCapture.UseVisualStyleBackColor = true;
             this.buttonCapture.Click += new System.EventHandler(this.buttonCapture_Click);
             // 
-            // buttonStart
+            // btnSearch
             // 
-            this.buttonStart.Location = new System.Drawing.Point(884, 56);
-            this.buttonStart.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonStart.Name = "buttonStart";
-            this.buttonStart.Size = new System.Drawing.Size(80, 30);
-            this.buttonStart.TabIndex = 4;
-            this.buttonStart.Text = "Start";
-            this.buttonStart.UseVisualStyleBackColor = true;
-            this.buttonStart.Click += new System.EventHandler(this.buttonStart_Click);
+            this.btnSearch.Location = new System.Drawing.Point(884, 80);
+            this.btnSearch.Margin = new System.Windows.Forms.Padding(2);
+            this.btnSearch.Name = "btnSearch";
+            this.btnSearch.Size = new System.Drawing.Size(80, 30);
+            this.btnSearch.TabIndex = 4;
+            this.btnSearch.Text = "Search";
+            this.btnSearch.UseVisualStyleBackColor = true;
+            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
-            // pictureBox2
+            // pbxSubImg
             // 
-            this.pictureBox2.Location = new System.Drawing.Point(884, 566);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(100, 95);
-            this.pictureBox2.TabIndex = 8;
-            this.pictureBox2.TabStop = false;
+            this.pbxSubImg.Location = new System.Drawing.Point(884, 514);
+            this.pbxSubImg.Name = "pbxSubImg";
+            this.pbxSubImg.Size = new System.Drawing.Size(100, 95);
+            this.pbxSubImg.TabIndex = 8;
+            this.pbxSubImg.TabStop = false;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(9, 704);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(41, 12);
+            this.label1.Size = new System.Drawing.Size(35, 12);
             this.label1.TabIndex = 9;
             this.label1.Text = "label1";
             // 
             // btnRobot2
             // 
-            this.btnRobot2.Location = new System.Drawing.Point(884, 243);
+            this.btnRobot2.Location = new System.Drawing.Point(979, 290);
             this.btnRobot2.Name = "btnRobot2";
             this.btnRobot2.Size = new System.Drawing.Size(80, 30);
             this.btnRobot2.TabIndex = 10;
@@ -145,21 +147,43 @@
             this.btnRobot2.UseVisualStyleBackColor = true;
             this.btnRobot2.Click += new System.EventHandler(this.btnRobot2_Click);
             // 
+            // btnZoom
+            // 
+            this.btnZoom.Location = new System.Drawing.Point(884, 125);
+            this.btnZoom.Name = "btnZoom";
+            this.btnZoom.Size = new System.Drawing.Size(80, 30);
+            this.btnZoom.TabIndex = 6;
+            this.btnZoom.Text = "Zoom";
+            this.btnZoom.UseVisualStyleBackColor = true;
+            this.btnZoom.Click += new System.EventHandler(this.btnZoom_Click);
+            // 
+            // btnDumpSubImg
+            // 
+            this.btnDumpSubImg.Location = new System.Drawing.Point(884, 664);
+            this.btnDumpSubImg.Name = "btnDumpSubImg";
+            this.btnDumpSubImg.Size = new System.Drawing.Size(80, 30);
+            this.btnDumpSubImg.TabIndex = 11;
+            this.btnDumpSubImg.Text = "DumpSubImg";
+            this.btnDumpSubImg.UseVisualStyleBackColor = true;
+            this.btnDumpSubImg.Click += new System.EventHandler(this.btnDumpSubImg_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1079, 725);
+            this.Controls.Add(this.btnDumpSubImg);
             this.Controls.Add(this.btnRobot2);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.pictureBox2);
+            this.Controls.Add(this.pbxSubImg);
             this.Controls.Add(this.btnRobot1);
-            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.pbxSrcImg);
+            this.Controls.Add(this.btnZoom);
             this.Controls.Add(this.btnWebTest);
-            this.Controls.Add(this.buttonStart);
+            this.Controls.Add(this.btnSearch);
             this.Controls.Add(this.buttonCapture);
-            this.Controls.Add(this.buttonOpen);
-            this.Controls.Add(this.buttonOpenSub);
+            this.Controls.Add(this.btnOpenSrc);
+            this.Controls.Add(this.btnOpenSub);
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Margin = new System.Windows.Forms.Padding(2);
@@ -167,8 +191,8 @@
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbxSrcImg)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbxSubImg)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -176,16 +200,18 @@
 
         #endregion
 
-        private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.Button buttonOpen;
-        private System.Windows.Forms.Button buttonOpenSub;
-        private System.Windows.Forms.Button buttonStart;
+        private System.Windows.Forms.PictureBox pbxSrcImg;
+        private System.Windows.Forms.Button btnOpenSrc;
+        private System.Windows.Forms.Button btnOpenSub;
+        private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.Button buttonCapture;
         private System.Windows.Forms.Button btnWebTest;
         private System.Windows.Forms.Button btnRobot1;
-        private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.PictureBox pbxSubImg;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnRobot2;
+        private System.Windows.Forms.Button btnZoom;
+        private System.Windows.Forms.Button btnDumpSubImg;
 
     }
 }
