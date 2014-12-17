@@ -40,6 +40,7 @@
             this.btnRobot2 = new System.Windows.Forms.Button();
             this.btnZoom = new System.Windows.Forms.Button();
             this.btnDumpSubImg = new System.Windows.Forms.Button();
+            this.btnAutoKeys = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSrcImg)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSubImg)).BeginInit();
             this.SuspendLayout();
@@ -57,10 +58,11 @@
             // 
             // btnOpenSrc
             // 
+            this.btnOpenSrc.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnOpenSrc.Location = new System.Drawing.Point(884, 11);
             this.btnOpenSrc.Margin = new System.Windows.Forms.Padding(2);
             this.btnOpenSrc.Name = "btnOpenSrc";
-            this.btnOpenSrc.Size = new System.Drawing.Size(80, 30);
+            this.btnOpenSrc.Size = new System.Drawing.Size(80, 42);
             this.btnOpenSrc.TabIndex = 1;
             this.btnOpenSrc.Text = "OpenSrcImg";
             this.btnOpenSrc.UseVisualStyleBackColor = true;
@@ -68,10 +70,11 @@
             // 
             // btnOpenSub
             // 
+            this.btnOpenSub.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnOpenSub.Location = new System.Drawing.Point(979, 11);
             this.btnOpenSub.Margin = new System.Windows.Forms.Padding(2);
             this.btnOpenSub.Name = "btnOpenSub";
-            this.btnOpenSub.Size = new System.Drawing.Size(80, 30);
+            this.btnOpenSub.Size = new System.Drawing.Size(80, 42);
             this.btnOpenSub.TabIndex = 2;
             this.btnOpenSub.Text = "OpenSubImg";
             this.btnOpenSub.UseVisualStyleBackColor = true;
@@ -79,6 +82,7 @@
             // 
             // btnRobot1
             // 
+            this.btnRobot1.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnRobot1.Location = new System.Drawing.Point(884, 290);
             this.btnRobot1.Name = "btnRobot1";
             this.btnRobot1.Size = new System.Drawing.Size(80, 30);
@@ -89,6 +93,7 @@
             // 
             // btnWebTest
             // 
+            this.btnWebTest.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnWebTest.Location = new System.Drawing.Point(979, 125);
             this.btnWebTest.Name = "btnWebTest";
             this.btnWebTest.Size = new System.Drawing.Size(80, 30);
@@ -99,7 +104,7 @@
             // 
             // buttonCapture
             // 
-            this.buttonCapture.Font = new System.Drawing.Font("SimHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.buttonCapture.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.buttonCapture.Location = new System.Drawing.Point(979, 80);
             this.buttonCapture.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCapture.Name = "buttonCapture";
@@ -111,6 +116,7 @@
             // 
             // btnSearch
             // 
+            this.btnSearch.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnSearch.Location = new System.Drawing.Point(884, 80);
             this.btnSearch.Margin = new System.Windows.Forms.Padding(2);
             this.btnSearch.Name = "btnSearch";
@@ -139,6 +145,7 @@
             // 
             // btnRobot2
             // 
+            this.btnRobot2.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnRobot2.Location = new System.Drawing.Point(979, 290);
             this.btnRobot2.Name = "btnRobot2";
             this.btnRobot2.Size = new System.Drawing.Size(80, 30);
@@ -149,6 +156,7 @@
             // 
             // btnZoom
             // 
+            this.btnZoom.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnZoom.Location = new System.Drawing.Point(884, 125);
             this.btnZoom.Name = "btnZoom";
             this.btnZoom.Size = new System.Drawing.Size(80, 30);
@@ -159,19 +167,32 @@
             // 
             // btnDumpSubImg
             // 
+            this.btnDumpSubImg.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.btnDumpSubImg.Location = new System.Drawing.Point(884, 664);
             this.btnDumpSubImg.Name = "btnDumpSubImg";
-            this.btnDumpSubImg.Size = new System.Drawing.Size(80, 30);
+            this.btnDumpSubImg.Size = new System.Drawing.Size(100, 30);
             this.btnDumpSubImg.TabIndex = 11;
             this.btnDumpSubImg.Text = "DumpSubImg";
             this.btnDumpSubImg.UseVisualStyleBackColor = true;
             this.btnDumpSubImg.Click += new System.EventHandler(this.btnDumpSubImg_Click);
+            // 
+            // btnAutoKeys
+            // 
+            this.btnAutoKeys.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.btnAutoKeys.Location = new System.Drawing.Point(884, 180);
+            this.btnAutoKeys.Name = "btnAutoKeys";
+            this.btnAutoKeys.Size = new System.Drawing.Size(80, 41);
+            this.btnAutoKeys.TabIndex = 12;
+            this.btnAutoKeys.Text = "AutoKeys";
+            this.btnAutoKeys.UseVisualStyleBackColor = true;
+            this.btnAutoKeys.Click += new System.EventHandler(this.btnAutoKeys_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1079, 725);
+            this.Controls.Add(this.btnAutoKeys);
             this.Controls.Add(this.btnDumpSubImg);
             this.Controls.Add(this.btnRobot2);
             this.Controls.Add(this.label1);
@@ -212,6 +233,7 @@
         private System.Windows.Forms.Button btnRobot2;
         private System.Windows.Forms.Button btnZoom;
         private System.Windows.Forms.Button btnDumpSubImg;
+        private System.Windows.Forms.Button btnAutoKeys;
 
     }
 }

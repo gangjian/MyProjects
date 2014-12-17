@@ -15,6 +15,7 @@ using SuperKeys;
 using GDIPlusTest.ImageTools;
 using GDIPlusTest.GameRobots.Robot1;
 using GDIPlusTest.GameRobots.Robot2;
+using GDIPlusTest.Tools.AutoKeys;
 
 namespace GDIPlusTest
 {
@@ -257,6 +258,12 @@ namespace GDIPlusTest
                 Bitmap subImg = (Bitmap)pbxSubImg.Image.Clone();
                 BitmapProcess.dumpBitmap2File(subImg, 0, 0, subImg.Width, subImg.Height, sfd.FileName);
             }
+        }
+
+        private void btnAutoKeys_Click(object sender, EventArgs e)
+        {
+            FormAutoKeys akf = new FormAutoKeys();
+            akf.Show();
         }
     }
 }
