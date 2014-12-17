@@ -94,12 +94,13 @@ namespace BMTool
             else if (   E_FORM_MODE.MODE_2 == m_mode
                      || E_FORM_MODE.MODE_3 == m_mode)
             {
+                listView1.Columns.Add("编号", 50, HorizontalAlignment.Left);
                 listView1.Columns.Add("日期", 150, HorizontalAlignment.Left);
-                listView1.Columns.Add("名称", 80, HorizontalAlignment.Left);
-                listView1.Columns.Add("单价", 60, HorizontalAlignment.Left);
-                listView1.Columns.Add("数量", 60, HorizontalAlignment.Left);
+                listView1.Columns.Add("名称", 120, HorizontalAlignment.Left);
+                listView1.Columns.Add("单价", 80, HorizontalAlignment.Left);
+                listView1.Columns.Add("数量", 80, HorizontalAlignment.Left);
                 listView1.Columns.Add("优惠率", 80, HorizontalAlignment.Left);
-                listView1.Columns.Add("均摊运费", 80, HorizontalAlignment.Left);
+                listView1.Columns.Add("均摊运费", 100, HorizontalAlignment.Left);
             }
             else if (E_FORM_MODE.MODE_4 == m_mode)
             {
@@ -133,6 +134,13 @@ namespace BMTool
                 InputOutputInfoForm ioif = new InputOutputInfoForm();
                 if (DialogResult.OK == ioif.ShowDialog())
                 {
+                    ListViewItem lvi = new ListViewItem((listView1.Items.Count + 1).ToString());
+                    List<string> dataList = ioif.GetDataStringList();
+                    foreach (string str in dataList)
+                    {
+                        lvi.SubItems.Add(str);
+                    }
+                    listView1.Items.Add(lvi);
                 }
             }
             else if (E_FORM_MODE.MODE_4 == m_mode)
@@ -365,6 +373,16 @@ namespace BMTool
                 else if (   (E_FORM_MODE.MODE_2 == m_mode)
                          || (E_FORM_MODE.MODE_3 == m_mode))
                 {
+                    InputOutputInfoForm ioif = new InputOutputInfoForm();
+                    ioif.SetDataStringList(dataList);
+                    if (DialogResult.OK == ioif.ShowDialog())
+                    {
+                        dataList = ioif.GetDataStringList();
+                        for (int i = 0; i < dataList.Count; i++)
+                        {
+                            selectItem.SubItems[i + 1].Text = dataList[i];
+                        }
+                    }
                 }
                 else if (E_FORM_MODE.MODE_4 == m_mode)
                 {
@@ -414,16 +432,41 @@ namespace BMTool
                     continue;
                 }
                 string[] rdArr = rdline.Split(',');
-                if (rdArr.Length < 13)
+                if (E_FORM_MODE.MODE_1 == m_mode)
                 {
-                    continue;
+                    if (rdArr.Length < 13)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        ListViewItem lvi = new ListViewItem(rdArr[0]);
+                        for (int i = 1; i <= 12; i++)
+                        {
+                            lvi.SubItems.Add(rdArr[i]);
+                        }
+                        listView1.Items.Add(lvi);
+                    }
                 }
-                ListViewItem lvi = new ListViewItem(rdArr[0]);
-                for (int i = 1; i <= 12; i++)
+                if ((E_FORM_MODE.MODE_2 == m_mode || E_FORM_MODE.MODE_3 == m_mode))
                 {
-                    lvi.SubItems.Add(rdArr[i]);
+                    if (rdArr.Length < 8)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        ListViewItem lvi = new ListViewItem(rdArr[0]);
+                        for (int i = 1; i <= 7; i++)
+                        {
+                            lvi.SubItems.Add(rdArr[i]);
+                        }
+                        listView1.Items.Add(lvi);
+                    }
                 }
-                listView1.Items.Add(lvi);
+                else
+                {
+                }
             }
             sr.Close();
         }

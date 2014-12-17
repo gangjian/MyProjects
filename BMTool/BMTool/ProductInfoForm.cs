@@ -13,87 +13,87 @@ namespace BMTool
     {
         public string 名称
         {
-            get { return m_名称; }
-            set { m_名称 = value; }
+            get { return _名称; }
+            set { _名称 = value; }
         }
-        public string m_名称 = "";
+        public string _名称 = "";
 
         public DateTime 日期
         {
-            get { return m_日期; }
-            set { m_日期 = value; }
+            get { return _日期; }
+            set { _日期 = value; }
         }
-        public DateTime m_日期;
+        public DateTime _日期;
 
         public string 店铺
         {
-            get { return m_店铺; }
-            set { m_店铺 = value; }
+            get { return _店铺; }
+            set { _店铺 = value; }
         }
-        public string m_店铺;
+        public string _店铺;
 
         public string 型号
         {
-            get { return m_型号; }
-            set { m_型号 = value; }
+            get { return _型号; }
+            set { _型号 = value; }
         }
-        public string m_型号;
+        public string _型号;
 
         public string 货号
         {
-            get { return m_货号; }
-            set { m_货号 = value; }
+            get { return _货号; }
+            set { _货号 = value; }
         }
-        public string m_货号;
+        public string _货号;
 
         public decimal 单价
         {
-            get { return m_单价; }
-            set { m_单价 = value; }
+            get { return _单价; }
+            set { _单价 = value; }
         }
-        public decimal m_单价;
+        public decimal _单价;
 
         public decimal 税率
         {
-            get { return m_税率; }
-            set { m_税率 = value; }
+            get { return _税率; }
+            set { _税率 = value; }
         }
-        public decimal m_税率;
+        public decimal _税率;
 
         public decimal 税后单价
         {
-            get { return m_税后单价; }
-            set { m_税后单价 = value; }
+            get { return _税后单价; }
+            set { _税后单价 = value; }
         }
-        public decimal m_税后单价;
+        public decimal _税后单价;
 
         public decimal 汇率
         {
-            get { return m_汇率; }
-            set { m_汇率 = value; }
+            get { return _汇率; }
+            set { _汇率 = value; }
         }
-        public decimal m_汇率;
+        public decimal _汇率;
 
         public decimal 人民币单价
         {
-            get { return m_人民币单价; }
-            set { m_人民币单价 = value; }
+            get { return _人民币单价; }
+            set { _人民币单价 = value; }
         }
-        public decimal m_人民币单价;
+        public decimal _人民币单价;
 
         public decimal 积分率
         {
-            get { return m_积分率; }
-            set { m_积分率 = value; }
+            get { return _积分率; }
+            set { _积分率 = value; }
         }
-        public decimal m_积分率;
+        public decimal _积分率;
 
         public decimal 重量
         {
-            get { return m_重量; }
-            set { m_重量 = value; }
+            get { return _重量; }
+            set { _重量 = value; }
         }
-        public decimal m_重量;
+        public decimal _重量;
 
         public ProductInfoForm()
         {
@@ -105,45 +105,59 @@ namespace BMTool
         {
             if ("" != tbx名称.Text)
             {
-                this.m_名称 = tbx名称.Text;
-                if (!DateTime.TryParse(tbx日期.Text, out this.m_日期))
+                this.名称 = tbx名称.Text;
+                if (!DateTime.TryParse(tbx日期.Text, out this._日期))
                 {
+                    MessageBox.Show("日期格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                     return;
                 }
-                this.m_店铺 = tbx店铺.Text;
-                this.m_型号 = tbx型号.Text;
-                this.m_货号 = tbx货号.Text;
-                if (!decimal.TryParse(tbx单价.Text, out this.m_单价))
+                this.店铺 = tbx店铺.Text;
+                this.型号 = tbx型号.Text;
+                this.货号 = tbx货号.Text;
+                if (!decimal.TryParse(tbx单价.Text, out this._单价))
                 {
+                    MessageBox.Show("单价 格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                 }
-                else if (!decimal.TryParse(tbx税率.Text, out this.m_税率))
+                else if (!decimal.TryParse(tbx税率.Text, out this._税率))
                 {
+                    MessageBox.Show("税率 格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                 }
-                else if (!decimal.TryParse(tbx税后单价.Text, out this.m_税后单价))
+                else if (!decimal.TryParse(tbx税后单价.Text, out this._税后单价))
                 {
+                    MessageBox.Show("税后单价 格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                 }
-                else if (!decimal.TryParse(tbx汇率.Text, out this.m_汇率))
+                else if (!decimal.TryParse(tbx汇率.Text, out this._汇率))
                 {
+                    MessageBox.Show("汇率 格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                 }
-                else if (!decimal.TryParse(tbx人民币单价.Text, out this.m_人民币单价))
+                else if (!decimal.TryParse(tbx人民币单价.Text, out this._人民币单价))
                 {
+                    MessageBox.Show("人民币单价 格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                 }
-                else if (!decimal.TryParse(tbx积分率.Text, out this.m_积分率))
+                else if (!decimal.TryParse(tbx积分率.Text, out this._积分率))
                 {
+                    MessageBox.Show("积分率 格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                 }
-                else if (!decimal.TryParse(tbx重量.Text, out this.m_重量))
+                else if (!decimal.TryParse(tbx重量.Text, out this._重量))
                 {
+                    MessageBox.Show("重量 格式不对!");
                     this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
                 }
-
-                this.DialogResult = System.Windows.Forms.DialogResult.OK;
+                else
+                {
+                    this.DialogResult = System.Windows.Forms.DialogResult.OK;
+                }
+            }
+            else
+            {
+                this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             }
         }
 
