@@ -41,5 +41,10 @@ namespace GDIPlusTest.GameRobots.Robot2
                 this._winio_api.KeyPress(WinIoSys.Key.VK_SHIFT, 100);
             }
         }
+
+        private void btnLoadPic_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

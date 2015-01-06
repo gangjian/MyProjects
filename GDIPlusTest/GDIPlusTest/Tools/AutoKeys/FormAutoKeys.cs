@@ -83,6 +83,9 @@ namespace GDIPlusTest.Tools.AutoKeys
                 if (aki.couter == aki.period)
                 {
                     this._winio_api.KeyPress(aki.key, 100);
+                    System.Threading.Thread.Sleep(100);
+                    this._winio_api.KeyPress(aki.key, 100);
+                    System.Threading.Thread.Sleep(100);
                     aki.couter = 0;
                 }
             }
