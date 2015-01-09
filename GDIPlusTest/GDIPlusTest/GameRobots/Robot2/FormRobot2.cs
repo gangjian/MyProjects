@@ -44,7 +44,43 @@ namespace GDIPlusTest.GameRobots.Robot2
 
         private void btnLoadPic_Click(object sender, EventArgs e)
         {
+            Bitmap subBitmap = openBitmapFile();
+            if (null != subBitmap)
+            {
+                this.pictureBox1.Width = subBitmap.Width;
+                this.pictureBox1.Height = subBitmap.Height;
+                this.pictureBox1.Image = subBitmap;
+            }
+        }
 
+        private Bitmap openBitmapFile()
+        {
+            Bitmap bitMap = null;
+
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "图像文件(JPeg, Gif, Bmp, etc.)|*.jpg;*.jpeg;*.gif;*.bmp;*.tif; *.tiff; *.png| JPeg 图像文件(*.jpg;*.jpeg)|*.jpg;*.jpeg |GIF 图像文件(*.gif)|*.gif |BMP图像文件(*.bmp)|*.bmp|Tiff图像文件(*.tif;*.tiff)|*.tif;*.tiff|Png图像文件(*.png)| *.png |所有文件(*.*)|*.*";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                bitMap = new Bitmap(openFileDialog.FileName);
+            }
+
+            return bitMap;
+        }
+
+        private void btnFindRocks_Click(object sender, EventArgs e)
+        {
+            if (null == pictureBox1.Image)
+            {
+                return;
+            }
+            Bitmap bitMap = (Bitmap)pictureBox1.Image.Clone();
+            List<Rectangle> foundList = ImageIdentify.FindRocks(bitMap);
+            Graphics g = Graphics.FromImage(bitMap);
+            foreach(Rectangle rect in foundList)
+            {
+                g.DrawRectangle(new Pen(new SolidBrush(Color.Red), 2), rect);
+            }
+            pictureBox1.Image = bitMap;
         }
     }
 }
