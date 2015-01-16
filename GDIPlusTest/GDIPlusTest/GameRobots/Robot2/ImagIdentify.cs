@@ -11,36 +11,57 @@ namespace GDIPlusTest.GameRobots.Robot2
     {
         static public List<Rectangle> FindRocks(Bitmap img)
         {
-            BitmapPixelColorData bpcd = new BitmapPixelColorData(img);
-            List<Rectangle> foundList = new List<Rectangle>();
-            List<Rectangle> whiteSquareList = new List<Rectangle>();
-            int imgHeight = bpcd.m_pixelColorMatrix.GetLength(0);
-            int imgWidth = bpcd.m_pixelColorMatrix.GetLength(1);
+            BitmapPixelColorData imgData = new BitmapPixelColorData(img);
 
-            // 逐行列扫描
-            for (int y = 0; y < imgHeight; y++)
+            List<Rectangle> whiteSquareList = getWhiteSquares(imgData);
+
+            while (Rectangle.Empty != findSingleRock(ref whiteSquareList))
             {
-                for (int x = 0; x < imgWidth; x++)
-                {
-                    // 如果该点已在确认区域的范围内, continue.
-                    if (inConfirmedArea(x, y, foundList)
-                        || inConfirmedArea(x, y, whiteSquareList))
-                    {
-                        continue;
-                    }
-                    // 如果发现白色的方块
-                    Size foundSquareSize;
-                    if (foundWhiteSquare(x, y, bpcd.m_pixelColorMatrix, out foundSquareSize))
-                    {
-                        whiteSquareList.Add(new Rectangle(x, y, foundSquareSize.Width, foundSquareSize.Height));
-                    }
-                }
             }
 
             return whiteSquareList;
         }
 
-        static bool foundWhiteSquare(int x, int y, Color[,] mat, out Size squareSize)
+/////////////////////////////////////////////////////////////////////////////////////
+        static Rectangle findSingleRock(ref List<Rectangle> whiteSquareList)
+        {
+            Rectangle rect = Rectangle.Empty;
+            // 找到左上方第一个白色小方块
+            // 找出跟它距离接近的其它小方块
+            // 扩展周围灰色的范围
+            // 确定整个石块区域的范围
+
+            return rect;
+        }
+
+        static List<Rectangle> getWhiteSquares(BitmapPixelColorData img_data)
+        {
+            List<Rectangle> whiteSquareList = new List<Rectangle>();
+            int imgHeight = img_data.m_pixelColorMatrix.GetLength(0);
+            int imgWidth = img_data.m_pixelColorMatrix.GetLength(1);
+
+            // 逐行列扫描, 找白色的小方块
+            for (int y = 0; y < imgHeight; y++)
+            {
+                for (int x = 0; x < imgWidth; x++)
+                {
+                    // 如果该点已在确认区域的范围内, continue.
+                    if (inConfirmedArea(x, y, whiteSquareList))
+                    {
+                        continue;
+                    }
+                    // 如果发现白色的方块
+                    Size foundSquareSize;
+                    if (findWhiteSquare(x, y, img_data.m_pixelColorMatrix, out foundSquareSize))
+                    {
+                        whiteSquareList.Add(new Rectangle(x, y, foundSquareSize.Width, foundSquareSize.Height));
+                    }
+                }
+            }
+            return whiteSquareList;
+        }
+
+        static bool findWhiteSquare(int x, int y, Color[,] mat, out Size squareSize)
         {
             int imgHeight = mat.GetLength(0);
             int imgWidth = mat.GetLength(1);
