@@ -9,15 +9,25 @@ namespace GDIPlusTest.GameRobots.Robot2
 {
     class ImageIdentify
     {
-        static public List<Rectangle> FindRocks(Bitmap img)
+        static BitmapPixelColorData _imgData = null;
+        public ImageIdentify(Bitmap img)
         {
-            List<Rectangle> rocksList = new List<Rectangle>();
-            BitmapPixelColorData imgData = new BitmapPixelColorData(img);
+            System.Diagnostics.Trace.Assert(null != img);
+            _imgData = new BitmapPixelColorData(img);
+        }
 
-            List<Rectangle> whiteSquareList = getWhiteSquares(imgData);
+        /// <summary>
+        /// 找出游戏画面上石块的区域
+        /// </summary>
+        /// <returns></returns>
+        static public List<Rectangle> FindRocks()
+        {
+            System.Diagnostics.Trace.Assert(null != _imgData);
+            List<Rectangle> rocksList = new List<Rectangle>();
+            List<Rectangle> whiteSquareList = getWhiteSquares(_imgData);
 
             Rectangle rockRect = Rectangle.Empty;
-            while (Rectangle.Empty != (rockRect = findSingleRock(ref whiteSquareList, imgData)))
+            while (Rectangle.Empty != (rockRect = findSingleRock(ref whiteSquareList, _imgData)))
             {
                 rocksList.Add(rockRect);
             }
@@ -25,9 +35,43 @@ namespace GDIPlusTest.GameRobots.Robot2
             return rocksList;
         }
 
+        /// <summary>
+        /// 找出游戏画面上树丛的区域
+        /// </summary>
+        /// <returns></returns>
+        static public List<Rectangle> FindTrees()
+        {
+            System.Diagnostics.Trace.Assert(null != _imgData);
+            List<Rectangle> treesList = new List<Rectangle>();
+
+            return treesList;
+        }
+
+        /// <summary>
+        /// 找出游戏画面上砖墙的区域
+        /// </summary>
+        /// <param name="img"></param>
+        /// <returns></returns>
+        static public List<Rectangle> FindBricks(Bitmap img)
+        {
+            List<Rectangle> bricksList = new List<Rectangle>();
+
+            return bricksList;
+        }
+
 /////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>
+        /// 石块上白色小方块间的最大距离
+        /// </summary>
         private const int D_MAX_WHITE_SQUARE_DISTANCE = (10 + 2);
 
+        /// <summary>
+        /// 找出一片独立的石块区域
+        /// </summary>
+        /// <param name="whiteSquareList"></param>
+        /// <param name="imgData"></param>
+        /// <returns></returns>
         static Rectangle findSingleRock(ref List<Rectangle> whiteSquareList, BitmapPixelColorData imgData)
         {
             int i, j;

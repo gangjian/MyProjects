@@ -74,7 +74,8 @@ namespace GDIPlusTest.GameRobots.Robot2
                 return;
             }
             Bitmap bitMap = (Bitmap)pictureBox1.Image.Clone();
-            List<Rectangle> foundList = ImageIdentify.FindRocks(bitMap);
+            ImageIdentify imgID = new ImageIdentify(bitMap);
+            List<Rectangle> foundList = ImageIdentify.FindRocks();
             Graphics g = Graphics.FromImage(bitMap);
             foreach(Rectangle rect in foundList)
             {
