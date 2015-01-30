@@ -44,6 +44,14 @@ namespace GDIPlusTest.GameRobots.Robot2
             System.Diagnostics.Trace.Assert(null != _imgData);
             List<Rectangle> treesList = new List<Rectangle>();
 
+            Point startPoint = new Point(0, 0);
+            Rectangle treeRect = Rectangle.Empty;
+            while (Rectangle.Empty != (treeRect = findSingleTree(startPoint, _imgData, treesList)))
+            {
+                treesList.Add(treeRect);
+                startPoint = new Point(treeRect.Right, treeRect.Top);
+            }
+
             return treesList;
         }
 
@@ -60,6 +68,122 @@ namespace GDIPlusTest.GameRobots.Robot2
         }
 
 /////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>
+        /// 找出一片独立的树丛区域
+        /// </summary>
+        /// <param name="imgData"></param>
+        /// <returns></returns>
+        static Rectangle findSingleTree(Point pt, BitmapPixelColorData imgData, List<Rectangle> foundList)
+        {
+            int imgHeight = imgData.m_pixelColorMatrix.GetLength(0);
+            int imgWidth = imgData.m_pixelColorMatrix.GetLength(1);
+
+            // 找到第一个绿色的点
+            for (int i = pt.Y; i < imgHeight; i++)
+            {
+                for (int j = pt.X; j < imgWidth; j++)
+                {
+                    if (inConfirmedArea(j, i, foundList))
+                    {
+                        continue;
+                    }
+                    Color pixel = imgData.m_pixelColorMatrix[i, j];
+                    if (isColorGreen(pixel))
+                    {
+                        // 找到第一个绿色点附近所有绿色的点
+                        Rectangle rect = findGreenGroup(new Point(j, i), imgData);
+                        if (Rectangle.Empty != rect)
+                        {
+                            return rect;
+                        }
+                    }
+                }
+            }
+
+            return Rectangle.Empty;
+        }
+
+        /// <summary>
+        /// 找出从某一点开始所有相邻的绿色点的集合
+        /// </summary>
+        /// <param name="pt"></param>
+        /// <param name="imgData"></param>
+        static Rectangle findGreenGroup(Point pt, BitmapPixelColorData imgData)
+        {
+            Rectangle rect = Rectangle.Empty;
+            int imgHeight = imgData.m_pixelColorMatrix.GetLength(0);
+            int imgWidth = imgData.m_pixelColorMatrix.GetLength(1);
+            int right = pt.X;
+            int left = pt.X;
+            int top = pt.Y;
+            int bottom = pt.Y;
+            int i, j;
+
+            for (i = pt.Y; i < imgHeight; i++)
+            {
+                int blackCount = 0;
+                bool greenFlg = false;
+                // 向右侧扫描所有绿色点
+                for (j = pt.X; j < imgWidth; j++)
+                {
+                    Color pixel = imgData.m_pixelColorMatrix[i, j];
+                    if (isColorGreen(pixel))
+                    {
+                        blackCount = 0;
+                        greenFlg = true;
+                    }
+                    else
+                    {
+                        // 除了绿点, 只允许在中间出现连续的两个黑点
+                        if (    (isColorBlack(pixel) || isColorGray(pixel))
+                            &&  (j > pt.X)  )
+                        {
+                            blackCount += 1;
+                            if (blackCount > 2)
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                // 行末确定右侧边界
+                if (greenFlg)
+                {
+                    if (j - blackCount > right)
+                    {
+                        if ((pt.X == right)
+                            || (Math.Abs(j - blackCount - right) <= 2))
+                        {
+                            right = j - blackCount;
+                        }
+                        else
+                        {
+                            // 差距过大的话, 表明是另一个矩形区域
+                            greenFlg = false;
+                            break;
+                        }
+                    }
+                    bottom = i;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (    (right > pt.X)
+                &&  (bottom > pt.Y) )
+            {
+                rect = new Rectangle(pt.X, pt.Y, right - pt.X, bottom - pt.Y);
+            }
+
+            return rect;
+        }
 
         /// <summary>
         /// 石块上白色小方块间的最大距离
@@ -258,6 +382,11 @@ namespace GDIPlusTest.GameRobots.Robot2
             return expandRect;
         }
 
+        /// <summary>
+        /// 判断像素点是否是灰色
+        /// </summary>
+        /// <param name="pixel"></param>
+        /// <returns></returns>
         static bool isColorGray(Color pixel)
         {
             if (
@@ -270,7 +399,47 @@ namespace GDIPlusTest.GameRobots.Robot2
             {
                 return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断像素点是否是绿色
+        /// </summary>
+        /// <param name="pixel"></param>
+        /// <returns></returns>
+        static bool isColorGreen(Color pixel)
+        {
+            if (    (pixel.G > pixel.R)
+                &&  (pixel.G > pixel.B))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断像素点是否是黑色
+        /// </summary>
+        /// <param name="pixel"></param>
+        /// <returns></returns>
+        static bool isColorBlack(Color pixel)
+        {
+            if (    (0 == pixel.R)
+                &&  (0 == pixel.G)
+                &&  (0 == pixel.B))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         static List<Rectangle> getWhiteSquares(BitmapPixelColorData img_data)

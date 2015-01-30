@@ -32,6 +32,7 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnLoadPic = new System.Windows.Forms.Button();
             this.btnFindRocks = new System.Windows.Forms.Button();
+            this.btnFindTrees = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -73,6 +74,16 @@
             this.btnFindRocks.UseVisualStyleBackColor = true;
             this.btnFindRocks.Click += new System.EventHandler(this.btnFindRocks_Click);
             // 
+            // btnFindTrees
+            // 
+            this.btnFindTrees.Location = new System.Drawing.Point(557, 101);
+            this.btnFindTrees.Name = "btnFindTrees";
+            this.btnFindTrees.Size = new System.Drawing.Size(82, 34);
+            this.btnFindTrees.TabIndex = 0;
+            this.btnFindTrees.Text = "findTrees";
+            this.btnFindTrees.UseVisualStyleBackColor = true;
+            this.btnFindTrees.Click += new System.EventHandler(this.btnFindTrees_Click);
+            // 
             // FormRobot2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -80,6 +91,7 @@
             this.ClientSize = new System.Drawing.Size(739, 540);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.btnLoadPic);
+            this.Controls.Add(this.btnFindTrees);
             this.Controls.Add(this.btnFindRocks);
             this.Controls.Add(this.button1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -100,5 +112,6 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Button btnLoadPic;
         private System.Windows.Forms.Button btnFindRocks;
+        private System.Windows.Forms.Button btnFindTrees;
     }
 }

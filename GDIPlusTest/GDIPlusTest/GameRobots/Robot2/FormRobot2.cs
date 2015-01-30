@@ -83,5 +83,22 @@ namespace GDIPlusTest.GameRobots.Robot2
             }
             pictureBox1.Image = bitMap;
         }
+
+        private void btnFindTrees_Click(object sender, EventArgs e)
+        {
+            if (null == pictureBox1.Image)
+            {
+                return;
+            }
+            Bitmap bitMap = (Bitmap)pictureBox1.Image.Clone();
+            ImageIdentify imgID = new ImageIdentify(bitMap);
+            List<Rectangle> foundList = ImageIdentify.FindTrees();
+            Graphics g = Graphics.FromImage(bitMap);
+            foreach (Rectangle rect in foundList)
+            {
+                g.DrawRectangle(new Pen(new SolidBrush(Color.Red), 2), rect);
+            }
+            pictureBox1.Image = bitMap;
+        }
     }
 }
