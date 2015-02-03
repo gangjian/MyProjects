@@ -42,6 +42,8 @@ namespace GDIPlusTest.GameRobots.Robot2
         static public List<Rectangle> FindTrees()
         {
             System.Diagnostics.Trace.Assert(null != _imgData);
+            int imgHeight = _imgData.m_pixelColorMatrix.GetLength(0);
+            int imgWidth = _imgData.m_pixelColorMatrix.GetLength(1);
             List<Rectangle> treesList = new List<Rectangle>();
 
             Point startPoint = new Point(0, 0);
@@ -49,7 +51,14 @@ namespace GDIPlusTest.GameRobots.Robot2
             while (Rectangle.Empty != (treeRect = findSingleTree(startPoint, _imgData, treesList)))
             {
                 treesList.Add(treeRect);
-                startPoint = new Point(treeRect.Right, treeRect.Top);
+                if (treeRect.Right >= imgWidth)
+                {
+                    startPoint = new Point(0, treeRect.Top + 1);
+                }
+                else
+                {
+                    startPoint = new Point(treeRect.Right, treeRect.Top);
+                }
             }
 
             return treesList;
@@ -92,7 +101,7 @@ namespace GDIPlusTest.GameRobots.Robot2
                     if (isColorGreen(pixel))
                     {
                         // 找到第一个绿色点附近所有绿色的点
-                        Rectangle rect = findGreenGroup(new Point(j, i), imgData);
+                        Rectangle rect = findGreenGroup(new Point(j, i), imgData, foundList);
                         if (Rectangle.Empty != rect)
                         {
                             return rect;
@@ -109,7 +118,7 @@ namespace GDIPlusTest.GameRobots.Robot2
         /// </summary>
         /// <param name="pt"></param>
         /// <param name="imgData"></param>
-        static Rectangle findGreenGroup(Point pt, BitmapPixelColorData imgData)
+        static Rectangle findGreenGroup(Point pt, BitmapPixelColorData imgData, List<Rectangle> foundList)
         {
             Rectangle rect = Rectangle.Empty;
             int imgHeight = imgData.m_pixelColorMatrix.GetLength(0);
@@ -122,26 +131,67 @@ namespace GDIPlusTest.GameRobots.Robot2
 
             for (i = pt.Y; i < imgHeight; i++)
             {
+                int curLeft = -1;
+                int curRight = -1;
                 int blackCount = 0;
-                bool greenFlg = false;
+                // 向左扫描所有相邻的绿色点
+                for (j = pt.X; j >= 0; j--)
+                {
+                    Color pixel = imgData.m_pixelColorMatrix[i, j];
+                    if (inConfirmedArea(j, i, foundList))
+                    {
+                        break;
+                    }
+                    else if (isColorGreen(pixel))
+                    {
+                        curLeft = j;
+                        blackCount = 0;
+                    }
+                    else if (   isColorBlack(pixel)
+                             || isColorGray(pixel))
+                    {
+                        blackCount += 1;
+                        if (blackCount > 2)
+                        {
+                            blackCount = 0;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
                 // 向右侧扫描所有绿色点
+                blackCount = 0;
                 for (j = pt.X; j < imgWidth; j++)
                 {
                     Color pixel = imgData.m_pixelColorMatrix[i, j];
-                    if (isColorGreen(pixel))
+                    if (inConfirmedArea(j, i, foundList))
+                    {
+                        break;
+                    }
+                    else if (isColorGreen(pixel))
                     {
                         blackCount = 0;
-                        greenFlg = true;
+                        curRight = j;
+                        if (-1 == curLeft)
+                        {
+                            curLeft = j;
+                        }
                     }
                     else
                     {
                         // 除了绿点, 只允许在中间出现连续的两个黑点
-                        if (    (isColorBlack(pixel) || isColorGray(pixel))
-                            &&  (j > pt.X)  )
+                        if (   (-1 == curLeft)
+                                 || (   isColorBlack(pixel)
+                                     || isColorGray(pixel)  )
+                            )
                         {
                             blackCount += 1;
                             if (blackCount > 2)
                             {
+                                blackCount = 0;
                                 break;
                             }
                         }
@@ -151,24 +201,38 @@ namespace GDIPlusTest.GameRobots.Robot2
                         }
                     }
                 }
-                // 行末确定右侧边界
-                if (greenFlg)
+                // 确定该行绿色区间的起止点
+                if (    (-1 != curLeft)
+                    &&  (-1 != curRight)    )
                 {
-                    if (j - blackCount > right)
+                    if (    (pt.X == right)
+                        &&  (pt.X == left)  )
                     {
-                        if ((pt.X == right)
-                            || (Math.Abs(j - blackCount - right) <= 2))
+                        // 说明这是第一行
+                        left = curLeft;
+                        right = curRight;
+                    }
+                    else
+                    {
+                        if (    (Math.Abs(curRight - right) <= 2)
+                            &&  (Math.Abs(curLeft - left) <= 2) )
                         {
-                            right = j - blackCount;
+                            if (curLeft < left)
+                            {
+                                left = curLeft;
+                            }
+                            if (curRight > right)
+                            {
+                                right = curRight;
+                            }
+                            bottom = i;
                         }
                         else
                         {
-                            // 差距过大的话, 表明是另一个矩形区域
-                            greenFlg = false;
+                            // 差距过大表明已经进入另一块矩形区间
                             break;
                         }
                     }
-                    bottom = i;
                 }
                 else
                 {
@@ -179,7 +243,7 @@ namespace GDIPlusTest.GameRobots.Robot2
             if (    (right > pt.X)
                 &&  (bottom > pt.Y) )
             {
-                rect = new Rectangle(pt.X, pt.Y, right - pt.X, bottom - pt.Y);
+                rect = new Rectangle(left, top, right - left, bottom - top);
             }
 
             return rect;
