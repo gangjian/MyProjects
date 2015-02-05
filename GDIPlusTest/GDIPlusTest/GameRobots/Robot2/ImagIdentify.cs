@@ -51,13 +51,13 @@ namespace GDIPlusTest.GameRobots.Robot2
             while (Rectangle.Empty != (treeRect = findSingleTree(startPoint, _imgData, treesList)))
             {
                 treesList.Add(treeRect);
-                if (treeRect.Right >= imgWidth)
+                if (treeRect.Right + 1 >= imgWidth)
                 {
                     startPoint = new Point(0, treeRect.Top + 1);
                 }
                 else
                 {
-                    startPoint = new Point(treeRect.Right, treeRect.Top);
+                    startPoint = new Point(treeRect.Right + 1, treeRect.Top);
                 }
             }
 
@@ -69,14 +69,67 @@ namespace GDIPlusTest.GameRobots.Robot2
         /// </summary>
         /// <param name="img"></param>
         /// <returns></returns>
-        static public List<Rectangle> FindBricks(Bitmap img)
+        static public List<Rectangle> FindBricks()
         {
+            System.Diagnostics.Trace.Assert(null != _imgData);
+            int imgHeight = _imgData.m_pixelColorMatrix.GetLength(0);
+            int imgWidth = _imgData.m_pixelColorMatrix.GetLength(1);
             List<Rectangle> bricksList = new List<Rectangle>();
+
+            Point startPoint = new Point(0, 0);
+            Rectangle bricksRect = Rectangle.Empty;
+            while (Rectangle.Empty != (bricksRect = findSingleBricks(startPoint, _imgData, bricksList)))
+            {
+                bricksList.Add(bricksRect);
+                if (bricksRect.Right + 1 >= imgWidth)
+                {
+                    startPoint = new Point(0, bricksRect.Top + 1);
+                }
+                else
+                {
+                    startPoint = new Point(bricksRect.Right + 1, bricksRect.Top);
+                }
+            }
 
             return bricksList;
         }
 
 /////////////////////////////////////////////////////////////////////////////////////
+
+        static Rectangle findSingleBricks(Point pt, BitmapPixelColorData imgData, List<Rectangle> foundList)
+        {
+            int imgHeight = imgData.m_pixelColorMatrix.GetLength(0);
+            int imgWidth = imgData.m_pixelColorMatrix.GetLength(1);
+
+            // 找到第一个红色的点
+            for (int i = pt.Y; i < imgHeight; i++)
+            {
+                int start_x = pt.X;
+                if (i > pt.Y)
+                {
+                    start_x = 0;
+                }
+                for (int j = start_x; j < imgWidth; j++)
+                {
+                    if (inConfirmedArea(j, i, foundList))
+                    {
+                        continue;
+                    }
+                    Color pixel = imgData.m_pixelColorMatrix[i, j];
+                    if (isColorRed(pixel))
+                    {
+                        // 找到第一个绿色点附近所有绿色的点
+                        Rectangle rect = findRedGroup(new Point(j, i), imgData, foundList);
+                        if (Rectangle.Empty != rect)
+                        {
+                            return rect;
+                        }
+                    }
+                }
+            }
+
+            return Rectangle.Empty;
+        }
 
         /// <summary>
         /// 找出一片独立的树丛区域
@@ -91,7 +144,12 @@ namespace GDIPlusTest.GameRobots.Robot2
             // 找到第一个绿色的点
             for (int i = pt.Y; i < imgHeight; i++)
             {
-                for (int j = pt.X; j < imgWidth; j++)
+                int start_x = pt.X;
+                if (i > pt.Y)
+                {
+                    start_x = 0;
+                }
+                for (int j = start_x; j < imgWidth; j++)
                 {
                     if (inConfirmedArea(j, i, foundList))
                     {
@@ -114,7 +172,7 @@ namespace GDIPlusTest.GameRobots.Robot2
         }
 
         /// <summary>
-        /// 找出从某一点开始所有相邻的绿色点的集合
+        /// 找出从某一点开始所有相邻的绿色点的(矩形)集合
         /// </summary>
         /// <param name="pt"></param>
         /// <param name="imgData"></param>
@@ -217,6 +275,7 @@ namespace GDIPlusTest.GameRobots.Robot2
                         if (    (Math.Abs(curRight - right) <= 2)
                             &&  (Math.Abs(curLeft - left) <= 2) )
                         {
+                            // 最常见的情况: 左右边界都在之前确定的边界附近
                             if (curLeft < left)
                             {
                                 left = curLeft;
@@ -227,9 +286,22 @@ namespace GDIPlusTest.GameRobots.Robot2
                             }
                             bottom = i;
                         }
+                        // 以下两种情况只有一条边界与之前确定的边界接近, 另一条差距较大
+                        // 说明有一侧出现了与另一块矩形区域并列靠近的情况
+                        // 此时要保持既定的边界位置不变(不要算到临近的另一块矩形区域里去)
+                        else if (Math.Abs(curRight - right) <= 2)
+                        {
+                            curLeft = left;
+                            bottom = i;
+                        }
+                        else if (Math.Abs(curLeft - left) <= 2)
+                        {
+                            curRight = right;
+                            bottom = i;
+                        }
+                        // 两侧都与既定边界差距过大表明已经进入另一块矩形区间
                         else
                         {
-                            // 差距过大表明已经进入另一块矩形区间
                             break;
                         }
                     }
@@ -243,7 +315,122 @@ namespace GDIPlusTest.GameRobots.Robot2
             if (    (right > pt.X)
                 &&  (bottom > pt.Y) )
             {
-                rect = new Rectangle(left, top, right - left, bottom - top);
+                rect = new Rectangle(left, top, right - left + 1, bottom - top + 1);
+            }
+
+            return rect;
+        }
+
+        static Rectangle findRedGroup(Point pt, BitmapPixelColorData imgData, List<Rectangle> foundList)
+        {
+            Rectangle rect = Rectangle.Empty;
+            int imgHeight = imgData.m_pixelColorMatrix.GetLength(0);
+            int imgWidth = imgData.m_pixelColorMatrix.GetLength(1);
+            int right = pt.X;
+            int left = pt.X;
+            int top = pt.Y;
+            int bottom = pt.Y;
+            int i, j;
+
+            for (i = pt.Y; i < imgHeight; i++)
+            {
+                int curLeft = -1;
+                int curRight = -1;
+                // 向左扫描所有相邻的红色点
+                for (j = pt.X; j >= 0; j--)
+                {
+                    Color pixel = imgData.m_pixelColorMatrix[i, j];
+                    if (inConfirmedArea(j, i, foundList))
+                    {
+                        break;
+                    }
+                    else if (isColorRed(pixel))
+                    {
+                        curLeft = j;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                // 向右侧扫描所有红色点
+                for (j = pt.X; j < imgWidth; j++)
+                {
+                    Color pixel = imgData.m_pixelColorMatrix[i, j];
+                    if (inConfirmedArea(j, i, foundList))
+                    {
+                        break;
+                    }
+                    else if (isColorRed(pixel))
+                    {
+                        curRight = j;
+                        if (-1 == curLeft)
+                        {
+                            curLeft = j;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                // 确定该行红色区间的起止点
+                if ((-1 != curLeft)
+                    && (-1 != curRight))
+                {
+                    if ((pt.X == right)
+                        && (pt.X == left))
+                    {
+                        // 说明这是第一行
+                        left = curLeft;
+                        right = curRight;
+                    }
+                    else
+                    {
+                        if ((Math.Abs(curRight - right) <= 2)
+                            && (Math.Abs(curLeft - left) <= 2))
+                        {
+                            // 最常见的情况: 左右边界都在之前确定的边界附近
+                            if (curLeft < left)
+                            {
+                                left = curLeft;
+                            }
+                            if (curRight > right)
+                            {
+                                right = curRight;
+                            }
+                            bottom = i;
+                        }
+                        // 以下两种情况只有一条边界与之前确定的边界接近, 另一条差距较大
+                        // 说明有一侧出现了与另一块矩形区域并列靠近的情况
+                        // 此时要保持既定的边界位置不变(不要算到临近的另一块矩形区域里去)
+                        else if (Math.Abs(curRight - right) <= 2)
+                        {
+                            curLeft = left;
+                            bottom = i;
+                        }
+                        else if (Math.Abs(curLeft - left) <= 2)
+                        {
+                            curRight = right;
+                            bottom = i;
+                        }
+                        // 两侧都与既定边界差距过大表明已经进入另一块矩形区间
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if ((right > pt.X)
+                && (bottom > pt.Y))
+            {
+                rect = new Rectangle(left, top, right - left + 1, bottom - top + 1);
             }
 
             return rect;
@@ -497,6 +684,19 @@ namespace GDIPlusTest.GameRobots.Robot2
             if (    (0 == pixel.R)
                 &&  (0 == pixel.G)
                 &&  (0 == pixel.B))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        static bool isColorRed(Color pixel)
+        {
+            if ((pixel.R > pixel.G)
+                && (pixel.R > pixel.B))
             {
                 return true;
             }

@@ -75,13 +75,17 @@ namespace GDIPlusTest.GameRobots.Robot2
             }
             Bitmap bitMap = (Bitmap)pictureBox1.Image.Clone();
             ImageIdentify imgID = new ImageIdentify(bitMap);
+            DateTime startTime = DateTime.Now;
             List<Rectangle> foundList = ImageIdentify.FindRocks();
+            DateTime endTime = DateTime.Now;
+            TimeSpan duringTime = endTime - startTime;
             Graphics g = Graphics.FromImage(bitMap);
             foreach(Rectangle rect in foundList)
             {
                 g.DrawRectangle(new Pen(new SolidBrush(Color.Red), 2), rect);
             }
             pictureBox1.Image = bitMap;
+            MessageBox.Show(duringTime.TotalMilliseconds.ToString());
         }
 
         private void btnFindTrees_Click(object sender, EventArgs e)
@@ -92,13 +96,38 @@ namespace GDIPlusTest.GameRobots.Robot2
             }
             Bitmap bitMap = (Bitmap)pictureBox1.Image.Clone();
             ImageIdentify imgID = new ImageIdentify(bitMap);
+            DateTime startTime = DateTime.Now;
             List<Rectangle> foundList = ImageIdentify.FindTrees();
+            DateTime endTime = DateTime.Now;
+            TimeSpan duringTime = endTime - startTime;
             Graphics g = Graphics.FromImage(bitMap);
             foreach (Rectangle rect in foundList)
             {
                 g.DrawRectangle(new Pen(new SolidBrush(Color.Red), 2), rect);
             }
             pictureBox1.Image = bitMap;
+            MessageBox.Show(duringTime.TotalMilliseconds.ToString());
+        }
+
+        private void btnFindBricks_Click(object sender, EventArgs e)
+        {
+            if (null == pictureBox1.Image)
+            {
+                return;
+            }
+            Bitmap bitMap = (Bitmap)pictureBox1.Image.Clone();
+            ImageIdentify imgID = new ImageIdentify(bitMap);
+            DateTime startTime = DateTime.Now;
+            List<Rectangle> foundList = ImageIdentify.FindBricks();
+            DateTime endTime = DateTime.Now;
+            TimeSpan duringTime = endTime - startTime;
+            Graphics g = Graphics.FromImage(bitMap);
+            foreach (Rectangle rect in foundList)
+            {
+                g.DrawRectangle(new Pen(new SolidBrush(Color.Red), 2), rect);
+            }
+            pictureBox1.Image = bitMap;
+            MessageBox.Show(duringTime.TotalMilliseconds.ToString());
         }
     }
 }

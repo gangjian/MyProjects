@@ -33,6 +33,7 @@
             this.btnLoadPic = new System.Windows.Forms.Button();
             this.btnFindRocks = new System.Windows.Forms.Button();
             this.btnFindTrees = new System.Windows.Forms.Button();
+            this.btnFindBricks = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -84,6 +85,16 @@
             this.btnFindTrees.UseVisualStyleBackColor = true;
             this.btnFindTrees.Click += new System.EventHandler(this.btnFindTrees_Click);
             // 
+            // btnFindBricks
+            // 
+            this.btnFindBricks.Location = new System.Drawing.Point(557, 141);
+            this.btnFindBricks.Name = "btnFindBricks";
+            this.btnFindBricks.Size = new System.Drawing.Size(82, 34);
+            this.btnFindBricks.TabIndex = 0;
+            this.btnFindBricks.Text = "findBricks";
+            this.btnFindBricks.UseVisualStyleBackColor = true;
+            this.btnFindBricks.Click += new System.EventHandler(this.btnFindBricks_Click);
+            // 
             // FormRobot2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -91,6 +102,7 @@
             this.ClientSize = new System.Drawing.Size(739, 540);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.btnLoadPic);
+            this.Controls.Add(this.btnFindBricks);
             this.Controls.Add(this.btnFindTrees);
             this.Controls.Add(this.btnFindRocks);
             this.Controls.Add(this.button1);
@@ -113,5 +125,6 @@
         private System.Windows.Forms.Button btnLoadPic;
         private System.Windows.Forms.Button btnFindRocks;
         private System.Windows.Forms.Button btnFindTrees;
+        private System.Windows.Forms.Button btnFindBricks;
     }
 }
