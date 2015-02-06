@@ -1,0 +1,10 @@
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\bin\Release\SourceAnalyzer.exe
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\bin\Release\SourceAnalyzer.pdb
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\obj\x86\Release\ResolveAssemblyReference.cache
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\obj\x86\Release\SourceAnalyzer.exe
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\obj\x86\Release\SourceAnalyzer.pdb
+D:\gang\MyProjects\ConsoleTest\SourceAnalyzer\obj\x86\Release\SourceAnalyzer.exe
+D:\gang\MyProjects\ConsoleTest\SourceAnalyzer\obj\x86\Release\SourceAnalyzer.pdb
+D:\gang\MyProjects\ConsoleTest\SourceAnalyzer\bin\Release\SourceAnalyzer.exe
+D:\gang\MyProjects\ConsoleTest\SourceAnalyzer\bin\Release\SourceAnalyzer.pdb
+D:\gang\MyProjects\ConsoleTest\SourceAnalyzer\obj\x86\Release\ResolveAssemblyReference.cache

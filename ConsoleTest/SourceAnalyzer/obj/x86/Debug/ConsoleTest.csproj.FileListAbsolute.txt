@@ -1,0 +1,5 @@
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\bin\Debug\ConsoleTest.exe
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\bin\Debug\ConsoleTest.pdb
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\obj\x86\Debug\ResolveAssemblyReference.cache
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\obj\x86\Debug\ConsoleTest.exe
+D:\gang\MyProjects\ConsoleTest\ConsoleTest\obj\x86\Debug\ConsoleTest.pdb

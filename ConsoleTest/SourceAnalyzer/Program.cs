@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace ConsoleTest
 {
@@ -20,8 +19,6 @@ namespace ConsoleTest
                 }
                 else if ("show form" == cmd)
                 {
-                    Form1 fm = new Form1();
-                    fm.Show();
                 }
                 else
                 {
