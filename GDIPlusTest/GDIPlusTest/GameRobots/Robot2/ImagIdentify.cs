@@ -111,14 +111,14 @@ namespace GDIPlusTest.GameRobots.Robot2
                 }
                 for (int j = start_x; j < imgWidth; j++)
                 {
-                    if (inConfirmedArea(j, i, foundList))
+                    if (inConfirmedArea(ref j, i, foundList))
                     {
                         continue;
                     }
                     Color pixel = imgData.m_pixelColorMatrix[i, j];
                     if (isColorRed(pixel))
                     {
-                        // 找到第一个绿色点附近所有绿色的点
+                        // 找到第一个红色点附近所有红色的点
                         Rectangle rect = findRedGroup(new Point(j, i), imgData, foundList);
                         if (Rectangle.Empty != rect)
                         {
@@ -151,7 +151,7 @@ namespace GDIPlusTest.GameRobots.Robot2
                 }
                 for (int j = start_x; j < imgWidth; j++)
                 {
-                    if (inConfirmedArea(j, i, foundList))
+                    if (inConfirmedArea(ref j, i, foundList))
                     {
                         continue;
                     }
@@ -196,7 +196,7 @@ namespace GDIPlusTest.GameRobots.Robot2
                 for (j = pt.X; j >= 0; j--)
                 {
                     Color pixel = imgData.m_pixelColorMatrix[i, j];
-                    if (inConfirmedArea(j, i, foundList))
+                    if (inConfirmedArea(ref j, i, foundList))
                     {
                         break;
                     }
@@ -225,7 +225,7 @@ namespace GDIPlusTest.GameRobots.Robot2
                 for (j = pt.X; j < imgWidth; j++)
                 {
                     Color pixel = imgData.m_pixelColorMatrix[i, j];
-                    if (inConfirmedArea(j, i, foundList))
+                    if (inConfirmedArea(ref j, i, foundList))
                     {
                         break;
                     }
@@ -337,32 +337,41 @@ namespace GDIPlusTest.GameRobots.Robot2
                 int curLeft = -1;
                 int curRight = -1;
                 // 向左扫描所有相邻的红色点
+                int blackCount = 0;
                 for (j = pt.X; j >= 0; j--)
                 {
                     Color pixel = imgData.m_pixelColorMatrix[i, j];
-                    if (inConfirmedArea(j, i, foundList))
+                    if (inConfirmedArea(ref j, i, foundList))
                     {
                         break;
                     }
                     else if (isColorRed(pixel))
                     {
                         curLeft = j;
+                        blackCount = 0;
                     }
                     else
                     {
-                        break;
+                        blackCount += 1;
+                        if (blackCount > 1)
+                        {
+                            blackCount = 0;
+                            break;
+                        }
                     }
                 }
                 // 向右侧扫描所有红色点
+                blackCount = 0;
                 for (j = pt.X; j < imgWidth; j++)
                 {
                     Color pixel = imgData.m_pixelColorMatrix[i, j];
-                    if (inConfirmedArea(j, i, foundList))
+                    if (inConfirmedArea(ref j, i, foundList))
                     {
                         break;
                     }
                     else if (isColorRed(pixel))
                     {
+                        blackCount = 0;
                         curRight = j;
                         if (-1 == curLeft)
                         {
@@ -371,7 +380,12 @@ namespace GDIPlusTest.GameRobots.Robot2
                     }
                     else
                     {
-                        break;
+                        blackCount += 1;
+                        if (blackCount > 1)
+                        {
+                            blackCount = 0;
+                            break;
+                        }
                     }
                 }
                 // 确定该行红色区间的起止点
@@ -718,7 +732,7 @@ namespace GDIPlusTest.GameRobots.Robot2
                 for (int x = 0; x < imgWidth; x++)
                 {
                     // 如果该点已在确认区域的范围内, continue.
-                    if (inConfirmedArea(x, y, whiteSquareList))
+                    if (inConfirmedArea(ref x, y, whiteSquareList))
                     {
                         continue;
                     }
@@ -790,15 +804,16 @@ namespace GDIPlusTest.GameRobots.Robot2
             return false;
         }
 
-        static bool inConfirmedArea(int x, int y, List<Rectangle> confirmedList)
+        static bool inConfirmedArea(ref int x, int y, List<Rectangle> confirmedList)
         {
             foreach (Rectangle rect in confirmedList)
             {
                 if ((x >= rect.X)
-                    && (x <= (rect.X + rect.Width))
+                    && (x < (rect.X + rect.Width))
                     && (y >= rect.Y)
-                    && (y <= rect.Y + rect.Height))
+                    && (y < (rect.Y + rect.Height))   )
                 {
+                    x = rect.X + rect.Width;
                     return true;
                 }
             }
