@@ -120,7 +120,9 @@ namespace GDIPlusTest.GameRobots.Robot2
                     {
                         // 找到第一个红色点附近所有红色的点
                         Rectangle rect = findRedGroup(new Point(j, i), imgData, foundList);
-                        if (Rectangle.Empty != rect)
+                        if (Rectangle.Empty != rect
+                            && rect.Width >= 12
+                            && rect.Height>= 6)
                         {
                             return rect;
                         }
@@ -160,7 +162,10 @@ namespace GDIPlusTest.GameRobots.Robot2
                     {
                         // 找到第一个绿色点附近所有绿色的点
                         Rectangle rect = findGreenGroup(new Point(j, i), imgData, foundList);
-                        if (Rectangle.Empty != rect)
+                        if (Rectangle.Empty != rect
+                            // 此处还要加上对矩形区域的大小的判断
+                            && rect.Width > 30
+                            && rect.Height > 30)
                         {
                             return rect;
                         }
@@ -381,7 +386,12 @@ namespace GDIPlusTest.GameRobots.Robot2
                     else
                     {
                         blackCount += 1;
-                        if (blackCount > 1)
+                        int maxBlackCnt = 1;
+                        if (-1 == curLeft)
+                        {
+                            maxBlackCnt = 2;
+                        }
+                        if (blackCount > maxBlackCnt)
                         {
                             blackCount = 0;
                             break;
@@ -415,20 +425,6 @@ namespace GDIPlusTest.GameRobots.Robot2
                             }
                             bottom = i;
                         }
-                        // 以下两种情况只有一条边界与之前确定的边界接近, 另一条差距较大
-                        // 说明有一侧出现了与另一块矩形区域并列靠近的情况
-                        // 此时要保持既定的边界位置不变(不要算到临近的另一块矩形区域里去)
-                        else if (Math.Abs(curRight - right) <= 2)
-                        {
-                            curLeft = left;
-                            bottom = i;
-                        }
-                        else if (Math.Abs(curLeft - left) <= 2)
-                        {
-                            curRight = right;
-                            bottom = i;
-                        }
-                        // 两侧都与既定边界差距过大表明已经进入另一块矩形区间
                         else
                         {
                             break;
@@ -712,7 +708,16 @@ namespace GDIPlusTest.GameRobots.Robot2
             if ((pixel.R > pixel.G)
                 && (pixel.R > pixel.B))
             {
-                return true;
+                // 以下是为了区别于黄色或紫色
+                int r = pixel.R - pixel.B;
+                int g = pixel.G - pixel.B;
+                if (    (g > 0)
+                    &&  ((float)g/(float)r < 0.70)
+                    )
+                {
+                    return true;
+                }
+                return false;
             }
             else
             {
