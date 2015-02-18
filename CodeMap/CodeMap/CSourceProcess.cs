@@ -6,6 +6,16 @@ using System.IO;
 
 namespace CodeMap
 {
+    // 条件编译处理情报
+    class CC_INFO
+    {
+        public string exp = "";
+        public bool unidentified_flag = false;
+        public bool write_flag = true;
+        public bool write_next_flag = false;
+        public bool pop_up_flag = false;
+    }
+
     class CSourceProcess
     {
         /// <summary>
@@ -49,6 +59,10 @@ namespace CodeMap
             List<string> retList = new List<string>();
 
             string rdLine = tr.ReadLine();
+            if (null == rdLine)
+            {
+                return retList;
+            }
             string wtLine = "";
             do
             {
@@ -91,12 +105,13 @@ namespace CodeMap
                     }
                     if (-1 != idx_e)
                     {
-                        wtLine = rdLine.Remove(idx_s, idx_e - idx_s + 2);
+                        rdLine = rdLine.Remove(idx_s, idx_e - idx_s + 2);
                     }
                     else
                     {
-                        wtLine = "";
+                        rdLine = "";
                     }
+                    continue;
                 }
                 else
                 {
@@ -104,7 +119,12 @@ namespace CodeMap
                     wtLine = rdLine.TrimEnd();
                 }
                 retList.Add(wtLine);
-            } while (null != (rdLine = tr.ReadLine()));
+                rdLine = tr.ReadLine();
+                if (null == rdLine)
+                {
+                    break;
+                }
+            } while (true);
             tr.Close();
 
             return retList;
@@ -118,77 +138,89 @@ namespace CodeMap
         public static List<string> RemoveConditionalCompile(List<string> inputList)
         {
             List<string> retList = new List<string>();
-            bool wtFlag = true;
-            bool wtNextFlag = false;
-            bool bUnknownCondition = false;
+            List<CC_INFO> ccStack = new List<CC_INFO>();    // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
+            CC_INFO cc_info = new CC_INFO();
+
             string rdLine = "";
             foreach (string line in inputList)
             {
                 rdLine = line.Trim().ToLower();
                 if (rdLine.StartsWith("#if"))
                 {
-                    string exp = rdLine.Remove(0, 3).Trim();
-                    if ("0" == exp)
+                    ccStack.Add(cc_info);
+                    cc_info = new CC_INFO();
+
+                    cc_info.exp = rdLine.Remove(0, 3).Trim();
+                    if ("0" == cc_info.exp)
                     {
-                        wtFlag = false;
-                        wtNextFlag = false;
+                        cc_info.write_flag = false;
+                        cc_info.write_next_flag = false;
                     }
-                    else if ("1" == exp)
+                    else if ("1" == cc_info.exp)
                     {
-                        wtFlag = false;
-                        wtNextFlag = true;
+                        cc_info.write_flag = false;
+                        cc_info.write_next_flag = true;
                     }
                     else
                     {
-                        bUnknownCondition = true;
-                        wtFlag = true;
-                        wtNextFlag = false;
+                        cc_info.unidentified_flag = true;
+                        cc_info.write_flag = true;
+                        cc_info.write_next_flag = false;
                     }
                 }
                 else if (rdLine.StartsWith("#else"))
                 {
-                    if (bUnknownCondition)
+                    if (cc_info.unidentified_flag)
                     {
                     }
-                    else if (true == wtFlag)
+                    else if (true == cc_info.write_flag)
                     {
-                        wtFlag = false;
-                        wtNextFlag = false;
+                        cc_info.write_flag = false;
+                        cc_info.write_next_flag = false;
                     }
                     else
                     {
-                        wtFlag = false;
-                        wtNextFlag = true;
+                        cc_info.write_flag = false;
+                        cc_info.write_next_flag = true;
                     }
                 }
                 else if (rdLine.StartsWith("#endif"))
                 {
-                    if (bUnknownCondition)
+                    if (cc_info.unidentified_flag)
                     {
-                        bUnknownCondition = false;
+                        cc_info.unidentified_flag = false;
                     }
                     else
                     {
-                        wtFlag = false;
-                        wtNextFlag = true;
+                        cc_info.write_flag = false;
+                        cc_info.write_next_flag = true;
                     }
+                    cc_info.pop_up_flag = true;
                 }
                 else
                 {
-                    if (true == wtNextFlag)
+                    if (true == cc_info.write_next_flag)
                     {
-                        wtFlag = true;
-                        wtNextFlag = false;
+                        cc_info.write_flag = true;
+                        cc_info.write_next_flag = false;
                     }
                 }
 
-                if (wtFlag)
+                if (cc_info.write_flag)
                 {
                     retList.Add(line);
                 }
                 else
                 {
                     retList.Add("");
+                }
+
+                // 嵌套时弹出堆栈, 恢复之前的情报
+                if (true == cc_info.pop_up_flag)
+                {
+                    int lastIdx = ccStack.Count - 1;
+                    cc_info = ccStack[lastIdx];
+                    ccStack.RemoveAt(lastIdx);
                 }
             }
 
