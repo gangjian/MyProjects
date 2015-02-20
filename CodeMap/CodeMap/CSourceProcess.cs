@@ -16,6 +16,19 @@ namespace CodeMap
         public bool pop_up_flag = false;
     }
 
+    // 文件当中某个内容的位置(行列号)
+    class File_Pos
+    {
+        public int row_num = 0;    // 行号
+        public int col_num = 0;    // 列号
+
+        public File_Pos(int r, int c)
+        {
+            row_num = r;
+            col_num = c;
+        }
+    }
+
     enum E_CHAR_TYPE
     {
         E_CTYPE_WHITE_SPACE,
@@ -25,6 +38,11 @@ namespace CodeMap
         E_CTYPE_PUNCTUATION,
         E_CTYPE_SYMBOL,
         E_CTYPE_UNKNOWN
+    }
+
+    class CFileInfo
+    {
+        public List<string> include_list = new List<string>();
     }
 
     class CSourceProcess
@@ -39,7 +57,7 @@ namespace CodeMap
             wtList = RemoveConditionalCompile(wtList);
 
             int lineIdx = 0, startIdx = 0;
-            GetCodeBlock(wtList, ref lineIdx, ref startIdx);
+            CFileInfo fi = CodeAnalyze(wtList, ref lineIdx, ref startIdx);
 
             //TextWriter tw = new StreamWriter(fileName);
             //foreach (string wtLine in wtList)
@@ -244,27 +262,117 @@ namespace CodeMap
         }
 
         /// <summary>
-        /// 取得一块分类代码区块
+        /// 代码解析
         /// </summary>
-        public static void GetCodeBlock(List<string> codeList, ref int lineIdx, ref int startIdx)
+        public static CFileInfo CodeAnalyze(List<string> codeList, ref int lineIdx, ref int startIdx)
         {
             System.Diagnostics.Trace.Assert((null != codeList));
             if (0 == codeList.Count)
             {
-                return;
+                return null;
             }
 
+            CFileInfo fi = new CFileInfo();
+            List<string> sdIdList = new List<string>();     // 标准标识符暂存列表
             string nextId = null;
             while (null != (nextId = GetNextIdentifier(codeList, ref lineIdx, ref startIdx)))
             {
-                System.Diagnostics.Trace.WriteLine(nextId);
-                if ("rcvcm_conv" == nextId)
+                // 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
+                if (IsStandardIdentifier(nextId))
                 {
-                    System.Diagnostics.Trace.WriteLine("shit");
+                    sdIdList.Add(nextId);
+                }
+                // 否则可能是各种符号
+                else
+                {
+                    // 遇到小括号了, 可能是碰上函数声明或定义了
+                    if (("(" == nextId) && (0 != sdIdList.Count))
+                    {
+                        FunctionDetection(codeList, ref lineIdx, ref startIdx);
+                    }
+                    // 井号开头的是预处理命令
+                    else if ("#" == nextId)
+                    {
+                        PreprocessCommandHandling(codeList, ref lineIdx, ref startIdx, ref fi);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Trace.WriteLine("艾玛! 不晓得这是啥玩意? line = " + (lineIdx + 1).ToString() + "Col = " + startIdx.ToString());
+                    }
+                    sdIdList.Clear();
                 }
             }
 
-            return;
+            return fi;
+        }
+
+        /// <summary>
+        /// 预处理命令处理
+        /// </summary>
+        static void PreprocessCommandHandling(List<string> codeList, ref int lineIdx, ref int startIdx, ref CFileInfo fi)
+        {
+            string cmd = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+            // 头文件包含
+            if ("include" == cmd.ToLower())
+            {
+                string incFileName = GetIncludeFileName(codeList, ref lineIdx, ref startIdx);
+                if (null != incFileName)
+                {
+                    fi.include_list.Add(incFileName);
+                }
+            }
+            // 宏定义
+            else if ("define" == cmd.ToLower())
+            {
+            }
+            // 条件编译
+            else if ("if" == cmd.ToLower())
+            {
+            }
+            else if ("else" == cmd.ToLower())
+            {
+            }
+            else if ("endif" == cmd.ToLower())
+            {
+            }
+            else
+            {
+            }
+        }
+
+        /// <summary>
+        /// 函数探测(声明, 定义)
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="lineIdx"></param>
+        /// <param name="startIdx"></param>
+        static void FunctionDetection(List<string> codeList, ref int lineIdx, ref int startIdx)
+        {
+            // TODO:
+        }
+
+        static string GetIncludeFileName(List<string> codeList, ref int lineIdx, ref int startIdx)
+        {
+            string quot = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+            string retName = quot;
+            if ("\"" == quot)
+            {
+            }
+            else if ("<" == quot)
+            {
+                quot = ">";
+            }
+            else
+            {
+                return null;
+            }
+            string str = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+            while (quot != str)
+            {
+                retName += str;
+                str = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+            }
+            return retName + quot;
         }
 
         /// <summary>
@@ -425,6 +533,77 @@ RET_IDF:
             {
                 return E_CHAR_TYPE.E_CTYPE_UNKNOWN;
             }
+        }
+
+        /// <summary>
+        /// 判断是否是"标准"标识符
+        /// 字母数字下划线组成且开头不是数字
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        static bool IsStandardIdentifier(string idStr)
+        {
+            int cnt = 0;
+            foreach (Char ch in idStr)
+            {
+                if (!Char.IsDigit(ch) && !Char.IsLetter(ch) && ('_' != ch))
+                {
+                    return false;
+                }
+                if (0 == cnt)
+                {
+                    // 开头不能是数字
+                    if (Char.IsDigit(ch))
+                    {
+                        return false;
+                    }
+                }
+                cnt++;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 从当前位置开始, 找到下一个指定符号出现的位置
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="lineIdx"></param>
+        /// <param name="startIdx"></param>
+        /// <param name="symbol"></param>
+        static File_Pos FindNextSymbol(List<string> codeList, int lineIdx, int startIdx, Char symbol)
+        {
+            string curLine = "";
+            int curIdx = startIdx;
+            while (true)
+            {
+                // 到list末尾结束跳出
+                if (lineIdx >= codeList.Count)
+                {
+                    break;
+                }
+                curLine = codeList[lineIdx];
+                // 如果当前行是空行, 跳到下一行
+                if (string.Empty == curLine)
+                {
+                    lineIdx++;
+                    continue;
+                }
+                for (; curIdx < curLine.Length; curIdx++)
+                {
+                    Char curChar = curLine[curIdx];
+                    if (symbol == curChar)
+                    {
+                        // 找到了
+                        File_Pos fpos = new File_Pos(lineIdx, curIdx);
+                    }
+                }
+                // 到达行末
+                // 转到下一行开头
+                lineIdx++;
+                curIdx = 0;
+            }
+
+            return null;
         }
     }
 }
