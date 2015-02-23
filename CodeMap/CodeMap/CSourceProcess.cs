@@ -17,12 +17,12 @@ namespace CodeMap
     }
 
     // 文件当中某个内容的位置(行列号)
-    class File_Pos
+    public class File_Position
     {
         public int row_num = 0;    // 行号
         public int col_num = 0;    // 列号
 
-        public File_Pos(int r, int c)
+        public File_Position(int r, int c)
         {
             row_num = r;
             col_num = c;
@@ -40,9 +40,23 @@ namespace CodeMap
         E_CTYPE_UNKNOWN
     }
 
-    class CFileInfo
+    public class CFileInfo
     {
-        public List<string> include_list = new List<string>();
+        public List<string> include_file_list = new List<string>();
+        public List<CFunctionInfo> fun_declare_list = new List<CFunctionInfo>();
+        public List<CFunctionInfo> fun_define_list = new List<CFunctionInfo>();
+    }
+
+    /// <summary>
+    /// C函数的情报
+    /// </summary>
+    public class CFunctionInfo
+    {
+        public string name = "";                                           // 函数名称
+        public List<string> qualifiers = new List<string>();               // 修饰符列表
+        public List<string> paras = new List<string>();                    // 参数列表
+        public File_Position body_start_pos = new File_Position(0, 0);     // 函数体开始位置
+        public File_Position body_end_pos = new File_Position(0, 0);       // 函数体结束位置
     }
 
     class CSourceProcess
@@ -273,22 +287,23 @@ namespace CodeMap
             }
 
             CFileInfo fi = new CFileInfo();
-            List<string> sdIdList = new List<string>();     // 标准标识符暂存列表
+            List<string> qualifierList = new List<string>();     // 修饰符暂存列表
             string nextId = null;
             while (null != (nextId = GetNextIdentifier(codeList, ref lineIdx, ref startIdx)))
             {
                 // 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
-                if (IsStandardIdentifier(nextId))
+                if (IsStandardIdentifier(nextId) 
+                    || ("*" == nextId))
                 {
-                    sdIdList.Add(nextId);
+                    qualifierList.Add(nextId);
                 }
                 // 否则可能是各种符号
                 else
                 {
                     // 遇到小括号了, 可能是碰上函数声明或定义了
-                    if (("(" == nextId) && (0 != sdIdList.Count))
+                    if (("(" == nextId) && (0 != qualifierList.Count))
                     {
-                        FunctionDetection(codeList, ref lineIdx, ref startIdx);
+                        FunctionDetection(codeList, qualifierList, ref lineIdx, ref startIdx);
                     }
                     // 井号开头的是预处理命令
                     else if ("#" == nextId)
@@ -299,7 +314,7 @@ namespace CodeMap
                     {
                         System.Diagnostics.Trace.WriteLine("艾玛! 不晓得这是啥玩意? line = " + (lineIdx + 1).ToString() + "Col = " + startIdx.ToString());
                     }
-                    sdIdList.Clear();
+                    qualifierList.Clear();
                 }
             }
 
@@ -318,7 +333,7 @@ namespace CodeMap
                 string incFileName = GetIncludeFileName(codeList, ref lineIdx, ref startIdx);
                 if (null != incFileName)
                 {
-                    fi.include_list.Add(incFileName);
+                    fi.include_file_list.Add(incFileName);
                 }
             }
             // 宏定义
@@ -346,9 +361,47 @@ namespace CodeMap
         /// <param name="codeList"></param>
         /// <param name="lineIdx"></param>
         /// <param name="startIdx"></param>
-        static void FunctionDetection(List<string> codeList, ref int lineIdx, ref int startIdx)
+        static void FunctionDetection(List<string> codeList, List<string>qualifierList, ref int lineIdx, ref int startIdx)
         {
-            // TODO:
+            // 先找匹配的小括号
+            File_Position fs = FindNextSymbol(codeList, lineIdx, startIdx, ')');
+            if (null == fs)
+            {
+                return;
+            }
+            // 然后确认小括号后面是否跟着配对的大括号
+            int searchLine = fs.row_num;
+            int searchCol = fs.col_num + 1;
+            string nextIdStr = GetNextIdentifier(codeList, ref searchLine, ref searchCol);
+            if (";" == nextIdStr)
+            {
+                // 小括号后面跟着分号说明这是函数声明
+                CFunctionInfo cfi = new CFunctionInfo();
+                cfi.name = qualifierList.Last();
+                qualifierList.RemoveAt(qualifierList.Count - 1);
+                cfi.qualifiers = qualifierList;
+            }
+            else if ("{" == nextIdStr)
+            {
+                // 小括号后面跟着配对的大括号说明这是函数定义(带函数体)
+                fs = FindNextMatchSymbol(codeList, searchLine, searchCol, '}');
+                if (null == fs)
+                {
+                    return;
+                }
+                searchLine = fs.row_num;
+                searchCol = fs.col_num;
+                // 确定函数体范围
+                // 确定参数列表,返回值等函数签名信息
+            }
+            else
+            {
+                // 估计是出错了
+                return;
+            }
+            // 更新index
+            lineIdx = searchLine;
+            startIdx = searchCol;
         }
 
         static string GetIncludeFileName(List<string> codeList, ref int lineIdx, ref int startIdx)
@@ -570,7 +623,7 @@ RET_IDF:
         /// <param name="lineIdx"></param>
         /// <param name="startIdx"></param>
         /// <param name="symbol"></param>
-        static File_Pos FindNextSymbol(List<string> codeList, int lineIdx, int startIdx, Char symbol)
+        static File_Position FindNextSymbol(List<string> codeList, int lineIdx, int startIdx, Char symbol)
         {
             string curLine = "";
             int curIdx = startIdx;
@@ -591,10 +644,12 @@ RET_IDF:
                 for (; curIdx < curLine.Length; curIdx++)
                 {
                     Char curChar = curLine[curIdx];
+                    // 注意这里暂时没有考虑中间会遇到条件编译分支的情况
                     if (symbol == curChar)
                     {
                         // 找到了
-                        File_Pos fpos = new File_Pos(lineIdx, curIdx);
+                        File_Position fpos = new File_Position(lineIdx, curIdx);
+                        return fpos;
                     }
                 }
                 // 到达行末
@@ -605,5 +660,81 @@ RET_IDF:
 
             return null;
         }
+
+        /// <summary>
+        /// 找到下一个配对的符号
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="lineIdx"></param>
+        /// <param name="startIdx"></param>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        static File_Position FindNextMatchSymbol(List<string> codeList, int lineIdx, int startIdx, Char rightSymbol)
+        {
+            Char leftSymbol;
+            if ('}' == rightSymbol)
+            {
+                leftSymbol = '{';
+            }
+            else if (')' == rightSymbol)
+            {
+                leftSymbol = '(';
+            }
+            else
+            {
+                System.Diagnostics.Trace.Assert(false);
+                return null;
+            }
+
+            int matchCount = 1;
+            List<int> matchCountStack = new List<int>();    // 应对#ifdef条件编译嵌套时, matchCount的堆栈管理
+            int curIdx = startIdx;
+            while (true)
+            {
+                string idStr = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+                if (null == idStr)
+                {
+                    break;
+                }
+                else if (leftSymbol.ToString() == idStr)
+                {
+                    matchCount += 1;
+                }
+                else if (rightSymbol.ToString() == idStr)
+                {
+                    matchCount -= 1;
+                    if (0 == matchCount)
+                    {
+                        // 找到了
+                        File_Position fs = new File_Position(lineIdx, startIdx);
+                        return fs;
+                    }
+                }
+                else if ("#" == idStr)
+                {
+                    idStr = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+                    if ("ifdef" == idStr.ToLower())
+                    {
+                        // 压栈
+                        matchCountStack.Add(matchCount);
+                    }
+                    else if ("else" == idStr.ToLower())
+                    {
+                        // 取值但是不出栈
+                        matchCount = matchCountStack[matchCountStack.Count - 1];
+                    }
+                    else if ("endif" == idStr.ToLower())
+                    {
+                        // 出栈
+                        matchCountStack.RemoveAt(matchCountStack.Count - 1);
+                    }
+                }
+                else
+                {
+                }
+            }
+            return null;
+        }
+
     }
 }
