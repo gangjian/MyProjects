@@ -52,6 +52,7 @@ namespace CodeMap
         /// </summary>
         void FindFiles(string rootPath)
         {
+            List<CFileInfo> CSourceInfoList = new List<CFileInfo>();
             DirectoryInfo di = new DirectoryInfo(rootPath);
             try
             {
@@ -63,7 +64,8 @@ namespace CodeMap
                 {
                     if (".c" == fi.Extension.ToLower())
                     {
-                        CSourceProcess.CFileProcess(fi.FullName);
+                        CFileInfo cfi = CSourceProcess.CFileProcess(fi.FullName);
+                        CSourceInfoList.Add(cfi);
                         lbStatus.Text = fi.FullName;
                     }
                     else if (".h" == fi.Extension.ToLower())

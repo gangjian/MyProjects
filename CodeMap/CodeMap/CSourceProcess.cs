@@ -52,11 +52,11 @@ namespace CodeMap
     /// </summary>
     public class CFunctionInfo
     {
-        public string name = "";                                           // 函数名称
-        public List<string> qualifiers = new List<string>();               // 修饰符列表
-        public List<string> paras = new List<string>();                    // 参数列表
-        public File_Position body_start_pos = new File_Position(0, 0);     // 函数体开始位置
-        public File_Position body_end_pos = new File_Position(0, 0);       // 函数体结束位置
+        public string name = "";                                            // 函数名称
+        public List<string> qualifiers = new List<string>();                // 修饰符列表
+        public List<string> paras = new List<string>();                     // 参数列表
+        public File_Position body_start_pos = null;                         // 函数体开始位置
+        public File_Position body_end_pos = null;                           // 函数体结束位置
     }
 
     class CSourceProcess
@@ -65,7 +65,7 @@ namespace CodeMap
         /// ".c"源文件处理
         /// </summary>
         /// <param name="fileName"></param>
-        public static void CFileProcess(string fileName)
+        public static CFileInfo CFileProcess(string fileName)
         {
             List<string> wtList = RemoveComments(fileName);
             wtList = RemoveConditionalCompile(wtList);
@@ -73,12 +73,7 @@ namespace CodeMap
             int lineIdx = 0, startIdx = 0;
             CFileInfo fi = CodeAnalyze(wtList, ref lineIdx, ref startIdx);
 
-            //TextWriter tw = new StreamWriter(fileName);
-            //foreach (string wtLine in wtList)
-            //{
-            //    tw.WriteLine(wtLine);
-            //}
-            //tw.Close();
+            return fi;
         }
 
         /// <summary>
@@ -289,7 +284,9 @@ namespace CodeMap
             CFileInfo fi = new CFileInfo();
             List<string> qualifierList = new List<string>();     // 修饰符暂存列表
             string nextId = null;
-            while (null != (nextId = GetNextIdentifier(codeList, ref lineIdx, ref startIdx)))
+            File_Position foundPos = null;
+            File_Position searchPos = new File_Position(lineIdx, startIdx);
+            while (null != (nextId = GetNextIdentifier(codeList, ref searchPos, out foundPos)))
             {
                 // 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
                 if (IsStandardIdentifier(nextId) 
@@ -303,12 +300,23 @@ namespace CodeMap
                     // 遇到小括号了, 可能是碰上函数声明或定义了
                     if (("(" == nextId) && (0 != qualifierList.Count))
                     {
-                        FunctionDetection(codeList, qualifierList, ref lineIdx, ref startIdx);
+                        CFunctionInfo cfi = FunctionDetection(codeList, qualifierList, ref searchPos);
+                        if (null != cfi)
+                        {
+                            if (null != cfi.body_start_pos)
+                            {
+                                fi.fun_define_list.Add(cfi);
+                            }
+                            else
+                            {
+                                fi.fun_declare_list.Add(cfi);
+                            }
+                        }
                     }
                     // 井号开头的是预处理命令
                     else if ("#" == nextId)
                     {
-                        PreprocessCommandHandling(codeList, ref lineIdx, ref startIdx, ref fi);
+                        PreprocessCommandHandling(codeList, ref searchPos, ref fi);
                     }
                     else
                     {
@@ -324,13 +332,14 @@ namespace CodeMap
         /// <summary>
         /// 预处理命令处理
         /// </summary>
-        static void PreprocessCommandHandling(List<string> codeList, ref int lineIdx, ref int startIdx, ref CFileInfo fi)
+        static void PreprocessCommandHandling(List<string> codeList, ref File_Position searchPos, ref CFileInfo fi)
         {
-            string cmd = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+            File_Position foundPos = null;
+            string cmd = GetNextIdentifier(codeList, ref searchPos, out foundPos);
             // 头文件包含
             if ("include" == cmd.ToLower())
             {
-                string incFileName = GetIncludeFileName(codeList, ref lineIdx, ref startIdx);
+                string incFileName = GetIncludeFileName(codeList, ref searchPos);
                 if (null != incFileName)
                 {
                     fi.include_file_list.Add(incFileName);
@@ -361,52 +370,71 @@ namespace CodeMap
         /// <param name="codeList"></param>
         /// <param name="lineIdx"></param>
         /// <param name="startIdx"></param>
-        static void FunctionDetection(List<string> codeList, List<string>qualifierList, ref int lineIdx, ref int startIdx)
+        static CFunctionInfo FunctionDetection(List<string> codeList, List<string> qualifierList, ref File_Position searchPos)
         {
+            CFunctionInfo cfi = null;
+
             // 先找匹配的小括号
-            File_Position fs = FindNextSymbol(codeList, lineIdx, startIdx, ')');
+            File_Position fs = FindNextSymbol(codeList, searchPos, ')');
             if (null == fs)
             {
-                return;
+                return null;
             }
+            File_Position bracketLeft = new File_Position(searchPos.row_num, searchPos.col_num);
+            File_Position bracketRight = fs;
+            List<string> paraList = GetParaList(codeList, bracketLeft, bracketRight);
+
             // 然后确认小括号后面是否跟着配对的大括号
-            int searchLine = fs.row_num;
-            int searchCol = fs.col_num + 1;
-            string nextIdStr = GetNextIdentifier(codeList, ref searchLine, ref searchCol);
+            searchPos = new File_Position(fs.row_num, fs.col_num + 1);
+            File_Position foundPos = null;
+            string nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
             if (";" == nextIdStr)
             {
                 // 小括号后面跟着分号说明这是函数声明
-                CFunctionInfo cfi = new CFunctionInfo();
+                cfi = new CFunctionInfo();
+                // 函数名
                 cfi.name = qualifierList.Last();
+                // 函数修饰符
                 qualifierList.RemoveAt(qualifierList.Count - 1);
                 cfi.qualifiers = qualifierList;
+                // 参数列表
+                cfi.paras = paraList;
             }
             else if ("{" == nextIdStr)
             {
+                File_Position bodyStartPos = foundPos;
                 // 小括号后面跟着配对的大括号说明这是函数定义(带函数体)
-                fs = FindNextMatchSymbol(codeList, searchLine, searchCol, '}');
+                fs = FindNextMatchSymbol(codeList, searchPos, '}');
                 if (null == fs)
                 {
-                    return;
+                    return null;
                 }
-                searchLine = fs.row_num;
-                searchCol = fs.col_num;
-                // 确定函数体范围
-                // 确定参数列表,返回值等函数签名信息
+                searchPos = new File_Position(fs.row_num, fs.col_num + 1);
+                cfi = new CFunctionInfo();
+                // 函数名
+                cfi.name = qualifierList.Last();
+                // 函数修饰符
+                qualifierList.RemoveAt(qualifierList.Count - 1);
+                cfi.qualifiers = qualifierList;
+                // 参数列表
+                cfi.paras = paraList;
+                // 函数体起始位置
+                cfi.body_start_pos = bodyStartPos;
+                cfi.body_end_pos = fs;
             }
             else
             {
                 // 估计是出错了
-                return;
+                return null;
             }
             // 更新index
-            lineIdx = searchLine;
-            startIdx = searchCol;
+            return cfi;
         }
 
-        static string GetIncludeFileName(List<string> codeList, ref int lineIdx, ref int startIdx)
+        static string GetIncludeFileName(List<string> codeList, ref File_Position searchPos)
         {
-            string quot = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+            File_Position foundPos = null;
+            string quot = GetNextIdentifier(codeList, ref searchPos, out foundPos);
             string retName = quot;
             if ("\"" == quot)
             {
@@ -419,11 +447,11 @@ namespace CodeMap
             {
                 return null;
             }
-            string str = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+            string str = GetNextIdentifier(codeList, ref searchPos, out foundPos);
             while (quot != str)
             {
                 retName += str;
-                str = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+                str = GetNextIdentifier(codeList, ref searchPos, out foundPos);
             }
             return retName + quot;
         }
@@ -435,8 +463,11 @@ namespace CodeMap
         /// <param name="lineIdx"></param>
         /// <param name="startIdx"></param>
         /// <returns></returns>
-        static string GetNextIdentifier(List<string> codeList, ref int lineIdx, ref int startIdx)
+        static string GetNextIdentifier(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
         {
+            int lineIdx = searchPos.row_num;
+            int startIdx = searchPos.col_num;
+            foundPos = new File_Position(lineIdx, startIdx);
             System.Diagnostics.Trace.Assert(lineIdx >= 0);
             if (lineIdx >= codeList.Count)
             {
@@ -542,12 +573,15 @@ namespace CodeMap
 RET_IDF:
             if (-1 != s_pos && -1 != e_pos)
             {
+                foundPos = new File_Position(lineIdx, s_pos);
                 if (curIdx >= curLine.Length)
                 {
                     lineIdx++;
                     curIdx = 0;
                 }
                 startIdx = curIdx;
+                searchPos.row_num = lineIdx;
+                searchPos.col_num = startIdx;
                 return curLine.Substring(s_pos, e_pos - s_pos + 1);
             }
             else
@@ -623,9 +657,11 @@ RET_IDF:
         /// <param name="lineIdx"></param>
         /// <param name="startIdx"></param>
         /// <param name="symbol"></param>
-        static File_Position FindNextSymbol(List<string> codeList, int lineIdx, int startIdx, Char symbol)
+        static File_Position FindNextSymbol(List<string> codeList, File_Position searchPos, Char symbol)
         {
             string curLine = "";
+            int lineIdx = searchPos.row_num;
+            int startIdx = searchPos.col_num;
             int curIdx = startIdx;
             while (true)
             {
@@ -669,7 +705,7 @@ RET_IDF:
         /// <param name="startIdx"></param>
         /// <param name="symbol"></param>
         /// <returns></returns>
-        static File_Position FindNextMatchSymbol(List<string> codeList, int lineIdx, int startIdx, Char rightSymbol)
+        static File_Position FindNextMatchSymbol(List<string> codeList, File_Position searchPos, Char rightSymbol)
         {
             Char leftSymbol;
             if ('}' == rightSymbol)
@@ -688,10 +724,10 @@ RET_IDF:
 
             int matchCount = 1;
             List<int> matchCountStack = new List<int>();    // 应对#ifdef条件编译嵌套时, matchCount的堆栈管理
-            int curIdx = startIdx;
+            File_Position foundPos = null;
             while (true)
             {
-                string idStr = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+                string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                 if (null == idStr)
                 {
                     break;
@@ -706,13 +742,12 @@ RET_IDF:
                     if (0 == matchCount)
                     {
                         // 找到了
-                        File_Position fs = new File_Position(lineIdx, startIdx);
-                        return fs;
+                        return foundPos;
                     }
                 }
                 else if ("#" == idStr)
                 {
-                    idStr = GetNextIdentifier(codeList, ref lineIdx, ref startIdx);
+                    idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("ifdef" == idStr.ToLower())
                     {
                         // 压栈
@@ -734,6 +769,51 @@ RET_IDF:
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// 取得参数列表
+        /// </summary>
+        /// <returns></returns>
+        static List<string> GetParaList(List<string> codeList, File_Position bracketLeft, File_Position bracketRight)
+        {
+            string catStr = LineStringCat(codeList, bracketLeft, bracketRight);
+            // 去掉右小括号
+            if (catStr.EndsWith(")"))
+            {
+                catStr = catStr.Remove(catStr.LastIndexOf(')'));
+            }
+            string[] paras = catStr.Split(',');
+            if (0 == paras.Length)
+            {
+                return null;
+            }
+            List<string> retParaList = new List<string>();
+            foreach (string p in paras)
+            {
+                retParaList.Add(p.Trim());
+            }
+            return retParaList;
+        }
+
+        static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
+        {
+            int startRow = startPos.row_num;
+            int startCol = startPos.col_num;
+            int endRow = endPos.row_num;
+            int endCol = endPos.col_num;
+            string retStr = "";
+            string lineStr = "";
+            while (startRow < endRow)
+            {
+                lineStr = codeList[startRow];
+                retStr += lineStr.Substring(startCol);
+                startRow += 1;
+                startCol = 0;
+            }
+            lineStr = codeList[startRow];
+            retStr += lineStr.Substring(startCol, endCol - startCol + 1);
+            return retStr;
         }
 
     }
