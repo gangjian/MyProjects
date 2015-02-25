@@ -1,0 +1,88 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+
+namespace CodeMap
+{
+    // 条件编译处理情报
+    class CC_INFO
+    {
+        public string exp = "";
+        public bool unidentified_flag = false;
+        public bool write_flag = true;
+        public bool write_next_flag = false;
+        public bool pop_up_flag = false;
+    }
+
+    // 文件当中某个内容的位置(行列号)
+    public class File_Position
+    {
+        public int row_num = 0;    // 行号
+        public int col_num = 0;    // 列号
+
+        public File_Position(int r, int c)
+        {
+            row_num = r;
+            col_num = c;
+        }
+    }
+
+    public enum E_CHAR_TYPE
+    {
+        E_CTYPE_WHITE_SPACE,
+        E_CTYPE_LETTER,
+        E_CTYPE_NUMBER,
+        E_CTYPE_UNDERLINE,
+        E_CTYPE_PUNCTUATION,
+        E_CTYPE_SYMBOL,
+        E_CTYPE_UNKNOWN
+    }
+
+    /// <summary>
+    /// C 源代码文件情报类
+    /// </summary>
+    public class CFileInfo
+    {
+        public List<string> include_file_list = new List<string>();                         // "include"头文件列表
+        public List<CFunctionInfo> fun_declare_list = new List<CFunctionInfo>();            // 函数声明列表
+        public List<CFunctionInfo> fun_define_list = new List<CFunctionInfo>();             // 函数定义列表
+        public List<UsrDefineTypeInfo> user_def_type_list = new List<UsrDefineTypeInfo>();  // 用户定义类型列表
+    }
+
+    /// <summary>
+    /// C函数的情报
+    /// </summary>
+    public class CFunctionInfo
+    {
+        public string name = "";                                            // 函数名称
+        public List<string> qualifiers = new List<string>();                // 修饰符列表
+        public List<string> paras = new List<string>();                     // 参数列表
+        public File_Position body_start_pos = null;                         // 函数体开始位置
+        public File_Position body_end_pos = null;                           // 函数体结束位置
+    }
+
+    /// <summary>
+    /// 用户定义类型情报
+    /// </summary>
+    public class UsrDefineTypeInfo
+    {
+        public string type = "";
+        public string name = "";
+        public List<string> memberList = new List<string>();
+        public File_Position body_start_pos = null;
+        public File_Position body_end_pos = null;
+    }
+
+    public class GlobalVarInfo
+    {
+        public string type = "";
+        public string name = "";
+        public List<string> qualifiers = new List<string>();                // 修饰符列表
+        public int array_count = 1;                                         // (如果是数组的话)数组长度, 非数组默认长度为1
+        public string initial_string = "";                                  // 初始化赋值字符串
+    }
+}
+
+
