@@ -65,13 +65,22 @@ namespace CodeMap
                     if (".c" == fi.Extension.ToLower())
                     {
                         CFileInfo cfi = CSourceProcess.CFileProcess(fi.FullName);
-                        CSourceInfoList.Add(cfi);
-                        lbStatus.Text = fi.FullName;
+                        if (null != cfi)
+                        {
+                            cfi.full_name = fi.FullName;
+                            CSourceInfoList.Add(cfi);
+                            lbStatus.Text = fi.FullName;
+                        }
                     }
                     else if (".h" == fi.Extension.ToLower())
                     {
-                        CSourceProcess.HeaderFileProcess(fi.FullName);
-                        lbStatus.Text = fi.FullName;
+                        CFileInfo cfi = CSourceProcess.HeaderFileProcess(fi.FullName);
+                        if (null != cfi)
+                        {
+                            cfi.full_name = fi.FullName;
+                            CSourceInfoList.Add(cfi);
+                            lbStatus.Text = fi.FullName;
+                        }
                     }
                     else
                     {

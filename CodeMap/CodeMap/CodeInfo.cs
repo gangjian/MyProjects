@@ -45,10 +45,14 @@ namespace CodeMap
     /// </summary>
     public class CFileInfo
     {
+        public string full_name = "";
         public List<string> include_file_list = new List<string>();                         // "include"头文件列表
         public List<CFunctionInfo> fun_declare_list = new List<CFunctionInfo>();            // 函数声明列表
         public List<CFunctionInfo> fun_define_list = new List<CFunctionInfo>();             // 函数定义列表
         public List<UsrDefineTypeInfo> user_def_type_list = new List<UsrDefineTypeInfo>();  // 用户定义类型列表
+        public List<GlobalVarInfo> global_var_declare_list = new List<GlobalVarInfo>();     // 全局量声明列表
+        public List<GlobalVarInfo> global_var_define_list = new List<GlobalVarInfo>();      // 全局量定义列表
+        public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
     }
 
     /// <summary>
@@ -80,8 +84,15 @@ namespace CodeMap
         public string type = "";
         public string name = "";
         public List<string> qualifiers = new List<string>();                // 修饰符列表
-        public int array_count = 1;                                         // (如果是数组的话)数组长度, 非数组默认长度为1
+        public string array_size_str = "";                                  // (如果是数组的话)数组size字符串
         public string initial_string = "";                                  // 初始化赋值字符串
+    }
+
+    public class MacroDefineInfo
+    {
+        public string name = "";                            // 宏名
+        public List<string> paras = new List<string>();     // 参数列表
+        public string value = "";                           // 宏值
     }
 }
 

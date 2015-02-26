@@ -27,10 +27,15 @@ namespace CodeMap
         /// ".h"头文件处理
         /// </summary>
         /// <param name="fileName"></param>
-        public static void HeaderFileProcess(string fileName)
+        public static CFileInfo HeaderFileProcess(string fileName)
         {
             List<string> wtList = RemoveComments(fileName);
             wtList = RemoveConditionalCompile(wtList);
+
+            int lineIdx = 0, startIdx = 0;
+            CFileInfo fi = CodeAnalyze(wtList, ref lineIdx, ref startIdx);
+
+            return fi;
         }
 
         /// <summary>
@@ -218,6 +223,7 @@ namespace CodeMap
             System.Diagnostics.Trace.Assert((null != codeList));
             if (0 == codeList.Count)
             {
+                ErrOutput();
                 return null;
             }
 
@@ -239,10 +245,10 @@ namespace CodeMap
                         )
                     {
                         // 用户定义类型处理
-                        UsrDefineTypeInfo udti = UserDefineTypeProcess(codeList, ref searchPos, qualifierList);
+                        UsrDefineTypeInfo udti = UserDefineTypeProcess(codeList, qualifierList, ref searchPos);
                         if (null != udti)
                         {
-                            // TODO: 注意如果是匿名类型, 要给加个名字
+                            // 如果是匿名类型, 要给加个名字
                             if ("" == udti.name)
                             {
                                 udti.name = "USR_DEFINE_TYPE_ANONYMOUS_" + fi.user_def_type_list.Count.ToString();
@@ -250,6 +256,7 @@ namespace CodeMap
                             fi.user_def_type_list.Add(udti);
                             qualifierList.Clear();
                             qualifierList.Add(udti.name);
+                            // TODO: 要去掉后面跟着的分号, 避免后面误认为全局量
                         }
                     }
                 }
@@ -259,7 +266,7 @@ namespace CodeMap
                     // 遇到小括号了, 可能是碰上函数声明或定义了
                     if (("(" == nextId) && (0 != qualifierList.Count))
                     {
-                        CFunctionInfo cfi = FunctionDetection(codeList, qualifierList, ref searchPos);
+                        CFunctionInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos);
                         if (null != cfi)
                         {
                             if (null != cfi.body_start_pos)
@@ -275,20 +282,47 @@ namespace CodeMap
                     // 井号开头的是预处理命令
                     else if ("#" == nextId)
                     {
-                        PreprocessCommandHandling(codeList, ref searchPos, ref fi);
+                        PreprocessCommandProcess(codeList, ref searchPos, ref fi);
                     }
-                    // 全局量
-                    else if (("=" == nextId)
-                            || (";" == nextId))
-                    {
-                    }
-                    // 全局数组
+                    // 全局量(包含全局数组)
                     else if ("[" == nextId)
                     {
+                        // 到下一个"]"出现的位置是数组长度
+                        File_Position fp = FindNextSymbol(codeList, searchPos, ']');
+                        if (null != fp)
+                        {
+                            string arraySize = LineStringCat(codeList, foundPos, fp);
+                            qualifierList.Add(arraySize);
+                            fp.col_num += 1;
+                            searchPos = fp;
+                            continue;
+                        }
+                    }
+                    else if ("=" == nextId)
+                    {
+                        // 直到下一个分号出现的位置, 都是初始化语句
+                        qualifierList.Add(nextId);
+                        File_Position fp = FindNextSymbol(codeList, searchPos, ';');
+                        if (null != fp)
+                        {
+                            foundPos.col_num += 1;
+                            string initialStr = LineStringCat(codeList, foundPos, fp);
+                            qualifierList.Add(initialStr.Trim());
+                            searchPos = fp;
+                            continue;
+                        }
+                    }
+                    else if (";" == nextId)
+                    {
+                        // 注意用户定义类型后面的分号不是全局量
+                        if (2 <= qualifierList.Count)
+                        {
+                            GlobalVarProcess(codeList, qualifierList, ref fi);
+                        }
                     }
                     else
                     {
-                        System.Diagnostics.Trace.WriteLine("艾玛! 不晓得这是啥玩意? line = " + (lineIdx + 1).ToString() + "Col = " + startIdx.ToString());
+//                      System.Diagnostics.Trace.WriteLine("艾玛! 不晓得这是啥玩意? line = " + (lineIdx + 1).ToString() + "Col = " + startIdx.ToString());
                     }
                     qualifierList.Clear();
                 }
@@ -300,7 +334,7 @@ namespace CodeMap
         /// <summary>
         /// 预处理命令处理
         /// </summary>
-        static void PreprocessCommandHandling(List<string> codeList, ref File_Position searchPos, ref CFileInfo fi)
+        static void PreprocessCommandProcess(List<string> codeList, ref File_Position searchPos, ref CFileInfo fi)
         {
             File_Position foundPos = null;
             string cmd = GetNextIdentifier(codeList, ref searchPos, out foundPos);
@@ -316,6 +350,7 @@ namespace CodeMap
             // 宏定义
             else if ("define" == cmd.ToLower())
             {
+                DefineProcess(codeList, ref searchPos, ref fi);
             }
             // 条件编译
             else if ("if" == cmd.ToLower())
@@ -344,7 +379,7 @@ namespace CodeMap
         /// <param name="codeList"></param>
         /// <param name="lineIdx"></param>
         /// <param name="startIdx"></param>
-        static CFunctionInfo FunctionDetection(List<string> codeList, List<string> qualifierList, ref File_Position searchPos)
+        static CFunctionInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos)
         {
             CFunctionInfo cfi = null;
 
@@ -352,6 +387,7 @@ namespace CodeMap
             File_Position fp = FindNextSymbol(codeList, searchPos, ')');
             if (null == fp)
             {
+                ErrOutput();
                 return null;
             }
             File_Position bracketLeft = new File_Position(searchPos.row_num, searchPos.col_num);
@@ -381,6 +417,7 @@ namespace CodeMap
                 fp = FindNextMatchSymbol(codeList, searchPos, '}');
                 if (null == fp)
                 {
+                    ErrOutput();
                     return null;
                 }
                 searchPos = new File_Position(fp.row_num, fp.col_num + 1);
@@ -399,6 +436,7 @@ namespace CodeMap
             else
             {
                 // 估计是出错了
+                ErrOutput();
                 return null;
             }
             // 更新index
@@ -419,6 +457,7 @@ namespace CodeMap
             }
             else
             {
+                ErrOutput();
                 return null;
             }
             string str = GetNextIdentifier(codeList, ref searchPos, out foundPos);
@@ -437,7 +476,11 @@ namespace CodeMap
         static List<string> GetParaList(List<string> codeList, File_Position bracketLeft, File_Position bracketRight)
         {
             string catStr = LineStringCat(codeList, bracketLeft, bracketRight);
-            // 去掉右小括号
+            // 去掉小括号
+            if (catStr.StartsWith("("))
+            {
+                catStr = catStr.Remove(0, 1);
+            }
             if (catStr.EndsWith(")"))
             {
                 catStr = catStr.Remove(catStr.LastIndexOf(')'));
@@ -445,6 +488,7 @@ namespace CodeMap
             string[] paras = catStr.Split(',');
             if (0 == paras.Length)
             {
+                ErrOutput();
                 return null;
             }
             List<string> retParaList = new List<string>();
@@ -455,26 +499,6 @@ namespace CodeMap
             return retParaList;
         }
 
-        static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
-        {
-            int startRow = startPos.row_num;
-            int startCol = startPos.col_num;
-            int endRow = endPos.row_num;
-            int endCol = endPos.col_num;
-            string retStr = "";
-            string lineStr = "";
-            while (startRow < endRow)
-            {
-                lineStr = codeList[startRow];
-                retStr += lineStr.Substring(startCol);
-                startRow += 1;
-                startCol = 0;
-            }
-            lineStr = codeList[startRow];
-            retStr += lineStr.Substring(startCol, endCol - startCol + 1);
-            return retStr;
-        }
-
         /// <summary>
         /// 用户定义类型处理
         /// </summary>
@@ -482,10 +506,11 @@ namespace CodeMap
         /// <param name="startPos"></param>
         /// <param name="qualifierList"></param>
         /// <returns></returns>
-        static UsrDefineTypeInfo UserDefineTypeProcess(List<string> codeList, ref File_Position startPos, List<string> qualifierList)
+        static UsrDefineTypeInfo UserDefineTypeProcess(List<string> codeList, List<string> qualifierList, ref File_Position startPos)
         {
             if (0 == qualifierList.Count)
             {
+                ErrOutput();
                 return null;
             }
             string keyStr = qualifierList.Last();
@@ -503,11 +528,13 @@ namespace CodeMap
                     nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("{" != nextIdStr)
                     {
+                        ErrOutput();
                         return null;
                     }
                 }
                 else
                 {
+                    ErrOutput();
                     return null;
                 }
             }
@@ -515,6 +542,7 @@ namespace CodeMap
             foundPos = FindNextMatchSymbol(codeList, searchPos, '}');
             if (null == foundPos)
             {
+                ErrOutput();
                 return null;
             }
             retUsrTypeInfo.body_end_pos = foundPos;
@@ -536,6 +564,7 @@ namespace CodeMap
             string[] members = catStr.Split(sepStr);
             if (0 == members.Length)
             {
+                ErrOutput();
                 return null;
             }
             foreach (string m in members)
@@ -560,6 +589,123 @@ namespace CodeMap
             startPos = searchPos;
 
             return retUsrTypeInfo;
+        }
+
+        /// <summary>
+        /// 全局变量处理
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="qualifierList"></param>
+        /// <param name="searchPos"></param>
+        /// <param name="cfi"></param>
+        static void GlobalVarProcess(List<string> codeList, List<string> qualifierList, ref CFileInfo cfi)
+        {
+            GlobalVarInfo gvi = new GlobalVarInfo();
+
+            // 判断是否有初始化语句
+            int idx = -1;
+            if (-1 != (idx = qualifierList.IndexOf("=")))
+            {
+                gvi.initial_string += qualifierList[idx + 1];
+                for (int i = qualifierList.Count - 1; i >= idx; i--)
+                {
+                    qualifierList.RemoveAt(i);
+                }
+            }
+
+            // 判断是否是数组
+            idx = qualifierList.Count - 1;
+            string qlfStr = qualifierList[idx].Trim();
+            if (qlfStr.StartsWith("[") && qlfStr.EndsWith("]"))
+            {
+                qlfStr = qlfStr.Substring(1, qlfStr.Length - 2).Trim();
+                gvi.array_size_str = qlfStr;
+                qualifierList.RemoveAt(idx);
+            }
+
+            // 变量名
+            idx = qualifierList.Count - 1;
+            qlfStr = qualifierList[idx].Trim();
+            if (IsStandardIdentifier(qlfStr))
+            {
+                gvi.name = qlfStr;
+            }
+            else
+            {
+                return;
+            }
+            qualifierList.RemoveAt(idx);
+
+            // 类型名
+            idx = qualifierList.Count - 1;
+            qlfStr = qualifierList[idx].Trim();
+            string type_name = "";
+            while (false == IsStandardIdentifier(qlfStr))
+            {
+                type_name = qlfStr + type_name;
+                idx--;
+                qlfStr = qualifierList[idx].Trim();
+            }
+            type_name = qlfStr + type_name;
+            gvi.type = type_name;
+
+            // 剩余的都放到修饰符列表里去
+            for (int i = 0; i < idx; i++)
+            {
+                gvi.qualifiers.Add(qualifierList[i].Trim());
+            }
+            if ((0 != gvi.qualifiers.Count)
+                && ("extern" == gvi.qualifiers.First().Trim().ToLower()))
+            {
+                cfi.global_var_declare_list.Add(gvi);
+            }
+            else
+            {
+                cfi.global_var_define_list.Add(gvi);
+            }
+        }
+
+        static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref CFileInfo cfi)
+        {
+            File_Position sPos, fPos;
+            sPos = new File_Position(searchPos.row_num, searchPos.col_num);
+            string nextIdStr = GetNextIdentifier(codeList, ref sPos, out fPos);
+            if (!IsStandardIdentifier(nextIdStr))
+            {
+                return;
+            }
+            MacroDefineInfo mdi = new MacroDefineInfo();
+            mdi.name = nextIdStr;
+
+            string leftStr = codeList[sPos.row_num].Substring(sPos.col_num);
+            if (leftStr.StartsWith("("))
+            {
+                File_Position ePos = FindNextSymbol(codeList, sPos, ')');
+                if (null == ePos)
+                {
+                    return;
+                }
+                mdi.paras = GetParaList(codeList, sPos, ePos);
+                sPos = ePos;
+                sPos.col_num += 1;
+            }
+
+            string defineValStr = codeList[sPos.row_num].Substring(sPos.col_num);
+            while (defineValStr.EndsWith(@"\"))
+            {
+                sPos.row_num += 1;
+                sPos.col_num = 0;
+                defineValStr += codeList[sPos.row_num].Substring(sPos.col_num);
+            }
+            mdi.value = defineValStr.Trim();
+
+            cfi.macro_define_list.Add(mdi);
+            searchPos = sPos;
+        }
+
+        static void ErrOutput()
+        {
+            System.Diagnostics.Trace.WriteLine("Something is wrong!");
         }
     }
 }

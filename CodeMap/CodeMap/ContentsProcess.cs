@@ -23,6 +23,7 @@ namespace CodeMap
             System.Diagnostics.Trace.Assert(lineIdx >= 0);
             if (lineIdx >= codeList.Count)
             {
+                ErrOutput();
                 return null;
             }
 
@@ -108,6 +109,7 @@ namespace CodeMap
                                 goto RET_IDF;
                             }
                         case E_CHAR_TYPE.E_CTYPE_UNKNOWN:
+                            ErrOutput();
                             return null;
                     }
                 }
@@ -138,6 +140,7 @@ namespace CodeMap
             }
             else
             {
+                ErrOutput();
                 return null;
             }
         }
@@ -245,7 +248,7 @@ namespace CodeMap
                 lineIdx++;
                 curIdx = 0;
             }
-
+            ErrOutput();
             return null;
         }
 
@@ -270,7 +273,7 @@ namespace CodeMap
             }
             else
             {
-                System.Diagnostics.Trace.Assert(false);
+                ErrOutput();
                 return null;
             }
 
@@ -322,7 +325,28 @@ namespace CodeMap
                 {
                 }
             }
+            ErrOutput();
             return null;
+        }
+
+        static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
+        {
+            int startRow = startPos.row_num;
+            int startCol = startPos.col_num;
+            int endRow = endPos.row_num;
+            int endCol = endPos.col_num;
+            string retStr = "";
+            string lineStr = "";
+            while (startRow < endRow)
+            {
+                lineStr = codeList[startRow];
+                retStr += lineStr.Substring(startCol);
+                startRow += 1;
+                startCol = 0;
+            }
+            lineStr = codeList[startRow];
+            retStr += lineStr.Substring(startCol, endCol - startCol + 1);
+            return retStr;
         }
 
     }
