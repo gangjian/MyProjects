@@ -420,13 +420,8 @@ namespace CodeMap
                 }
                 string nameStr = LineStringCat(codeList, sp, ep);
                 cfi.name = nameStr;
-                bracketLeft = new File_Position(searchPos);
             }
-            else
-            {
-                // 此时实际上已经是在左括号右边的位置了, 所以要退回左括号的位置
-                bracketLeft = new File_Position(searchPos.row_num, searchPos.col_num - 1);
-            }
+            bracketLeft = new File_Position(searchPos);
             bracketRight = fp;
             List<string> paraList = GetParaList(codeList, bracketLeft, bracketRight);
 

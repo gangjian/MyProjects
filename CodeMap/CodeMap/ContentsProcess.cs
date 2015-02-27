@@ -23,7 +23,6 @@ namespace CodeMap
             System.Diagnostics.Trace.Assert(lineIdx >= 0);
             if (lineIdx >= codeList.Count)
             {
-                ErrReport();
                 return null;
             }
 
