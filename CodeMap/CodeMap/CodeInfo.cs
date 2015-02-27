@@ -27,6 +27,12 @@ namespace CodeMap
             row_num = r;
             col_num = c;
         }
+
+        public File_Position(File_Position nfp)
+        {
+            row_num = nfp.row_num;
+            col_num = nfp.col_num;
+        }
     }
 
     public enum E_CHAR_TYPE

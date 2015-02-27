@@ -19,11 +19,11 @@ namespace CodeMap
         {
             int lineIdx = searchPos.row_num;
             int startIdx = searchPos.col_num;
-            foundPos = new File_Position(lineIdx, startIdx);
+            foundPos = new File_Position(searchPos);
             System.Diagnostics.Trace.Assert(lineIdx >= 0);
             if (lineIdx >= codeList.Count)
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
 
@@ -109,7 +109,7 @@ namespace CodeMap
                                 goto RET_IDF;
                             }
                         case E_CHAR_TYPE.E_CTYPE_UNKNOWN:
-                            ErrOutput();
+                            ErrReport();
                             return null;
                     }
                 }
@@ -140,7 +140,7 @@ namespace CodeMap
             }
             else
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
         }
@@ -248,7 +248,7 @@ namespace CodeMap
                 lineIdx++;
                 curIdx = 0;
             }
-            ErrOutput();
+            ErrReport();
             return null;
         }
 
@@ -273,7 +273,7 @@ namespace CodeMap
             }
             else
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
 
@@ -325,7 +325,7 @@ namespace CodeMap
                 {
                 }
             }
-            ErrOutput();
+            ErrReport();
             return null;
         }
 

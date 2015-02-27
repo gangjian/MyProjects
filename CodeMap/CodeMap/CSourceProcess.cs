@@ -223,7 +223,7 @@ namespace CodeMap
             System.Diagnostics.Trace.Assert((null != codeList));
             if (0 == codeList.Count)
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
 
@@ -238,6 +238,14 @@ namespace CodeMap
                 if (IsStandardIdentifier(nextId) 
                     || ("*" == nextId))
                 {
+                    if (MacroDetectAndExpand(nextId, codeList, foundPos, fi.macro_define_list))
+                    {
+                        // 判断是否是已定义的宏, 是的话进行宏展开
+                        // 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
+                        searchPos = new File_Position(foundPos);
+                        continue;
+                    }
+
                     qualifierList.Add(nextId);
                     if (("struct" == nextId)
                         || ("enum" == nextId)
@@ -381,17 +389,45 @@ namespace CodeMap
         /// <param name="startIdx"></param>
         static CFunctionInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos)
         {
-            CFunctionInfo cfi = null;
+            CFunctionInfo cfi = new CFunctionInfo();
 
             // 先找匹配的小括号
             File_Position fp = FindNextSymbol(codeList, searchPos, ')');
             if (null == fp)
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
-            File_Position bracketLeft = new File_Position(searchPos.row_num, searchPos.col_num);
-            File_Position bracketRight = fp;
+            File_Position bracketLeft = null;
+            File_Position bracketRight = null;
+            if (codeList[searchPos.row_num].Substring(searchPos.col_num).Trim().StartsWith("*"))
+            {
+                // 吗呀, 这不是传说中的函数指针嘛...
+                File_Position sp = searchPos;
+                File_Position ep = fp;
+                ep.col_num -= 1;
+                searchPos = FindNextSymbol(codeList, fp, '(');
+                if (null == searchPos)
+                {
+                    ErrReport();
+                    return null;
+                }
+                fp = FindNextSymbol(codeList, searchPos, ')');
+                if (null == fp)
+                {
+                    ErrReport();
+                    return null;
+                }
+                string nameStr = LineStringCat(codeList, sp, ep);
+                cfi.name = nameStr;
+                bracketLeft = new File_Position(searchPos);
+            }
+            else
+            {
+                // 此时实际上已经是在左括号右边的位置了, 所以要退回左括号的位置
+                bracketLeft = new File_Position(searchPos.row_num, searchPos.col_num - 1);
+            }
+            bracketRight = fp;
             List<string> paraList = GetParaList(codeList, bracketLeft, bracketRight);
 
             // 然后确认小括号后面是否跟着配对的大括号
@@ -401,12 +437,14 @@ namespace CodeMap
             if (";" == nextIdStr)
             {
                 // 小括号后面跟着分号说明这是函数声明
-                cfi = new CFunctionInfo();
                 // 函数名
-                cfi.name = qualifierList.Last();
-                // 函数修饰符
-                qualifierList.RemoveAt(qualifierList.Count - 1);
-                cfi.qualifiers = qualifierList;
+                if ("" == cfi.name)
+                {
+                    cfi.name = qualifierList.Last();
+                    // 函数修饰符
+                    qualifierList.RemoveAt(qualifierList.Count - 1);
+                }
+                cfi.qualifiers = new List<string>(qualifierList);
                 // 参数列表
                 cfi.paras = paraList;
             }
@@ -417,11 +455,10 @@ namespace CodeMap
                 fp = FindNextMatchSymbol(codeList, searchPos, '}');
                 if (null == fp)
                 {
-                    ErrOutput();
+                    ErrReport();
                     return null;
                 }
                 searchPos = new File_Position(fp.row_num, fp.col_num + 1);
-                cfi = new CFunctionInfo();
                 // 函数名
                 cfi.name = qualifierList.Last();
                 // 函数修饰符
@@ -436,7 +473,7 @@ namespace CodeMap
             else
             {
                 // 估计是出错了
-                ErrOutput();
+                ErrReport();
                 return null;
             }
             // 更新index
@@ -457,7 +494,7 @@ namespace CodeMap
             }
             else
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
             string str = GetNextIdentifier(codeList, ref searchPos, out foundPos);
@@ -488,7 +525,7 @@ namespace CodeMap
             string[] paras = catStr.Split(',');
             if (0 == paras.Length)
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
             List<string> retParaList = new List<string>();
@@ -510,14 +547,14 @@ namespace CodeMap
         {
             if (0 == qualifierList.Count)
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
             string keyStr = qualifierList.Last();
             string fstStr = qualifierList.First();
 
             UsrDefineTypeInfo retUsrTypeInfo = new UsrDefineTypeInfo();
-            File_Position searchPos = new File_Position(startPos.row_num, startPos.col_num);
+            File_Position searchPos = new File_Position(startPos);
             File_Position foundPos = null;
             string nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
             if ("{" != nextIdStr)
@@ -528,13 +565,13 @@ namespace CodeMap
                     nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("{" != nextIdStr)
                     {
-                        ErrOutput();
+                        ErrReport();
                         return null;
                     }
                 }
                 else
                 {
-                    ErrOutput();
+                    ErrReport();
                     return null;
                 }
             }
@@ -542,7 +579,7 @@ namespace CodeMap
             foundPos = FindNextMatchSymbol(codeList, searchPos, '}');
             if (null == foundPos)
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
             retUsrTypeInfo.body_end_pos = foundPos;
@@ -564,7 +601,7 @@ namespace CodeMap
             string[] members = catStr.Split(sepStr);
             if (0 == members.Length)
             {
-                ErrOutput();
+                ErrReport();
                 return null;
             }
             foreach (string m in members)
@@ -668,7 +705,7 @@ namespace CodeMap
         static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref CFileInfo cfi)
         {
             File_Position sPos, fPos;
-            sPos = new File_Position(searchPos.row_num, searchPos.col_num);
+            sPos = new File_Position(searchPos);
             string nextIdStr = GetNextIdentifier(codeList, ref sPos, out fPos);
             if (!IsStandardIdentifier(nextIdStr))
             {
@@ -693,17 +730,97 @@ namespace CodeMap
             string defineValStr = codeList[sPos.row_num].Substring(sPos.col_num);
             while (defineValStr.EndsWith(@"\"))
             {
+                defineValStr = defineValStr.Remove(defineValStr.Length - 1);
                 sPos.row_num += 1;
                 sPos.col_num = 0;
                 defineValStr += codeList[sPos.row_num].Substring(sPos.col_num);
             }
             mdi.value = defineValStr.Trim();
-
             cfi.macro_define_list.Add(mdi);
-            searchPos = sPos;
+
+            sPos.row_num += 1;
+            sPos.col_num = 0;
+            searchPos = new File_Position(sPos);
         }
 
-        static void ErrOutput()
+        static bool MacroDetectAndExpand(string idStr, List<string> codeList, File_Position foundPos, List<MacroDefineInfo> defineList)
+        {
+            if (!IsStandardIdentifier(idStr))
+            {
+                return false;
+            }
+            foreach (MacroDefineInfo di in defineList)
+            {
+                // 判断宏名是否一致
+                if (idStr == di.name)
+                {
+                    string macroName = di.name;
+                    File_Position macroPos = new File_Position(foundPos);
+                    int lineIdx = foundPos.row_num;
+                    string replaceStr = di.value;
+                    // 判断有无带参数
+                    if (0 != di.paras.Count)
+                    {
+                        // 取得实参
+                        File_Position sPos = new File_Position(foundPos.row_num, foundPos.col_num + idStr.Length);
+                        string paraStr = GetNextIdentifier(codeList, ref sPos, out foundPos);
+                        if ("(" != paraStr)
+                        {
+                            ErrReport();
+                            break;
+                        }
+                        File_Position leftBracket = foundPos;
+                        foundPos = FindNextSymbol(codeList, sPos, ')');
+                        if (null == foundPos)
+                        {
+                            ErrReport();
+                            break;
+                        }
+                        paraStr = LineStringCat(codeList, macroPos, foundPos);
+                        macroName = paraStr;
+                        List<string> realParas = GetParaList(codeList, leftBracket, foundPos);
+                        if (realParas.Count != di.paras.Count)
+                        {
+                            ErrReport();
+                            break;
+                        }
+                        // 替换宏值里的形参
+                        int idx = 0;
+                        foreach (string rp in realParas)
+                        {
+                            replaceStr = replaceStr.Replace(di.paras[idx], rp);
+                            idx++;
+                        }
+
+                    }
+                    // 应对宏里面出现的"##"
+                    string[]seps = {"##"};
+                    string[]arr = replaceStr.Split(seps, StringSplitOptions.None);
+                    if (arr.Length > 1)
+                    {
+                        string newStr = "";
+                        foreach (string sepStr in arr)
+                        {
+                            newStr += sepStr.Trim();
+                        }
+                        replaceStr = newStr;
+                    }
+                    // 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
+                    if (replaceStr.Contains('#'))
+                    {
+                        ErrReport();
+                        return false;
+                    }
+
+                    // 用宏值去替换原来的宏名(宏展开)
+                    codeList[lineIdx] = codeList[lineIdx].Replace(macroName, replaceStr);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        static void ErrReport()
         {
             System.Diagnostics.Trace.WriteLine("Something is wrong!");
         }
