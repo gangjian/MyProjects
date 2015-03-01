@@ -54,7 +54,7 @@ namespace CodeMap
         {
             List<CFileInfo> CSourceInfoList = new List<CFileInfo>();
             DirectoryInfo di = new DirectoryInfo(rootPath);
-            try
+            //try
             {
                 foreach (DirectoryInfo subDir in di.GetDirectories())
                 {
@@ -87,10 +87,10 @@ namespace CodeMap
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-            }
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(ex.ToString());
+            //}
         }
 
     }

@@ -264,7 +264,6 @@ namespace CodeMap
                             fi.user_def_type_list.Add(udti);
                             qualifierList.Clear();
                             qualifierList.Add(udti.name);
-                            // TODO: 要去掉后面跟着的分号, 避免后面误认为全局量
                         }
                     }
                 }
@@ -322,11 +321,23 @@ namespace CodeMap
                     }
                     else if (";" == nextId)
                     {
-                        // 注意用户定义类型后面的分号不是全局量
-                        if (2 <= qualifierList.Count)
+                        // typedef类型定义
+                        if (   (0 != qualifierList.Count)
+                            && ("typedef" == qualifierList[0]))
                         {
-                            GlobalVarProcess(codeList, qualifierList, ref fi);
+                            TypeDefProcess(codeList, qualifierList, ref fi);
                         }
+                        // 注意用户定义类型后面的分号不是全局量
+                        else if (2 <= qualifierList.Count)
+                        {
+                            GlobalVarProcess(qualifierList, ref fi);
+                        }
+                    }
+                    else if ("," == nextId)
+                    {
+                        // 逗号表达式, 现在只考虑到是全局变量(定义, 声明)的场合, 分别进行处理
+                        GlobalVarProcess(qualifierList, ref fi);
+                        continue;
                     }
                     else
                     {
@@ -363,18 +374,47 @@ namespace CodeMap
             // 条件编译
             else if ("if" == cmd.ToLower())
             {
+                string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                if ("defined" == idStr)
+                {
+                }
+                // 跳到行末, 暂不处理
+                if (searchPos.row_num == foundPos.row_num)
+                {
+                    searchPos.col_num = codeList[searchPos.row_num].Length;
+                }
             }
             else if ("ifdef" == cmd.ToLower())
             {
+                // 跳到行末, 暂不处理
+                if (searchPos.row_num == foundPos.row_num)
+                {
+                    searchPos.col_num = codeList[searchPos.row_num].Length;
+                }
             }
             else if ("ifndef" == cmd.ToLower())
             {
+                // 跳到行末, 暂不处理
+                if (searchPos.row_num == foundPos.row_num)
+                {
+                    searchPos.col_num = codeList[searchPos.row_num].Length;
+                }
             }
             else if ("else" == cmd.ToLower())
             {
+                // 跳到行末, 暂不处理
+                if (searchPos.row_num == foundPos.row_num)
+                {
+                    searchPos.col_num = codeList[searchPos.row_num].Length;
+                }
             }
             else if ("endif" == cmd.ToLower())
             {
+                // 跳到行末, 暂不处理
+                if (searchPos.row_num == foundPos.row_num)
+                {
+                    searchPos.col_num = codeList[searchPos.row_num].Length;
+                }
             }
             else
             {
@@ -560,7 +600,12 @@ namespace CodeMap
                     nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("{" != nextIdStr)
                     {
-                        ErrReport();
+                        // 没找到最大括号, 说明这不是一个新的用户定义类型
+                        if ((0 != qualifierList.Count)
+                            && ("typedef" == qualifierList[0]))
+                        {
+                            // 说明这是一个typedef类型定义, 这里返回不做处理, 等后面解析到分号";"的时候再进行typedef类型定义处理
+                        }
                         return null;
                     }
                 }
@@ -630,7 +675,7 @@ namespace CodeMap
         /// <param name="qualifierList"></param>
         /// <param name="searchPos"></param>
         /// <param name="cfi"></param>
-        static void GlobalVarProcess(List<string> codeList, List<string> qualifierList, ref CFileInfo cfi)
+        static void GlobalVarProcess(List<string> qualifierList, ref CFileInfo cfi)
         {
             GlobalVarInfo gvi = new GlobalVarInfo();
 
@@ -783,6 +828,11 @@ namespace CodeMap
                         int idx = 0;
                         foreach (string rp in realParas)
                         {
+                            if (string.Empty == rp)
+                            {
+                                // 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
+                                continue;
+                            }
                             replaceStr = replaceStr.Replace(di.paras[idx], rp);
                             idx++;
                         }
@@ -813,6 +863,25 @@ namespace CodeMap
                 }
             }
             return false;
+        }
+
+        static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref CFileInfo cfi)
+        {
+            TypeDefineInfo tdi = new TypeDefineInfo();
+            string old_type = "";
+            for (int i = 1; i < qualifierList.Count; i++)
+            {
+                if (qualifierList.Count - 1 == i)
+                {
+                    tdi.new_type_name = qualifierList[i];
+                    tdi.old_type_name = old_type;
+                }
+                else
+                {
+                    old_type += (" " + qualifierList[i]);
+                }
+            }
+            cfi.type_define_list.Add(tdi);
         }
 
         static void ErrReport()

@@ -114,13 +114,13 @@ namespace CodeMap
                 }
 
                 // 到达行末
-                // 转到下一行开头
-                lineIdx++;
-                curIdx = 0;
                 if (startFlag)
                 {
                     goto RET_IDF;
                 }
+                // 转到下一行开头
+                lineIdx++;
+                curIdx = 0;
             }
             return null;
         RET_IDF:

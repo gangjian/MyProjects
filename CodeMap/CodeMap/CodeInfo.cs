@@ -59,6 +59,7 @@ namespace CodeMap
         public List<GlobalVarInfo> global_var_declare_list = new List<GlobalVarInfo>();     // 全局量声明列表
         public List<GlobalVarInfo> global_var_define_list = new List<GlobalVarInfo>();      // 全局量定义列表
         public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
+        public List<TypeDefineInfo> type_define_list = new List<TypeDefineInfo>();          // typedef类型定义列表
     }
 
     /// <summary>
@@ -99,6 +100,12 @@ namespace CodeMap
         public string name = "";                            // 宏名
         public List<string> paras = new List<string>();     // 参数列表
         public string value = "";                           // 宏值
+    }
+
+    public class TypeDefineInfo
+    {
+        public string old_type_name = "";
+        public string new_type_name = "";
     }
 }
 
