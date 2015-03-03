@@ -273,7 +273,7 @@ namespace CodeMap
                     // 遇到小括号了, 可能是碰上函数声明或定义了
                     if (("(" == nextId) && (0 != qualifierList.Count))
                     {
-                        CFunctionInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos);
+                        CFunctionInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
                         if (null != cfi)
                         {
                             if (null != cfi.body_start_pos)
@@ -384,7 +384,9 @@ namespace CodeMap
                     searchPos.col_num = codeList[searchPos.row_num].Length;
                 }
             }
-            else if ("ifdef" == cmd.ToLower())
+            else if (  ("ifdef" == cmd.ToLower())
+                    || ("ifndef" == cmd.ToLower())
+                    )
             {
                 // 跳到行末, 暂不处理
                 if (searchPos.row_num == foundPos.row_num)
@@ -392,15 +394,8 @@ namespace CodeMap
                     searchPos.col_num = codeList[searchPos.row_num].Length;
                 }
             }
-            else if ("ifndef" == cmd.ToLower())
-            {
-                // 跳到行末, 暂不处理
-                if (searchPos.row_num == foundPos.row_num)
-                {
-                    searchPos.col_num = codeList[searchPos.row_num].Length;
-                }
-            }
-            else if ("else" == cmd.ToLower())
+            else if (("else" == cmd.ToLower())
+                    || ("elif" == cmd.ToLower()))
             {
                 // 跳到行末, 暂不处理
                 if (searchPos.row_num == foundPos.row_num)
@@ -427,33 +422,32 @@ namespace CodeMap
         /// <param name="codeList"></param>
         /// <param name="lineIdx"></param>
         /// <param name="startIdx"></param>
-        static CFunctionInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos)
+        static CFunctionInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos, File_Position bracketLeft)
         {
             CFunctionInfo cfi = new CFunctionInfo();
 
             // 先找匹配的小括号
-            File_Position fp = FindNextSymbol(codeList, searchPos, ')');
-            if (null == fp)
+            File_Position bracketRight = FindNextMatchSymbol(codeList, searchPos, ')');
+            if (null == bracketRight)
             {
                 ErrReport();
                 return null;
             }
-            File_Position bracketLeft = null;
-            File_Position bracketRight = null;
-            if (codeList[searchPos.row_num].Substring(searchPos.col_num).Trim().StartsWith("*"))
+            if (codeList[bracketLeft.row_num].Substring(bracketLeft.col_num + 1).Trim().StartsWith("*"))
             {
                 // 吗呀, 这不是传说中的函数指针嘛...
-                File_Position sp = searchPos;
-                File_Position ep = fp;
+                File_Position sp = bracketLeft;
+                File_Position ep = bracketRight;
+                sp.col_num += 1;
                 ep.col_num -= 1;
-                searchPos = FindNextSymbol(codeList, fp, '(');
+                bracketLeft = FindNextSymbol(codeList, bracketRight, '(');
                 if (null == searchPos)
                 {
                     ErrReport();
                     return null;
                 }
-                fp = FindNextSymbol(codeList, searchPos, ')');
-                if (null == fp)
+                bracketRight = FindNextSymbol(codeList, searchPos, ')');
+                if (null == bracketRight)
                 {
                     ErrReport();
                     return null;
@@ -461,12 +455,10 @@ namespace CodeMap
                 string nameStr = LineStringCat(codeList, sp, ep);
                 cfi.name = nameStr;
             }
-            bracketLeft = new File_Position(searchPos);
-            bracketRight = fp;
             List<string> paraList = GetParaList(codeList, bracketLeft, bracketRight);
 
             // 然后确认小括号后面是否跟着配对的大括号
-            searchPos = new File_Position(fp.row_num, fp.col_num + 1);
+            searchPos = new File_Position(bracketRight.row_num, bracketRight.col_num + 1);
             File_Position foundPos = null;
             string nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
             if (";" == nextIdStr)
@@ -487,7 +479,7 @@ namespace CodeMap
             {
                 File_Position bodyStartPos = foundPos;
                 // 小括号后面跟着配对的大括号说明这是函数定义(带函数体)
-                fp = FindNextMatchSymbol(codeList, searchPos, '}');
+                File_Position fp = FindNextMatchSymbol(codeList, searchPos, '}');
                 if (null == fp)
                 {
                     ErrReport();

@@ -255,9 +255,8 @@ namespace CodeMap
         /// 找到下一个配对的符号
         /// </summary>
         /// <param name="codeList"></param>
-        /// <param name="lineIdx"></param>
-        /// <param name="startIdx"></param>
-        /// <param name="symbol"></param>
+        /// <param name="searchPos"></param>
+        /// <param name="rightSymbol"></param>
         /// <returns></returns>
         static File_Position FindNextMatchSymbol(List<string> codeList, File_Position searchPos, Char rightSymbol)
         {
@@ -276,8 +275,8 @@ namespace CodeMap
                 return null;
             }
 
+            Stack<int> matchCountStack = new Stack<int>();    // 应对#ifdef条件编译嵌套时, matchCount的堆栈管理
             int matchCount = 1;
-            List<int> matchCountStack = new List<int>();    // 应对#ifdef条件编译嵌套时, matchCount的堆栈管理
             File_Position foundPos = null;
             while (true)
             {
@@ -307,17 +306,17 @@ namespace CodeMap
                         || ("if" == idStr.ToLower()))
                     {
                         // 压栈
-                        matchCountStack.Add(matchCount);
+                        matchCountStack.Push(matchCount);
                     }
                     else if ("else" == idStr.ToLower())
                     {
                         // 取值但是不出栈
-                        matchCount = matchCountStack[matchCountStack.Count - 1];
+                        matchCount = matchCountStack.Peek();
                     }
                     else if ("endif" == idStr.ToLower())
                     {
                         // 出栈
-                        matchCountStack.RemoveAt(matchCountStack.Count - 1);
+                        matchCountStack.Pop();
                     }
                 }
                 else
