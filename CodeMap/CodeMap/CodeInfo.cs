@@ -60,6 +60,11 @@ namespace CodeMap
         public List<GlobalVarInfo> global_var_define_list = new List<GlobalVarInfo>();      // 全局量定义列表
         public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
         public List<TypeDefineInfo> type_define_list = new List<TypeDefineInfo>();          // typedef类型定义列表
+
+        public CFileInfo(string fileName)
+        {
+            full_name = fileName;
+        }
     }
 
     /// <summary>

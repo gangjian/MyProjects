@@ -43,44 +43,34 @@ namespace CodeMap
             {
                 return;
             }
-            FindFiles(tbxRootFolder.Text);
+            List<string> cSourceFilesList = new List<string>();
+            List<string> cHeaderFilesList = new List<string>();
+            GetFiles(tbxRootFolder.Text, ref cSourceFilesList, ref cHeaderFilesList);
+            List<CFileInfo> fileInfoList = CSourceProcess.CFileListProcess(cSourceFilesList, cHeaderFilesList);
             lbStatus.Text = "Finish";
         }
 
         /// <summary>
         /// 遍历文件夹
         /// </summary>
-        void FindFiles(string rootPath)
+        void GetFiles(string rootPath, ref List<string> cSourceFilesList, ref List<string> cHeaderFilesList)
         {
-            List<CFileInfo> CSourceInfoList = new List<CFileInfo>();
             DirectoryInfo di = new DirectoryInfo(rootPath);
             //try
             {
                 foreach (DirectoryInfo subDir in di.GetDirectories())
                 {
-                    FindFiles(subDir.FullName);
+                    GetFiles(subDir.FullName, ref cSourceFilesList, ref cHeaderFilesList);
                 }
                 foreach (FileInfo fi in di.GetFiles())
                 {
                     if (".c" == fi.Extension.ToLower())
                     {
-                        CFileInfo cfi = CSourceProcess.CFileProcess(fi.FullName);
-                        if (null != cfi)
-                        {
-                            cfi.full_name = fi.FullName;
-                            CSourceInfoList.Add(cfi);
-                            lbStatus.Text = fi.FullName;
-                        }
+                        cSourceFilesList.Add(fi.FullName);
                     }
                     else if (".h" == fi.Extension.ToLower())
                     {
-                        CFileInfo cfi = CSourceProcess.HeaderFileProcess(fi.FullName);
-                        if (null != cfi)
-                        {
-                            cfi.full_name = fi.FullName;
-                            CSourceInfoList.Add(cfi);
-                            lbStatus.Text = fi.FullName;
-                        }
+                        cHeaderFilesList.Add(fi.FullName);
                     }
                     else
                     {

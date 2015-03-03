@@ -12,28 +12,33 @@ namespace CodeMap
         /// ".c"源文件处理
         /// </summary>
         /// <param name="fileName"></param>
-        public static CFileInfo CFileProcess(string fileName)
+        public static List<CFileInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
         {
-            List<string> wtList = RemoveComments(fileName);
-            wtList = RemoveConditionalCompile(wtList);
+            List<CFileInfo> retList = new List<CFileInfo>();
+            foreach (string hdFile in hdFileList)
+            {
+                CFileProcess(hdFile, ref retList, hdFileList);
+            }
+            foreach (string srcFile in srcFileList)
+            {
+                CFileProcess(srcFile, ref retList, hdFileList);
+            }
 
-            int lineIdx = 0, startIdx = 0;
-            CFileInfo fi = CodeAnalyze(wtList, ref lineIdx, ref startIdx);
-
-            return fi;
+            return retList;
         }
 
-        /// <summary>
-        /// ".h"头文件处理
-        /// </summary>
-        /// <param name="fileName"></param>
-        public static CFileInfo HeaderFileProcess(string fileName)
+        static CFileInfo CFileProcess(string fileName, ref List<CFileInfo> parsedList, List<string> headerList)
         {
-            List<string> wtList = RemoveComments(fileName);
-            wtList = RemoveConditionalCompile(wtList);
+            // 去掉注释
+            List<string> codeList = RemoveComments(fileName);
+            CFileInfo fi = new CFileInfo(fileName);
+            // 预编译处理
+            codeList = PrecompileProcess(codeList, ref fi, ref parsedList, headerList);
 
-            int lineIdx = 0, startIdx = 0;
-            CFileInfo fi = CodeAnalyze(wtList, ref lineIdx, ref startIdx);
+            File_Position sPos = new File_Position(0, 0);
+            // 文件解析
+            CodeAnalyze(codeList, ref sPos, ref fi);
+            parsedList.Add(fi);
 
             return fi;
         }
@@ -119,84 +124,131 @@ namespace CodeMap
         }
 
         /// <summary>
-        /// 去除条件编译块
+        /// 预编译处理
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static List<string> RemoveConditionalCompile(List<string> inputList)
+        public static List<string> PrecompileProcess(List<string> codeList, ref CFileInfo fi,
+                                                     ref List<CFileInfo> parsedList, List<string> headerList)
         {
             List<string> retList = new List<string>();
             List<CC_INFO> ccStack = new List<CC_INFO>();    // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
             CC_INFO cc_info = new CC_INFO();
 
             string rdLine = "";
-            foreach (string line in inputList)
+            for (int idx = 0; idx < codeList.Count; idx++)
             {
-                rdLine = line.Trim().ToLower();
-                if (rdLine.StartsWith("#if"))
+                rdLine = codeList[idx].Trim();
+                if (rdLine.StartsWith("#"))
                 {
-                    ccStack.Add(cc_info);
-                    cc_info = new CC_INFO();
+                    File_Position searchPos = new File_Position(idx, rdLine.IndexOf("#"));
+                    File_Position foundPos = null;
+                    string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                    if ("include" == idStr.ToLower())
+                    {
+                        // 取得include文件名
+                        string incFileName = GetIncludeFileName(codeList, ref searchPos);
+                        System.Diagnostics.Trace.Assert(null != incFileName);
+                        fi.include_file_list.Add(incFileName);
 
-                    cc_info.exp = rdLine.Remove(0, 3).Trim();
-                    if ("0" == cc_info.exp)
-                    {
-                        cc_info.write_flag = false;
-                        cc_info.write_next_flag = false;
+                        // 取得头文件的解析情报
+                        CFileInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
                     }
-                    else if ("1" == cc_info.exp)
+                    else if ("define" == idStr.ToLower())
                     {
-                        cc_info.write_flag = false;
-                        cc_info.write_next_flag = true;
                     }
                     else
                     {
-                        cc_info.unidentified_flag = true;
-                        cc_info.write_flag = true;
-                        cc_info.write_next_flag = false;
+                        if ("if" == idStr.ToLower())
+                        {
+                            idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                            if ("defined" == idStr)
+                            {
+                            }
+                        }
+                        else if ("ifdef" == idStr.ToLower())
+                        {
+                        }
+                        else if ("ifndef" == idStr.ToLower())
+                        {
+                        }
+                        else if ("else" == idStr.ToLower())
+                        {
+                        }
+                        else if ("elif" == idStr.ToLower())
+                        {
+                        }
+                        else if ("endif" == idStr.ToLower())
+                        {
+                        }
                     }
-                }
-                else if (rdLine.StartsWith("#else"))
-                {
-                    if (cc_info.unidentified_flag)
+
+           ///////////////////////////////////////////////////////////////////
+                    if (rdLine.StartsWith("#if"))
                     {
+                        ccStack.Add(cc_info);
+                        cc_info = new CC_INFO();
+
+                        cc_info.exp = rdLine.Remove(0, 3).Trim();
+                        if ("0" == cc_info.exp)
+                        {
+                            cc_info.write_flag = false;
+                            cc_info.write_next_flag = false;
+                        }
+                        else if ("1" == cc_info.exp)
+                        {
+                            cc_info.write_flag = false;
+                            cc_info.write_next_flag = true;
+                        }
+                        else
+                        {
+                            cc_info.unidentified_flag = true;
+                            cc_info.write_flag = true;
+                            cc_info.write_next_flag = false;
+                        }
                     }
-                    else if (true == cc_info.write_flag)
+                    else if (rdLine.StartsWith("#else"))
                     {
-                        cc_info.write_flag = false;
-                        cc_info.write_next_flag = false;
+                        if (cc_info.unidentified_flag)
+                        {
+                        }
+                        else if (true == cc_info.write_flag)
+                        {
+                            cc_info.write_flag = false;
+                            cc_info.write_next_flag = false;
+                        }
+                        else
+                        {
+                            cc_info.write_flag = false;
+                            cc_info.write_next_flag = true;
+                        }
+                    }
+                    else if (rdLine.StartsWith("#endif"))
+                    {
+                        if (cc_info.unidentified_flag)
+                        {
+                            cc_info.unidentified_flag = false;
+                        }
+                        else
+                        {
+                            cc_info.write_flag = false;
+                            cc_info.write_next_flag = true;
+                        }
+                        cc_info.pop_up_flag = true;
                     }
                     else
                     {
-                        cc_info.write_flag = false;
-                        cc_info.write_next_flag = true;
-                    }
-                }
-                else if (rdLine.StartsWith("#endif"))
-                {
-                    if (cc_info.unidentified_flag)
-                    {
-                        cc_info.unidentified_flag = false;
-                    }
-                    else
-                    {
-                        cc_info.write_flag = false;
-                        cc_info.write_next_flag = true;
-                    }
-                    cc_info.pop_up_flag = true;
-                }
-                else
-                {
-                    if (true == cc_info.write_next_flag)
-                    {
-                        cc_info.write_flag = true;
-                        cc_info.write_next_flag = false;
+                        if (true == cc_info.write_next_flag)
+                        {
+                            cc_info.write_flag = true;
+                            cc_info.write_next_flag = false;
+                        }
                     }
                 }
 
                 if (cc_info.write_flag)
                 {
-                    retList.Add(line);
+                    retList.Add(codeList[idx]);
                 }
                 else
                 {
@@ -215,23 +267,61 @@ namespace CodeMap
             return retList;
         }
 
+        static CFileInfo GetIncFileParsedInfo(string incFileName, ref List<CFileInfo> parsedList, List<string> headerList)
+        {
+            if (incFileName.StartsWith("<") && incFileName.EndsWith(">"))
+            {
+            }
+            else if (incFileName.StartsWith("\"") && incFileName.EndsWith("\""))
+            {
+            }
+            else
+            {
+                System.Diagnostics.Trace.Assert(false);
+            }
+            // 现在已解析过的list里找
+            foreach (var pi in parsedList)
+            {
+                string fName = GetFileName(pi.full_name);
+                if (fName.ToLower() == incFileName.ToLower())
+                {
+                    // 如果找到了, 直接返回
+                    return pi;
+                }
+            }
+
+            // 如果上一步没找到, 证明还没被解析, 则在全部头文件list里找
+            foreach (var hn in headerList)
+            {
+                string fName = GetFileName(hn);
+                if (fName.ToLower() == incFileName.ToLower())
+                {
+                    // 如果找到了, 则要先解析这个头文件
+                    CFileInfo fi = CFileProcess(hn, ref parsedList, headerList);
+                    return fi;
+                }
+            }
+            // 头文件没找到
+            ErrReport(incFileName + "没找到呀!");
+
+            return null;
+        }
+
         /// <summary>
         /// 代码解析
         /// </summary>
-        public static CFileInfo CodeAnalyze(List<string> codeList, ref int lineIdx, ref int startIdx)
+        public static void CodeAnalyze(List<string> codeList, ref File_Position searchPos, ref CFileInfo fi)
         {
             System.Diagnostics.Trace.Assert((null != codeList));
             if (0 == codeList.Count)
             {
                 ErrReport();
-                return null;
+                return;
             }
 
-            CFileInfo fi = new CFileInfo();
             List<string> qualifierList = new List<string>();     // 修饰符暂存列表
             string nextId = null;
             File_Position foundPos = null;
-            File_Position searchPos = new File_Position(lineIdx, startIdx);
             while (null != (nextId = GetNextIdentifier(codeList, ref searchPos, out foundPos)))
             {
                 // 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
@@ -346,8 +436,6 @@ namespace CodeMap
                     qualifierList.Clear();
                 }
             }
-
-            return fi;
         }
 
         /// <summary>
@@ -876,9 +964,9 @@ namespace CodeMap
             cfi.type_define_list.Add(tdi);
         }
 
-        static void ErrReport()
+        static void ErrReport(string errMsg = "Something is wrong!")
         {
-            System.Diagnostics.Trace.WriteLine("Something is wrong!");
+            System.Diagnostics.Trace.WriteLine(errMsg);
         }
     }
 }

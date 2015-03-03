@@ -347,6 +347,18 @@ namespace CodeMap
             return retStr;
         }
 
+        static string GetFileName(string fullName)
+        {
+            string retName = fullName;
+            int idx = fullName.LastIndexOf('\\');
+            if (-1 != idx)
+            {
+                retName = fullName.Substring(idx + 1).Trim();
+            }
+
+            return retName;
+        }
+
     }
 
 }
