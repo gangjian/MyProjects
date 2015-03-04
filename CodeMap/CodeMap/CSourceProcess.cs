@@ -34,7 +34,9 @@ namespace CodeMap
             CFileInfo fi = new CFileInfo(fileName);
             // 预编译处理
             codeList = PrecompileProcess(codeList, ref fi, ref parsedList, headerList);
+            Save2File(codeList, fileName + ".bak");
 
+            // 从头开始解析
             File_Position sPos = new File_Position(0, 0);
             // 文件解析
             CodeAnalyze(codeList, ref sPos, ref fi);
@@ -126,14 +128,18 @@ namespace CodeMap
         /// <summary>
         /// 预编译处理
         /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="codeList"></param>
+        /// <param name="fi"></param>
+        /// <param name="parsedList">已解析的文件情报列表</param>
+        /// <param name="headerList">头文件名列表</param>
         /// <returns></returns>
         public static List<string> PrecompileProcess(List<string> codeList, ref CFileInfo fi,
                                                      ref List<CFileInfo> parsedList, List<string> headerList)
         {
             List<string> retList = new List<string>();
-            List<CC_INFO> ccStack = new List<CC_INFO>();    // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
+            Stack<CC_INFO> ccStack = new Stack<CC_INFO>();              // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
             CC_INFO cc_info = new CC_INFO();
+            List<CFileInfo> includeHeaderList = new List<CFileInfo>();  // 该文件包含的头文件的解析情报List
 
             string rdLine = "";
             for (int idx = 0; idx < codeList.Count; idx++)
@@ -141,107 +147,131 @@ namespace CodeMap
                 rdLine = codeList[idx].Trim();
                 if (rdLine.StartsWith("#"))
                 {
-                    File_Position searchPos = new File_Position(idx, rdLine.IndexOf("#"));
+                    File_Position searchPos = new File_Position(idx, rdLine.IndexOf("#") + 1);
                     File_Position foundPos = null;
                     string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("include" == idStr.ToLower())
                     {
+                        if (false == cc_info.write_flag)
+                        {
+                            continue;
+                        }
                         // 取得include文件名
                         string incFileName = GetIncludeFileName(codeList, ref searchPos);
                         System.Diagnostics.Trace.Assert(null != incFileName);
                         fi.include_file_list.Add(incFileName);
-
-                        // 取得头文件的解析情报
-                        CFileInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
+                        if (incFileName.StartsWith("\"") && incFileName.EndsWith("\""))
+                        {
+                            // 去掉引号
+                            incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
+                            // 取得头文件的解析情报
+                            CFileInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
+                            if (null != incInfo)
+                            {
+                                includeHeaderList.Add(incInfo);
+                            }
+                        }
                     }
                     else if ("define" == idStr.ToLower())
                     {
+                        if (false == cc_info.write_flag)
+                        {
+                            continue;
+                        }
+                        DefineProcess(codeList, ref searchPos, ref fi);
                     }
                     else
                     {
+                        string exprStr = "";            // 表达式字符串
                         if ("if" == idStr.ToLower())
                         {
-                            idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-                            if ("defined" == idStr)
+                            ccStack.Push(cc_info);
+                            cc_info = new CC_INFO();
+                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                            // 判断表达式的值
+                            if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
                             {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = true;
+                            }
+                            else
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = false;
                             }
                         }
                         else if ("ifdef" == idStr.ToLower())
                         {
+                            ccStack.Push(cc_info);
+                            cc_info = new CC_INFO();
+                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                            // 判断表达式是否已定义
+                            if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = true;
+                            }
+                            else
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = false;
+                            }
                         }
                         else if ("ifndef" == idStr.ToLower())
                         {
+                            ccStack.Push(cc_info);
+                            cc_info = new CC_INFO();
+                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                            // 判断表达式是否已定义
+                            if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = false;
+                            }
+                            else
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = true;
+                            }
                         }
                         else if ("else" == idStr.ToLower())
                         {
+                            if (true == cc_info.write_flag)
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = false;
+                            }
+                            else
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = true;
+                            }
                         }
                         else if ("elif" == idStr.ToLower())
                         {
+                            // 跟"if"一样, 但是因为不是嵌套所以不用压栈
+                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                            // 判断表达式的值
+                            if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = true;
+                            }
+                            else
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = false;
+                            }
                         }
                         else if ("endif" == idStr.ToLower())
                         {
-                        }
-                    }
+                            cc_info.write_flag = false;
+                            cc_info.write_next_flag = true;
 
-           ///////////////////////////////////////////////////////////////////
-                    if (rdLine.StartsWith("#if"))
-                    {
-                        ccStack.Add(cc_info);
-                        cc_info = new CC_INFO();
-
-                        cc_info.exp = rdLine.Remove(0, 3).Trim();
-                        if ("0" == cc_info.exp)
-                        {
-                            cc_info.write_flag = false;
-                            cc_info.write_next_flag = false;
-                        }
-                        else if ("1" == cc_info.exp)
-                        {
-                            cc_info.write_flag = false;
-                            cc_info.write_next_flag = true;
+                            cc_info.pop_up_flag = true;
                         }
                         else
                         {
-                            cc_info.unidentified_flag = true;
-                            cc_info.write_flag = true;
-                            cc_info.write_next_flag = false;
-                        }
-                    }
-                    else if (rdLine.StartsWith("#else"))
-                    {
-                        if (cc_info.unidentified_flag)
-                        {
-                        }
-                        else if (true == cc_info.write_flag)
-                        {
-                            cc_info.write_flag = false;
-                            cc_info.write_next_flag = false;
-                        }
-                        else
-                        {
-                            cc_info.write_flag = false;
-                            cc_info.write_next_flag = true;
-                        }
-                    }
-                    else if (rdLine.StartsWith("#endif"))
-                    {
-                        if (cc_info.unidentified_flag)
-                        {
-                            cc_info.unidentified_flag = false;
-                        }
-                        else
-                        {
-                            cc_info.write_flag = false;
-                            cc_info.write_next_flag = true;
-                        }
-                        cc_info.pop_up_flag = true;
-                    }
-                    else
-                    {
-                        if (true == cc_info.write_next_flag)
-                        {
-                            cc_info.write_flag = true;
-                            cc_info.write_next_flag = false;
                         }
                     }
                 }
@@ -254,13 +284,16 @@ namespace CodeMap
                 {
                     retList.Add("");
                 }
+                if (true == cc_info.write_next_flag)
+                {
+                    cc_info.write_flag = true;
+                    cc_info.write_next_flag = false;
+                }
 
                 // 嵌套时弹出堆栈, 恢复之前的情报
                 if (true == cc_info.pop_up_flag)
                 {
-                    int lastIdx = ccStack.Count - 1;
-                    cc_info = ccStack[lastIdx];
-                    ccStack.RemoveAt(lastIdx);
+                    cc_info = ccStack.Pop();
                 }
             }
 
@@ -269,17 +302,7 @@ namespace CodeMap
 
         static CFileInfo GetIncFileParsedInfo(string incFileName, ref List<CFileInfo> parsedList, List<string> headerList)
         {
-            if (incFileName.StartsWith("<") && incFileName.EndsWith(">"))
-            {
-            }
-            else if (incFileName.StartsWith("\"") && incFileName.EndsWith("\""))
-            {
-            }
-            else
-            {
-                System.Diagnostics.Trace.Assert(false);
-            }
-            // 现在已解析过的list里找
+            // 先在已解析过的文件list里找
             foreach (var pi in parsedList)
             {
                 string fName = GetFileName(pi.full_name);
@@ -291,18 +314,20 @@ namespace CodeMap
             }
 
             // 如果上一步没找到, 证明还没被解析, 则在全部头文件list里找
-            foreach (var hn in headerList)
+            foreach (var hd_name in headerList)
             {
-                string fName = GetFileName(hn);
+                string fName = GetFileName(hd_name);
                 if (fName.ToLower() == incFileName.ToLower())
                 {
                     // 如果找到了, 则要先解析这个头文件
-                    CFileInfo fi = CFileProcess(hn, ref parsedList, headerList);
+                    CFileInfo fi = CFileProcess(hd_name, ref parsedList, headerList);
+                    // TODO: 注意当有多个同名文件符合条件时的情况应对
+
                     return fi;
                 }
             }
             // 头文件没找到
-            ErrReport(incFileName + "没找到呀!");
+            // ErrReport(incFileName + " 头文件没找到!");
 
             return null;
         }
@@ -376,10 +401,14 @@ namespace CodeMap
                             }
                         }
                     }
-                    // 井号开头的是预处理命令
                     else if ("#" == nextId)
                     {
-                        PreprocessCommandProcess(codeList, ref searchPos, ref fi);
+                        // 预编译命令, 因为已经处理过了, 不在这里解析, 跳到宏定义结束
+                        while (codeList[searchPos.row_num].EndsWith("\\"))
+                        {
+                            searchPos.row_num += 1;
+                        }
+                        searchPos.col_num = codeList[searchPos.row_num].Length;
                     }
                     // 全局量(包含全局数组)
                     else if ("[" == nextId)
@@ -426,81 +455,16 @@ namespace CodeMap
                     else if ("," == nextId)
                     {
                         // 逗号表达式, 现在只考虑到是全局变量(定义, 声明)的场合, 分别进行处理
+                        // TODO: 逗号不一定是全局量, 还有可能是结构体类型定义 ipxsys.h line:409
                         GlobalVarProcess(qualifierList, ref fi);
                         continue;
                     }
                     else
                     {
-//                      System.Diagnostics.Trace.WriteLine("艾玛! 不晓得这是啥玩意? line = " + (lineIdx + 1).ToString() + "Col = " + startIdx.ToString());
+                        // Do Nothing
                     }
                     qualifierList.Clear();
                 }
-            }
-        }
-
-        /// <summary>
-        /// 预处理命令处理
-        /// </summary>
-        static void PreprocessCommandProcess(List<string> codeList, ref File_Position searchPos, ref CFileInfo fi)
-        {
-            File_Position foundPos = null;
-            string cmd = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-            // 头文件包含
-            if ("include" == cmd.ToLower())
-            {
-                string incFileName = GetIncludeFileName(codeList, ref searchPos);
-                if (null != incFileName)
-                {
-                    fi.include_file_list.Add(incFileName);
-                }
-            }
-            // 宏定义
-            else if ("define" == cmd.ToLower())
-            {
-                DefineProcess(codeList, ref searchPos, ref fi);
-            }
-            // 条件编译
-            else if ("if" == cmd.ToLower())
-            {
-                string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-                if ("defined" == idStr)
-                {
-                }
-                // 跳到行末, 暂不处理
-                if (searchPos.row_num == foundPos.row_num)
-                {
-                    searchPos.col_num = codeList[searchPos.row_num].Length;
-                }
-            }
-            else if (  ("ifdef" == cmd.ToLower())
-                    || ("ifndef" == cmd.ToLower())
-                    )
-            {
-                // 跳到行末, 暂不处理
-                if (searchPos.row_num == foundPos.row_num)
-                {
-                    searchPos.col_num = codeList[searchPos.row_num].Length;
-                }
-            }
-            else if (("else" == cmd.ToLower())
-                    || ("elif" == cmd.ToLower()))
-            {
-                // 跳到行末, 暂不处理
-                if (searchPos.row_num == foundPos.row_num)
-                {
-                    searchPos.col_num = codeList[searchPos.row_num].Length;
-                }
-            }
-            else if ("endif" == cmd.ToLower())
-            {
-                // 跳到行末, 暂不处理
-                if (searchPos.row_num == foundPos.row_num)
-                {
-                    searchPos.col_num = codeList[searchPos.row_num].Length;
-                }
-            }
-            else
-            {
             }
         }
 

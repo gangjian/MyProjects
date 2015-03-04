@@ -347,6 +347,11 @@ namespace CodeMap
             return retStr;
         }
 
+        /// <summary>
+        /// 从完整路径中取得文件名
+        /// </summary>
+        /// <param name="fullName"></param>
+        /// <returns></returns>
         static string GetFileName(string fullName)
         {
             string retName = fullName;
@@ -359,6 +364,108 @@ namespace CodeMap
             return retName;
         }
 
+        /// <summary>
+        /// 取得一个表达式
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="searchPos"></param>
+        /// <param name="foundPos"></param>
+        /// <returns></returns>
+        static string GetExpressionStr(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
+        {
+            foundPos = new File_Position(searchPos);
+
+            string lineStr = codeList[searchPos.row_num];
+            string exprStr = lineStr.Substring(searchPos.col_num).Trim();
+            foundPos.col_num = lineStr.IndexOf(exprStr);
+            searchPos.row_num += 1;
+            searchPos.col_num = 0;
+
+            return exprStr;
+        }
+
+        /// <summary>
+        /// 判断表达式是否已定义(#if defined)
+        /// </summary>
+        /// <param name="exp">表达式</param>
+        /// <param name="headerList">头文件列表</param>
+        /// <param name="defineList">宏定义列表</param>
+        /// <returns></returns>
+        static MacroDefineInfo JudgeExpressionDefined(string exp, List<CFileInfo> headerList, List<MacroDefineInfo> defineList)
+        {
+            foreach (var di in defineList)
+            {
+                if (exp == di.name)
+                {
+                    return di;
+                }
+            }
+            foreach (var fi in headerList)
+            {
+                foreach (var di in fi.macro_define_list)
+                {
+                    if (exp == di.name)
+                    {
+                        return di;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 判断表达式的值
+        /// </summary>
+        /// <param name="exp">表达式</param>
+        /// <param name="headerList">头文件列表</param>
+        /// <param name="defineList">宏定义列表</param>
+        /// <returns></returns>
+        static int JudgeExpressionValue(string exp, List<CFileInfo> headerList, List<MacroDefineInfo> defineList)
+        {
+            // TODO: 暂不考虑复合表达式的情况
+            // 对于复合表达式, 拆分成单独表达式分别求值
+            int retVal = 0;
+            if (int.TryParse(exp, out retVal))
+            {
+                return retVal;
+            }
+            else if (IsStandardIdentifier(exp))
+            {
+                MacroDefineInfo mdi = JudgeExpressionDefined(exp, headerList, defineList);
+                if (null != mdi)
+                {
+                    if (int.TryParse(mdi.value, out retVal))
+                    {
+                        return retVal;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        static string GetSimpleExpression(string complexExp, int idx)
+        {
+            return null;
+        }
+
+        ////////////////////////////////////////////////
+
+        static void Save2File(List<string> writeList, string saveName)
+        {
+            try
+            {
+                StreamWriter sw = new StreamWriter(saveName);
+                foreach (string wtLine in writeList)
+                {
+                    sw.WriteLine(wtLine);
+                }
+                sw.Close();
+            }
+            catch (Exception ex)
+            {
+                ErrReport(ex.ToString());
+            }
+        }
     }
 
 }
