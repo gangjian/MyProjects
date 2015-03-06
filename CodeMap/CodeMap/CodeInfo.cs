@@ -84,8 +84,8 @@ namespace CodeMap
     /// </summary>
     public class UsrDefineTypeInfo
     {
-        public string type = "";
-        public string name = "";
+        public string type = "";                                            // "struct, enum, union"
+        public List<string> nameList = new List<string>();                  // 可能有多个名(逗号分割)
         public List<string> memberList = new List<string>();
         public File_Position body_start_pos = null;
         public File_Position body_end_pos = null;

@@ -448,6 +448,25 @@ namespace CodeMap
             return null;
         }
 
+        static File_Position FindNextSpecIdentifier(string idStr, List<string> codeList, File_Position searchPos)
+        {
+            File_Position foundPos = null;
+            string retStr = null;
+            while (true)
+            {
+                retStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                if (idStr == retStr)
+                {
+                    return foundPos;
+                }
+                else if (null == retStr)
+                {
+                    break;
+                }
+            }
+            return null;
+        }
+
         ////////////////////////////////////////////////
 
         static void Save2File(List<string> writeList, string saveName)

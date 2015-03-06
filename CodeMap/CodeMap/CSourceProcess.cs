@@ -372,13 +372,13 @@ namespace CodeMap
                         if (null != udti)
                         {
                             // 如果是匿名类型, 要给加个名字
-                            if ("" == udti.name)
+                            if (0 == udti.nameList.Count)
                             {
-                                udti.name = "USR_DEFINE_TYPE_ANONYMOUS_" + fi.user_def_type_list.Count.ToString();
+                                udti.nameList.Add("USR_DEFINE_TYPE_ANONYMOUS_" + fi.user_def_type_list.Count.ToString());
                             }
                             fi.user_def_type_list.Add(udti);
                             qualifierList.Clear();
-                            qualifierList.Add(udti.name);
+                            qualifierList.Add(udti.nameList[0]);
                         }
                     }
                 }
@@ -640,7 +640,7 @@ namespace CodeMap
             {
                 if (IsStandardIdentifier(nextIdStr))
                 {
-                    retUsrTypeInfo.name = nextIdStr;
+                    retUsrTypeInfo.nameList.Add(nextIdStr);
                     nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("{" != nextIdStr)
                     {
@@ -699,13 +699,26 @@ namespace CodeMap
 
             if ("typedef" == fstStr)
             {
-                searchPos = foundPos;
+                searchPos = foundPos;   // 右侧大括号
                 searchPos.col_num += 1;
-                nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-                if (IsStandardIdentifier(nextIdStr))
+                File_Position sPos = new File_Position(searchPos);
+                foundPos = FindNextSpecIdentifier(";", codeList, searchPos);    // 找到分号; 也就是typedef结束的位置
+                if (null == foundPos)
                 {
-                    retUsrTypeInfo.name = nextIdStr;
+                    return null;
                 }
+                retUsrTypeInfo.nameList.Clear();
+                string nameStr = LineStringCat(codeList, sPos, foundPos);
+                string[] nameArr = nameStr.Split(',');
+                foreach (string name in nameArr)
+                {
+                    if (IsStandardIdentifier(name.Trim()))
+                    {
+                        retUsrTypeInfo.nameList.Add(name.Trim());
+                    }
+                }
+                foundPos.col_num -= 1;
+                searchPos = foundPos;
             }
             startPos = searchPos;
 
