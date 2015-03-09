@@ -147,7 +147,7 @@ namespace CodeMap
                 rdLine = codeList[idx].Trim();
                 if (rdLine.StartsWith("#"))
                 {
-                    File_Position searchPos = new File_Position(idx, rdLine.IndexOf("#") + 1);
+                    File_Position searchPos = new File_Position(idx, codeList[idx].IndexOf("#") + 1);
                     File_Position foundPos = null;
                     string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("include" == idStr.ToLower())
@@ -185,88 +185,154 @@ namespace CodeMap
                         string exprStr = "";            // 表达式字符串
                         if ("if" == idStr.ToLower())
                         {
+                            bool lastFlag = cc_info.write_flag;
                             ccStack.Push(cc_info);
                             cc_info = new CC_INFO();
-                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
-                            // 判断表达式的值
-                            if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
-                            {
-                                cc_info.write_flag = false;
-                                cc_info.write_next_flag = true;
-                            }
-                            else
+                            if (false == lastFlag)
                             {
                                 cc_info.write_flag = false;
                                 cc_info.write_next_flag = false;
+                            }
+                            else
+                            {
+                                exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                // 判断表达式的值
+                                if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = true;
+                                }
+                                else
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = false;
+                                }
                             }
                         }
                         else if ("ifdef" == idStr.ToLower())
                         {
+                            bool lastFlag = cc_info.write_flag;
                             ccStack.Push(cc_info);
                             cc_info = new CC_INFO();
-                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
-                            // 判断表达式是否已定义
-                            if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
-                            {
-                                cc_info.write_flag = false;
-                                cc_info.write_next_flag = true;
-                            }
-                            else
+                            if (false == lastFlag)
                             {
                                 cc_info.write_flag = false;
                                 cc_info.write_next_flag = false;
+                            }
+                            else
+                            {
+                                exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                // 判断表达式是否已定义
+                                if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = true;
+                                }
+                                else
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = false;
+                                }
                             }
                         }
                         else if ("ifndef" == idStr.ToLower())
                         {
+                            bool lastFlag = cc_info.write_flag;
                             ccStack.Push(cc_info);
                             cc_info = new CC_INFO();
-                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
-                            // 判断表达式是否已定义
-                            if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
+                            if (false == lastFlag)
                             {
                                 cc_info.write_flag = false;
                                 cc_info.write_next_flag = false;
                             }
                             else
                             {
-                                cc_info.write_flag = false;
-                                cc_info.write_next_flag = true;
+                                exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                // 判断表达式是否已定义
+                                if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = false;
+                                }
+                                else
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = true;
+                                }
                             }
                         }
                         else if ("else" == idStr.ToLower())
                         {
-                            if (true == cc_info.write_flag)
+                            bool lastFlag = true;
+                            if (ccStack.Count > 0)
+                            {
+                                lastFlag = ccStack.Peek().write_flag;
+                            }
+                            if (false == lastFlag)
                             {
                                 cc_info.write_flag = false;
                                 cc_info.write_next_flag = false;
                             }
                             else
                             {
-                                cc_info.write_flag = false;
-                                cc_info.write_next_flag = true;
+                                if (true == cc_info.write_flag)
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = false;
+                                }
+                                else
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = true;
+                                }
                             }
                         }
                         else if ("elif" == idStr.ToLower())
                         {
-                            // 跟"if"一样, 但是因为不是嵌套所以不用压栈
-                            exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
-                            // 判断表达式的值
-                            if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
+                            bool lastFlag = true;
+                            if (ccStack.Count > 0)
                             {
-                                cc_info.write_flag = false;
-                                cc_info.write_next_flag = true;
+                                lastFlag = ccStack.Peek().write_flag;
                             }
-                            else
+                            if (false == lastFlag)
                             {
                                 cc_info.write_flag = false;
                                 cc_info.write_next_flag = false;
                             }
+                            else
+                            {
+                                // 跟"if"一样, 但是因为不是嵌套所以不用压栈
+                                exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                // 判断表达式的值
+                                if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = true;
+                                }
+                                else
+                                {
+                                    cc_info.write_flag = false;
+                                    cc_info.write_next_flag = false;
+                                }
+                            }
                         }
                         else if ("endif" == idStr.ToLower())
                         {
-                            cc_info.write_flag = false;
-                            cc_info.write_next_flag = true;
+                            bool lastFlag = true;
+                            if (ccStack.Count > 0)
+                            {
+                                lastFlag = ccStack.Peek().write_flag;
+                            }
+                            if (false == lastFlag)
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = false;
+                            }
+                            else
+                            {
+                                cc_info.write_flag = false;
+                                cc_info.write_next_flag = true;
+                            }
 
                             cc_info.pop_up_flag = true;
                         }
