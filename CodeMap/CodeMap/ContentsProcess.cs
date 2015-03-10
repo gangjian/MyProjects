@@ -275,7 +275,6 @@ namespace CodeMap
                 return null;
             }
 
-            Stack<int> matchCountStack = new Stack<int>();    // 应对#ifdef条件编译嵌套时, matchCount的堆栈管理
             int matchCount = 1;
             File_Position foundPos = null;
             while (true)
@@ -296,27 +295,6 @@ namespace CodeMap
                     {
                         // 找到了
                         return foundPos;
-                    }
-                }
-                else if ("#" == idStr)
-                {
-                    idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-                    if (("ifdef" == idStr.ToLower())
-                        || ("ifndef" == idStr.ToLower())
-                        || ("if" == idStr.ToLower()))
-                    {
-                        // 压栈
-                        matchCountStack.Push(matchCount);
-                    }
-                    else if ("else" == idStr.ToLower())
-                    {
-                        // 取值但是不出栈
-                        matchCount = matchCountStack.Peek();
-                    }
-                    else if ("endif" == idStr.ToLower())
-                    {
-                        // 出栈
-                        matchCountStack.Pop();
                     }
                 }
                 else
@@ -352,7 +330,7 @@ namespace CodeMap
         /// </summary>
         /// <param name="fullName"></param>
         /// <returns></returns>
-        static string GetFileName(string fullName)
+        public static string GetFileName(string fullName)
         {
             string retName = fullName;
             int idx = fullName.LastIndexOf('\\');

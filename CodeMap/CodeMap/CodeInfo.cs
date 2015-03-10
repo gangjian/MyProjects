@@ -96,7 +96,7 @@ namespace CodeMap
         public string type = "";
         public string name = "";
         public List<string> qualifiers = new List<string>();                // 修饰符列表
-        public string array_size_str = "";                                  // (如果是数组的话)数组size字符串
+        public string array_size_string = "";                               // (如果是数组的话)数组size字符串
         public string initial_string = "";                                  // 初始化赋值字符串
     }
 

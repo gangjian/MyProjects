@@ -41,6 +41,7 @@ namespace CodeMap
             // 文件解析
             CodeAnalyze(codeList, ref sPos, ref fi);
             parsedList.Add(fi);
+            XmlProcess.SaveCFileInfo2XML(fi);
 
             return fi;
         }
@@ -152,23 +153,22 @@ namespace CodeMap
                     string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if ("include" == idStr.ToLower())
                     {
-                        if (false == cc_info.write_flag)
+                        if (false != cc_info.write_flag)
                         {
-                            continue;
-                        }
-                        // 取得include文件名
-                        string incFileName = GetIncludeFileName(codeList, ref searchPos);
-                        System.Diagnostics.Trace.Assert(null != incFileName);
-                        fi.include_file_list.Add(incFileName);
-                        if (incFileName.StartsWith("\"") && incFileName.EndsWith("\""))
-                        {
-                            // 去掉引号
-                            incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
-                            // 取得头文件的解析情报
-                            CFileInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
-                            if (null != incInfo)
+                            // 取得include文件名
+                            string incFileName = GetIncludeFileName(codeList, ref searchPos);
+                            System.Diagnostics.Trace.Assert(null != incFileName);
+                            fi.include_file_list.Add(incFileName);
+                            if (incFileName.StartsWith("\"") && incFileName.EndsWith("\""))
                             {
-                                includeHeaderList.Add(incInfo);
+                                // 去掉引号
+                                incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
+                                // 取得头文件的解析情报
+                                CFileInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
+                                if (null != incInfo)
+                                {
+                                    includeHeaderList.Add(incInfo);
+                                }
                             }
                         }
                     }
@@ -520,8 +520,6 @@ namespace CodeMap
                     }
                     else if ("," == nextId)
                     {
-                        // 逗号表达式, 现在只考虑到是全局变量(定义, 声明)的场合, 分别进行处理
-                        // TODO: 逗号不一定是全局量, 还有可能是结构体类型定义 ipxsys.h line:409
                         GlobalVarProcess(qualifierList, ref fi);
                         continue;
                     }
@@ -657,6 +655,7 @@ namespace CodeMap
         /// <returns></returns>
         static List<string> GetParaList(List<string> codeList, File_Position bracketLeft, File_Position bracketRight)
         {
+            List<string> retParaList = new List<string>();
             string catStr = LineStringCat(codeList, bracketLeft, bracketRight);
             // 去掉小括号
             if (catStr.StartsWith("("))
@@ -667,13 +666,12 @@ namespace CodeMap
             {
                 catStr = catStr.Remove(catStr.LastIndexOf(')'));
             }
-            string[] paras = catStr.Split(',');
-            if (0 == paras.Length)
+            catStr = catStr.Trim();
+            if ("" == catStr)
             {
-                ErrReport();
-                return null;
+                return retParaList;
             }
-            List<string> retParaList = new List<string>();
+            string[] paras = catStr.Split(',');
             foreach (string p in paras)
             {
                 retParaList.Add(p.Trim());
@@ -819,7 +817,7 @@ namespace CodeMap
             if (qlfStr.StartsWith("[") && qlfStr.EndsWith("]"))
             {
                 qlfStr = qlfStr.Substring(1, qlfStr.Length - 2).Trim();
-                gvi.array_size_str = qlfStr;
+                gvi.array_size_string = qlfStr;
                 qualifierList.RemoveAt(idx);
             }
 
