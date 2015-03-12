@@ -37,9 +37,10 @@
             // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(12, 234);
+            this.buttonStart.Location = new System.Drawing.Point(52, 163);
+            this.buttonStart.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.buttonStart.Name = "buttonStart";
-            this.buttonStart.Size = new System.Drawing.Size(75, 37);
+            this.buttonStart.Size = new System.Drawing.Size(56, 30);
             this.buttonStart.TabIndex = 0;
             this.buttonStart.Text = "Start";
             this.buttonStart.UseVisualStyleBackColor = true;
@@ -47,9 +48,11 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.BackColor = System.Drawing.Color.Black;
             this.pictureBox1.Location = new System.Drawing.Point(-1, 0);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(215, 215);
+            this.pictureBox1.Size = new System.Drawing.Size(161, 157);
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
             // 
@@ -60,20 +63,20 @@
             // 
             // TomatoTimerForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
-            this.ClientSize = new System.Drawing.Size(213, 283);
+            this.ClientSize = new System.Drawing.Size(160, 195);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.buttonStart);
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "TomatoTimerForm";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "TomatoTimerForm";
             this.TopMost = true;
-            this.TransparencyKey = System.Drawing.Color.Navy;
+            this.TransparencyKey = System.Drawing.Color.Transparent;
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.TomatoTimerForm_Paint);
             this.Resize += new System.EventHandler(this.TomatoTimerForm_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
