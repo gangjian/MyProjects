@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BitmapDisplay.cs" />
     <Compile Include="CodeInfo.cs" />
     <Compile Include="ContentsProcess.cs" />
     <Compile Include="CSourceProcess.cs" />

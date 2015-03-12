@@ -47,6 +47,11 @@ namespace CodeMap
             List<string> cHeaderFilesList = new List<string>();
             GetFiles(tbxRootFolder.Text, ref cSourceFilesList, ref cHeaderFilesList);
             List<CFileInfo> fileInfoList = CSourceProcess.CFileListProcess(cSourceFilesList, cHeaderFilesList);
+
+            BitmapDisplay bd = new BitmapDisplay();
+            Bitmap codeMap = bd.DrawMap(fileInfoList, pictureBox1.Width, pictureBox1.Height);
+            pictureBox1.Image = codeMap;
+
             lbStatus.Text = "Finish";
         }
 
@@ -81,6 +86,11 @@ namespace CodeMap
             //{
             //    MessageBox.Show(ex.ToString());
             //}
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("pictureBox1_Click");
         }
 
     }

@@ -33,20 +33,23 @@
             this.label1 = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
             this.lbStatus = new System.Windows.Forms.Label();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // tbxRootFolder
             // 
+            this.tbxRootFolder.Font = new System.Drawing.Font("MS UI Gothic", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.tbxRootFolder.Location = new System.Drawing.Point(12, 31);
             this.tbxRootFolder.Name = "tbxRootFolder";
-            this.tbxRootFolder.Size = new System.Drawing.Size(427, 19);
+            this.tbxRootFolder.Size = new System.Drawing.Size(427, 20);
             this.tbxRootFolder.TabIndex = 0;
             // 
             // btnPrjFdr
             // 
-            this.btnPrjFdr.Location = new System.Drawing.Point(449, 29);
+            this.btnPrjFdr.Location = new System.Drawing.Point(445, 30);
             this.btnPrjFdr.Name = "btnPrjFdr";
-            this.btnPrjFdr.Size = new System.Drawing.Size(75, 23);
+            this.btnPrjFdr.Size = new System.Drawing.Size(75, 22);
             this.btnPrjFdr.TabIndex = 1;
             this.btnPrjFdr.Text = "...";
             this.btnPrjFdr.UseVisualStyleBackColor = true;
@@ -63,9 +66,9 @@
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(449, 68);
+            this.btnStart.Location = new System.Drawing.Point(547, 16);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(75, 42);
+            this.btnStart.Size = new System.Drawing.Size(75, 36);
             this.btnStart.TabIndex = 3;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
@@ -74,24 +77,37 @@
             // lbStatus
             // 
             this.lbStatus.AutoSize = true;
-            this.lbStatus.Location = new System.Drawing.Point(10, 283);
+            this.lbStatus.Location = new System.Drawing.Point(12, 731);
             this.lbStatus.Name = "lbStatus";
             this.lbStatus.Size = new System.Drawing.Size(37, 12);
             this.lbStatus.TabIndex = 4;
             this.lbStatus.Text = "Ready";
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.BackColor = System.Drawing.Color.Black;
+            this.pictureBox1.Location = new System.Drawing.Point(12, 65);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(1186, 663);
+            this.pictureBox1.TabIndex = 5;
+            this.pictureBox1.TabStop = false;
+            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(536, 304);
+            this.ClientSize = new System.Drawing.Size(1210, 752);
+            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.lbStatus);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnPrjFdr);
             this.Controls.Add(this.tbxRootFolder);
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "CodeMap";
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -104,6 +120,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Label lbStatus;
+        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }
 
