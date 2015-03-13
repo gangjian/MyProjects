@@ -47,9 +47,9 @@ namespace CodeMap
     }
 
     /// <summary>
-    /// C 源代码文件情报类
+    /// C源代码文件解析结果情报类
     /// </summary>
-    public class CFileInfo
+    public class CFileParseInfo
     {
         public string full_name = "";
         public List<string> include_file_list = new List<string>();                         // "include"头文件列表
@@ -61,7 +61,7 @@ namespace CodeMap
         public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
         public List<TypeDefineInfo> type_define_list = new List<TypeDefineInfo>();          // typedef类型定义列表
 
-        public CFileInfo(string fileName)
+        public CFileParseInfo(string fileName)
         {
             full_name = fileName;
         }

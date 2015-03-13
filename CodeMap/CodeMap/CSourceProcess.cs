@@ -12,9 +12,9 @@ namespace CodeMap
         /// ".c"源文件处理
         /// </summary>
         /// <param name="fileName"></param>
-        public static List<CFileInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
+        public static List<CFileParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
         {
-            List<CFileInfo> retList = new List<CFileInfo>();
+            List<CFileParseInfo> retList = new List<CFileParseInfo>();
             foreach (string hdFile in hdFileList)
             {
                 CFileProcess(hdFile, ref retList, hdFileList);
@@ -27,11 +27,11 @@ namespace CodeMap
             return retList;
         }
 
-        static CFileInfo CFileProcess(string fileName, ref List<CFileInfo> parsedList, List<string> headerList)
+        static CFileParseInfo CFileProcess(string fileName, ref List<CFileParseInfo> parsedList, List<string> headerList)
         {
             // 去掉注释
             List<string> codeList = RemoveComments(fileName);
-            CFileInfo fi = new CFileInfo(fileName);
+            CFileParseInfo fi = new CFileParseInfo(fileName);
             // 预编译处理
             codeList = PrecompileProcess(codeList, ref fi, ref parsedList, headerList);
             Save2File(codeList, fileName + ".bak");
@@ -134,13 +134,13 @@ namespace CodeMap
         /// <param name="parsedList">已解析的文件情报列表</param>
         /// <param name="headerList">头文件名列表</param>
         /// <returns></returns>
-        public static List<string> PrecompileProcess(List<string> codeList, ref CFileInfo fi,
-                                                     ref List<CFileInfo> parsedList, List<string> headerList)
+        public static List<string> PrecompileProcess(List<string> codeList, ref CFileParseInfo fi,
+                                                     ref List<CFileParseInfo> parsedList, List<string> headerList)
         {
             List<string> retList = new List<string>();
             Stack<CC_INFO> ccStack = new Stack<CC_INFO>();              // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
             CC_INFO cc_info = new CC_INFO();
-            List<CFileInfo> includeHeaderList = new List<CFileInfo>();  // 该文件包含的头文件的解析情报List
+            List<CFileParseInfo> includeHeaderList = new List<CFileParseInfo>();  // 该文件包含的头文件的解析情报List
 
             string rdLine = "";
             for (int idx = 0; idx < codeList.Count; idx++)
@@ -164,7 +164,7 @@ namespace CodeMap
                                 // 去掉引号
                                 incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
                                 // 取得头文件的解析情报
-                                CFileInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
+                                CFileParseInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
                                 if (null != incInfo)
                                 {
                                     includeHeaderList.Add(incInfo);
@@ -366,7 +366,7 @@ namespace CodeMap
             return retList;
         }
 
-        static CFileInfo GetIncFileParsedInfo(string incFileName, ref List<CFileInfo> parsedList, List<string> headerList)
+        static CFileParseInfo GetIncFileParsedInfo(string incFileName, ref List<CFileParseInfo> parsedList, List<string> headerList)
         {
             // 先在已解析过的文件list里找
             foreach (var pi in parsedList)
@@ -386,7 +386,7 @@ namespace CodeMap
                 if (fName.ToLower() == incFileName.ToLower())
                 {
                     // 如果找到了, 则要先解析这个头文件
-                    CFileInfo fi = CFileProcess(hd_name, ref parsedList, headerList);
+                    CFileParseInfo fi = CFileProcess(hd_name, ref parsedList, headerList);
                     // TODO: 注意当有多个同名文件符合条件时的情况应对
 
                     return fi;
@@ -401,7 +401,7 @@ namespace CodeMap
         /// <summary>
         /// 代码解析
         /// </summary>
-        public static void CodeAnalyze(List<string> codeList, ref File_Position searchPos, ref CFileInfo fi)
+        public static void CodeAnalyze(List<string> codeList, ref File_Position searchPos, ref CFileParseInfo fi)
         {
             System.Diagnostics.Trace.Assert((null != codeList));
             if (0 == codeList.Count)
@@ -796,7 +796,7 @@ namespace CodeMap
         /// <param name="qualifierList"></param>
         /// <param name="searchPos"></param>
         /// <param name="cfi"></param>
-        static void GlobalVarProcess(List<string> qualifierList, ref CFileInfo cfi)
+        static void GlobalVarProcess(List<string> qualifierList, ref CFileParseInfo cfi)
         {
             GlobalVarInfo gvi = new GlobalVarInfo();
 
@@ -863,7 +863,7 @@ namespace CodeMap
             }
         }
 
-        static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref CFileInfo cfi)
+        static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref CFileParseInfo cfi)
         {
             File_Position sPos, fPos;
             sPos = new File_Position(searchPos);
@@ -986,7 +986,7 @@ namespace CodeMap
             return false;
         }
 
-        static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref CFileInfo cfi)
+        static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref CFileParseInfo cfi)
         {
             TypeDefineInfo tdi = new TypeDefineInfo();
             string old_type = "";

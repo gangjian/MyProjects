@@ -369,7 +369,7 @@ namespace CodeMap
         /// <param name="headerList">头文件列表</param>
         /// <param name="defineList">宏定义列表</param>
         /// <returns></returns>
-        static MacroDefineInfo JudgeExpressionDefined(string exp, List<CFileInfo> headerList, List<MacroDefineInfo> defineList)
+        static MacroDefineInfo JudgeExpressionDefined(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
         {
             foreach (var di in defineList)
             {
@@ -398,7 +398,7 @@ namespace CodeMap
         /// <param name="headerList">头文件列表</param>
         /// <param name="defineList">宏定义列表</param>
         /// <returns></returns>
-        static int JudgeExpressionValue(string exp, List<CFileInfo> headerList, List<MacroDefineInfo> defineList)
+        static int JudgeExpressionValue(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
         {
             // TODO: 暂不考虑复合表达式的情况
             // 对于复合表达式, 拆分成单独表达式分别求值

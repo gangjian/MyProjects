@@ -8,7 +8,7 @@ namespace CodeMap
 {
     class XmlProcess
     {
-        public static void SaveCFileInfo2XML(CFileInfo cfi)
+        public static void SaveCFileInfo2XML(CFileParseInfo cfi)
         {
             XDocument xdoc = new XDocument();
             // 创建文件节点

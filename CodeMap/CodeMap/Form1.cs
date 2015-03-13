@@ -46,7 +46,7 @@ namespace CodeMap
             List<string> cSourceFilesList = new List<string>();
             List<string> cHeaderFilesList = new List<string>();
             GetFiles(tbxRootFolder.Text, ref cSourceFilesList, ref cHeaderFilesList);
-            List<CFileInfo> fileInfoList = CSourceProcess.CFileListProcess(cSourceFilesList, cHeaderFilesList);
+            List<CFileParseInfo> fileInfoList = CSourceProcess.CFileListProcess(cSourceFilesList, cHeaderFilesList);
 
             BitmapDisplay bd = new BitmapDisplay();
             Bitmap codeMap = bd.DrawMap(fileInfoList, pictureBox1.Width, pictureBox1.Height);
