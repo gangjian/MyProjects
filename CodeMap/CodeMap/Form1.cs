@@ -49,7 +49,7 @@ namespace CodeMap
             List<CFileParseInfo> fileInfoList = CSourceProcess.CFileListProcess(cSourceFilesList, cHeaderFilesList);
 
             BitmapDisplay bd = new BitmapDisplay();
-            Bitmap codeMap = bd.DrawMap(fileInfoList, pictureBox1.Width, pictureBox1.Height);
+            Bitmap codeMap = bd.DrawMap(tbxRootFolder.Text, fileInfoList, pictureBox1.Width, pictureBox1.Height);
             pictureBox1.Image = codeMap;
 
             lbStatus.Text = "Finish";
