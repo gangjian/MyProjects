@@ -14,10 +14,10 @@ namespace CodeMap
         const int MIN_DISPLAY_FONT_SIZE = 1;                // 显示文字的最小字号
         const int MAX_DISPLAY_FONT_SIZE = 15;               // 显示文字的最大字号
         const string DISPLAY_FONT_NAME = "Verdana";         // 字体名称
-        const float DISPLAY_SPACE_RATE_H = 0.1F;            // 水平方向显示区块空位(间距)所占总长度的百分比(比率)
-        const float DISPLAY_SPACE_RATE_V = 0.1F;            // 垂直方向显示区块空位(间距)所占总长度的百分比(比率)
+        const string SPACE_STRING = "XX";                   // 显示区块间的空位(间距)为2个字符宽度
 
         SolidBrush textBrush = new SolidBrush(Color.Red);
+        SolidBrush titleBrush = new SolidBrush(Color.LightBlue);
         Pen fileFramePen = new Pen(Color.DarkCyan, 2);
         Pen folderFramePen = new Pen(Color.DarkGreen, 2);
 
@@ -43,10 +43,10 @@ namespace CodeMap
             List<DisplayScaleInfo> fileDisplayScaleList = MeasureFileDisplayScale(fileParseInfoList, g);
             // 再计算各个文件夹各个字体大小对应的SizeF
             List<DisplayScaleInfo> folderDisplayScaleList = new List<DisplayScaleInfo>();
-            MeasureFolderDisplayScale(root, fileDisplayScaleList, ref folderDisplayScaleList);
+            MeasureFolderDisplayScale(root, fileDisplayScaleList, ref folderDisplayScaleList, g);
 
             // 递归描画各个文件夹
-            DrawFolder(startPoint, root, fileDisplayScaleList, folderDisplayScaleList, fileParseInfoList, g, 5);
+            DrawFolder(startPoint, root, fileDisplayScaleList, folderDisplayScaleList, fileParseInfoList, g, 7);
 
             return _bitMap;
         }
@@ -70,15 +70,10 @@ namespace CodeMap
                     float maxWidth = 0;
                     float totalHeight = 0;
                     // 文件名显示size
-                    string fileName = curFileInfo.full_name;
-                    int idx = fileName.LastIndexOf("\\");
-                    if (-1 != idx)
-                    {
-                        fileName = fileName.Substring(idx + 2).Trim();
-                    }
+                    string fileName = GetFileName(curFileInfo.full_name);
                     SizeF nameSize = g.MeasureString(fileName, textFont);
                     maxWidth = nameSize.Width;
-                    totalHeight += nameSize.Height;
+                    totalHeight += (float)(nameSize.Height * 1.5);
 
                     // 暂时只考虑在表示文件的矩形框里显示文件内有定义的函数名的情况
                     foreach (CFunctionInfo curFunc in curFileInfo.fun_define_list)
@@ -90,7 +85,7 @@ namespace CodeMap
                         }
                         totalHeight += nameSize.Height;
                     }
-                    SizeF fileDisplaySize = new SizeF(maxWidth, totalHeight);
+                    SizeF fileDisplaySize = new SizeF((float)(maxWidth * 1.1), totalHeight);
                     fds.displaySizeList.Add(fileDisplaySize);
                 }
 
@@ -104,7 +99,8 @@ namespace CodeMap
         /// <summary>
         /// 计算文件夹的显示尺寸
         /// </summary>
-        void MeasureFolderDisplayScale(string path, List<DisplayScaleInfo> fileDisplayScaleList, ref List<DisplayScaleInfo> folderDisplayScaleList)
+        void MeasureFolderDisplayScale(string path, List<DisplayScaleInfo> fileDisplayScaleList,
+                                       ref List<DisplayScaleInfo> folderDisplayScaleList, Graphics g)
         {
             float[] hSizeArray = new float[MAX_DISPLAY_FONT_SIZE] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             float[] vSizeArray = new float[MAX_DISPLAY_FONT_SIZE] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -112,35 +108,41 @@ namespace CodeMap
             // 分别取得其下所有文件和子文件夹的显示尺寸
             List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
             List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
+            // 各个矩形块的SizeF列表, 用以进行布局排列
+            List<SizeF> rectSizeList = new List<SizeF>();
 
             foreach (string subDir in subDirsList)
             {
-                MeasureFolderDisplayScale(subDir, fileDisplayScaleList, ref folderDisplayScaleList);
-
+                MeasureFolderDisplayScale(subDir, fileDisplayScaleList, ref folderDisplayScaleList, g);
+                SizeF subFolderSize = new SizeF();
                 for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
                 {
-                    SizeF subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList, scale);
+                    subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList, scale);
                     hSizeArray[scale] += subFolderSize.Width;
                     if (subFolderSize.Height > vSizeArray[scale])
                     {
                         vSizeArray[scale] = subFolderSize.Height;
                     }
                 }
+                rectSizeList.Add(subFolderSize);
             }
             foreach (string fname in subFilesList)
             {
+                SizeF srcFileSize = new SizeF();
                 for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
                 {
-                    SizeF srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList, scale);
+                    srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList, scale);
                     hSizeArray[scale] += srcFileSize.Width;
                     if (srcFileSize.Height > vSizeArray[scale])
                     {
                         vSizeArray[scale] = srcFileSize.Height;
                     }
                 }
+                rectSizeList.Add(srcFileSize);
             }
 
             // 考虑怎样进行合理显示布局
+            List<RectLayout> layoutList = GetRectsLayout(rectSizeList);
             // 先不考虑纵向分层, 暂时先一字排开
             // 计算当前文件夹的显示SizeF
             DisplayScale ds = new DisplayScale();
@@ -148,7 +150,12 @@ namespace CodeMap
             {
                 float hSize = hSizeArray[scale];
                 float vSize = vSizeArray[scale];
-                SizeF retSizeF = new SizeF(hSize * (1 + DISPLAY_SPACE_RATE_H), vSize * (1 + DISPLAY_SPACE_RATE_V));
+
+                Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
+                // 计算间距宽度
+                float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
+
+                SizeF retSizeF = new SizeF(hSize + spaceDistance * (subDirsList.Count + subFilesList.Count), vSize + spaceDistance);
                 ds.displaySizeList.Add(retSizeF);
             }
             DisplayScaleInfo curDsi = new DisplayScaleInfo(path, ds);
@@ -248,25 +255,11 @@ namespace CodeMap
             // 取得当前路径下所有子文件夹和文件的列表
             List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
             List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
-            // 计算显示区块间距大小
-            float totalWidth = 0;   // 区块总宽度
-            int totalCount = 0;     // 区块总数
-            foreach (string sf in subFilesList)
-            {
-                SizeF fileSizeF = GetFileDisplaySizeF(sf, fileDisplayScaleList, scale);
-                totalWidth += fileSizeF.Width;
-                totalCount++;
-            }
-            foreach (string sd in subDirsList)
-            {
-                SizeF folderSizeF = GetFolderDisplaySizeF(sd, folderDisplayScaleList, scale);
-                totalWidth += folderSizeF.Width;
-                totalCount++;
-            }
-            float spaceDistance = (float)((DISPLAY_SPACE_RATE_H * totalWidth) / totalCount);
 
-            startPoint.X += (int)(spaceDistance / 2);
             Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
+            // 计算间距宽度
+            float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
+            startPoint.X += (int)(spaceDistance / 2);
 
             // 从左至右先描画各个文件
             foreach (string sf in subFilesList)
@@ -280,10 +273,17 @@ namespace CodeMap
                 if (null != curFileParseInfo)
                 {
                     float totalHeight = 0;
+                    // 画文件名
+                    string fname = GetFileName(sf);
+                    SizeF nameSize = g.MeasureString(fname, textFont);
+                    PointF textPoint = new PointF(startPoint.X, startPoint.Y + totalHeight);
+                    g.DrawString(fname, textFont, titleBrush, textPoint);
+                    totalHeight += (float)(nameSize.Height * 1.1);
+                    // 画内部函数定义名
                     foreach (CFunctionInfo fi in curFileParseInfo.fun_define_list)
                     {
-                        SizeF nameSize = g.MeasureString(fi.name, textFont);
-                        PointF textPoint = new PointF(startPoint.X, startPoint.Y + totalHeight);
+                        nameSize = g.MeasureString(fi.name, textFont);
+                        textPoint = new PointF(startPoint.X, startPoint.Y + totalHeight);
                         g.DrawString(fi.name, textFont, textBrush, textPoint);
                         totalHeight += nameSize.Height;
                     }
@@ -314,6 +314,54 @@ namespace CodeMap
             }
             return null;
         }
+
+        string GetFileName(string fullName)
+        {
+            string retName = fullName;
+            int idx = fullName.LastIndexOf('\\');
+            if (-1 != idx)
+            {
+                retName = fullName.Substring(idx + 1).Trim();
+            }
+
+            return retName;
+        }
+
+        /// <summary>
+        /// 根据一组矩形的size决定这些矩形如何排列布局
+        /// </summary>
+        /// <param name="sizeList">入力: 矩形的size列表</param>
+        /// <returns>出力: 按先后顺序各矩形的行列号</returns>
+        List<RectLayout> GetRectsLayout(List<SizeF> sizeList)
+        {
+            List<RectLayout> retLayoutList = new List<RectLayout>();
+            // 对全部矩形块按高度降序排序
+            sizeList.Sort(RectSizeCompareByHeight);
+
+            return retLayoutList;
+        }
+
+        /// <summary>
+        /// 矩形块排序方法
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <returns></returns>
+        int RectSizeCompareByHeight(SizeF s1, SizeF s2)
+        {
+            if (s1.Height > s2.Height)
+            {
+                return -1;
+            }
+            else if (s1.Height < s2.Height)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
     }
 
     // 文件的图形表示尺寸
@@ -333,5 +381,12 @@ namespace CodeMap
             fullName = fn;
             displayScale = ds;
         }
+    }
+
+    // 表示矩形区块的布局信息(行列号)
+    public class RectLayout
+    {
+        public int row = 0;
+        public int col = 0;
     }
 }

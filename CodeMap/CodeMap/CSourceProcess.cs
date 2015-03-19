@@ -34,14 +34,14 @@ namespace CodeMap
             CFileParseInfo fi = new CFileParseInfo(fileName);
             // 预编译处理
             codeList = PrecompileProcess(codeList, ref fi, ref parsedList, headerList);
-            Save2File(codeList, fileName + ".bak");
+//          Save2File(codeList, fileName + ".bak");
 
             // 从头开始解析
             File_Position sPos = new File_Position(0, 0);
             // 文件解析
             CodeAnalyze(codeList, ref sPos, ref fi);
             parsedList.Add(fi);
-            XmlProcess.SaveCFileInfo2XML(fi);
+//          XmlProcess.SaveCFileInfo2XML(fi);
 
             return fi;
         }
