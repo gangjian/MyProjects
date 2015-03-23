@@ -32,7 +32,7 @@ namespace CodeMap
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public Bitmap DrawMap(string root, List<CFileParseInfo> fileParseInfoList, int width, int height)
+        public Bitmap DrawMap(string root, List<CFileParseInfo> fileParseInfoList, int width, int height, int scale)
         {
             _bitMap = new Bitmap(width, height);
             Graphics g = Graphics.FromImage(_bitMap);
@@ -46,7 +46,7 @@ namespace CodeMap
             MeasureFolderDisplayScale(root, fileDisplayScaleList, ref folderDisplayScaleList, g);
 
             // 递归描画各个文件夹
-            DrawFolder(startPoint, root, fileDisplayScaleList, folderDisplayScaleList, fileParseInfoList, g, 7);
+            DrawFolder(startPoint, root, fileDisplayScaleList, folderDisplayScaleList, fileParseInfoList, g, scale);
 
             return _bitMap;
         }
@@ -102,61 +102,57 @@ namespace CodeMap
         void MeasureFolderDisplayScale(string path, List<DisplayScaleInfo> fileDisplayScaleList,
                                        ref List<DisplayScaleInfo> folderDisplayScaleList, Graphics g)
         {
-            float[] hSizeArray = new float[MAX_DISPLAY_FONT_SIZE] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            float[] vSizeArray = new float[MAX_DISPLAY_FONT_SIZE] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
             // 分别取得其下所有文件和子文件夹的显示尺寸
             List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
             List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
             // 各个矩形块的SizeF列表, 用以进行布局排列
-            List<SizeF> rectSizeList = new List<SizeF>();
-
+            List<List<SizeF>> rectSizeList = new List<List<SizeF>>();
+            for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
+            {
+                rectSizeList.Add(new List<SizeF>());
+            }
+            int idx = 0;
             foreach (string subDir in subDirsList)
             {
                 MeasureFolderDisplayScale(subDir, fileDisplayScaleList, ref folderDisplayScaleList, g);
                 SizeF subFolderSize = new SizeF();
+                idx = 0;
                 for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
                 {
                     subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList, scale);
-                    hSizeArray[scale] += subFolderSize.Width;
-                    if (subFolderSize.Height > vSizeArray[scale])
-                    {
-                        vSizeArray[scale] = subFolderSize.Height;
-                    }
+                    rectSizeList[idx].Add(subFolderSize);
+                    idx++;
                 }
-                rectSizeList.Add(subFolderSize);
             }
             foreach (string fname in subFilesList)
             {
                 SizeF srcFileSize = new SizeF();
+                idx = 0;
                 for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
                 {
                     srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList, scale);
-                    hSizeArray[scale] += srcFileSize.Width;
-                    if (srcFileSize.Height > vSizeArray[scale])
-                    {
-                        vSizeArray[scale] = srcFileSize.Height;
-                    }
+                    rectSizeList[idx].Add(srcFileSize);
+                    idx++;
                 }
-                rectSizeList.Add(srcFileSize);
             }
 
-            // 考虑怎样进行合理显示布局
-            List<RectLayout> layoutList = GetRectsLayout(rectSizeList);
             // 先不考虑纵向分层, 暂时先一字排开
             // 计算当前文件夹的显示SizeF
             DisplayScale ds = new DisplayScale();
+            idx = 0;
             for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
             {
-                float hSize = hSizeArray[scale];
-                float vSize = vSizeArray[scale];
-
                 Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
                 // 计算间距宽度
                 float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
 
-                SizeF retSizeF = new SizeF(hSize + spaceDistance * (subDirsList.Count + subFilesList.Count), vSize + spaceDistance);
+                // 考虑怎样进行合理显示布局
+                List<RectLayout> layoutList = GetRectsLayout(rectSizeList[idx]);
+                SizeF retSizeF = GetLayoutFrameSize(layoutList, spaceDistance);
+
                 ds.displaySizeList.Add(retSizeF);
+                ds.layoutScaleList.Add(layoutList);
+                idx++;
             }
             DisplayScaleInfo curDsi = new DisplayScaleInfo(path, ds);
             // 将当前文件夹的显示SizeF加入到文件夹SizeF列表中
@@ -338,6 +334,30 @@ namespace CodeMap
             // 对全部矩形块按高度降序排序
             sizeList.Sort(RectSizeCompareByHeight);
 
+            // 取得最高块的高度
+            float maxHeight = sizeList[0].Height;
+            int col = 0;                                                        // 列号
+            // 首先只排成一行
+            RectLayout rl = new RectLayout(sizeList[0], 0, col);
+            retLayoutList.Add(rl);
+            sizeList.RemoveAt(0);
+            // 以这个高度为基准,看看能否把矮的块摞在一起以接近这个高度
+            while (0 != sizeList.Count)
+            {
+                List<SizeF> rectStack = GetRectStackByHeight(ref sizeList, maxHeight);
+                if (0 != rectStack.Count)
+                {
+                    col += 1;
+                    foreach (SizeF s in rectStack)
+                    {
+                        rl = new RectLayout(s, 0, col);
+                        retLayoutList.Add(rl);
+                    }
+                }
+            }
+
+            // 判断这一行是否水平方向上过于细长, 如果是, 尝试换成多行的布局
+
             return retLayoutList;
         }
 
@@ -362,6 +382,85 @@ namespace CodeMap
                 return 0;
             }
         }
+
+        List<SizeF> GetRectStackByHeight(ref List<SizeF> inputList, float targetHeight)
+        {
+            List<SizeF> retList = new List<SizeF>();
+            float fstHeight = inputList[0].Height;
+            retList.Add(inputList[0]);
+            inputList.RemoveAt(0);
+            // 然后尝试还能不能再放下别的块
+            float curHeight = fstHeight;
+
+            List<int> removeIdxList = new List<int>();
+            for (int idx = 0; idx < inputList.Count; idx++)
+            {
+                SizeF s = inputList[idx];
+                if (s.Height + curHeight < targetHeight)
+                {
+                    removeIdxList.Add(idx);
+                    curHeight += s.Height;
+                }
+            }
+            for (int i = removeIdxList.Count - 1; i >= 0; i--)
+            {
+                int idx = removeIdxList[i];
+                retList.Add(inputList[idx]);
+                inputList.RemoveAt(idx);
+            }
+
+            return retList;
+        }
+
+        SizeF GetLayoutFrameSize(List<RectLayout> layoutList, float spaceDistance)
+        {
+            List<int> rowList = new List<int>();
+            List<int> colList = new List<int>();
+            foreach (RectLayout rl in layoutList)
+            {
+                if (!rowList.Contains(rl.row))
+                {
+                    rowList.Add(rl.row);
+                }
+                if (!colList.Contains(rl.col))
+                {
+                    colList.Add(rl.col);
+                }
+            }
+            List<float> rowWidthList = new List<float>();       // 各行的总宽度
+            for (int i = 0; i < rowList.Count; i++)
+            {
+                rowWidthList.Add(0);
+            }
+            List<float> colHeightList = new List<float>();      // 各列的总高度
+            for (int i = 0; i < colList.Count; i++)
+            {
+                colHeightList.Add(0);
+            }
+            foreach (RectLayout rl in layoutList)
+            {
+                rowWidthList[rl.row] += (rl.size.Width + spaceDistance);
+                colHeightList[rl.col] += (rl.size.Height + spaceDistance);
+            }
+            float maxWidth = 0;
+            float maxHeight = 0;
+            foreach (float w in rowWidthList)
+            {
+                if (w > maxWidth)
+                {
+                    maxWidth = w;
+                }
+            }
+            foreach (float h in colHeightList)
+            {
+                if (h > maxHeight)
+                {
+                    maxHeight = h;
+                }
+            }
+
+            return new SizeF(maxWidth, maxHeight);
+        }
     }
 
     // 文件的图形表示尺寸
@@ -369,6 +468,7 @@ namespace CodeMap
     {
         // 各种大小字体对应的显示尺寸
         public List<SizeF> displaySizeList = new List<SizeF>();
+        public List<List<RectLayout>> layoutScaleList = new List<List<RectLayout>>();
     }
 
     public class DisplayScaleInfo
@@ -386,7 +486,15 @@ namespace CodeMap
     // 表示矩形区块的布局信息(行列号)
     public class RectLayout
     {
-        public int row = 0;
-        public int col = 0;
+        public SizeF size = new SizeF();
+        public int row = -1;
+        public int col = -1;
+
+        public RectLayout(SizeF s, int r, int c)
+        {
+            size = s;
+            row = r;
+            col = c;
+        }
     }
 }

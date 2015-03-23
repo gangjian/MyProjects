@@ -34,6 +34,7 @@
             this.btnStart = new System.Windows.Forms.Button();
             this.lbStatus = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.cbxScale = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -66,9 +67,9 @@
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(547, 16);
+            this.btnStart.Location = new System.Drawing.Point(1092, 27);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(75, 36);
+            this.btnStart.Size = new System.Drawing.Size(106, 27);
             this.btnStart.TabIndex = 3;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
@@ -93,11 +94,20 @@
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
+            // cbxScale
+            // 
+            this.cbxScale.FormattingEnabled = true;
+            this.cbxScale.Location = new System.Drawing.Point(559, 31);
+            this.cbxScale.Name = "cbxScale";
+            this.cbxScale.Size = new System.Drawing.Size(107, 20);
+            this.cbxScale.TabIndex = 6;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1210, 752);
+            this.Controls.Add(this.cbxScale);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.lbStatus);
             this.Controls.Add(this.btnStart);
@@ -121,6 +131,7 @@
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Label lbStatus;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ComboBox cbxScale;
     }
 }
 

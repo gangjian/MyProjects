@@ -15,6 +15,11 @@ namespace CodeMap
         public Form1()
         {
             InitializeComponent();
+            for (int i = 1; i < 15; i++)
+            {
+                cbxScale.Items.Add(i);
+            }
+            cbxScale.SelectedIndex = 6;
         }
 
         /// <summary>
@@ -49,7 +54,7 @@ namespace CodeMap
             List<CFileParseInfo> fileInfoList = CSourceProcess.CFileListProcess(cSourceFilesList, cHeaderFilesList);
 
             BitmapDisplay bd = new BitmapDisplay();
-            Bitmap codeMap = bd.DrawMap(tbxRootFolder.Text, fileInfoList, pictureBox1.Width, pictureBox1.Height);
+            Bitmap codeMap = bd.DrawMap(tbxRootFolder.Text, fileInfoList, pictureBox1.Width, pictureBox1.Height, cbxScale.SelectedIndex + 1);
             pictureBox1.Image = codeMap;
 
             lbStatus.Text = "Finish";
