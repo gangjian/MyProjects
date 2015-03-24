@@ -147,7 +147,7 @@ namespace CodeMap
                 float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
 
                 // 考虑怎样进行合理显示布局
-                List<RectLayout> layoutList = GetRectsLayout(rectSizeList[idx]);
+                List<RectLayout> layoutList = GetRectsLayout(rectSizeList[idx], spaceDistance);
                 SizeF retSizeF = GetLayoutFrameSize(layoutList, spaceDistance);
 
                 ds.displaySizeList.Add(retSizeF);
@@ -176,17 +176,32 @@ namespace CodeMap
 
         SizeF GetFolderDisplaySizeF(string fname, List<DisplayScaleInfo> folderDisplayScaleList, int scale = 0)
         {
-            foreach (DisplayScaleInfo fdi in folderDisplayScaleList)
+            foreach (DisplayScaleInfo fds in folderDisplayScaleList)
             {
-                if (fdi.fullName.Equals(fname))
+                if (fds.fullName.Equals(fname))
                 {
-                    if (scale < fdi.displayScale.displaySizeList.Count)
+                    if (scale < fds.displayScale.displaySizeList.Count)
                     {
-                        return fdi.displayScale.displaySizeList[scale];
+                        return fds.displayScale.displaySizeList[scale];
                     }
                 }
             }
             return new SizeF();
+        }
+
+        List<RectLayout> GetFolderRectLayoutList(string fname, List<DisplayScaleInfo> folderDisplayScaleList, int scale = 0)
+        {
+            foreach (DisplayScaleInfo fds in folderDisplayScaleList)
+            {
+                if (fds.fullName.Equals(fname))
+                {
+                    if (scale < fds.displayScale.displaySizeList.Count)
+                    {
+                        return fds.displayScale.layoutScaleList[scale];
+                    }
+                }
+            }
+            return null;
         }
 
         List<string> GetSubDirectoriesFromDsList(string root, List<DisplayScaleInfo> fileDisplayScaleList)
@@ -244,7 +259,17 @@ namespace CodeMap
             return filesList;
         }
 
-        void DrawFolder(Point startPoint, string path, List<DisplayScaleInfo> fileDisplayScaleList,
+        /// <summary>
+        /// 文件夹描画
+        /// </summary>
+        /// <param name="startPoint"></param>
+        /// <param name="path"></param>
+        /// <param name="fileDisplayScaleList"></param>
+        /// <param name="folderDisplayScaleList"></param>
+        /// <param name="fileParseInfoList"></param>
+        /// <param name="g"></param>
+        /// <param name="scale"></param>
+        void DrawFolder(PointF startPoint, string path, List<DisplayScaleInfo> fileDisplayScaleList,
                         List<DisplayScaleInfo> folderDisplayScaleList, List<CFileParseInfo> fileParseInfoList,
                         Graphics g, int scale = 0)
         {
@@ -252,17 +277,21 @@ namespace CodeMap
             List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
             List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
 
+            List<RectLayout> rectLayoutList = GetFolderRectLayoutList(path, folderDisplayScaleList, scale);
+
             Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
             // 计算间距宽度
             float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
-            startPoint.X += (int)(spaceDistance / 2);
+//          startPoint.X += (int)(spaceDistance / 2);
 
             // 从左至右先描画各个文件
             foreach (string sf in subFilesList)
             {
                 SizeF fileSizeF = GetFileDisplaySizeF(sf, fileDisplayScaleList, scale);
+                PointF offsetPoint = GetRectDrawOffset(rectLayoutList, fileSizeF, spaceDistance);
+                PointF drawPoint = new PointF(startPoint.X + offsetPoint.X, startPoint.Y + offsetPoint.Y);
                 // 画文件边框
-                Rectangle frameRect = new Rectangle((int)startPoint.X, (int)startPoint.Y, (int)fileSizeF.Width, (int)fileSizeF.Height);
+                Rectangle frameRect = new Rectangle((int)drawPoint.X, (int)drawPoint.Y, (int)fileSizeF.Width, (int)fileSizeF.Height);
                 g.DrawRectangle(fileFramePen, frameRect);
                 // 画文件内部
                 CFileParseInfo curFileParseInfo = GetFileParsedInfoByName(sf, fileParseInfoList);
@@ -272,31 +301,135 @@ namespace CodeMap
                     // 画文件名
                     string fname = GetFileName(sf);
                     SizeF nameSize = g.MeasureString(fname, textFont);
-                    PointF textPoint = new PointF(startPoint.X, startPoint.Y + totalHeight);
+                    PointF textPoint = new PointF(drawPoint.X, drawPoint.Y + totalHeight);
                     g.DrawString(fname, textFont, titleBrush, textPoint);
                     totalHeight += (float)(nameSize.Height * 1.1);
                     // 画内部函数定义名
                     foreach (CFunctionInfo fi in curFileParseInfo.fun_define_list)
                     {
                         nameSize = g.MeasureString(fi.name, textFont);
-                        textPoint = new PointF(startPoint.X, startPoint.Y + totalHeight);
+                        textPoint = new PointF(drawPoint.X, drawPoint.Y + totalHeight);
                         g.DrawString(fi.name, textFont, textBrush, textPoint);
                         totalHeight += nameSize.Height;
                     }
                 }
-                startPoint.X += (int)(fileSizeF.Width + spaceDistance);
             }
             // 接着画各个子文件夹
             foreach (string sd in subDirsList)
             {
                 SizeF folderSizeF = GetFolderDisplaySizeF(sd, folderDisplayScaleList, scale);
+                PointF offsetPoint = GetRectDrawOffset(rectLayoutList, folderSizeF, spaceDistance);
+                PointF drawPoint = new PointF(startPoint.X + offsetPoint.X, startPoint.Y + offsetPoint.Y);
                 // 画文件夹边框
-                Rectangle frameRect = new Rectangle((int)startPoint.X, (int)startPoint.Y, (int)folderSizeF.Width, (int)folderSizeF.Height);
+                Rectangle frameRect = new Rectangle((int)drawPoint.X, (int)drawPoint.Y, (int)folderSizeF.Width, (int)folderSizeF.Height);
                 g.DrawRectangle(folderFramePen, frameRect);
                 // 递归画子文件夹内部
-                DrawFolder(startPoint, sd, fileDisplayScaleList, folderDisplayScaleList, fileParseInfoList, g, scale);
-                startPoint.X += (int)(folderSizeF.Width + spaceDistance);
+                DrawFolder(drawPoint, sd, fileDisplayScaleList, folderDisplayScaleList, fileParseInfoList, g, scale);
             }
+        }
+
+        PointF GetRectDrawOffset(List<RectLayout> layoutList, SizeF rectSize, float spaceDistance)
+        {
+            PointF retOffset = new PointF(spaceDistance / 2, spaceDistance / 2);
+
+            // 统计所有的行列号
+            List<int> rowList = new List<int>();
+            List<int> colList = new List<int>();
+            foreach (RectLayout rl in layoutList)
+            {
+                if (!rowList.Contains(rl.row))
+                {
+                    rowList.Add(rl.row);
+                }
+                if (!colList.Contains(rl.col))
+                {
+                    colList.Add(rl.col);
+                }
+            }
+
+            // 找到指定size的矩形块
+            int row = -1;
+            int col = -1;
+            int idx = 0;
+            foreach (RectLayout rl in layoutList)
+            {
+                if (   rl.size.Equals(rectSize)
+                    && (false == rl.isDrawn)    )
+                {
+                    row = rl.row;
+                    col = rl.col;
+                    rl.isDrawn = true;
+                    break;
+                }
+                idx++;
+            }
+            if (    (-1 == row)
+                ||  (-1 == col))
+            {
+                // 没找到
+                return PointF.Empty;
+            }
+
+            float totalWidth = 0;
+            foreach (int c in colList)
+            {
+                // 指定矩形块左侧的列
+                if (c < col)
+                {
+                    float maxWidth = 0;
+                    foreach (RectLayout rl in layoutList)
+                    {
+                        if (c == rl.col)
+                        {
+                            if (rl.size.Width > maxWidth)
+                            {
+                                maxWidth = rl.size.Width;
+                            }
+                        }
+                    }
+                    totalWidth += (maxWidth + spaceDistance);
+                }
+            }
+            float totalHeight = 0;
+            foreach (int r in rowList)
+            {
+                if (r < row)
+                {
+                    float maxHeight = 0;
+                    foreach (RectLayout rl in layoutList)
+                    {
+                        if (r == rl.row)
+                        {
+                            if (rl.size.Height > maxHeight)
+                            {
+                                maxHeight = rl.size.Height;
+                            }
+                        }
+                    }
+                    totalHeight += (maxHeight + spaceDistance);
+                }
+            }
+
+            RectLayout layout = layoutList[idx];
+            if (0 != layout.order)
+            {
+                // 序号不为0, 说明这一位置(行, 列)是由多个较小的矩形块摞在一起组成的
+                // 所以要找到所有排在指定矩形块上面的其它块, 进以确定其offset
+                foreach (RectLayout rl in layoutList)
+                {
+                    if (   (rl.col == layout.col)
+                        && (rl.row == layout.row)
+                        && (rl.order < layout.order))
+                    {
+                        // 行列号一样, 但是序号更靠前, 这正是摞在指定矩形块上面那些矩形块
+                        totalHeight += (rl.size.Height + spaceDistance);
+                    }
+                }
+            }
+            retOffset.X += totalWidth;
+            retOffset.Y += totalHeight;
+
+            return retOffset;
         }
 
         CFileParseInfo GetFileParsedInfoByName(string fullName, List<CFileParseInfo> fileParseInfoList)
@@ -328,7 +461,7 @@ namespace CodeMap
         /// </summary>
         /// <param name="sizeList">入力: 矩形的size列表</param>
         /// <returns>出力: 按先后顺序各矩形的行列号</returns>
-        List<RectLayout> GetRectsLayout(List<SizeF> sizeList)
+        List<RectLayout> GetRectsLayout(List<SizeF> sizeList, float spaceDistance)
         {
             List<RectLayout> retLayoutList = new List<RectLayout>();
             // 对全部矩形块按高度降序排序
@@ -344,14 +477,16 @@ namespace CodeMap
             // 以这个高度为基准,看看能否把矮的块摞在一起以接近这个高度
             while (0 != sizeList.Count)
             {
-                List<SizeF> rectStack = GetRectStackByHeight(ref sizeList, maxHeight);
+                List<SizeF> rectStack = GetRectStackByHeight(ref sizeList, maxHeight, spaceDistance);
                 if (0 != rectStack.Count)
                 {
                     col += 1;
+                    int orderNum = 0;       // 序号, 多个小块摞到一起时, 行列号是一样的, 用序号表示其上下次序关系
                     foreach (SizeF s in rectStack)
                     {
-                        rl = new RectLayout(s, 0, col);
+                        rl = new RectLayout(s, 0, col, orderNum);
                         retLayoutList.Add(rl);
+                        orderNum += 1;
                     }
                 }
             }
@@ -383,7 +518,7 @@ namespace CodeMap
             }
         }
 
-        List<SizeF> GetRectStackByHeight(ref List<SizeF> inputList, float targetHeight)
+        List<SizeF> GetRectStackByHeight(ref List<SizeF> inputList, float targetHeight, float spaceDistance)
         {
             List<SizeF> retList = new List<SizeF>();
             float fstHeight = inputList[0].Height;
@@ -396,10 +531,10 @@ namespace CodeMap
             for (int idx = 0; idx < inputList.Count; idx++)
             {
                 SizeF s = inputList[idx];
-                if (s.Height + curHeight < targetHeight)
+                if (s.Height + spaceDistance + curHeight < targetHeight)
                 {
                     removeIdxList.Add(idx);
-                    curHeight += s.Height;
+                    curHeight += (s.Height + spaceDistance);
                 }
             }
             for (int i = removeIdxList.Count - 1; i >= 0; i--)
@@ -427,39 +562,42 @@ namespace CodeMap
                     colList.Add(rl.col);
                 }
             }
-            List<float> rowWidthList = new List<float>();       // 各行的总宽度
+            float totalHeight = 0;
+            float totalWidth = 0;
             for (int i = 0; i < rowList.Count; i++)
             {
-                rowWidthList.Add(0);
+                int rowNum = rowList[i];
+                float maxHeight = 0;
+                foreach (RectLayout rl in layoutList)
+                {
+                    if (rowNum == rl.row)
+                    {
+                        if (rl.size.Height > maxHeight)
+                        {
+                            maxHeight = rl.size.Height;
+                        }
+                    }
+                }
+                totalHeight += (maxHeight + spaceDistance);
             }
-            List<float> colHeightList = new List<float>();      // 各列的总高度
             for (int i = 0; i < colList.Count; i++)
             {
-                colHeightList.Add(0);
-            }
-            foreach (RectLayout rl in layoutList)
-            {
-                rowWidthList[rl.row] += (rl.size.Width + spaceDistance);
-                colHeightList[rl.col] += (rl.size.Height + spaceDistance);
-            }
-            float maxWidth = 0;
-            float maxHeight = 0;
-            foreach (float w in rowWidthList)
-            {
-                if (w > maxWidth)
+                int colNum = colList[i];
+                float maxWidth = 0;
+                foreach (RectLayout rl in layoutList)
                 {
-                    maxWidth = w;
+                    if (colNum == rl.col)
+                    {
+                        if (rl.size.Width > maxWidth)
+                        {
+                            maxWidth = rl.size.Width;
+                        }
+                    }
                 }
-            }
-            foreach (float h in colHeightList)
-            {
-                if (h > maxHeight)
-                {
-                    maxHeight = h;
-                }
+                totalWidth += (maxWidth + spaceDistance);
             }
 
-            return new SizeF(maxWidth, maxHeight);
+            return new SizeF(totalWidth, totalHeight);
         }
     }
 
@@ -489,12 +627,15 @@ namespace CodeMap
         public SizeF size = new SizeF();
         public int row = -1;
         public int col = -1;
+        public int order = 0;          // 序号: 当多个小块被摞到一起时, 它们的行列号是一样的, 这时用序号来表示其上下次序关系;
+        public bool isDrawn = false;   // 用于描画时标示是否画过
 
-        public RectLayout(SizeF s, int r, int c)
+        public RectLayout(SizeF s, int r, int c, int o = -1)
         {
             size = s;
             row = r;
             col = c;
+            order = o;
         }
     }
 }
