@@ -9,8 +9,6 @@ namespace CodeMap
 {
     class BitmapDisplay
     {
-        Bitmap _bitMap = null;
-
         const int MIN_DISPLAY_FONT_SIZE = 1;                // 显示文字的最小字号
         const int MAX_DISPLAY_FONT_SIZE = 15;               // 显示文字的最大字号
         const string DISPLAY_FONT_NAME = "Verdana";         // 字体名称
@@ -34,27 +32,29 @@ namespace CodeMap
         /// <returns></returns>
         public Bitmap DrawMap(string root, List<CFileParseInfo> fileParseInfoList, int width, int height, int scale)
         {
-            _bitMap = new Bitmap(width, height);
-            Graphics g = Graphics.FromImage(_bitMap);
-            g.Clear(Color.Black);
+            Bitmap bitMap = new Bitmap(width, height);
+            Graphics g = Graphics.FromImage(bitMap);
             Point startPoint = new Point(3, 3);
 
             // 先计算每个源文件各个字体大小对应的SizeF
-            List<DisplayScaleInfo> fileDisplayScaleList = MeasureFileDisplayScale(fileParseInfoList, g);
+            List<DisplayScaleInfo> fileDisplayScaleList = MeasureFileDisplayScale(fileParseInfoList, g, scale);
             // 再计算各个文件夹各个字体大小对应的SizeF
             List<DisplayScaleInfo> folderDisplayScaleList = new List<DisplayScaleInfo>();
-            MeasureFolderDisplayScale(root, fileDisplayScaleList, ref folderDisplayScaleList, g);
+            SizeF rootSize = MeasureFolderDisplayScale(root, fileDisplayScaleList, ref folderDisplayScaleList, g, scale);
+            bitMap = new Bitmap((int)rootSize.Width, (int)rootSize.Height);
+            g = Graphics.FromImage(bitMap);
+            g.Clear(Color.Black);
 
             // 递归描画各个文件夹
             DrawFolder(startPoint, root, fileDisplayScaleList, folderDisplayScaleList, fileParseInfoList, g, scale);
 
-            return _bitMap;
+            return bitMap;
         }
 
         /// <summary>
         /// 计算所有源文件的各个字体大小对应的图形化显示尺寸
         /// </summary>
-        List<DisplayScaleInfo> MeasureFileDisplayScale(List<CFileParseInfo> fileParseInfoList, Graphics g)
+        List<DisplayScaleInfo> MeasureFileDisplayScale(List<CFileParseInfo> fileParseInfoList, Graphics g, int scale)
         {
             List<DisplayScaleInfo> fileDisplayScaleList = new List<DisplayScaleInfo>();
 
@@ -64,30 +64,28 @@ namespace CodeMap
 
                 // 分别测试每种字体大小对应的显示尺寸
                 DisplayScale fds = new DisplayScale();
-                for (int f = MIN_DISPLAY_FONT_SIZE; f <= MAX_DISPLAY_FONT_SIZE; f++)
-                {
-                    Font textFont = new Font(DISPLAY_FONT_NAME, f);
-                    float maxWidth = 0;
-                    float totalHeight = 0;
-                    // 文件名显示size
-                    string fileName = GetFileName(curFileInfo.full_name);
-                    SizeF nameSize = g.MeasureString(fileName, textFont);
-                    maxWidth = nameSize.Width;
-                    totalHeight += (float)(nameSize.Height * 1.5);
+                int fontSize = scale + 1;
+                Font textFont = new Font(DISPLAY_FONT_NAME, fontSize);
+                float maxWidth = 0;
+                float totalHeight = 0;
+                // 文件名显示size
+                string fileName = GetFileName(curFileInfo.full_name);
+                SizeF nameSize = g.MeasureString(fileName, textFont);
+                maxWidth = nameSize.Width;
+                totalHeight += (float)(nameSize.Height * 1.5);
 
-                    // 暂时只考虑在表示文件的矩形框里显示文件内有定义的函数名的情况
-                    foreach (CFunctionInfo curFunc in curFileInfo.fun_define_list)
+                // 暂时只考虑在表示文件的矩形框里显示文件内有定义的函数名的情况
+                foreach (CFunctionInfo curFunc in curFileInfo.fun_define_list)
+                {
+                    nameSize = g.MeasureString(curFunc.name, textFont);
+                    if (nameSize.Width > maxWidth)
                     {
-                        nameSize = g.MeasureString(curFunc.name, textFont);
-                        if (nameSize.Width > maxWidth)
-                        {
-                            maxWidth = nameSize.Width;
-                        }
-                        totalHeight += nameSize.Height;
+                        maxWidth = nameSize.Width;
                     }
-                    SizeF fileDisplaySize = new SizeF((float)(maxWidth * 1.1), totalHeight);
-                    fds.displaySizeList.Add(fileDisplaySize);
+                    totalHeight += nameSize.Height;
                 }
+                SizeF fileDisplaySize = new SizeF((float)(maxWidth * 1.1), totalHeight);
+                fds.displaySize = fileDisplaySize;
 
                 DisplayScaleInfo fdi = new DisplayScaleInfo(curFileInfo.full_name, fds);
                 fileDisplayScaleList.Add(fdi);
@@ -99,109 +97,140 @@ namespace CodeMap
         /// <summary>
         /// 计算文件夹的显示尺寸
         /// </summary>
-        void MeasureFolderDisplayScale(string path, List<DisplayScaleInfo> fileDisplayScaleList,
-                                       ref List<DisplayScaleInfo> folderDisplayScaleList, Graphics g)
+        SizeF MeasureFolderDisplayScale(string path, List<DisplayScaleInfo> fileDisplayScaleList,
+                                       ref List<DisplayScaleInfo> folderDisplayScaleList, Graphics g, int scale)
         {
+            Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
+            // 计算间距宽度
+            float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
+
             // 分别取得其下所有文件和子文件夹的显示尺寸
             List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
             List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
             // 各个矩形块的SizeF列表, 用以进行布局排列
-            List<List<SizeF>> rectSizeList = new List<List<SizeF>>();
-            for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
-            {
-                rectSizeList.Add(new List<SizeF>());
-            }
-            int idx = 0;
+            List<SizeF> rectSizeList = new List<SizeF>();
             foreach (string subDir in subDirsList)
             {
-                MeasureFolderDisplayScale(subDir, fileDisplayScaleList, ref folderDisplayScaleList, g);
-                SizeF subFolderSize = new SizeF();
-                idx = 0;
-                for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
-                {
-                    subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList, scale);
-                    rectSizeList[idx].Add(subFolderSize);
-                    idx++;
-                }
+                MeasureFolderDisplayScale(subDir, fileDisplayScaleList, ref folderDisplayScaleList, g, scale);
+                SizeF subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList);
+                rectSizeList.Add(subFolderSize);
             }
             foreach (string fname in subFilesList)
             {
-                SizeF srcFileSize = new SizeF();
-                idx = 0;
-                for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
+                SizeF srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList);
+                rectSizeList.Add(srcFileSize);
+            }
+
+            List<RectLayout> layoutList = null;
+            SizeF retSizeF = SizeF.Empty;
+            // 找到最高的块
+            // 对全部矩形块按高度降序排序
+            rectSizeList.Sort(RectSizeCompareByHeight);
+            // 以最高的块高度为基准, 对其它低于这个高度的文件夹进行重新排列
+            float maxHeight = rectSizeList[0].Height;
+            foreach (string subDir in subDirsList)
+            {
+                SizeF subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList);
+                if (subFolderSize.Height < maxHeight)
                 {
-                    srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList, scale);
-                    rectSizeList[idx].Add(srcFileSize);
-                    idx++;
+                    layoutList = GetFolderRectLayoutList(subDir, folderDisplayScaleList);
+                    List<SizeF> tmpSizeList = new List<SizeF>();
+                    foreach (RectLayout rl in layoutList)
+                    {
+                        tmpSizeList.Add(rl.size);
+                    }
+                    List<RectLayout> newLayoutList = MakeRectsLayout(tmpSizeList, spaceDistance, maxHeight);
+                    SetFolderRectLayoutList(subDir, folderDisplayScaleList, newLayoutList);
+                    SizeF newSize = GetLayoutFrameSize(newLayoutList, spaceDistance);
+                    SetFolderDisplaySize(subDir, folderDisplayScaleList, newSize);
                 }
+            }
+            rectSizeList = new List<SizeF>();
+            foreach (string subDir in subDirsList)
+            {
+                SizeF subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList);
+                rectSizeList.Add(subFolderSize);
+            }
+            foreach (string fname in subFilesList)
+            {
+                SizeF srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList);
+                rectSizeList.Add(srcFileSize);
             }
 
             // 先不考虑纵向分层, 暂时先一字排开
             // 计算当前文件夹的显示SizeF
+
+            // 考虑怎样进行合理显示布局
+            layoutList = MakeRectsLayout(rectSizeList, spaceDistance);
+            retSizeF = GetLayoutFrameSize(layoutList, spaceDistance);
+
             DisplayScale ds = new DisplayScale();
-            idx = 0;
-            for (int scale = MIN_DISPLAY_FONT_SIZE - 1; scale < MAX_DISPLAY_FONT_SIZE; scale++)
-            {
-                Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
-                // 计算间距宽度
-                float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
+            ds.displaySize = retSizeF;
+            ds.layoutScaleList = layoutList;
 
-                // 考虑怎样进行合理显示布局
-                List<RectLayout> layoutList = GetRectsLayout(rectSizeList[idx], spaceDistance);
-                SizeF retSizeF = GetLayoutFrameSize(layoutList, spaceDistance);
-
-                ds.displaySizeList.Add(retSizeF);
-                ds.layoutScaleList.Add(layoutList);
-                idx++;
-            }
             DisplayScaleInfo curDsi = new DisplayScaleInfo(path, ds);
             // 将当前文件夹的显示SizeF加入到文件夹SizeF列表中
             folderDisplayScaleList.Add(curDsi);
+
+            return retSizeF;
         }
 
-        SizeF GetFileDisplaySizeF(string fname, List<DisplayScaleInfo> fileDisplayScaleList, int scale = 0)
+        SizeF GetFileDisplaySizeF(string fname, List<DisplayScaleInfo> fileDisplayScaleList)
         {
             foreach (DisplayScaleInfo fdi in fileDisplayScaleList)
             {
                 if (fdi.fullName.Equals(fname))
                 {
-                    if (scale < fdi.displayScale.displaySizeList.Count)
-                    {
-                        return fdi.displayScale.displaySizeList[scale];
-                    }
+                    return fdi.displayScale.displaySize;
                 }
             }
-            return new SizeF();
+            return SizeF.Empty;
         }
 
-        SizeF GetFolderDisplaySizeF(string fname, List<DisplayScaleInfo> folderDisplayScaleList, int scale = 0)
+        SizeF GetFolderDisplaySizeF(string fname, List<DisplayScaleInfo> folderDisplayScaleList)
         {
             foreach (DisplayScaleInfo fds in folderDisplayScaleList)
             {
                 if (fds.fullName.Equals(fname))
                 {
-                    if (scale < fds.displayScale.displaySizeList.Count)
-                    {
-                        return fds.displayScale.displaySizeList[scale];
-                    }
+                    return fds.displayScale.displaySize;
                 }
             }
-            return new SizeF();
+            return SizeF.Empty;
         }
 
-        List<RectLayout> GetFolderRectLayoutList(string fname, List<DisplayScaleInfo> folderDisplayScaleList, int scale = 0)
+        List<RectLayout> GetFolderRectLayoutList(string fname, List<DisplayScaleInfo> folderDisplayScaleList)
         {
             foreach (DisplayScaleInfo fds in folderDisplayScaleList)
             {
                 if (fds.fullName.Equals(fname))
                 {
-                    if (scale < fds.displayScale.displaySizeList.Count)
-                    {
-                        return fds.displayScale.layoutScaleList[scale];
-                    }
+                    return fds.displayScale.layoutScaleList;
                 }
             }
             return null;
+        }
+
+        void SetFolderRectLayoutList(string fname, List<DisplayScaleInfo> folderDisplayScaleList, List<RectLayout> newLayoutList)
+        {
+            foreach (DisplayScaleInfo fds in folderDisplayScaleList)
+            {
+                if (fds.fullName.Equals(fname))
+                {
+                    fds.displayScale.layoutScaleList = newLayoutList;
+                }
+            }
+        }
+
+        void SetFolderDisplaySize(string fname, List<DisplayScaleInfo> folderDisplayScaleList, SizeF newDisplaySize)
+        {
+            foreach (DisplayScaleInfo fds in folderDisplayScaleList)
+            {
+                if (fds.fullName.Equals(fname))
+                {
+                    fds.displayScale.displaySize = newDisplaySize;
+                }
+            }
         }
 
         List<string> GetSubDirectoriesFromDsList(string root, List<DisplayScaleInfo> fileDisplayScaleList)
@@ -277,7 +306,7 @@ namespace CodeMap
             List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
             List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
 
-            List<RectLayout> rectLayoutList = GetFolderRectLayoutList(path, folderDisplayScaleList, scale);
+            List<RectLayout> rectLayoutList = GetFolderRectLayoutList(path, folderDisplayScaleList);
 
             Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
             // 计算间距宽度
@@ -287,7 +316,7 @@ namespace CodeMap
             // 从左至右先描画各个文件
             foreach (string sf in subFilesList)
             {
-                SizeF fileSizeF = GetFileDisplaySizeF(sf, fileDisplayScaleList, scale);
+                SizeF fileSizeF = GetFileDisplaySizeF(sf, fileDisplayScaleList);
                 PointF offsetPoint = GetRectDrawOffset(rectLayoutList, fileSizeF, spaceDistance);
                 PointF drawPoint = new PointF(startPoint.X + offsetPoint.X, startPoint.Y + offsetPoint.Y);
                 // 画文件边框
@@ -317,7 +346,7 @@ namespace CodeMap
             // 接着画各个子文件夹
             foreach (string sd in subDirsList)
             {
-                SizeF folderSizeF = GetFolderDisplaySizeF(sd, folderDisplayScaleList, scale);
+                SizeF folderSizeF = GetFolderDisplaySizeF(sd, folderDisplayScaleList);
                 PointF offsetPoint = GetRectDrawOffset(rectLayoutList, folderSizeF, spaceDistance);
                 PointF drawPoint = new PointF(startPoint.X + offsetPoint.X, startPoint.Y + offsetPoint.Y);
                 // 画文件夹边框
@@ -461,35 +490,58 @@ namespace CodeMap
         /// </summary>
         /// <param name="sizeList">入力: 矩形的size列表</param>
         /// <returns>出力: 按先后顺序各矩形的行列号</returns>
-        List<RectLayout> GetRectsLayout(List<SizeF> sizeList, float spaceDistance)
+        List<RectLayout> MakeRectsLayout(List<SizeF> sizeList, float spaceDistance, float targetHeight = 0)
         {
             List<RectLayout> retLayoutList = new List<RectLayout>();
-            // 对全部矩形块按高度降序排序
-            sizeList.Sort(RectSizeCompareByHeight);
 
-            // 取得最高块的高度
-            float maxHeight = sizeList[0].Height;
             int col = 0;                                                        // 列号
-            // 首先只排成一行
-            RectLayout rl = new RectLayout(sizeList[0], 0, col);
-            retLayoutList.Add(rl);
-            sizeList.RemoveAt(0);
+            RectLayout rl = null;
+            // 取得最高块的高度
+            sizeList.Sort(RectSizeCompareByHeight);
+            float maxHeight = sizeList[0].Height;
+            if (0 != targetHeight
+                && targetHeight > maxHeight)
+            {
+                maxHeight = targetHeight;
+            }
+            else
+            {
+                // 首先只排成一行
+                rl = new RectLayout(sizeList[0], 0, col);
+                retLayoutList.Add(rl);
+                sizeList.RemoveAt(0);
+                col += 1;
+            }
             // 以这个高度为基准,看看能否把矮的块摞在一起以接近这个高度
             while (0 != sizeList.Count)
             {
                 List<SizeF> rectStack = GetRectStackByHeight(ref sizeList, maxHeight, spaceDistance);
                 if (0 != rectStack.Count)
                 {
-                    col += 1;
-                    int orderNum = 0;       // 序号, 多个小块摞到一起时, 行列号是一样的, 用序号表示其上下次序关系
-                    foreach (SizeF s in rectStack)
+                    if (0 != retLayoutList.Count)
                     {
-                        rl = new RectLayout(s, 0, col, orderNum);
-                        retLayoutList.Add(rl);
-                        orderNum += 1;
+                        int orderNum = 0;       // 序号, 多个小块摞到一起时, 行列号是一样的, 用序号表示其上下次序关系
+                        foreach (SizeF s in rectStack)
+                        {
+                            rl = new RectLayout(s, 0, col, orderNum);
+                            retLayoutList.Add(rl);
+                            orderNum += 1;
+                        }
                     }
+                    else
+                    {
+                        int row = 0;
+                        foreach (SizeF s in rectStack)
+                        {
+                            rl = new RectLayout(s, row, col, 0);
+                            retLayoutList.Add(rl);
+                            row += 1;
+                        }
+                    }
+                    col += 1;
                 }
             }
+
 
             // 判断这一行是否水平方向上过于细长, 如果是, 尝试换成多行的布局
 
@@ -604,9 +656,9 @@ namespace CodeMap
     // 文件的图形表示尺寸
     public class DisplayScale
     {
-        // 各种大小字体对应的显示尺寸
-        public List<SizeF> displaySizeList = new List<SizeF>();
-        public List<List<RectLayout>> layoutScaleList = new List<List<RectLayout>>();
+        // 当前scale对应字体的显示尺寸
+        public SizeF displaySize = new SizeF();
+        public List<RectLayout> layoutScaleList = new List<RectLayout>();
     }
 
     public class DisplayScaleInfo

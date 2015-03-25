@@ -15,7 +15,7 @@ namespace CodeMap
         public Form1()
         {
             InitializeComponent();
-            for (int i = 1; i < 15; i++)
+            for (int i = 1; i <= 15; i++)
             {
                 cbxScale.Items.Add(i);
             }
@@ -55,7 +55,11 @@ namespace CodeMap
 
             BitmapDisplay bd = new BitmapDisplay();
             Bitmap codeMap = bd.DrawMap(tbxRootFolder.Text, fileInfoList, pictureBox1.Width, pictureBox1.Height, cbxScale.SelectedIndex + 1);
-            pictureBox1.Image = codeMap;
+
+            Bitmap showPic = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            Graphics g = Graphics.FromImage(showPic);
+            g.DrawImage(codeMap, 0, 0);
+            pictureBox1.Image = showPic;
 
             lbStatus.Text = "Finish";
         }
@@ -95,7 +99,12 @@ namespace CodeMap
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("pictureBox1_Click");
+            //MessageBox.Show("pictureBox1_Click");
+        }
+
+        private void pictureBox1_DoubleClick(object sender, EventArgs e)
+        {
+            MessageBox.Show("pictureBox1_DoubleClick");
         }
 
     }
