@@ -14,8 +14,9 @@ namespace CodeMap
         const string DISPLAY_FONT_NAME = "Verdana";         // 字体名称
         const string SPACE_STRING = "XX";                   // 显示区块间的空位(间距)为2个字符宽度
 
-        SolidBrush textBrush = new SolidBrush(Color.Red);
-        SolidBrush titleBrush = new SolidBrush(Color.LightBlue);
+        SolidBrush textBrush = new SolidBrush(Color.LightPink);
+        SolidBrush fileTitleBrush = new SolidBrush(Color.LightBlue);
+        SolidBrush folderTitleBrush = new SolidBrush(Color.AntiqueWhite);
         Pen fileFramePen = new Pen(Color.DarkCyan, 2);
         Pen folderFramePen = new Pen(Color.DarkGreen, 2);
 
@@ -69,7 +70,7 @@ namespace CodeMap
                 float maxWidth = 0;
                 float totalHeight = 0;
                 // 文件名显示size
-                string fileName = GetFileName(curFileInfo.full_name);
+                string fileName = GetSingleName(curFileInfo.full_name);
                 SizeF nameSize = g.MeasureString(fileName, textFont);
                 maxWidth = nameSize.Width;
                 totalHeight += (float)(nameSize.Height * 1.5);
@@ -100,23 +101,47 @@ namespace CodeMap
         SizeF MeasureFolderDisplayScale(string path, List<DisplayScaleInfo> fileDisplayScaleList,
                                        ref List<DisplayScaleInfo> folderDisplayScaleList, Graphics g, int scale)
         {
+            List<string> allSourceFiles = GetAllSourceFilesFromDsList(path, fileDisplayScaleList);
+            if (0 == allSourceFiles.Count)
+            {
+                // 暂时先不画头文件和空文件夹
+                return SizeF.Empty;
+            }
+
             Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
+            Font folderNameFont = new Font(DISPLAY_FONT_NAME, scale + 2);
             // 计算间距宽度
             float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
 
+            // 文件夹标题文字的高度
+            string folderName = GetSingleName(path);
+            float folderNameHeight = g.MeasureString(folderName, folderNameFont).Height;
+
             // 分别取得其下所有文件和子文件夹的显示尺寸
             List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
-            List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
+            List<string> subFilesList = GetSubFilesFromDsList(path, fileDisplayScaleList);
             // 各个矩形块的SizeF列表, 用以进行布局排列
             List<SizeF> rectSizeList = new List<SizeF>();
             foreach (string subDir in subDirsList)
             {
+                allSourceFiles = GetAllSourceFilesFromDsList(subDir, fileDisplayScaleList);
+                if (0 == allSourceFiles.Count)
+                {
+                    // 暂时先不画头文件和空文件夹
+                    continue;
+                }
+
                 MeasureFolderDisplayScale(subDir, fileDisplayScaleList, ref folderDisplayScaleList, g, scale);
                 SizeF subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList);
                 rectSizeList.Add(subFolderSize);
             }
             foreach (string fname in subFilesList)
             {
+                if (fname.ToLower().EndsWith(".h"))
+                {
+                    // 暂时先不画头文件和空文件夹
+                    continue;
+                }
                 SizeF srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList);
                 rectSizeList.Add(srcFileSize);
             }
@@ -130,6 +155,12 @@ namespace CodeMap
             float maxHeight = rectSizeList[0].Height;
             foreach (string subDir in subDirsList)
             {
+                allSourceFiles = GetAllSourceFilesFromDsList(subDir, fileDisplayScaleList);
+                if (0 == allSourceFiles.Count)
+                {
+                    // 暂时先不画头文件和空文件夹
+                    continue;
+                }
                 SizeF subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList);
                 if (subFolderSize.Height < maxHeight)
                 {
@@ -148,11 +179,22 @@ namespace CodeMap
             rectSizeList = new List<SizeF>();
             foreach (string subDir in subDirsList)
             {
+                allSourceFiles = GetAllSourceFilesFromDsList(subDir, fileDisplayScaleList);
+                if (0 == allSourceFiles.Count)
+                {
+                    // 暂时先不画头文件和空文件夹
+                    continue;
+                }
                 SizeF subFolderSize = GetFolderDisplaySizeF(subDir, folderDisplayScaleList);
                 rectSizeList.Add(subFolderSize);
             }
             foreach (string fname in subFilesList)
             {
+                if (fname.ToLower().EndsWith(".h"))
+                {
+                    // 暂时先不画头文件和空文件夹
+                    continue;
+                }
                 SizeF srcFileSize = GetFileDisplaySizeF(fname, fileDisplayScaleList);
                 rectSizeList.Add(srcFileSize);
             }
@@ -163,6 +205,8 @@ namespace CodeMap
             // 考虑怎样进行合理显示布局
             layoutList = MakeRectsLayout(rectSizeList, spaceDistance);
             retSizeF = GetLayoutFrameSize(layoutList, spaceDistance);
+            retSizeF.Height += folderNameHeight + 2;
+            retSizeF.Width += folderNameHeight;
 
             DisplayScale ds = new DisplayScale();
             ds.displaySize = retSizeF;
@@ -261,7 +305,13 @@ namespace CodeMap
             return subDirList;
         }
 
-        List<string> GetFilesFromDsList(string root, List<DisplayScaleInfo> fileDisplayScaleList)
+        /// <summary>
+        /// 取得当前路径下的所有文件(不包括子文件夹内的文件)
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="fileDisplayScaleList"></param>
+        /// <returns></returns>
+        List<string> GetSubFilesFromDsList(string root, List<DisplayScaleInfo> fileDisplayScaleList)
         {
             if (!root.EndsWith("\\"))
             {
@@ -289,6 +339,37 @@ namespace CodeMap
         }
 
         /// <summary>
+        /// 取得当前路径下所有文件(包括子文件夹内的文件)
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="fileDisplayScaleList"></param>
+        /// <returns></returns>
+        List<string> GetAllSourceFilesFromDsList(string root, List<DisplayScaleInfo> fileDisplayScaleList)
+        {
+            if (!root.EndsWith("\\"))
+            {
+                root += "\\";
+            }
+            List<string> filesList = new List<string>();
+            foreach (DisplayScaleInfo dsi in fileDisplayScaleList)
+            {
+                string fullName = dsi.fullName;
+                if (fullName.StartsWith(root))
+                {
+                    if (fullName.ToLower().EndsWith(".h"))
+                    {
+                        // 暂时不在图上画头文件
+                    }
+                    else
+                    {
+                        filesList.Add(fullName);
+                    }
+                }
+            }
+            return filesList;
+        }
+
+        /// <summary>
         /// 文件夹描画
         /// </summary>
         /// <param name="startPoint"></param>
@@ -303,19 +384,40 @@ namespace CodeMap
                         Graphics g, int scale = 0)
         {
             // 取得当前路径下所有子文件夹和文件的列表
-            List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
-            List<string> subFilesList = GetFilesFromDsList(path, fileDisplayScaleList);
+            List<string> allSubFiles = GetAllSourceFilesFromDsList(path, fileDisplayScaleList);
+            if (0 == allSubFiles.Count)
+            {
+                // 暂时不画空的文件夹(不算头文件)
+                return;
+            }
 
+            List<string> subDirsList = GetSubDirectoriesFromDsList(path, fileDisplayScaleList);
+            List<string> subFilesList = GetSubFilesFromDsList(path, fileDisplayScaleList);
+
+            // 取得当前路径的布局信息
             List<RectLayout> rectLayoutList = GetFolderRectLayoutList(path, folderDisplayScaleList);
 
+            // 字体
             Font textFont = new Font(DISPLAY_FONT_NAME, scale + 1);
+
+            string folderName = GetSingleName(path);
+            Font folderNameFont = new Font(folderName, scale + 2);
+
             // 计算间距宽度
             float spaceDistance = g.MeasureString(SPACE_STRING, textFont).Width;
-//          startPoint.X += (int)(spaceDistance / 2);
+            float folderNameHeight = g.MeasureString(folderName, folderNameFont).Height;
 
+            // 画文件夹名称
+            g.DrawString(folderName, folderNameFont, folderTitleBrush, startPoint.X + 1, startPoint.Y + 1);
+            startPoint.Y += folderNameHeight;
             // 从左至右先描画各个文件
             foreach (string sf in subFilesList)
             {
+                if (sf.ToLower().EndsWith(".h"))
+                {
+                    // 暂时先不画头文件
+                    continue;
+                }
                 SizeF fileSizeF = GetFileDisplaySizeF(sf, fileDisplayScaleList);
                 PointF offsetPoint = GetRectDrawOffset(rectLayoutList, fileSizeF, spaceDistance);
                 PointF drawPoint = new PointF(startPoint.X + offsetPoint.X, startPoint.Y + offsetPoint.Y);
@@ -328,10 +430,10 @@ namespace CodeMap
                 {
                     float totalHeight = 0;
                     // 画文件名
-                    string fname = GetFileName(sf);
+                    string fname = GetSingleName(sf);
                     SizeF nameSize = g.MeasureString(fname, textFont);
                     PointF textPoint = new PointF(drawPoint.X, drawPoint.Y + totalHeight);
-                    g.DrawString(fname, textFont, titleBrush, textPoint);
+                    g.DrawString(fname, textFont, fileTitleBrush, textPoint);
                     totalHeight += (float)(nameSize.Height * 1.1);
                     // 画内部函数定义名
                     foreach (CFunctionInfo fi in curFileParseInfo.fun_define_list)
@@ -346,6 +448,12 @@ namespace CodeMap
             // 接着画各个子文件夹
             foreach (string sd in subDirsList)
             {
+                allSubFiles = GetAllSourceFilesFromDsList(sd, fileDisplayScaleList);
+                if (0 == allSubFiles.Count)
+                {
+                    // 暂时不画头文件和空文件夹
+                    continue;
+                }
                 SizeF folderSizeF = GetFolderDisplaySizeF(sd, folderDisplayScaleList);
                 PointF offsetPoint = GetRectDrawOffset(rectLayoutList, folderSizeF, spaceDistance);
                 PointF drawPoint = new PointF(startPoint.X + offsetPoint.X, startPoint.Y + offsetPoint.Y);
@@ -473,9 +581,13 @@ namespace CodeMap
             return null;
         }
 
-        string GetFileName(string fullName)
+        string GetSingleName(string fullName)
         {
             string retName = fullName;
+            if (retName.EndsWith("\\"))
+            {
+                retName = retName.Remove(retName.Length - 1).Trim();
+            }
             int idx = fullName.LastIndexOf('\\');
             if (-1 != idx)
             {

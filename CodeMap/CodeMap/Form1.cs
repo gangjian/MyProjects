@@ -19,7 +19,7 @@ namespace CodeMap
             {
                 cbxScale.Items.Add(i);
             }
-            cbxScale.SelectedIndex = 6;
+            cbxScale.SelectedIndex = 4;
         }
 
         /// <summary>
