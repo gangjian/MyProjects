@@ -42,6 +42,10 @@ namespace CodeMap
             // 再计算各个文件夹各个字体大小对应的SizeF
             List<DisplayScaleInfo> folderDisplayScaleList = new List<DisplayScaleInfo>();
             SizeF rootSize = MeasureFolderDisplayScale(root, fileDisplayScaleList, ref folderDisplayScaleList, g, scale);
+            if (SizeF.Empty == rootSize)
+            {
+                return bitMap;
+            }
             bitMap = new Bitmap((int)rootSize.Width, (int)rootSize.Height);
             g = Graphics.FromImage(bitMap);
             g.Clear(Color.Black);
