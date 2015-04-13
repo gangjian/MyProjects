@@ -12,17 +12,21 @@ namespace CodeMap
 {
     public partial class Form1 : Form
     {
+        public const int MIN_SCALE_VAL = 1;
+        public const int MAX_SCALE_VAL = 15;
+        int _scale = MIN_SCALE_VAL + 4;
+
         public Form1()
         {
             InitializeComponent();
-            for (int i = 1; i <= 15; i++)
+            for (int i = MIN_SCALE_VAL; i <= MAX_SCALE_VAL; i++)
             {
                 cbxScale.Items.Add(i);
             }
-            cbxScale.SelectedIndex = 4;
+            cbxScale.SelectedIndex = _scale - 1;
         }
 
-        Bitmap _codeMap = null;
+        List<Bitmap> _codeMapList = null;
 
         /// <summary>
         /// 设定工程根目录
@@ -36,6 +40,11 @@ namespace CodeMap
             if (DialogResult.OK == dlg.ShowDialog())
             {
                 tbxRootFolder.Text = dlg.SelectedPath;
+                _codeMapList = new List<Bitmap>();
+                for (int i = MIN_SCALE_VAL; i <= MAX_SCALE_VAL; i++)
+                {
+                    _codeMapList.Add(null);
+                }
             }
         }
 
@@ -60,12 +69,11 @@ namespace CodeMap
             _fileInfoList = CSourceProcess.CFileListProcess(cSourceFilesList, cHeaderFilesList);
 
             BitmapDisplay bd = new BitmapDisplay();
-            _codeMap = bd.DrawMap(tbxRootFolder.Text, _fileInfoList, pictureBox1.Width, pictureBox1.Height, cbxScale.SelectedIndex + 1);
-
-            Bitmap showPic = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            Graphics g = Graphics.FromImage(showPic);
-            g.DrawImage(_codeMap, _topLeft);
-            pictureBox1.Image = showPic;
+            for (int i = MIN_SCALE_VAL; i <= MAX_SCALE_VAL; i++)
+            {
+                _codeMapList[i - 1] = bd.DrawMap(tbxRootFolder.Text, _fileInfoList, i);
+            }
+            showCodeMapOnPictureBox();
 
             lbStatus.Text = "Finish";
         }
@@ -131,6 +139,11 @@ namespace CodeMap
 
         private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
+            Bitmap codeMap = _codeMapList[_scale - 1];
+            if (null == codeMap)
+            {
+                return;
+            }
             if (Point.Empty != _mouseDownPoint)
             {
                 int offsetX = e.X - _mouseDownPoint.X;
@@ -142,58 +155,25 @@ namespace CodeMap
                     // 鼠标移动距离太短的话, 就不移动画面了, 防止点击时移动画面重画导致闪烁
                     return;
                 }
-                // 边界检查
-                if (offsetX > 0)    // 背景图相对窗口向右移
-                {
-                    // 保证背景图左边缘不离开PictureBox左边缘
-                    if (_mouseDownTopLeft.X - offsetX < 0)
-                    {
-                        offsetX = _mouseDownTopLeft.X;
-                    }
-                }
-                else                // 背景图相对窗口左移
-                {
-                    if (_mouseDownTopLeft.X + pictureBox1.Width < _codeMap.Width)
-                    {
-                        if (_mouseDownTopLeft.X + pictureBox1.Width - offsetX > _codeMap.Width)
-                        {
-                            offsetX = _mouseDownTopLeft.X + pictureBox1.Width - _codeMap.Width;
-                        }
-                    }
-                    else
-                    {
-                        offsetX = 0;
-                    }
-                }
-                if (offsetY > 0)
-                {
-                    if (_mouseDownTopLeft.Y - offsetY < 0)
-                    {
-                        offsetY = _mouseDownTopLeft.Y;
-                    }
-                }
-                else
-                {
-                    if (_mouseDownTopLeft.Y + pictureBox1.Height < _codeMap.Height)
-                    {
-                        if (_mouseDownTopLeft.Y + pictureBox1.Height - offsetY > _codeMap.Height)
-                        {
-                            offsetY = _mouseDownTopLeft.Y + pictureBox1.Height - _codeMap.Height;
-                        }
-                    }
-                    else
-                    {
-                        offsetY = 0;
-                    }
-                }
-
                 Point newTopLeft = new Point(_mouseDownTopLeft.X - offsetX, _mouseDownTopLeft.Y - offsetY);
+                if (newTopLeft.X < -pictureBox1.Width)
+                {
+                    newTopLeft.X = -pictureBox1.Width;
+                }
+                else if (newTopLeft.X > codeMap.Width)
+                {
+                    newTopLeft.X = codeMap.Width;
+                }
+                if (newTopLeft.Y < -pictureBox1.Height)
+                {
+                    newTopLeft.Y = -pictureBox1.Height;
+                }
+                else if (newTopLeft.Y > codeMap.Height)
+                {
+                    newTopLeft.Y = codeMap.Height;
+                }
                 _topLeft = newTopLeft;
-
-                Graphics g = pictureBox1.CreateGraphics();
-                g.Clear(Color.Black);
-                Rectangle destRect = new Rectangle(0, 0, pictureBox1.Width, pictureBox1.Height);
-                g.DrawImage(_codeMap, destRect, _topLeft.X, _topLeft.Y, pictureBox1.Width, pictureBox1.Height, GraphicsUnit.Pixel);
+                showCodeMapOnPictureBox();
             }
         }
 
@@ -203,20 +183,40 @@ namespace CodeMap
             {
                 return;
             }
+            Bitmap codeMap = _codeMapList[_scale - 1];
+            if (null == codeMap)
+            {
+                return;
+            }
             BitmapDisplay bd = new BitmapDisplay();
-            float oldSize = _codeMap.Width;
-            _codeMap = bd.DrawMap(tbxRootFolder.Text, _fileInfoList, pictureBox1.Width, pictureBox1.Height, cbxScale.SelectedIndex + 1);
-            float newSize = _codeMap.Width;
+            float oldSize = codeMap.Width;
+            codeMap = _codeMapList[cbxScale.SelectedIndex];
+            _scale = cbxScale.SelectedIndex + 1;
+            float newSize = codeMap.Width;
             float zoomRate = newSize / oldSize;
-            _topLeft = new Point((int)(_topLeft.X * zoomRate), (int)(_topLeft.Y * zoomRate));
+            // 确定缩放前中点的位置
+            Point centralPoint = new Point(_topLeft.X + pictureBox1.Width / 2, _topLeft.Y + pictureBox1.Height / 2);
+            // 确定缩放后的中点位置
+            centralPoint = new Point((int)(centralPoint.X * zoomRate), (int)(centralPoint.Y * zoomRate));
+            // 根据重点算出缩放后的左上角顶点的位置
+            _topLeft = new Point(centralPoint.X - pictureBox1.Width / 2, centralPoint.Y - pictureBox1.Height / 2);
+//          _topLeft = new Point((int)(_topLeft.X * zoomRate), (int)(_topLeft.Y * zoomRate));
 
-            Bitmap showPic = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            Graphics g = Graphics.FromImage(showPic);
-            Rectangle destRect = new Rectangle(0, 0, pictureBox1.Width, pictureBox1.Height);
-            g.DrawImage(_codeMap, destRect, _topLeft.X, _topLeft.Y, pictureBox1.Width, pictureBox1.Height, GraphicsUnit.Pixel);
-            pictureBox1.Image = showPic;
-
+            showCodeMapOnPictureBox();
             lbStatus.Text = "Finish";
+        }
+
+        void showCodeMapOnPictureBox()
+        {
+            Bitmap codeMap = _codeMapList[_scale - 1];
+            if (null == codeMap)
+            {
+                return;
+            }
+            Graphics g = pictureBox1.CreateGraphics();
+            g.Clear(Color.Black);
+            Rectangle destRect = new Rectangle(0, 0, pictureBox1.Width, pictureBox1.Height);
+            g.DrawImage(codeMap, destRect, _topLeft.X, _topLeft.Y, pictureBox1.Width, pictureBox1.Height, GraphicsUnit.Pixel);
         }
 
         private void Form1_Load(object sender, EventArgs e)

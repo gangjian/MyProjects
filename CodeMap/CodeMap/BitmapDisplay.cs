@@ -31,9 +31,9 @@ namespace CodeMap
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public Bitmap DrawMap(string root, List<CFileParseInfo> fileParseInfoList, int width, int height, int scale)
+        public Bitmap DrawMap(string root, List<CFileParseInfo> fileParseInfoList, int scale)
         {
-            Bitmap bitMap = new Bitmap(width, height);
+            Bitmap bitMap = new Bitmap(10, 10);
             Graphics g = Graphics.FromImage(bitMap);
             Point startPoint = new Point(3, 3);
 
