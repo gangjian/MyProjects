@@ -669,6 +669,8 @@ namespace CodeMap
             catStr = catStr.Trim();
             if ("" == catStr)
             {
+                // 如果没有参数, 只有一对空的小括号, 那么要加入一个空字串""参数
+                retParaList.Add("");
                 return retParaList;
             }
             string[] paras = catStr.Split(',');

@@ -143,42 +143,55 @@ namespace CodeMap
                     return;
                 }
                 // 边界检查
+                if (offsetX > 0)    // 背景图相对窗口向右移
+                {
+                    // 保证背景图左边缘不离开PictureBox左边缘
+                    if (_mouseDownTopLeft.X - offsetX < 0)
+                    {
+                        offsetX = _mouseDownTopLeft.X;
+                    }
+                }
+                else                // 背景图相对窗口左移
+                {
+                    if (_mouseDownTopLeft.X + pictureBox1.Width < _codeMap.Width)
+                    {
+                        if (_mouseDownTopLeft.X + pictureBox1.Width - offsetX > _codeMap.Width)
+                        {
+                            offsetX = _mouseDownTopLeft.X + pictureBox1.Width - _codeMap.Width;
+                        }
+                    }
+                    else
+                    {
+                        offsetX = 0;
+                    }
+                }
+                if (offsetY > 0)
+                {
+                    if (_mouseDownTopLeft.Y - offsetY < 0)
+                    {
+                        offsetY = _mouseDownTopLeft.Y;
+                    }
+                }
+                else
+                {
+                    if (_mouseDownTopLeft.Y + pictureBox1.Height < _codeMap.Height)
+                    {
+                        if (_mouseDownTopLeft.Y + pictureBox1.Height - offsetY > _codeMap.Height)
+                        {
+                            offsetY = _mouseDownTopLeft.Y + pictureBox1.Height - _codeMap.Height;
+                        }
+                    }
+                    else
+                    {
+                        offsetY = 0;
+                    }
+                }
+
                 Point newTopLeft = new Point(_mouseDownTopLeft.X - offsetX, _mouseDownTopLeft.Y - offsetY);
-                if (newTopLeft.X < 0)
-                {
-                    // 左侧边界
-                    newTopLeft.X = 0;
-                }
-                else if (newTopLeft.X + pictureBox1.Width > _codeMap.Width)
-                {
-                    if (_topLeft.X + pictureBox1.Width < _codeMap.Width)
-                    {
-                        newTopLeft.X = _codeMap.Width - pictureBox1.Width;
-                    }
-                    else
-                    {
-                        newTopLeft.X = _topLeft.X;
-                    }
-                }
-                if (newTopLeft.Y < 0)
-                {
-                    newTopLeft.Y = 0;
-                }
-                else if (newTopLeft.Y + pictureBox1.Height > _codeMap.Height)
-                {
-                    if (_topLeft.Y + pictureBox1.Height < _codeMap.Height)
-                    {
-                        newTopLeft.Y = _codeMap.Height - pictureBox1.Height;
-                    }
-                    else
-                    {
-                        newTopLeft.Y = _topLeft.Y;
-                    }
-                }
                 _topLeft = newTopLeft;
 
                 Graphics g = pictureBox1.CreateGraphics();
-                g.Clear(Color.DarkBlue);
+                g.Clear(Color.Black);
                 Rectangle destRect = new Rectangle(0, 0, pictureBox1.Width, pictureBox1.Height);
                 g.DrawImage(_codeMap, destRect, _topLeft.X, _topLeft.Y, pictureBox1.Width, pictureBox1.Height, GraphicsUnit.Pixel);
             }
@@ -191,7 +204,11 @@ namespace CodeMap
                 return;
             }
             BitmapDisplay bd = new BitmapDisplay();
+            float oldSize = _codeMap.Width;
             _codeMap = bd.DrawMap(tbxRootFolder.Text, _fileInfoList, pictureBox1.Width, pictureBox1.Height, cbxScale.SelectedIndex + 1);
+            float newSize = _codeMap.Width;
+            float zoomRate = newSize / oldSize;
+            _topLeft = new Point((int)(_topLeft.X * zoomRate), (int)(_topLeft.Y * zoomRate));
 
             Bitmap showPic = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             Graphics g = Graphics.FromImage(showPic);
