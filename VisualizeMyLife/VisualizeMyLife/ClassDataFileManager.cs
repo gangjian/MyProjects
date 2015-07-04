@@ -22,10 +22,14 @@ namespace VisualizeMyLife
 
     class ClassDataFileManager
     {
-        private string m_fullName = "";
+        private string m_fullName = string.Empty;
 
         public ClassDataFileManager(string fullName)
         {
+            if (!File.Exists(fullName))
+            {
+                return;
+            }
             m_fullName = fullName;
         }
 
@@ -35,8 +39,12 @@ namespace VisualizeMyLife
 
         public List<DataInfo> ReadDataList()
         {
-            StreamReader sr = new StreamReader(m_fullName);
             List<DataInfo> readDataList = new List<DataInfo>();
+            if (string.Empty == m_fullName)
+            {
+                return readDataList;
+            }
+            StreamReader sr = new StreamReader(m_fullName);
 
             DataInfo readDataInfo = null;
             string rdLine = "";
