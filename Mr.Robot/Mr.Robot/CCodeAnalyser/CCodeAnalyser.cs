@@ -17,10 +17,10 @@ namespace Mr.Robot
 		public static List<CFileParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
 		{
 			List<CFileParseInfo> retList = new List<CFileParseInfo>();
-			foreach (string hdFile in hdFileList)
-			{
-				CFileProcess(hdFile, ref retList, hdFileList);
-			}
+			//foreach (string hdFile in hdFileList)
+			//{
+			//	CFileProcess(hdFile, ref retList, hdFileList);
+			//}
 			foreach (string srcFile in srcFileList)
 			{
 				CFileProcess(srcFile, ref retList, hdFileList);
@@ -32,19 +32,20 @@ namespace Mr.Robot
 
 		// 以下都是内部调用方法
 
-		static CFileParseInfo CFileProcess(string fileName, ref List<CFileParseInfo> parsedList, List<string> headerList)
+		static CFileParseInfo CFileProcess(string fileName, ref List<CFileParseInfo> parsedList, List<string> headerFileNameList)
 		{
 			// 去掉注释
 			List<string> codeList = RemoveComments(fileName);
 			CFileParseInfo fi = new CFileParseInfo(fileName);
 			// 预编译处理
-			codeList = PrecompileProcess(codeList, ref fi, ref parsedList, headerList);
-			//          Save2File(codeList, fileName + ".bak");
+			List<CFileParseInfo> incHeaderInfoList;
+			codeList = PrecompileProcess(codeList, ref fi, ref parsedList, headerFileNameList, out incHeaderInfoList);
+//          Save2File(codeList, fileName + ".bak");
 
 			// 从头开始解析
 			File_Position sPos = new File_Position(0, 0);
 			// 文件解析
-			CodeAnalyze(fileName, codeList, ref sPos, ref fi);
+			CodeAnalyze(fileName, codeList, ref sPos, ref fi, incHeaderInfoList);
 			parsedList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
 
@@ -136,16 +137,19 @@ namespace Mr.Robot
 		/// </summary>
 		/// <param name="codeList"></param>
 		/// <param name="fi"></param>
-		/// <param name="parsedList">已解析的文件情报列表</param>
-		/// <param name="headerList">头文件名列表</param>
+		/// <param name="parsedList">已解析过的文件情报列表</param>
+		/// <param name="headerFileNameList">全部头文件名称列表</param>
+		/// <param name="includeHeaderFileInfoList">本文件包含的头文件解析信息列表</param>
 		/// <returns></returns>
 		public static List<string> PrecompileProcess(List<string> codeList, ref CFileParseInfo fi,
-													 ref List<CFileParseInfo> parsedList, List<string> headerList)
+													 ref List<CFileParseInfo> parsedList,
+													 List<string> headerFileNameList,
+													 out List<CFileParseInfo> includeHeaderInfoList)
 		{
 			List<string> retList = new List<string>();
-			Stack<CC_INFO> ccStack = new Stack<CC_INFO>();              // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
+			Stack<CC_INFO> ccStack = new Stack<CC_INFO>();						// 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
 			CC_INFO cc_info = new CC_INFO();
-			List<CFileParseInfo> includeHeaderList = new List<CFileParseInfo>();  // 该文件包含的头文件的解析情报List
+			includeHeaderInfoList = new List<CFileParseInfo>();					// 该文件包含的头文件的解析情报List
 
 			string rdLine = "";
 			for (int idx = 0; idx < codeList.Count; idx++)
@@ -163,16 +167,19 @@ namespace Mr.Robot
 							// 取得include文件名
 							string incFileName = GetIncludeFileName(codeList, ref searchPos);
 							System.Diagnostics.Trace.Assert(null != incFileName);
-							fi.include_file_list.Add(incFileName);
+							if (!fi.include_file_list.Contains(incFileName))
+							{
+								fi.include_file_list.Add(incFileName);
+							}
 							if (incFileName.StartsWith("\"") && incFileName.EndsWith("\""))
 							{
 								// 去掉引号
 								incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
 								// 取得头文件的解析情报
-								CFileParseInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerList);
+								CFileParseInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerFileNameList);
 								if (null != incInfo)
 								{
-									includeHeaderList.Add(incInfo);
+									includeHeaderInfoList.Add(incInfo);
 								}
 							}
 						}
@@ -202,7 +209,7 @@ namespace Mr.Robot
 							{
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-								if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
+								if (0 != JudgeExpressionValue(exprStr, includeHeaderInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = true;
@@ -228,7 +235,7 @@ namespace Mr.Robot
 							{
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-								if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
+								if (null != JudgeExpressionDefined(exprStr, includeHeaderInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = true;
@@ -254,7 +261,7 @@ namespace Mr.Robot
 							{
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-								if (null != JudgeExpressionDefined(exprStr, includeHeaderList, fi.macro_define_list))
+								if (null != JudgeExpressionDefined(exprStr, includeHeaderInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = false;
@@ -309,7 +316,7 @@ namespace Mr.Robot
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-								if (0 != JudgeExpressionValue(exprStr, includeHeaderList, fi.macro_define_list))
+								if (0 != JudgeExpressionValue(exprStr, includeHeaderInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = true;
@@ -408,7 +415,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 代码解析
 		/// </summary>
-		public static void CodeAnalyze(string fullName, List<string> codeList, ref File_Position searchPos, ref CFileParseInfo fi)
+		public static void CodeAnalyze(string fullName, List<string> codeList,
+									   ref File_Position searchPos, ref CFileParseInfo fi,
+									   List<CFileParseInfo> includeHeaderInfoList)
 		{
 			System.Diagnostics.Trace.Assert((null != codeList));
 			if (0 == codeList.Count)
@@ -436,7 +445,7 @@ namespace Mr.Robot
 				if (IsStandardIdentifier(nextId)
 					|| ("*" == nextId))
 				{
-					if (MacroDetectAndExpand(nextId, codeList, foundPos, fi.macro_define_list))
+					if (MacroDetectAndExpand(nextId, codeList, foundPos, fi, includeHeaderInfoList))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
@@ -923,13 +932,16 @@ namespace Mr.Robot
 			searchPos = new File_Position(sPos);
 		}
 
-		static bool MacroDetectAndExpand(string idStr, List<string> codeList, File_Position foundPos, List<MacroDefineInfo> defineList)
+		static bool MacroDetectAndExpand(string idStr, List<string> codeList,
+										 File_Position foundPos,
+										 CFileParseInfo curFileInfo,
+										 List<CFileParseInfo> includeHeaderInfoList)
 		{
 			if (!IsStandardIdentifier(idStr))
 			{
 				return false;
 			}
-			foreach (MacroDefineInfo di in defineList)
+			foreach (MacroDefineInfo di in curFileInfo.macro_define_list)
 			{
 				// 判断宏名是否一致
 				if (idStr == di.name)

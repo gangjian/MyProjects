@@ -350,7 +350,7 @@ namespace Mr.Robot
 		/// 判断表达式是否已定义(#if defined)
 		/// </summary>
 		/// <param name="exp">表达式</param>
-		/// <param name="headerList">头文件列表</param>
+		/// <param name="headerFileNameList">头文件列表</param>
 		/// <param name="defineList">宏定义列表</param>
 		/// <returns></returns>
 		static MacroDefineInfo JudgeExpressionDefined(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
@@ -379,7 +379,7 @@ namespace Mr.Robot
 		/// 判断表达式的值
 		/// </summary>
 		/// <param name="exp">表达式</param>
-		/// <param name="headerList">头文件列表</param>
+		/// <param name="headerFileNameList">头文件列表</param>
 		/// <param name="defineList">宏定义列表</param>
 		/// <returns></returns>
 		static int JudgeExpressionValue(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
