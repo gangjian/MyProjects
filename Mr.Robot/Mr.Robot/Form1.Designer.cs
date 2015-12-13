@@ -80,7 +80,7 @@
 			this.lvFileList.Location = new System.Drawing.Point(12, 88);
 			this.lvFileList.MultiSelect = false;
 			this.lvFileList.Name = "lvFileList";
-			this.lvFileList.Size = new System.Drawing.Size(331, 119);
+			this.lvFileList.Size = new System.Drawing.Size(331, 179);
 			this.lvFileList.TabIndex = 3;
 			this.lvFileList.UseCompatibleStateImageBehavior = false;
 			this.lvFileList.View = System.Windows.Forms.View.Details;
@@ -98,7 +98,7 @@
 			// label3
 			// 
 			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(9, 221);
+			this.label3.Location = new System.Drawing.Point(9, 270);
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(63, 13);
 			this.label3.TabIndex = 1;
@@ -109,10 +109,10 @@
 			this.lvFunctionList.Font = new System.Drawing.Font("Verdana", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.lvFunctionList.FullRowSelect = true;
 			this.lvFunctionList.GridLines = true;
-			this.lvFunctionList.Location = new System.Drawing.Point(12, 237);
+			this.lvFunctionList.Location = new System.Drawing.Point(12, 286);
 			this.lvFunctionList.MultiSelect = false;
 			this.lvFunctionList.Name = "lvFunctionList";
-			this.lvFunctionList.Size = new System.Drawing.Size(331, 368);
+			this.lvFunctionList.Size = new System.Drawing.Size(331, 319);
 			this.lvFunctionList.TabIndex = 3;
 			this.lvFunctionList.UseCompatibleStateImageBehavior = false;
 			this.lvFunctionList.View = System.Windows.Forms.View.Details;
@@ -135,7 +135,7 @@
 			this.lvVariableList.Location = new System.Drawing.Point(373, 88);
 			this.lvVariableList.MultiSelect = false;
 			this.lvVariableList.Name = "lvVariableList";
-			this.lvVariableList.Size = new System.Drawing.Size(331, 253);
+			this.lvVariableList.Size = new System.Drawing.Size(331, 266);
 			this.lvVariableList.TabIndex = 3;
 			this.lvVariableList.UseCompatibleStateImageBehavior = false;
 			this.lvVariableList.View = System.Windows.Forms.View.Details;

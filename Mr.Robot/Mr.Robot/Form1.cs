@@ -27,6 +27,7 @@ namespace Mr.Robot
 
 		private void UI_Init()
 		{
+			// 设定listView列标题和列宽
 			lvFileList.Columns.Add("", 330);
 			lvFunctionList.Columns.Add("", 330);
 
@@ -35,6 +36,18 @@ namespace Mr.Robot
 			lvVariableList.Columns.Add("I/O", 55);
 
 			lvBranchList.Columns.Add("", 330);
+
+			// load根目录路径
+			string root_path = IniFileProcess.IniReadValue("PATH_INFO", "root_path");
+			if (string.Empty != root_path)
+			{
+				DirectoryInfo di = new DirectoryInfo(root_path);
+				if (di.Exists)
+				{
+					tbxRootPath.Text = root_path;
+					LoadCSourceFiles();
+				}
+			}
 		}
 
 		private void btnSetFolder_Click(object sender, EventArgs e)
@@ -44,7 +57,12 @@ namespace Mr.Robot
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
 				tbxRootPath.Text = dialog.SelectedPath;
-				LoadCSourceFiles();
+				DirectoryInfo di = new DirectoryInfo(tbxRootPath.Text);
+				if (di.Exists)
+				{
+					LoadCSourceFiles();
+					IniFileProcess.IniWriteValue("PATH_INFO", "root_path", tbxRootPath.Text);
+				}
 			}
 		}
 
