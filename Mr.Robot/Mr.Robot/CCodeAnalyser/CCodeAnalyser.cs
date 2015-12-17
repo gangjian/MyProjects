@@ -432,8 +432,7 @@ namespace Mr.Robot
 			while (null != (nextId = GetNextIdentifier(codeList, ref searchPos, out foundPos)))
 			{
 				// 在这里加调试断点
-				if (fullName.EndsWith("Rte_swc_prc_trcta.h")
-					&& ("FUNC" == nextId))
+				if ("FUNC" == nextId)
 				{
 					// 调试断点
 					int a, b;
@@ -941,7 +940,16 @@ namespace Mr.Robot
 			{
 				return false;
 			}
-			foreach (MacroDefineInfo di in curFileInfo.macro_define_list)
+			// 作成一个所有包含头文件的宏定义的列表
+			List<MacroDefineInfo> defineList = new List<MacroDefineInfo>();
+			foreach (CFileParseInfo hdInfo in includeHeaderInfoList)
+			{
+				defineList.AddRange(hdInfo.macro_define_list);
+			}
+			// 添加上本文件所定义的宏
+			defineList.AddRange(curFileInfo.macro_define_list);
+			// 遍历查找宏名
+			foreach (MacroDefineInfo di in defineList)
 			{
 				// 判断宏名是否一致
 				if (idStr == di.name)
