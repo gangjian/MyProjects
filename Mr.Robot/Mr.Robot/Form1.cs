@@ -98,10 +98,20 @@ namespace Mr.Robot
 			}
 		}
 
+		List<CFileParseInfo> _CSourceFileInfoList = new List<CFileParseInfo>();
+
 		private void btnStart_Click(object sender, EventArgs e)
 		{
 			List<CFileParseInfo> parseInfoList
 				= CCodeAnalyser.CFileListProcess(_CSourceFilesList, _CHeaderFilesList);
+			_CSourceFileInfoList.Clear();
+			foreach (CFileParseInfo pi in parseInfoList)
+			{
+				if (pi.full_name.ToLower().EndsWith(".c"))
+				{
+					_CSourceFileInfoList.Add(pi);
+				}
+			}
 		}
 
 		private void lvFileList_SelectedIndexChanged(object sender, EventArgs e)
