@@ -61,6 +61,9 @@ namespace Mr.Robot
 		public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
 		public List<TypeDefineInfo> type_define_list = new List<TypeDefineInfo>();          // typedef类型定义列表
 
+		public List<string> originalCodeList = new List<string>();				// 原始代码行内容列表
+		public List<string> parsedCodeList = new List<string>();				// 解析后(去除注释, 宏展开等)的代码行内容列表
+
 		public CFileParseInfo(string fileName)
 		{
 			full_name = fileName;
@@ -113,4 +116,25 @@ namespace Mr.Robot
 		public string new_type_name = "";
 	}
 
+	/// <summary>
+	/// C代码解析结果类: 包含一个源文件解析信息和其包含的头文件解析信息列表
+	/// </summary>
+	public class CCodeParseResult
+	{
+		CFileParseInfo _sourceParseInfo;
+
+		public CFileParseInfo SourceParseInfo									// 源文件解析信息
+		{
+			get { return _sourceParseInfo; }
+			set { _sourceParseInfo = value; }
+		}
+
+		List<CFileParseInfo> _includeHeaderParseInfoList = new List<CFileParseInfo>();						// 源文件包含的头文件解析信息列表
+
+		public List<CFileParseInfo> IncludeHeaderParseInfoList
+		{
+			get { return _includeHeaderParseInfoList; }
+			set { _includeHeaderParseInfoList = value; }
+		}
+	}
 }

@@ -96,36 +96,86 @@ namespace Mr.Robot
 				ListViewItem new_item = new ListViewItem(fname);
 				lvFileList.Items.Add(new_item);
 			}
+			lvFunctionList.Items.Clear();
+			lvFunctionList.Enabled = false;
+			lvVariableList.Items.Clear();
+			lvVariableList.Enabled = false;
+			lvBranchList.Items.Clear();
+			lvBranchList.Enabled = false;
 		}
 
-		List<CFileParseInfo> _CSourceFileInfoList = new List<CFileParseInfo>();
+		List<CCodeParseResult> _ccodeParseResultList = new List<CCodeParseResult>();
+
+		public List<CCodeParseResult> CCodeParseResultList
+		{
+			get { return _ccodeParseResultList; }
+			set { _ccodeParseResultList = value; }
+		}
 
 		private void btnStart_Click(object sender, EventArgs e)
 		{
-			List<CFileParseInfo> parseInfoList
+			CCodeParseResultList.Clear();
+			CCodeParseResultList
 				= CCodeAnalyser.CFileListProcess(_CSourceFilesList, _CHeaderFilesList);
-			_CSourceFileInfoList.Clear();
-			foreach (CFileParseInfo pi in parseInfoList)
-			{
-				if (pi.full_name.ToLower().EndsWith(".c"))
-				{
-					_CSourceFileInfoList.Add(pi);
-				}
-			}
+
+			lvFunctionList.Enabled = true;
+			lvVariableList.Enabled = true;
+			lvBranchList.Enabled = true;
 		}
 
+		/// <summary>
+		/// 源文件列表控件选中状态改变
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		private void lvFileList_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			if (0 == lvFileList.SelectedItems.Count)
 			{
 				return;
 			}
+			if (labelStatus.Text == lvFileList.SelectedItems[0].Text)
+			{
+				return;
+			}
 			labelStatus.Text = lvFileList.SelectedItems[0].Text;
+			UpdateFunctionListView(lvFileList.SelectedItems[0].Text);
 		}
 
+		/// <summary>
+		/// 函数列表控件选中状态改变
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		private void lvFunctionList_SelectedIndexChanged(object sender, EventArgs e)
 		{
 
+		}
+
+		/// <summary>
+		/// 更新函数列表控件
+		/// </summary>
+		/// <param name="sourceFileName"></param>
+		void UpdateFunctionListView(string sourceFileName)
+		{
+			lvFunctionList.Items.Clear();
+			foreach (CCodeParseResult srcResult in CCodeParseResultList)
+			{
+				string path;
+				if (sourceFileName == IOProcess.GetFileName(srcResult.SourceParseInfo.full_name, out path))
+				{
+					foreach (CFunctionInfo functionInfo in srcResult.SourceParseInfo.fun_define_list)
+					{
+						ListViewItem item = new ListViewItem(functionInfo.name + ": "
+							+ functionInfo.body_start_pos.row_num.ToString() + ", "
+							+ functionInfo.body_start_pos.col_num.ToString() + "; "
+							+ functionInfo.body_end_pos.row_num.ToString() + ", "
+							+ functionInfo.body_end_pos.col_num.ToString());
+						lvFunctionList.Items.Add(item);
+					}
+					break;
+				}
+			}
 		}
 
 	}

@@ -9,55 +9,99 @@ namespace Mr.Robot
 {
 	public static partial class CCodeAnalyser
 	{
+		#region 全局字段
+		static List<string> _headerNameList = new List<string>();
+
+		public static List<string> HeaderNameList								// 所有头文件名列表
+		{
+			get { return CCodeAnalyser._headerNameList; }
+			set { CCodeAnalyser._headerNameList = value; }
+		}
+
+		static List<string> _sourceNameList = new List<string>();
+
+		public static List<string> SourceNameList								// 源文件名列表, 现状通常一次解析只有一个源文件
+		{
+			get { return CCodeAnalyser._sourceNameList; }
+			set { CCodeAnalyser._sourceNameList = value; }
+		}
+
+		static List<CFileParseInfo> _totalParsedInfoList = new List<CFileParseInfo>();
+
+		public static List<CFileParseInfo> TotalParsedInfoList					// 所有已经解析过的文件的解析情报列表(暂未使用)
+		{
+			get { return CCodeAnalyser._totalParsedInfoList; }
+			set { CCodeAnalyser._totalParsedInfoList = value; }
+		}
+		#endregion
+
 		#region 向外提供的接口方法
 		/// <summary>
 		/// ".c"源文件处理
 		/// </summary>
-		/// <param name="fileName"></param>
-		public static List<CFileParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
+		/// <param name="srcName"></param>
+		public static List<CCodeParseResult> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
 		{
-			List<CFileParseInfo> retList = new List<CFileParseInfo>();
-			//foreach (string hdFile in hdFileList)
-			//{
-			//	CFileProcess(hdFile, ref retList, hdFileList);
-			//}
-			foreach (string srcFile in srcFileList)
+			// 初始化
+			SourceNameList = srcFileList;
+			HeaderNameList = hdFileList;
+
+			List<CCodeParseResult> resultList = new List<CCodeParseResult>();
+
+			// 逐个解析源文件
+			foreach (string srcName in SourceNameList)
 			{
-				CFileProcess(srcFile, ref retList, hdFileList);
+				CCodeParseResult parseResult = new CCodeParseResult();
+				List<CFileParseInfo> hdList = new List<CFileParseInfo>();
+				parseResult.SourceParseInfo = CFileProcess(srcName, ref hdList);
+				parseResult.IncludeHeaderParseInfoList = hdList;
+
+				resultList.Add(parseResult);
 			}
 
-			return retList;
+			return resultList;
 		}
 		#endregion
 
 		// 以下都是内部调用方法
 
-		static CFileParseInfo CFileProcess(string fileName, ref List<CFileParseInfo> parsedList, List<string> headerFileNameList)
+		/// <summary>
+		/// C文件(包括源文件和头文件)处理
+		/// </summary>
+		/// <param name="srcName"></param>
+		/// <param name="includeInfoList"></param>
+		/// <returns></returns>
+		static CFileParseInfo CFileProcess(string srcName, ref List<CFileParseInfo> includeInfoList)
 		{
 			// 去掉注释
-			List<string> codeList = RemoveComments(fileName);
-			CFileParseInfo fi = new CFileParseInfo(fileName);
+			List<string> orginalCodeList;
+			List<string> codeList = RemoveComments(srcName, out orginalCodeList);
+			CFileParseInfo fi = new CFileParseInfo(srcName);
 			// 预编译处理
-			codeList = PrecompileProcess(codeList, ref fi, ref parsedList, headerFileNameList);
-//          Save2File(codeList, fileName + ".bak");
+			codeList = PrecompileProcess(codeList, ref fi, ref includeInfoList);
+			fi.parsedCodeList = codeList;
+			fi.originalCodeList = orginalCodeList;
+//          Save2File(codeList, srcName + ".bak");
 
 			// 从头开始解析
 			File_Position sPos = new File_Position(0, 0);
 			// 文件解析
-			CodeAnalyze(fileName, codeList, ref sPos, ref fi, parsedList);
-			parsedList.Add(fi);
+			CodeAnalyze(srcName, codeList, ref sPos, ref fi, includeInfoList);
+
+//			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
 
 			return fi;
 		}
 
 		/// <summary>
-		/// 移除注释
+		/// 移除代码注释
 		/// </summary>
-		public static List<string> RemoveComments(string fileName)
+		public static List<string> RemoveComments(string fileName, out List<string> orginalCodeList)
 		{
 			TextReader tr = new StreamReader(fileName);
 			List<string> retList = new List<string>();
+			orginalCodeList = new List<string>();
 
 			string rdLine = tr.ReadLine();
 			if (null == rdLine)
@@ -67,6 +111,7 @@ namespace Mr.Robot
 			string wtLine = "";
 			do
 			{
+				orginalCodeList.Add(rdLine);
 				int idx1 = rdLine.IndexOf("//");
 				int idx2 = rdLine.IndexOf("/*");
 
@@ -136,12 +181,11 @@ namespace Mr.Robot
 		/// </summary>
 		/// <param name="codeList"></param>
 		/// <param name="fi"></param>
-		/// <param name="parsedFileInfoList">已解析过的文件情报列表</param>
-		/// <param name="headerFileNameList">全部头文件名称列表</param>
+		/// <param name="includeInfoList"></param>
 		/// <returns></returns>
-		public static List<string> PrecompileProcess(List<string> codeList, ref CFileParseInfo fi,
-													 ref List<CFileParseInfo> parsedList,
-													 List<string> headerFileNameList)
+		public static List<string> PrecompileProcess(List<string> codeList,
+													 ref CFileParseInfo fi,
+													 ref List<CFileParseInfo> includeInfoList)
 		{
 			List<string> retList = new List<string>();
 			Stack<CC_INFO> ccStack = new Stack<CC_INFO>();						// 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
@@ -172,7 +216,7 @@ namespace Mr.Robot
 								// 去掉引号
 								incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
 								// 取得头文件的解析情报
-								CFileParseInfo incInfo = GetIncFileParsedInfo(incFileName, ref parsedList, headerFileNameList);
+								ParseIncludeHeaderFile(incFileName, ref includeInfoList);
 							}
 						}
 					}
@@ -201,7 +245,7 @@ namespace Mr.Robot
 							{
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-								if (0 != JudgeExpressionValue(exprStr, parsedList, fi.macro_define_list))
+								if (0 != JudgeExpressionValue(exprStr, includeInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = true;
@@ -227,7 +271,7 @@ namespace Mr.Robot
 							{
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-								if (null != JudgeExpressionDefined(exprStr, parsedList, fi.macro_define_list))
+								if (null != JudgeExpressionDefined(exprStr, includeInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = true;
@@ -253,7 +297,7 @@ namespace Mr.Robot
 							{
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-								if (null != JudgeExpressionDefined(exprStr, parsedList, fi.macro_define_list))
+								if (null != JudgeExpressionDefined(exprStr, includeInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = false;
@@ -308,7 +352,7 @@ namespace Mr.Robot
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
 								exprStr = GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-								if (0 != JudgeExpressionValue(exprStr, parsedList, fi.macro_define_list))
+								if (0 != JudgeExpressionValue(exprStr, includeInfoList, fi.macro_define_list))
 								{
 									cc_info.write_flag = false;
 									cc_info.write_next_flag = true;
@@ -370,44 +414,47 @@ namespace Mr.Robot
 			return retList;
 		}
 
-		static CFileParseInfo GetIncFileParsedInfo(string incFileName,
-												   ref List<CFileParseInfo> parsedFileInfoList,
-												   List<string> headerFileNameList)
+		/// <summary>
+		/// 取得include头文件的解析情报
+		/// </summary>
+		/// <param name="incFileName"></param>
+		/// <param name="includeInfoList"></param>
+		/// <returns></returns>
+		static void ParseIncludeHeaderFile(string incFileName,
+										 ref List<CFileParseInfo> includeInfoList)
 		{
 			// 先在已解析过的文件list里找
-			foreach (var pi in parsedFileInfoList)
+			foreach (var pi in includeInfoList)
 			{
 				string path;
 				string fName = IOProcess.GetFileName(pi.full_name, out path);
 				if (fName.ToLower() == incFileName.ToLower())
 				{
 					// 如果找到了, 直接返回
-					return pi;
+					return;
 				}
 			}
 
 			// 如果上一步没找到, 证明还没被解析, 则在全部头文件list里找
-			foreach (var hd_name in headerFileNameList)
+			foreach (var hd_name in HeaderNameList)
 			{
 				string path;
 				string fName = IOProcess.GetFileName(hd_name, out path);
 				if (fName.ToLower() == incFileName.ToLower())
 				{
 					// 如果找到了, 则要先解析这个头文件
-					CFileParseInfo fi = CFileProcess(hd_name, ref parsedFileInfoList, headerFileNameList);
+					CFileParseInfo fi = CFileProcess(hd_name, ref includeInfoList);
+					// 解析完后, 加到头文件解析列表中去
+					includeInfoList.Add(fi);
 					// TODO: 注意当有多个同名文件符合条件时的情况应对
-
-					return fi;
 				}
 			}
 			// 头文件没找到
 			// ErrReport(incFileName + " 头文件没找到!");
-
-			return null;
 		}
 
 		/// <summary>
-		/// 代码解析
+		/// 文件代码解析
 		/// </summary>
 		public static void CodeAnalyze(string fullName, List<string> codeList,
 									   ref File_Position searchPos, ref CFileParseInfo fi,
@@ -543,7 +590,7 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
-		/// 函数探测(声明, 定义)
+		/// 函数检测(声明, 定义)
 		/// </summary>
 		/// <param name="codeList"></param>
 		/// <param name="lineIdx"></param>
@@ -633,6 +680,12 @@ namespace Mr.Robot
 			return cfi;
 		}
 
+		/// <summary>
+		/// 取得包含头文件名
+		/// </summary>
+		/// <param name="codeList"></param>
+		/// <param name="searchPos"></param>
+		/// <returns></returns>
 		static string GetIncludeFileName(List<string> codeList, ref File_Position searchPos)
 		{
 			File_Position foundPos = null;
@@ -875,6 +928,12 @@ namespace Mr.Robot
 			}
 		}
 
+		/// <summary>
+		/// 宏定义处理
+		/// </summary>
+		/// <param name="codeList"></param>
+		/// <param name="searchPos"></param>
+		/// <param name="cfi"></param>
 		static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref CFileParseInfo cfi)
 		{
 			File_Position sPos, fPos;
@@ -916,6 +975,15 @@ namespace Mr.Robot
 			searchPos = new File_Position(sPos);
 		}
 
+		/// <summary>
+		/// 宏检测与宏展开
+		/// </summary>
+		/// <param name="idStr"></param>
+		/// <param name="codeList"></param>
+		/// <param name="foundPos"></param>
+		/// <param name="curFileInfo"></param>
+		/// <param name="includeHeaderInfoList"></param>
+		/// <returns></returns>
 		static bool MacroDetectAndExpand(string idStr, List<string> codeList,
 										 File_Position foundPos,
 										 CFileParseInfo curFileInfo,
@@ -1010,6 +1078,12 @@ namespace Mr.Robot
 			return false;
 		}
 
+		/// <summary>
+		/// 类型定义处理
+		/// </summary>
+		/// <param name="codeList"></param>
+		/// <param name="qualifierList"></param>
+		/// <param name="cfi"></param>
 		static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref CFileParseInfo cfi)
 		{
 			TypeDefineInfo tdi = new TypeDefineInfo();
