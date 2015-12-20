@@ -863,7 +863,7 @@ namespace Mr.Robot
 		/// <param name="cfi"></param>
 		static void GlobalVarProcess(List<string> qualifierList, ref CFileParseInfo cfi)
 		{
-			GlobalVarInfo gvi = new GlobalVarInfo();
+			VariableInfo gvi = new VariableInfo();
 
 			// 判断是否有初始化语句
 			int idx = -1;
@@ -995,12 +995,16 @@ namespace Mr.Robot
 			}
 			// 作成一个所有包含头文件的宏定义的列表
 			List<MacroDefineInfo> defineList = new List<MacroDefineInfo>();
+			List<TypeDefineInfo> typeDefineList = new List<TypeDefineInfo>();
 			foreach (CFileParseInfo hdInfo in includeHeaderInfoList)
 			{
 				defineList.AddRange(hdInfo.macro_define_list);
+				typeDefineList.AddRange(hdInfo.type_define_list);
 			}
 			// 添加上本文件所定义的宏
 			defineList.AddRange(curFileInfo.macro_define_list);
+			typeDefineList.AddRange(curFileInfo.type_define_list);
+
 			// 遍历查找宏名
 			foreach (MacroDefineInfo di in defineList)
 			{
@@ -1075,6 +1079,20 @@ namespace Mr.Robot
 					return true;
 				}
 			}
+			// typedef 用户自定义类型
+			foreach (TypeDefineInfo tdi in typeDefineList)
+			{
+				if (idStr == tdi.new_type_name)
+				{
+					string usrTypeName = tdi.new_type_name;
+					File_Position macroPos = new File_Position(foundPos);
+					int lineIdx = foundPos.row_num;
+					string realTypeName = tdi.old_type_name;
+					// 用原类型名去替换用户定义类型名
+					codeList[lineIdx] = codeList[lineIdx].Replace(usrTypeName, realTypeName);
+					return true;
+				}
+			}
 			return false;
 		}
 
@@ -1101,6 +1119,60 @@ namespace Mr.Robot
 				}
 			}
 			cfi.type_define_list.Add(tdi);
+		}
+
+		/// <summary>
+		/// 解析一个代码块
+		/// </summary>
+		/// <param name="fileInfo">文件情报</param>
+		/// <param name="startPos">代码块开始位置</param>
+		/// <param name="endPos">代码块结束位置</param>
+		static void CodeBlockParse(CFileParseInfo fileInfo, File_Position startPos, File_Position endPos)
+		{
+			// 如果遇到if, else, else if, switch, for, while, do等关键字: 取得所带的代码块并解析
+			// 如果遇到{, 表明遇到一个内嵌的子代码块
+			// 否则取得一条完整的语句
+		}
+
+		/// <summary>
+		/// 从当前位置提取一条语句
+		/// </summary>
+		/// <param name="fileInfo"></param>
+		/// <param name="startPos"></param>
+		/// <param name="endPos"></param>
+		/// <param name="isNormal">true: 是普通语句; false: 是if, for等分支,循环语句</param>
+		/// <returns></returns>
+		static string Get1Sentence(CFileParseInfo fileInfo, ref File_Position startPos, ref File_Position endPos, out bool isNormal)
+		{
+			isNormal = true;
+			List<string> qualifierList = new List<string>();     // 修饰符暂存列表
+			string nextId = null;
+			File_Position foundPos = null;
+			while (null != (nextId = GetNextIdentifier(fileInfo.parsedCodeList, ref startPos, out foundPos)))
+			{
+				// 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
+				if (IsStandardIdentifier(nextId)
+					|| ("*" == nextId))
+				{
+				}
+				// 否则可能是各种符号
+				else
+				{
+					;
+				}
+			}
+			return string.Empty;
+		}
+
+		/// <summary>
+		/// 解析一条代码语句
+		/// </summary>
+		/// <param name="fileInfo"></param>
+		/// <param name="startPos"></param>
+		/// <param name="endPos"></param>
+		static void CodeSentenceParse(CFileParseInfo fileInfo, File_Position startPos, File_Position endPos)
+		{
+
 		}
 
 		static void ErrReport(string errMsg = "Something is wrong!")

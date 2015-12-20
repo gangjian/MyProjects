@@ -56,8 +56,8 @@ namespace Mr.Robot
 		public List<CFunctionInfo> fun_declare_list = new List<CFunctionInfo>();            // 函数声明列表
 		public List<CFunctionInfo> fun_define_list = new List<CFunctionInfo>();             // 函数定义列表
 		public List<UsrDefineTypeInfo> user_def_type_list = new List<UsrDefineTypeInfo>();  // 用户定义类型列表
-		public List<GlobalVarInfo> global_var_declare_list = new List<GlobalVarInfo>();     // 全局量声明列表
-		public List<GlobalVarInfo> global_var_define_list = new List<GlobalVarInfo>();      // 全局量定义列表
+		public List<VariableInfo> global_var_declare_list = new List<VariableInfo>();     // 全局量声明列表
+		public List<VariableInfo> global_var_define_list = new List<VariableInfo>();      // 全局量定义列表
 		public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
 		public List<TypeDefineInfo> type_define_list = new List<TypeDefineInfo>();          // typedef类型定义列表
 
@@ -94,7 +94,10 @@ namespace Mr.Robot
 		public File_Position body_end_pos = null;
 	}
 
-	public class GlobalVarInfo
+	/// <summary>
+	/// 变量情报
+	/// </summary>
+	public class VariableInfo
 	{
 		public string type = "";
 		public string name = "";
