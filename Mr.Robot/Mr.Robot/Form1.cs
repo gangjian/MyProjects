@@ -94,6 +94,8 @@ namespace Mr.Robot
 				string fname = IOProcess.GetFileName(cfile, out path);
 				// 暂时只在文件列表里显示不包含完整路径的文件名
 				ListViewItem new_item = new ListViewItem(fname);
+				// 完整路径放在SubItem里
+				new_item.SubItems.Add(cfile);
 				lvFileList.Items.Add(new_item);
 			}
 			lvFunctionList.Items.Clear();
@@ -115,8 +117,20 @@ namespace Mr.Robot
 		private void btnStart_Click(object sender, EventArgs e)
 		{
 			CCodeParseResultList.Clear();
+			List<string> csfList = new List<string>();
+			foreach (ListViewItem item in lvFileList.Items)
+			{
+				if (item.Checked)
+				{
+					if (item.SubItems.Count >= 2)
+					{
+						string fpath = item.SubItems[1].Text;
+						csfList.Add(fpath);
+					}
+				}
+			}
 			CCodeParseResultList
-				= CCodeAnalyser.CFileListProcess(_CSourceFilesList, _CHeaderFilesList);
+				= CCodeAnalyser.CFileListProcess(csfList, _CHeaderFilesList);
 
 			lvFunctionList.Enabled = true;
 			lvVariableList.Enabled = true;

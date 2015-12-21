@@ -88,6 +88,9 @@ namespace Mr.Robot
 			// 文件解析
 			CodeAnalyze(srcName, codeList, ref sPos, ref fi, includeInfoList);
 
+			// 函数解析
+			FunctionsAnalyze(fi);
+
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
 
@@ -1119,60 +1122,6 @@ namespace Mr.Robot
 				}
 			}
 			cfi.type_define_list.Add(tdi);
-		}
-
-		/// <summary>
-		/// 解析一个代码块
-		/// </summary>
-		/// <param name="fileInfo">文件情报</param>
-		/// <param name="startPos">代码块开始位置</param>
-		/// <param name="endPos">代码块结束位置</param>
-		static void CodeBlockParse(CFileParseInfo fileInfo, File_Position startPos, File_Position endPos)
-		{
-			// 如果遇到if, else, else if, switch, for, while, do等关键字: 取得所带的代码块并解析
-			// 如果遇到{, 表明遇到一个内嵌的子代码块
-			// 否则取得一条完整的语句
-		}
-
-		/// <summary>
-		/// 从当前位置提取一条语句
-		/// </summary>
-		/// <param name="fileInfo"></param>
-		/// <param name="startPos"></param>
-		/// <param name="endPos"></param>
-		/// <param name="isNormal">true: 是普通语句; false: 是if, for等分支,循环语句</param>
-		/// <returns></returns>
-		static string Get1Sentence(CFileParseInfo fileInfo, ref File_Position startPos, ref File_Position endPos, out bool isNormal)
-		{
-			isNormal = true;
-			List<string> qualifierList = new List<string>();     // 修饰符暂存列表
-			string nextId = null;
-			File_Position foundPos = null;
-			while (null != (nextId = GetNextIdentifier(fileInfo.parsedCodeList, ref startPos, out foundPos)))
-			{
-				// 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
-				if (IsStandardIdentifier(nextId)
-					|| ("*" == nextId))
-				{
-				}
-				// 否则可能是各种符号
-				else
-				{
-					;
-				}
-			}
-			return string.Empty;
-		}
-
-		/// <summary>
-		/// 解析一条代码语句
-		/// </summary>
-		/// <param name="fileInfo"></param>
-		/// <param name="startPos"></param>
-		/// <param name="endPos"></param>
-		static void CodeSentenceParse(CFileParseInfo fileInfo, File_Position startPos, File_Position endPos)
-		{
-
 		}
 
 		static void ErrReport(string errMsg = "Something is wrong!")

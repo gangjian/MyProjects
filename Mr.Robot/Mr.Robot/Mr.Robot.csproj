@@ -47,6 +47,7 @@
     <Compile Include="CCodeAnalyser\CCodeAnalyser.cs" />
     <Compile Include="CCodeAnalyser\CCodeInfo.cs" />
     <Compile Include="CCodeAnalyser\ContentsProcess.cs" />
+    <Compile Include="CCodeAnalyser\FunctionAnalysis.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
