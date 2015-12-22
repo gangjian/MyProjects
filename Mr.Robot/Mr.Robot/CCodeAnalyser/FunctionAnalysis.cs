@@ -116,10 +116,15 @@ namespace Mr.Robot
 					else if ("{" == nextId)
 					{
 						// 左花括号, 内嵌的代码块
+						isSimple = false;
 						File_Position fp = FindNextMatchSymbol(fileInfo.parsedCodeList, searchPos, '}');
 						if (null != fp)
 						{
 							
+						}
+						else
+						{
+							break;
 						}
 					}
 					else
