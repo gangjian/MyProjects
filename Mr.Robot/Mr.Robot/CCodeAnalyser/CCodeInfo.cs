@@ -141,21 +141,4 @@ namespace Mr.Robot
 		}
 	}
 
-	/// <summary>
-	/// 语句块情报类
-	/// </summary>
-	public class StatementsBlock
-	{
-		string Expression = "";
-		File_Position sPos = null;
-		File_Position ePos = null;
-		List<StatementsBlock> childBlocks = new List<StatementsBlock>();
-	}
-	/// <summary>
-	/// 复合语句情报类
-	/// </summary>
-	public class CompondStatementsInfo
-	{
-		List<StatementsBlock> blocks = new List<StatementsBlock>();
-	}
 }

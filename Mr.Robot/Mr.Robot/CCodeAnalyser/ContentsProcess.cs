@@ -429,6 +429,51 @@ namespace Mr.Robot
 			return null;
 		}
 
+		static File_Position PositionMoveNext(List<string> codeList, File_Position thisPos)
+		{
+			File_Position nextPos = new File_Position(thisPos);
+			if (nextPos.col_num == codeList[thisPos.row_num].Length - 1)
+			{
+				// 已经是最后一列了, 就移到下一行开头
+				nextPos.row_num += 1;
+				nextPos.col_num = 0;
+			}
+			else
+			{
+				// 否则移到下一列
+				nextPos.col_num += 1;
+			}
+			return nextPos;
+		}
+
+		/// <summary>
+		/// 比较两个位置 0:一致; 1:前者大(靠后); -1:后者大(靠后);
+		/// </summary>
+		/// <returns></returns>
+		static int PositionCompare(File_Position p1, File_Position p2)
+		{
+			if (p1.row_num > p2.row_num)
+			{
+				return 1;
+			}
+			else if (p1.row_num < p2.row_num)
+			{
+				return -1;
+			}
+			else if (p1.col_num > p2.col_num)
+			{
+				return 1;
+			}
+			else if (p1.col_num < p2.col_num)
+			{
+				return -1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
 		////////////////////////////////////////////////
 
 		static void Save2File(List<string> writeList, string saveName)

@@ -89,7 +89,10 @@ namespace Mr.Robot
 			CodeAnalyze(srcName, codeList, ref sPos, ref fi, includeInfoList);
 
 			// 函数解析
-			FunctionsAnalyze(fi);
+			foreach (CFunctionInfo func in fi.fun_define_list)
+			{
+				FunctionAnalyze(fi, func);
+			}
 
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
