@@ -41,8 +41,12 @@ namespace Mr.Robot
             }
 
             // 函数语句树
-            StatementTree stree = new StatementTree();
-            CodeBlockParse(fileInfo, funInfo.body_start_pos, funInfo.body_end_pos);
+            StatementNode root = new StatementNode();
+            root.type = StatementNodeType.Root;
+            root.startPos = funInfo.body_start_pos;
+            root.endPos = funInfo.body_end_pos;
+
+            CodeBlockParse(fileInfo, root);
         }
 
 		/// <summary>
@@ -51,21 +55,23 @@ namespace Mr.Robot
 		/// <param name="fileInfo">文件情报</param>
 		/// <param name="startPos">代码块开始位置</param>
 		/// <param name="endPos">代码块结束位置</param>
-        static List<StatementNode> CodeBlockParse(CFileParseInfo fileInfo, File_Position startPos, File_Position endPos)
+        static void CodeBlockParse(CFileParseInfo fileInfo, StatementNode parentNode)
 		{
-            List<StatementNode> retList = new List<StatementNode>();
-			File_Position searchPos = startPos;
+			File_Position searchPos = parentNode.startPos;
 			// 因为开头第一个字符是左花括号, 所以先要移到下一个位置开始检索
 			searchPos = PositionMoveNext(fileInfo.parsedCodeList, searchPos);
 
 			// 循环提取每一条语句(简单语句或者复合语句)
-            StatementNode statementNode = GetNextStatement(fileInfo, ref searchPos, endPos);
-            while (null != statementNode)
+            StatementNode statementNode = null;
+            while (true)
 			{
-                retList.Add(statementNode);
-                statementNode = GetNextStatement(fileInfo, ref searchPos, endPos);
+                statementNode = GetNextStatement(fileInfo, ref searchPos, parentNode.endPos);
+                if (null == statementNode)
+	            {
+                    break;
+	            }
+                parentNode.childList.Add(statementNode);
 			}
-            return retList;
 		}
 
 		/// <summary>
@@ -80,13 +86,14 @@ namespace Mr.Robot
 											    ref File_Position startPos,
 												File_Position endPos)
 		{
-            StatementNode retStatementInfo = new StatementNode();
-			List<string> qualifierList = new List<string>();     // 修饰符暂存列表
+            StatementNode retNode = new StatementNode();
 			string nextIdStr = null;
 			File_Position foundPos = null;
 			nextIdStr = GetNextIdentifier(fileInfo.parsedCodeList, ref startPos, out foundPos);
 			File_Position searchPos = new File_Position(startPos);
 			startPos = new File_Position(foundPos);
+            bool bStart = false;    // 标识语句的开头
+
 			while (null != nextIdStr)
 			{
 				if (PositionCompare(searchPos, endPos) >= 0)
@@ -94,54 +101,37 @@ namespace Mr.Robot
 					// 对于检索范围超出区块结束位置的判断
 					break;
 				}
-				// 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
-				if (IsStandardIdentifier(nextIdStr)
-					|| ("*" == nextIdStr))
+				// 复合语句
+                if (
+                    (false == bStart)
+                    && (   ("if" == nextIdStr)
+                        || ("for" == nextIdStr)
+						|| ("while" == nextIdStr)
+                        || ("do" == nextIdStr)
+                        || ("switch" == nextIdStr)
+                        || ("{" == nextIdStr)
+                        || ("goto" == nextIdStr))
+                    )
 				{
-					// 复合语句
-					if (("if" == nextIdStr) || ("for" == nextIdStr)
-						|| ("while" == nextIdStr) || ("do" == nextIdStr)
-						|| ("switch" == nextIdStr))
-					{
-						// 取得完整的复合语句相关情报
-						retStatementInfo = GetCompondStatementsInfo(nextIdStr, fileInfo, ref searchPos, endPos);
-					}
-					else
-					{
-						qualifierList.Add(nextIdStr);
-					}
+					// 取得完整的复合语句相关情报
+					retNode = GetCompondStatementNode(nextIdStr, fileInfo, ref searchPos, endPos);
 				}
-				// 否则可能是各种符号
+                // 否则是简单语句
 				else
 				{
-					if (";" == nextIdStr)
-					{
-						// 分号是简单语句的结束标志
-						// 确定起始, 终了位置, 提取语句内容
-						string statementStr = LineStringCat(fileInfo.parsedCodeList, startPos, foundPos);
-						startPos = searchPos;
-						//retStatementInfo.keyStr = statementStr;
-						retStatementInfo.startPos = new File_Position(startPos);
-						retStatementInfo.endPos = new File_Position(foundPos);
-						return retStatementInfo;
-					}
-					else if ("{" == nextIdStr)
-					{
-						// 左花括号, 内嵌的代码块
-						File_Position fp = FindNextMatchSymbol(fileInfo.parsedCodeList, searchPos, '}');
-						if (null != fp)
-						{
-							;
-						}
-						else
-						{
-							break;
-						}
-					}
-					else
-					{
-					}
+                    // 找到语句结束,也就是分号的位置
+                    foundPos = FindNextSpecIdentifier(";", fileInfo.parsedCodeList, searchPos);
+                    if (null != foundPos)
+                    {
+                        string statementStr = LineStringCat(fileInfo.parsedCodeList, startPos, foundPos);
+						retNode.startPos = new File_Position(startPos);
+						retNode.endPos = new File_Position(foundPos);
+
+                        startPos = searchPos;
+                        return retNode;
+                    }
 				}
+                bStart = true;
 				nextIdStr = GetNextIdentifier(fileInfo.parsedCodeList, ref searchPos, out foundPos);
 			}
 			return null;
@@ -150,7 +140,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得复合语句情报
 		/// </summary>
-        static StatementNode GetCompondStatementsInfo(  string keyWord,
+        static StatementNode GetCompondStatementNode(  string keyWord,
 													    CFileParseInfo fileInfo,
 														ref File_Position startPos,
 														File_Position endPos)

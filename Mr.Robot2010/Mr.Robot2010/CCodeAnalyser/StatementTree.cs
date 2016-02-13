@@ -5,11 +5,6 @@ using System.Text;
 
 namespace Mr.Robot
 {
-    class StatementTree
-    {
-        List<StatementNode> statementList = new List<StatementNode>();
-    }
-
     class StatementNode
     {
         // 1.语句起止位置
@@ -17,33 +12,36 @@ namespace Mr.Robot
         public File_Position endPos;
 
         // 2.父语句节点引用
-        public StatementNode parent;
+        public StatementNode parent = null;
         // 3.子语句节点列表
         public List<StatementNode> childList = new List<StatementNode>();
         // 4.语句类型
-        public StatementType type = StatementType.StatementType_Simple;
+        public StatementNodeType type = StatementNodeType.Invalid;
 
         // 5.条件表达式(可以为空,表示恒成立)
         public string expression = string.Empty;
     }
 
-    // 语句类型枚举
-    enum StatementType
+    // 语句节点类型枚举
+    enum StatementNodeType
     {
-        StatementType_Simple,               // 简单句
+        Invalid,
+        Root,                 // 根节点(函数体)
+        Simple,               // 简单句
                                             // 以下是复合语句
-        StatementType_Compound_IfElse,      // if-else分支语句
-        StatementType_Compound_SwitchCase,  // switch-case分支语句
-        StatementType_Compound_While,       // while循环语句
-        StatementType_Compound_For,         // for循环语句
-        StatementType_Compound_DoWhile,     // do-while循环语句
-        StatementType_Compound_GoTo,        // goto跳转语句
+        Compound_IfElse,      // if-else分支语句
+        Compound_SwitchCase,  // switch-case分支语句
+        Compound_While,       // while循环语句
+        Compound_For,         // for循环语句
+        Compound_DoWhile,     // do-while循环语句
+        Compound_GoTo,        // goto跳转语句
+        Compound_Block,       // {}括起来的语句块
 
         // 以下是复合语句的分支语句
-        StatementType_Branch_If,            // if分支
-        StatementType_Branch_ElseIf,        // else if分支
-        StatementType_Branch_Else,          // else分支
-        StatementType_Branch_Case,          // case分支
-        StatementType_Branch_Default,       // default分支
+        Branch_If,            // if分支
+        Branch_ElseIf,        // else if分支
+        Branch_Else,          // else分支
+        Branch_Case,          // case分支
+        Branch_Default,       // default分支
     }
 }
