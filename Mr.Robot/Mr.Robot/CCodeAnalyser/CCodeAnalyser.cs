@@ -222,11 +222,10 @@ namespace Mr.Robot
 					}
 					else if ("define" == idStr.ToLower())
 					{
-						if (false == cc_info.write_flag)
+						if (false != cc_info.write_flag)
 						{
-							continue;
+							DefineProcess(codeList, ref searchPos, ref fi);
 						}
-						DefineProcess(codeList, ref searchPos, ref fi);
 					}
 					else
 					{
