@@ -7,9 +7,14 @@ namespace Mr.Robot
 {
     class StatementNode
     {
-        // 1.语句起止位置
-        public File_Position startPos;
-        public File_Position endPos;
+        // 1.语句范围(起止位置)
+		private File_Scope scope = new File_Scope();
+
+		public File_Scope Scope
+		{
+			get { return scope; }
+			set { scope = value; }
+		}
 
         // 2.父语句节点引用
         public StatementNode parent = null;

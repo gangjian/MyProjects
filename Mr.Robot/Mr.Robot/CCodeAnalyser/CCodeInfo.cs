@@ -35,6 +35,24 @@ namespace Mr.Robot
 		}
 	}
 
+	public class File_Scope
+	{
+		File_Position start = new File_Position(0, 0);
+
+		public File_Position Start
+		{
+			get { return start; }
+			set { start = value; }
+		}
+		File_Position end = new File_Position(0, 0);
+
+		public File_Position End
+		{
+			get { return end; }
+			set { end = value; }
+		}
+	}
+
 	public enum E_CHAR_TYPE
 	{
 		E_CTYPE_WHITE_SPACE,

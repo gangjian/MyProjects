@@ -43,8 +43,8 @@ namespace Mr.Robot
             // 函数语句树
             StatementNode root = new StatementNode();
             root.type = StatementNodeType.Root;
-            root.startPos = funInfo.body_start_pos;
-            root.endPos = funInfo.body_end_pos;
+            root.Scope.Start = funInfo.body_start_pos;
+            root.Scope.End = funInfo.body_end_pos;
 
             CodeBlockParse(fileInfo, root);
         }
@@ -57,7 +57,7 @@ namespace Mr.Robot
 		/// <param name="endPos">代码块结束位置</param>
         static void CodeBlockParse(CFileParseInfo fileInfo, StatementNode parentNode)
 		{
-			File_Position searchPos = parentNode.startPos;
+			File_Position searchPos = parentNode.Scope.Start;
 			// 因为开头第一个字符是左花括号, 所以先要移到下一个位置开始检索
 			searchPos = PositionMoveNext(fileInfo.parsedCodeList, searchPos);
 
@@ -65,7 +65,7 @@ namespace Mr.Robot
             StatementNode statementNode = null;
             while (true)
 			{
-                statementNode = GetNextStatement(fileInfo, ref searchPos, parentNode.endPos);
+                statementNode = GetNextStatement(fileInfo, ref searchPos, parentNode.Scope.End);
                 if (null == statementNode)
 	            {
                     break;
@@ -92,48 +92,44 @@ namespace Mr.Robot
 			nextIdStr = GetNextIdentifier(fileInfo.parsedCodeList, ref startPos, out foundPos);
 			File_Position searchPos = new File_Position(startPos);
 			startPos = new File_Position(foundPos);
-            bool bStart = false;    // 标识语句的开头
 
-			while (null != nextIdStr)
+			if (PositionCompare(searchPos, endPos) >= 0)
 			{
-				if (PositionCompare(searchPos, endPos) >= 0)
-				{
-					// 对于检索范围超出区块结束位置的判断
-					break;
-				}
-				// 复合语句
-                if (
-                    (false == bStart)
-                    && (   ("if" == nextIdStr)
-                        || ("for" == nextIdStr)
-						|| ("while" == nextIdStr)
-                        || ("do" == nextIdStr)
-                        || ("switch" == nextIdStr)
-                        || ("{" == nextIdStr)
-                        || ("goto" == nextIdStr))
-                    )
-				{
-					// 取得完整的复合语句相关情报
-					retNode = GetCompondStatementNode(nextIdStr, fileInfo, ref searchPos, endPos);
-				}
-                // 否则是简单语句
-				else
-				{
-                    // 找到语句结束,也就是分号的位置
-                    foundPos = FindNextSpecIdentifier(";", fileInfo.parsedCodeList, searchPos);
-                    if (null != foundPos)
-                    {
-                        string statementStr = LineStringCat(fileInfo.parsedCodeList, startPos, foundPos);
-						retNode.startPos = new File_Position(startPos);
-						retNode.endPos = new File_Position(foundPos);
-
-                        startPos = searchPos;
-                        return retNode;
-                    }
-				}
-                bStart = true;
-				nextIdStr = GetNextIdentifier(fileInfo.parsedCodeList, ref searchPos, out foundPos);
+				// 对于检索范围超出区块结束位置的判断
+				return null;
 			}
+			// 复合语句
+            if (
+				("if" == nextIdStr)
+				|| ("for" == nextIdStr)
+				|| ("while" == nextIdStr)
+				|| ("do" == nextIdStr)
+				|| ("switch" == nextIdStr)
+				|| ("{" == nextIdStr)
+				|| ("goto" == nextIdStr))
+			{
+				// 取得完整的复合语句相关情报
+				retNode = GetCompondStatementNode(nextIdStr, fileInfo, ref searchPos, endPos);
+				startPos = searchPos;
+				return retNode;
+			}
+            // 否则是简单语句
+			else
+			{
+                // 找到语句结束,也就是分号的位置
+                foundPos = FindNextSpecIdentifier(";", fileInfo.parsedCodeList, searchPos);
+                if (null != foundPos)
+                {
+                    string statementStr = LineStringCat(fileInfo.parsedCodeList, startPos, foundPos);
+					retNode.Scope.Start = new File_Position(startPos);
+					retNode.Scope.End = new File_Position(foundPos);
+					retNode.type = StatementNodeType.Simple;
+
+                    startPos = searchPos;
+                    return retNode;
+                }
+			}
+
 			return null;
 		}
 
@@ -145,38 +141,31 @@ namespace Mr.Robot
 														ref File_Position startPos,
 														File_Position endPos)
 		{
-			File_Position searchPos = new File_Position(startPos);
-			File_Position foundPos;
-			if ("if" == keyWord)
-			{
-				// 取得条件表达式
-				string conditionalExpression = GetConditionalExpression(fileInfo.parsedCodeList, ref searchPos);
-				if (string.Empty == conditionalExpression)
-				{
-					return null;
-				}
-				// 取得语句块
-				string idStr = GetNextIdentifier(fileInfo.parsedCodeList, ref searchPos, out foundPos);
-				if ("{" == idStr)
-				{
-					// 通常语句块会以花括号括起来
-					// 找到配对的花括号
-				}
-				else
-				{
-					// 但是如果没有遇到花括号, 那么可能是语句块只有一条简单语句
-					// 提取一条简单语句
-				}
-			}
-			else if (("for" == keyWord) || "while" == keyWord)
-			{
+			StatementNode retNode = new StatementNode();
+			retNode.type = GetNodeType(keyWord);
 
+			File_Position searchPos = new File_Position(startPos);
+			if (("if" == keyWord)
+				|| ("for" == keyWord)
+				|| ("while" == keyWord)
+				|| ("switch" == keyWord))
+			{
+				// 取得循环表达式
+				string expression = GetCompoundStatementExpression(fileInfo.parsedCodeList, ref searchPos);
+				if (string.Empty != expression)
+				{
+					retNode.expression = expression;
+					// 取得语句块起止位置
+					File_Scope scope = GetNextStatementsBlockScope(fileInfo.parsedCodeList, ref searchPos);
+					if (null != scope)
+					{
+						startPos = searchPos;
+						retNode.Scope = scope;
+						return retNode;
+					}
+				}
 			}
 			else if ("do" == keyWord)
-			{
-
-			}
-			else if ("switch" == keyWord)
 			{
 
 			}
@@ -202,11 +191,112 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
-		/// 取得条件表达式
+		/// 取得复合语句表达式
 		/// </summary>
-		static string GetConditionalExpression(List<string> codeList, ref File_Position searchPos)
+		static string GetCompoundStatementExpression(List<string> codeList, ref File_Position startPos)
 		{
+			File_Position searchPos = new File_Position(startPos);
+			File_Position foundPos = new File_Position(searchPos);
+
+			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if ("(" == idStr)
+			{
+				File_Position leftBracePos = new File_Position(foundPos);
+				searchPos = PositionMoveNext(codeList, leftBracePos);
+				File_Position rightBracePos = FindNextMatchSymbol(codeList, searchPos, ')');
+				if (null != rightBracePos)
+				{
+					startPos = searchPos;
+					string exp = LineStringCat(codeList, leftBracePos, rightBracePos);
+					return exp;
+				}
+			}
 			return string.Empty;
+		}
+
+		/// <summary>
+		/// 取得下一个语句块的范围(起止位置)
+		/// </summary>
+		/// <param name="codeList"></param>
+		/// <param name="startPos"></param>
+		/// <returns></returns>
+		static File_Scope GetNextStatementsBlockScope(List<string> codeList, ref File_Position startPos)
+		{
+			File_Scope scope = new File_Scope();
+			File_Position searchPos = new File_Position(startPos);
+			File_Position foundPos = new File_Position(searchPos);
+
+			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if ("{" == idStr)
+			{
+				// 通常语句块会以花括号括起来
+				File_Position leftBrace = new File_Position(foundPos);
+				// 找到配对的花括号
+				File_Position rightBrace = FindNextMatchSymbol(codeList, searchPos, '}');
+				if (null != rightBrace)
+				{
+					startPos = searchPos;
+					scope.Start = leftBrace;
+					scope.End = rightBrace;
+					return scope;
+				}
+			}
+			else
+			{
+				// 但是如果没有遇到花括号, 那么可能是语句块只有一条简单语句
+				// 提取一条简单语句
+				scope.Start = new File_Position(foundPos);
+				File_Position ePos;
+				if (";" == idStr)
+				{
+					// 空语句的场合
+					ePos = new File_Position(foundPos);
+				}
+				else
+				{
+					ePos = FindNextSpecIdentifier(";", codeList, searchPos);
+				}
+				if (null != ePos)
+				{
+					startPos = searchPos;
+					scope.End = ePos;
+					return scope;
+				}
+			}
+
+			return null;
+		}
+
+		static StatementNodeType GetNodeType(string keyWord)
+		{
+			StatementNodeType retType = StatementNodeType.Invalid;
+			switch (keyWord)
+			{
+				case "if":
+					retType = StatementNodeType.Compound_IfElse;
+					break;
+				case "{":
+					retType = StatementNodeType.Compound_Block;
+					break;
+				case "do":
+					retType = StatementNodeType.Compound_DoWhile;
+					break;
+				case "for":
+					retType = StatementNodeType.Compound_For;
+					break;
+				case "goto":
+					retType = StatementNodeType.Compound_GoTo;
+					break;
+				case "switch":
+					retType = StatementNodeType.Compound_SwitchCase;
+					break;
+				case "while":
+					retType = StatementNodeType.Compound_While;
+					break;
+				default:
+					break;
+			}
+			return retType;
 		}
 
 	}
