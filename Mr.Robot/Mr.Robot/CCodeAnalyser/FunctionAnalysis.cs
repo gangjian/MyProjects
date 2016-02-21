@@ -46,7 +46,9 @@ namespace Mr.Robot
             root.Scope.Start = funInfo.body_start_pos;
             root.Scope.End = funInfo.body_end_pos;
 
-            CodeBlockParse(fileInfo, root);
+            CodeBlockParse(fileInfo.parsedCodeList, root);
+
+			return;
         }
 
 		/// <summary>
@@ -55,21 +57,25 @@ namespace Mr.Robot
 		/// <param name="fileInfo">文件情报</param>
 		/// <param name="startPos">代码块开始位置</param>
 		/// <param name="endPos">代码块结束位置</param>
-        static void CodeBlockParse(CFileParseInfo fileInfo, StatementNode parentNode)
+		static void CodeBlockParse(List<string> codeList, StatementNode parentNode)
 		{
 			File_Position searchPos = parentNode.Scope.Start;
-			// 因为开头第一个字符是左花括号, 所以先要移到下一个位置开始检索
-			searchPos = PositionMoveNext(fileInfo.parsedCodeList, searchPos);
+			// 如果开头第一个字符是左花括号"{", 先要移到下一个位置开始检索
+			if ('{' == codeList[searchPos.row_num][searchPos.col_num])
+			{
+				searchPos = PositionMoveNext(codeList, searchPos);
+			}
 
 			// 循环提取每一条语句(简单语句或者复合语句)
             StatementNode statementNode = null;
             while (true)
 			{
-                statementNode = GetNextStatement(fileInfo, ref searchPos, parentNode.Scope.End);
+				statementNode = GetNextStatement(codeList, ref searchPos, parentNode.Scope.End);
                 if (null == statementNode)
 	            {
                     break;
 	            }
+				statementNode.parent = parentNode;
                 parentNode.childList.Add(statementNode);
 			}
 		}
@@ -82,14 +88,14 @@ namespace Mr.Robot
 		/// <param name="endPos"></param>
 		/// <param name="isSimpleStatement">true: 是简单语句; false: 是复合语句</param>
 		/// <returns></returns>
-        static StatementNode GetNextStatement(  CFileParseInfo fileInfo,
+		static StatementNode GetNextStatement(	List<string> codeList,
 											    ref File_Position startPos,
 												File_Position endPos)
 		{
             StatementNode retNode = new StatementNode();
 			string nextIdStr = null;
 			File_Position foundPos = null;
-			nextIdStr = GetNextIdentifier(fileInfo.parsedCodeList, ref startPos, out foundPos);
+			nextIdStr = GetNextIdentifier(codeList, ref startPos, out foundPos);
 			File_Position searchPos = new File_Position(startPos);
 			startPos = new File_Position(foundPos);
 
@@ -101,15 +107,16 @@ namespace Mr.Robot
 			// 复合语句
 			if (StatementNodeType.Invalid != GetNodeType(nextIdStr))
 			{
-				// 取得完整的复合语句相关情报
-				retNode = GetCompondStatementNode(nextIdStr, fileInfo, ref searchPos);
+				// 取得复合语句节点
+				retNode = GetCompondStatementNode(nextIdStr, codeList, ref searchPos);
 				startPos = searchPos;
 				return retNode;
 			}
             // 否则是简单语句
 			else
 			{
-				retNode = GetSimpleStatementNode(fileInfo, ref searchPos, foundPos);
+				// 取得简单语句节点
+				retNode = GetSimpleStatementNode(codeList, ref searchPos, foundPos);
 				startPos = searchPos;
 				return retNode;
 			}
@@ -119,7 +126,7 @@ namespace Mr.Robot
 		/// 取得复合语句情报
 		/// </summary>
         static StatementNode GetCompondStatementNode(string keyWord,
-													 CFileParseInfo fileInfo,
+													 List<string> codeList,
 													 ref File_Position startPos)
 		{
 			StatementNode retNode = null;
@@ -129,20 +136,20 @@ namespace Mr.Robot
 			switch (type)
 			{
 				case StatementNodeType.Compound_IfElse:							// if else
-					retNode = GetIfElseStatementNode(fileInfo.parsedCodeList, ref searchPos);
+					retNode = GetIfElseStatementNode(codeList, ref searchPos);
 					startPos = searchPos;
 					break;
 				case StatementNodeType.Compound_SwitchCase:						// switch case
-					retNode = GetSwitchCaseStatementNode(fileInfo.parsedCodeList, ref searchPos);
+					retNode = GetSwitchCaseStatementNode(codeList, ref searchPos);
 					startPos = searchPos;
 					break;
 				case StatementNodeType.Compound_While:							// while
 				case StatementNodeType.Compound_For:							// for
-					retNode = GetForOrWhileStatementNode(type, fileInfo.parsedCodeList, ref searchPos);
+					retNode = GetForOrWhileStatementNode(type, codeList, ref searchPos);
 					startPos = searchPos;
 					break;
 				case StatementNodeType.Compound_DoWhile:						// do while
-					retNode = GetDoWhileStatementNode(fileInfo.parsedCodeList, ref searchPos);
+					retNode = GetDoWhileStatementNode(codeList, ref searchPos);
 					startPos = searchPos;
 					break;
 				case StatementNodeType.Compound_GoTo:							// go to(未对应)
@@ -158,7 +165,7 @@ namespace Mr.Robot
 			return retNode;
 		}
 
-		static StatementNode GetSimpleStatementNode(CFileParseInfo fileInfo,
+		static StatementNode GetSimpleStatementNode(List<string> codeList,
 													ref File_Position startPos,
 													File_Position foundPos)
 		{
@@ -166,10 +173,10 @@ namespace Mr.Robot
 			File_Position searchPos = new File_Position(foundPos);
 			File_Position oldPos = new File_Position(foundPos);
 			// 找到语句结束,也就是分号的位置
-			foundPos = FindNextSpecIdentifier(";", fileInfo.parsedCodeList, searchPos);
+			foundPos = FindNextSpecIdentifier(";", codeList, searchPos);
 			if (null != foundPos)
 			{
-				string statementStr = LineStringCat(fileInfo.parsedCodeList, oldPos, foundPos);
+				string statementStr = LineStringCat(codeList, oldPos, foundPos);
 				retNode.Scope.Start = new File_Position(oldPos);
 				retNode.Scope.End = new File_Position(foundPos);
 				retNode.type = StatementNodeType.Simple;
@@ -199,18 +206,63 @@ namespace Mr.Robot
 				{
 					startPos = searchPos;
 					retNode.Scope = scope;
+					// 递归解析语句块
+					CodeBlockParse(codeList, retNode);
 					return retNode;
 				}
 			}
 			return null;
 		}
 
+		/// <summary>
+		/// 取得if else复合语句节点
+		/// </summary>
 		static StatementNode GetIfElseStatementNode(List<string> codeList, ref File_Position startPos)
 		{
+			StatementNode retNode = new StatementNode();
+			retNode.type = StatementNodeType.Compound_IfElse;
+			File_Position searchPos = new File_Position(startPos);
 			// 取得if条件表达式
-			// 取得if分支语句块
-			// 判断有无else if 分支
-			// 判断有无else分支
+			string expression = GetCompoundStatementExpression(codeList, ref searchPos);
+			if (string.Empty != expression)
+			{
+				retNode.expression = expression;
+				// 取得if分支起止位置
+				File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+				if (null != scope)
+				{
+					StatementNode ifBranch = new StatementNode();
+					ifBranch.parent = retNode;
+					ifBranch.expression = expression;
+					ifBranch.type = StatementNodeType.Branch_If;
+					ifBranch.Scope = scope;
+					// 递归解析分支语句块
+					CodeBlockParse(codeList, ifBranch);
+
+					retNode.Scope.Start = scope.Start;							// if分支的开始位置, 作为整个if else复合语句的起始位置
+					retNode.childList.Add(ifBranch);
+
+					File_Position lastElseEnd = null;							// 最后一个else分支的结束位置, 作为整个if else复合语句的结束位置
+					StatementNode elseBranch = GetNextElseBrachNode(codeList, ref searchPos);
+					while (null != elseBranch)
+					{
+						lastElseEnd = elseBranch.Scope.End;
+						elseBranch.parent = retNode;
+						// 递归解析分支语句块
+						CodeBlockParse(codeList, elseBranch);
+
+						retNode.childList.Add(elseBranch);
+						if (StatementNodeType.Branch_Else == elseBranch.type)
+						{
+							// 如果是"else"分支, 代表整个if复合语句结束
+							break;
+						}
+					}
+					startPos = searchPos;
+					retNode.Scope.End = lastElseEnd;
+					return retNode;
+				}
+			}
 			return null;
 		}
 
@@ -221,6 +273,53 @@ namespace Mr.Robot
 
 		static StatementNode GetDoWhileStatementNode(List<string> codeList, ref File_Position startPos)
 		{
+			return null;
+		}
+
+		static StatementNode GetNextElseBrachNode(List<string> codeList, ref File_Position startPos)
+		{
+			StatementNode retNode = new StatementNode();
+			File_Position searchPos = new File_Position(startPos);
+			File_Position foundPos = new File_Position(searchPos);
+			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if ("else" == idStr)
+			{
+				File_Position oldPos = new File_Position(searchPos);
+				idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				if ("if" == idStr)
+				{
+					// 表示这是一个"else if"分支
+					// 取得分支表达式
+					string expression = GetCompoundStatementExpression(codeList, ref searchPos);
+					if (string.Empty != expression)
+					{
+						retNode.expression = expression;
+						// 确定分支范围
+						File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+						if (null != scope)
+						{
+							retNode.type = StatementNodeType.Branch_ElseIf;
+							retNode.Scope = scope;
+							startPos = searchPos;
+							return retNode;
+						}
+					}
+				}
+				else
+				{
+					searchPos = oldPos;
+					// 否则是"else"分支
+					// 确定分支范围
+					File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+					if (null != scope)
+					{
+						retNode.type = StatementNodeType.Branch_Else;
+						retNode.Scope = scope;
+						startPos = searchPos;
+						return retNode;
+					}
+				}
+			}
 			return null;
 		}
 
