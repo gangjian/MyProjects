@@ -99,95 +99,129 @@ namespace Mr.Robot
 				return null;
 			}
 			// 复合语句
-            if (
-				("if" == nextIdStr)
-				|| ("for" == nextIdStr)
-				|| ("while" == nextIdStr)
-				|| ("do" == nextIdStr)
-				|| ("switch" == nextIdStr)
-				|| ("{" == nextIdStr)
-				|| ("goto" == nextIdStr))
+			if (StatementNodeType.Invalid != GetNodeType(nextIdStr))
 			{
 				// 取得完整的复合语句相关情报
-				retNode = GetCompondStatementNode(nextIdStr, fileInfo, ref searchPos, endPos);
+				retNode = GetCompondStatementNode(nextIdStr, fileInfo, ref searchPos);
 				startPos = searchPos;
 				return retNode;
 			}
             // 否则是简单语句
 			else
 			{
-                // 找到语句结束,也就是分号的位置
-                foundPos = FindNextSpecIdentifier(";", fileInfo.parsedCodeList, searchPos);
-                if (null != foundPos)
-                {
-                    string statementStr = LineStringCat(fileInfo.parsedCodeList, startPos, foundPos);
-					retNode.Scope.Start = new File_Position(startPos);
-					retNode.Scope.End = new File_Position(foundPos);
-					retNode.type = StatementNodeType.Simple;
-
-                    startPos = searchPos;
-                    return retNode;
-                }
+				retNode = GetSimpleStatementNode(fileInfo, ref searchPos, foundPos);
+				startPos = searchPos;
+				return retNode;
 			}
-
-			return null;
 		}
 
 		/// <summary>
 		/// 取得复合语句情报
 		/// </summary>
-        static StatementNode GetCompondStatementNode(  string keyWord,
-													    CFileParseInfo fileInfo,
-														ref File_Position startPos,
-														File_Position endPos)
+        static StatementNode GetCompondStatementNode(string keyWord,
+													 CFileParseInfo fileInfo,
+													 ref File_Position startPos)
+		{
+			StatementNode retNode = null;
+			StatementNodeType type = GetNodeType(keyWord);
+			File_Position searchPos = new File_Position(startPos);
+
+			switch (type)
+			{
+				case StatementNodeType.Compound_IfElse:							// if else
+					retNode = GetIfElseStatementNode(fileInfo.parsedCodeList, ref searchPos);
+					startPos = searchPos;
+					break;
+				case StatementNodeType.Compound_SwitchCase:						// switch case
+					retNode = GetSwitchCaseStatementNode(fileInfo.parsedCodeList, ref searchPos);
+					startPos = searchPos;
+					break;
+				case StatementNodeType.Compound_While:							// while
+				case StatementNodeType.Compound_For:							// for
+					retNode = GetForOrWhileStatementNode(type, fileInfo.parsedCodeList, ref searchPos);
+					startPos = searchPos;
+					break;
+				case StatementNodeType.Compound_DoWhile:						// do while
+					retNode = GetDoWhileStatementNode(fileInfo.parsedCodeList, ref searchPos);
+					startPos = searchPos;
+					break;
+				case StatementNodeType.Compound_GoTo:							// go to(未对应)
+					System.Diagnostics.Trace.Assert(false);
+					break;
+				case StatementNodeType.Compound_Block:							// "{"和"}"括起来的语句块
+					break;
+				default:
+					System.Diagnostics.Trace.Assert(false);						// 异常情况
+					break;
+			}
+
+			return retNode;
+		}
+
+		static StatementNode GetSimpleStatementNode(CFileParseInfo fileInfo,
+													ref File_Position startPos,
+													File_Position foundPos)
 		{
 			StatementNode retNode = new StatementNode();
-			retNode.type = GetNodeType(keyWord);
+			File_Position searchPos = new File_Position(foundPos);
+			File_Position oldPos = new File_Position(foundPos);
+			// 找到语句结束,也就是分号的位置
+			foundPos = FindNextSpecIdentifier(";", fileInfo.parsedCodeList, searchPos);
+			if (null != foundPos)
+			{
+				string statementStr = LineStringCat(fileInfo.parsedCodeList, oldPos, foundPos);
+				retNode.Scope.Start = new File_Position(oldPos);
+				retNode.Scope.End = new File_Position(foundPos);
+				retNode.type = StatementNodeType.Simple;
 
-			File_Position searchPos = new File_Position(startPos);
-			if (("if" == keyWord)
-				|| ("for" == keyWord)
-				|| ("while" == keyWord)
-				|| ("switch" == keyWord))
-			{
-				// 取得循环表达式
-				string expression = GetCompoundStatementExpression(fileInfo.parsedCodeList, ref searchPos);
-				if (string.Empty != expression)
-				{
-					retNode.expression = expression;
-					// 取得语句块起止位置
-					File_Scope scope = GetNextStatementsBlockScope(fileInfo.parsedCodeList, ref searchPos);
-					if (null != scope)
-					{
-						startPos = searchPos;
-						retNode.Scope = scope;
-						return retNode;
-					}
-				}
-			}
-			else if ("do" == keyWord)
-			{
-
-			}
-			else if ("{" == keyWord)
-			{
-
-			}
-			else
-			{
+				startPos = searchPos;
+				return retNode;
 			}
 			return null;
 		}
 
 		/// <summary>
-		/// 解析一条简单语句
+		/// 取得for/while循环的语句节点
 		/// </summary>
-		/// <param name="fileInfo"></param>
-		/// <param name="startPos"></param>
-		/// <param name="endPos"></param>
-		static void ParseSimpleStatement(CFileParseInfo fileInfo, File_Position startPos, File_Position endPos)
+		static StatementNode GetForOrWhileStatementNode(StatementNodeType type, List<string> codeList, ref File_Position startPos)
 		{
+			StatementNode retNode = new StatementNode();
+			retNode.type = type;
+			File_Position searchPos = new File_Position(startPos);
+			// 取得循环表达式
+			string expression = GetCompoundStatementExpression(codeList, ref searchPos);
+			if (string.Empty != expression)
+			{
+				retNode.expression = expression;
+				// 取得语句块起止位置
+				File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+				if (null != scope)
+				{
+					startPos = searchPos;
+					retNode.Scope = scope;
+					return retNode;
+				}
+			}
+			return null;
+		}
 
+		static StatementNode GetIfElseStatementNode(List<string> codeList, ref File_Position startPos)
+		{
+			// 取得if条件表达式
+			// 取得if分支语句块
+			// 判断有无else if 分支
+			// 判断有无else分支
+			return null;
+		}
+
+		static StatementNode GetSwitchCaseStatementNode(List<string> codeList, ref File_Position startPos)
+		{
+			return null;
+		}
+
+		static StatementNode GetDoWhileStatementNode(List<string> codeList, ref File_Position startPos)
+		{
+			return null;
 		}
 
 		/// <summary>
@@ -267,6 +301,11 @@ namespace Mr.Robot
 			return null;
 		}
 
+		/// <summary>
+		/// 根据关键字取得复合语句节点类型
+		/// </summary>
+		/// <param name="keyWord"></param>
+		/// <returns></returns>
 		static StatementNodeType GetNodeType(string keyWord)
 		{
 			StatementNodeType retType = StatementNodeType.Invalid;
