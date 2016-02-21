@@ -266,8 +266,43 @@ namespace Mr.Robot
 			return null;
 		}
 
+		/// <summary>
+		/// 取得switch case语句节点
+		/// </summary>
 		static StatementNode GetSwitchCaseStatementNode(List<string> codeList, ref File_Position startPos)
 		{
+			StatementNode retNode = new StatementNode();
+			retNode.type = StatementNodeType.Compound_SwitchCase;
+			File_Position searchPos = new File_Position(startPos);
+			// 取得switch条件表达式
+			string expression = GetCompoundStatementExpression(codeList, ref searchPos);
+			if (string.Empty != expression)
+			{
+				retNode.expression = expression;
+				// 取得switch分支起止位置
+				File_Position oldPos = PositionMoveNext(codeList, searchPos);	// 移到左{的下一位置
+				File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+				if (null != scope)
+				{
+					// 取得各case或default分支
+					StatementNode caseBranch = GetNextCaseBranchNode(codeList, ref oldPos);
+					while (null != caseBranch)
+					{
+						caseBranch.parent = retNode;
+						// 递归解析分支语句块
+						CodeBlockParse(codeList, caseBranch);
+
+						retNode.childList.Add(caseBranch);
+						if (StatementNodeType.Branch_Default == caseBranch.type)
+						{
+							// 如果是"default"分支, 代表整个switch case复合语句结束
+							break;
+						}
+					}
+					startPos = searchPos;
+					return retNode;
+				}
+			}
 			return null;
 		}
 
@@ -276,6 +311,9 @@ namespace Mr.Robot
 			return null;
 		}
 
+		/// <summary>
+		/// 取得下一个else/else if分支节点
+		/// </summary>
 		static StatementNode GetNextElseBrachNode(List<string> codeList, ref File_Position startPos)
 		{
 			StatementNode retNode = new StatementNode();
@@ -324,6 +362,27 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
+		/// 取得下一个case/default分支节点
+		/// </summary>
+		/// <returns></returns>
+		static StatementNode GetNextCaseBranchNode(List<string> codeList, ref File_Position startPos)
+		{
+			StatementNode retNode = new StatementNode();
+			File_Position searchPos = new File_Position(startPos);
+			File_Position foundPos = new File_Position(searchPos);
+			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if ("case" == idStr)
+			{
+				// 取得case语句, 定位":"的位置
+				// 取得整个case分支的范围: 逐一提取语句, 直到遇到"break;"或者下一case/default分支开始
+			}
+			else if ("default" == idStr)
+			{
+			}
+			return null;
+		}
+
+		/// <summary>
 		/// 取得复合语句表达式
 		/// </summary>
 		static string GetCompoundStatementExpression(List<string> codeList, ref File_Position startPos)
@@ -345,6 +404,19 @@ namespace Mr.Robot
 				}
 			}
 			return string.Empty;
+		}
+
+		/// <summary>
+		/// 取得switch case语句中case分支的表达式
+		/// </summary>
+		static string GetCaseBranchExpression(List<string> codeList, ref File_Position startPos)
+		{
+			File_Position searchPos = new File_Position(startPos);
+			File_Position foundPos = new File_Position(searchPos);
+
+			// 找到冒号":"的位置
+			foundPos = FindNextSpecIdentifier(":", codeList, searchPos);
+			return null;
 		}
 
 		/// <summary>
@@ -397,6 +469,11 @@ namespace Mr.Robot
 				}
 			}
 
+			return null;
+		}
+
+		static File_Scope GetCaseBranchScope(List<string> codeList, ref File_Position startPos)
+		{
 			return null;
 		}
 
