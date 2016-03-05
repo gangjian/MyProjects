@@ -74,13 +74,11 @@ namespace Mr.Robot
 		static CFileParseInfo CFileProcess(string srcName, ref List<CFileParseInfo> includeInfoList)
 		{
 			// 去掉注释
-			List<string> orginalCodeList;
-			List<string> codeList = RemoveComments(srcName, out orginalCodeList);
+			List<string> codeList = RemoveComments(srcName);
 			CFileParseInfo fi = new CFileParseInfo(srcName);
 			// 预编译处理
 			codeList = PrecompileProcess(codeList, ref fi, ref includeInfoList);
 			fi.parsedCodeList = codeList;
-			fi.originalCodeList = orginalCodeList;
 //          Save2File(codeList, srcName + ".bak");
 
 			// 从文件开头开始解析
@@ -97,21 +95,19 @@ namespace Mr.Robot
 		/// <summary>
 		/// 移除代码注释
 		/// </summary>
-		public static List<string> RemoveComments(string fileName, out List<string> orginalCodeList)
+		public static List<string> RemoveComments(string fileName)
 		{
 			TextReader tr = new StreamReader(fileName);
 			List<string> retList = new List<string>();
-			orginalCodeList = new List<string>();
 
 			string rdLine = tr.ReadLine();
 			if (null == rdLine)
 			{
 				return retList;
 			}
-			string wtLine = "";
+            string wtLine = "";
 			do
 			{
-				orginalCodeList.Add(rdLine);
 				int idx1 = rdLine.IndexOf("//");
 				int idx2 = rdLine.IndexOf("/*");
 
@@ -140,7 +136,7 @@ namespace Mr.Robot
 							wtLine = rdLine.Remove(idx_s).TrimEnd();
 						}
 						retList.Add(wtLine);
-						idx_s = 0;
+                        idx_s = 0;
 
 						rdLine = tr.ReadLine();
 						if (null == rdLine)
@@ -475,7 +471,11 @@ namespace Mr.Robot
 				if (IsStandardIdentifier(nextId)
 					|| ("*" == nextId))
 				{
-					if (MacroDetectAndExpand(nextId, codeList, foundPos, fi, parsedFileInfoList))
+                    if (0 != qualifierList.Count
+                        && IsUsrDefTypeKWD(qualifierList.Last()))
+                    {
+                    }
+					else if (MacroDetectAndExpand(nextId, codeList, foundPos, fi, parsedFileInfoList))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
@@ -484,10 +484,7 @@ namespace Mr.Robot
 					}
 
 					qualifierList.Add(nextId);
-					if (("struct" == nextId)
-						|| ("enum" == nextId)
-						|| ("union" == nextId)
-						)
+					if (IsUsrDefTypeKWD(nextId))
 					{
 						// 用户定义类型处理
 						UsrDefineTypeInfo udti = UserDefineTypeProcess(codeList, qualifierList, ref searchPos);
@@ -650,7 +647,7 @@ namespace Mr.Robot
 			else if ("{" == nextIdStr)
 			{
 				File_Position bodyStartPos = foundPos;
-				// 小括号后面跟着配对的大括号说明这是函数定义(带函数体)
+                // 小括号后面跟着配对的大括号说明这是函数定义(带函数体)
 				File_Position fp = FindNextMatchSymbol(codeList, searchPos, '}');
 				if (null == fp)
 				{

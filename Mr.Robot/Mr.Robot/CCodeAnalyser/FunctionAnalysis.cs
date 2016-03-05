@@ -59,7 +59,7 @@ namespace Mr.Robot
 		/// <param name="endPos">代码块结束位置</param>
 		static void CodeBlockParse(List<string> codeList, StatementNode parentNode)
 		{
-			File_Position searchPos = parentNode.Scope.Start;
+			File_Position searchPos = new File_Position(parentNode.Scope.Start);
 			// 如果开头第一个字符是左花括号"{", 先要移到下一个位置开始检索
 			if ('{' == codeList[searchPos.row_num][searchPos.col_num])
 			{
@@ -99,7 +99,8 @@ namespace Mr.Robot
 			File_Position searchPos = new File_Position(startPos);
 			startPos = new File_Position(foundPos);
 
-			if (PositionCompare(searchPos, endPos) >= 0)
+            if (null != endPos
+                && PositionCompare(searchPos, endPos) >= 0)
 			{
 				// 对于检索范围超出区块结束位置的判断
 				return null;
@@ -117,7 +118,7 @@ namespace Mr.Robot
 			{
 				// 取得简单语句节点
 				retNode = GetSimpleStatementNode(codeList, ref searchPos, foundPos);
-				startPos = searchPos;
+                startPos = PositionMoveNext(codeList, retNode.Scope.End);
 				return retNode;
 			}
 		}
@@ -165,6 +166,9 @@ namespace Mr.Robot
 			return retNode;
 		}
 
+        /// <summary>
+        /// 取得简单语句的语句节点对象
+        /// </summary>
 		static StatementNode GetSimpleStatementNode(List<string> codeList,
 													ref File_Position startPos,
 													File_Position foundPos)
@@ -188,7 +192,7 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
-		/// 取得for/while循环的语句节点
+		/// 取得for/while循环语句的语句节点对象
 		/// </summary>
 		static StatementNode GetForOrWhileStatementNode(StatementNodeType type, List<string> codeList, ref File_Position startPos)
 		{
@@ -200,8 +204,8 @@ namespace Mr.Robot
 			if (string.Empty != expression)
 			{
 				retNode.expression = expression;
-				// 取得语句块起止位置
-				File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+				// 取得分支范围
+				File_Scope scope = GetBranchScope(codeList, ref searchPos);
 				if (null != scope)
 				{
 					startPos = searchPos;
@@ -213,6 +217,41 @@ namespace Mr.Robot
 			}
 			return null;
 		}
+
+        /// <summary>
+        /// 取得do-while循环语句的语句节点对象
+        /// </summary>
+        static StatementNode GetDoWhileStatementNode(List<string> codeList, ref File_Position startPos)
+        {
+            StatementNode retNode = new StatementNode();
+            retNode.type = StatementNodeType.Compound_DoWhile;
+            File_Position searchPos = new File_Position(startPos);
+            // 取得分支范围
+            File_Scope scope = GetBranchScope(codeList, ref searchPos);
+            if (null != scope)
+            {
+                retNode.Scope = scope;
+                searchPos = PositionMoveNext(codeList, scope.End);
+                File_Position foundPos;
+                string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                if ("while" == idStr)
+                {
+                    string expression = GetCompoundStatementExpression(codeList, ref searchPos);
+                    idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                    if (string.Empty != expression
+                        && ";" == idStr)
+                    {
+                        retNode.expression = expression;
+                        // 递归解析语句块
+                        CodeBlockParse(codeList, retNode);
+                        startPos = searchPos;
+                        return retNode;
+                    }
+                }
+            }
+
+            return null;
+        }
 
 		/// <summary>
 		/// 取得if else复合语句节点
@@ -227,8 +266,8 @@ namespace Mr.Robot
 			if (string.Empty != expression)
 			{
 				retNode.expression = expression;
-				// 取得if分支起止位置
-				File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+				// 取得if分支范围
+				File_Scope scope = GetBranchScope(codeList, ref searchPos);
 				if (null != scope)
 				{
 					StatementNode ifBranch = new StatementNode();
@@ -242,7 +281,7 @@ namespace Mr.Robot
 					retNode.Scope.Start = scope.Start;							// if分支的开始位置, 作为整个if else复合语句的起始位置
 					retNode.childList.Add(ifBranch);
 
-					File_Position lastElseEnd = null;							// 最后一个else分支的结束位置, 作为整个if else复合语句的结束位置
+					File_Position lastElseEnd = ifBranch.Scope.End;             // 最后一个else分支的结束位置, 作为整个if else复合语句的结束位置
 					StatementNode elseBranch = GetNextElseBrachNode(codeList, ref searchPos);
 					while (null != elseBranch)
 					{
@@ -257,6 +296,7 @@ namespace Mr.Robot
 							// 如果是"else"分支, 代表整个if复合语句结束
 							break;
 						}
+                        elseBranch = GetNextElseBrachNode(codeList, ref searchPos);
 					}
 					startPos = searchPos;
 					retNode.Scope.End = lastElseEnd;
@@ -279,13 +319,16 @@ namespace Mr.Robot
 			if (string.Empty != expression)
 			{
 				retNode.expression = expression;
-				// 取得switch分支起止位置
-				File_Position oldPos = PositionMoveNext(codeList, searchPos);	// 移到左{的下一位置
-				File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+				// 取得switch分支范围
+				File_Position oldPos = PositionMoveNext(codeList, searchPos);	// 移到左{的位置
+				File_Scope scope = GetBranchScope(codeList, ref searchPos);
+                searchPos = oldPos;
 				if (null != scope)
 				{
+                    retNode.Scope = scope;
+                    searchPos = PositionMoveNext(codeList, searchPos);          // 移到左{的下一个位置
 					// 取得各case或default分支
-					StatementNode caseBranch = GetNextCaseBranchNode(codeList, ref oldPos);
+					StatementNode caseBranch = GetNextCaseBranchNode(codeList, ref searchPos);
 					while (null != caseBranch)
 					{
 						caseBranch.parent = retNode;
@@ -298,16 +341,12 @@ namespace Mr.Robot
 							// 如果是"default"分支, 代表整个switch case复合语句结束
 							break;
 						}
+                        caseBranch = GetNextCaseBranchNode(codeList, ref searchPos);
 					}
-					startPos = searchPos;
+                    startPos = PositionMoveNext(codeList, retNode.Scope.End);
 					return retNode;
 				}
 			}
-			return null;
-		}
-
-		static StatementNode GetDoWhileStatementNode(List<string> codeList, ref File_Position startPos)
-		{
 			return null;
 		}
 
@@ -333,7 +372,7 @@ namespace Mr.Robot
 					{
 						retNode.expression = expression;
 						// 确定分支范围
-						File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+						File_Scope scope = GetBranchScope(codeList, ref searchPos);
 						if (null != scope)
 						{
 							retNode.type = StatementNodeType.Branch_ElseIf;
@@ -348,7 +387,7 @@ namespace Mr.Robot
 					searchPos = oldPos;
 					// 否则是"else"分支
 					// 确定分支范围
-					File_Scope scope = GetNextStatementsBlockScope(codeList, ref searchPos);
+					File_Scope scope = GetBranchScope(codeList, ref searchPos);
 					if (null != scope)
 					{
 						retNode.type = StatementNodeType.Branch_Else;
@@ -370,16 +409,56 @@ namespace Mr.Robot
 			StatementNode retNode = new StatementNode();
 			File_Position searchPos = new File_Position(startPos);
 			File_Position foundPos = new File_Position(searchPos);
+            File_Position oldPos = null;
 			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-			if ("case" == idStr)
-			{
-				// 取得case语句, 定位":"的位置
-				// 取得整个case分支的范围: 逐一提取语句, 直到遇到"break;"或者下一case/default分支开始
-			}
-			else if ("default" == idStr)
-			{
-			}
-			return null;
+
+            // 定位"case"或"default"关键字的位置
+            // 定位分号":"的位置
+            oldPos = new File_Position(foundPos);
+            foundPos = FindNextSpecIdentifier(":", codeList, searchPos);
+            if (null != foundPos)
+            {
+                string caseStr = LineStringCat(codeList, oldPos, foundPos);
+                retNode.expression = caseStr;
+                retNode.type = GetNodeType(idStr);
+                if (StatementNodeType.Invalid == retNode.type)
+                {
+                    return null;
+                }
+                retNode.Scope.Start = PositionMoveNext(codeList, foundPos);
+                retNode.Scope.End = retNode.Scope.Start;
+                // 取得整个case分支的范围: 逐一提取子语句, 直到遇到"break;"或者下一case/default分支开始
+                // 注意也可能没有子语句
+                while (true)
+                {
+                    StatementNode sn = GetNextStatement(codeList, ref searchPos, null);
+                    if (null != sn)
+                    {
+                        //retNode.childList.Add(sn);
+                        retNode.Scope.End = sn.Scope.End;
+                        oldPos = new File_Position(searchPos);
+                        idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                        searchPos = oldPos;
+                        // 分支结束的判断
+                        if ("case" == idStr
+                            || "default" == idStr
+                            || "}" == idStr)
+                        {
+                            // TODO: 移到前一位
+                            searchPos = PositionMovePrevious(codeList, foundPos);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                startPos = searchPos;
+                return retNode;
+            }
+
+            return null;
 		}
 
 		/// <summary>
@@ -425,7 +504,7 @@ namespace Mr.Robot
 		/// <param name="codeList"></param>
 		/// <param name="startPos"></param>
 		/// <returns></returns>
-		static File_Scope GetNextStatementsBlockScope(List<string> codeList, ref File_Position startPos)
+		static File_Scope GetBranchScope(List<string> codeList, ref File_Position startPos)
 		{
 			File_Scope scope = new File_Scope();
 			File_Position searchPos = new File_Position(startPos);
@@ -448,32 +527,16 @@ namespace Mr.Robot
 			}
 			else
 			{
-				// 但是如果没有遇到花括号, 那么可能是语句块只有一条简单语句
-				// 提取一条简单语句
-				scope.Start = new File_Position(foundPos);
-				File_Position ePos;
-				if (";" == idStr)
-				{
-					// 空语句的场合
-					ePos = new File_Position(foundPos);
-				}
-				else
-				{
-					ePos = FindNextSpecIdentifier(";", codeList, searchPos);
-				}
-				if (null != ePos)
-				{
-					startPos = searchPos;
-					scope.End = ePos;
-					return scope;
-				}
+				// 但是如果没有遇到花括号, 那么可能是语句块只有一条语句(※可能是简单语句也可能是复合语句)
+				// 提取一条语句
+                StatementNode sn = GetNextStatement(codeList, ref startPos, null);
+                if (null != sn)
+                {
+                    scope = sn.Scope;
+                    return scope;
+                }
 			}
 
-			return null;
-		}
-
-		static File_Scope GetCaseBranchScope(List<string> codeList, ref File_Position startPos)
-		{
 			return null;
 		}
 
@@ -508,6 +571,13 @@ namespace Mr.Robot
 				case "while":
 					retType = StatementNodeType.Compound_While;
 					break;
+
+                case "case":
+                    retType = StatementNodeType.Branch_Case;
+                    break;
+                case "default":
+                    retType = StatementNodeType.Branch_Default;
+                    break;
 				default:
 					break;
 			}

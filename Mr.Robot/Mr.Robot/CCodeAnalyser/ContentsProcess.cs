@@ -278,18 +278,38 @@ namespace Mr.Robot
 
 			int matchCount = 1;
 			File_Position foundPos = null;
-			while (true)
+            bool quoteStart = false;
+            string quoteStr = string.Empty;
+            while (true)
 			{
 				string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
 				if (null == idStr)
 				{
 					break;
 				}
-				else if (leftSymbol.ToString() == idStr)
+                else if (  "\'" == idStr
+                        || "\"" == idStr)
+                {
+                    // 要注意不要算上双引号, 单引号括起来的符号
+                    if (true == quoteStart
+                        && quoteStr == idStr)
+                    {
+                        quoteStart = false;
+                    }
+                    else if (!quoteStart)
+                    {
+                        quoteStart = true;
+                        quoteStr = idStr;
+                    }
+                    else
+                    {
+                    }
+                }
+                else if (!quoteStart && leftSymbol.ToString() == idStr)
 				{
 					matchCount += 1;
 				}
-				else if (rightSymbol.ToString() == idStr)
+                else if (!quoteStart && rightSymbol.ToString() == idStr)
 				{
 					matchCount -= 1;
 					if (0 == matchCount)
@@ -306,6 +326,13 @@ namespace Mr.Robot
 			return null;
 		}
 
+        /// <summary>
+        /// 将起止位置之间的内容连接成一个字符串(去掉换行)
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="startPos"></param>
+        /// <param name="endPos"></param>
+        /// <returns></returns>
 		static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
 		{
 			int startRow = startPos.row_num;
@@ -410,6 +437,13 @@ namespace Mr.Robot
 			return null;
 		}
 
+        /// <summary>
+        /// 查找下一个指定的标识符
+        /// </summary>
+        /// <param name="idStr"></param>
+        /// <param name="codeList"></param>
+        /// <param name="searchPos"></param>
+        /// <returns></returns>
 		static File_Position FindNextSpecIdentifier(string idStr, List<string> codeList, File_Position searchPos)
 		{
 			File_Position foundPos = null;
@@ -429,14 +463,23 @@ namespace Mr.Robot
 			return null;
 		}
 
+        /// <summary>
+        /// 移动到指定位置的下一位置
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="thisPos"></param>
+        /// <returns></returns>
 		static File_Position PositionMoveNext(List<string> codeList, File_Position thisPos)
 		{
 			File_Position nextPos = new File_Position(thisPos);
-			if (nextPos.col_num == codeList[thisPos.row_num].Length - 1)
+            if (thisPos.col_num == codeList[thisPos.row_num].Length - 1)
 			{
 				// 已经是最后一列了, 就移到下一行开头
-				nextPos.row_num += 1;
-				nextPos.col_num = 0;
+                if (thisPos.row_num < codeList.Count - 1)
+                {
+                    nextPos.row_num += 1;
+                    nextPos.col_num = 0;
+                }
 			}
 			else
 			{
@@ -445,6 +488,32 @@ namespace Mr.Robot
 			}
 			return nextPos;
 		}
+
+        /// <summary>
+        /// 移动到指定位置的前一位置
+        /// </summary>
+        /// <param name="codeList"></param>
+        /// <param name="thisPos"></param>
+        /// <returns></returns>
+        static File_Position PositionMovePrevious(List<string> codeList, File_Position thisPos)
+        {
+            File_Position prevPos = new File_Position(thisPos);
+            if (0 == thisPos.col_num)
+            {
+                // 已经是第一列了, 就移到上一行末尾
+                if (thisPos.row_num > 0)
+                {
+                    prevPos.row_num -= 1;
+                    prevPos.col_num = codeList[prevPos.row_num].Length - 1;
+                }
+            }
+            else
+            {
+                // 否则移到前一列
+                prevPos.col_num -= 1;
+            }
+            return prevPos;
+        }
 
 		/// <summary>
 		/// 比较两个位置 0:一致; 1:前者大(靠后); -1:后者大(靠后);
@@ -473,6 +542,20 @@ namespace Mr.Robot
 				return 0;
 			}
 		}
+
+        static bool IsUsrDefTypeKWD(string keyWord)
+        {
+            switch (keyWord)
+            {
+                case "struct":
+                case "union":
+                case "enum":
+                    return true;
+                default:
+                    break;
+            }
+            return false;
+        }
 
 		////////////////////////////////////////////////
 
