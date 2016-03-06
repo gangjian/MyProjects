@@ -84,7 +84,7 @@ namespace Mr.Robot
 			// 从文件开头开始解析
 			File_Position sPos = new File_Position(0, 0);
 			// 文件解析
-			CodeAnalyze(srcName, codeList, ref sPos, ref fi, includeInfoList);
+			CCodeFileAnalysis(srcName, codeList, ref sPos, ref fi, includeInfoList);
 
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
@@ -451,9 +451,11 @@ namespace Mr.Robot
 		/// <summary>
 		/// 文件代码解析
 		/// </summary>
-		public static void CodeAnalyze(string fullName, List<string> codeList,
-									   ref File_Position searchPos, ref CFileParseInfo fi,
-									   List<CFileParseInfo> parsedFileInfoList)
+		public static void CCodeFileAnalysis(string fullName,
+											List<string> codeList,
+											ref File_Position searchPos,
+											ref CFileParseInfo fi,
+											List<CFileParseInfo> parsedFileInfoList)
 		{
 			System.Diagnostics.Trace.Assert((null != codeList));
 			if (0 == codeList.Count)

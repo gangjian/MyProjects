@@ -255,7 +255,7 @@ namespace Mr.Robot
                 if (item.Checked)
                 {
                     functionName = item.Text;
-                    CCodeAnalyser.FunctionAnalyze(fullName, functionName, CCodeParseResultList);
+                    CCodeAnalyser.FunctionAnalysis(fullName, functionName, CCodeParseResultList);
                 }
             }
         }

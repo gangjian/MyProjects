@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Mr.Robot
 {
-    class StatementNode
+    public class StatementNode
     {
         // 1.语句范围(起止位置)
 		private File_Scope scope = new File_Scope();
@@ -21,14 +21,20 @@ namespace Mr.Robot
         // 3.子语句节点列表
         public List<StatementNode> childList = new List<StatementNode>();
         // 4.语句类型
-        public StatementNodeType type = StatementNodeType.Invalid;
+		private StatementNodeType type = StatementNodeType.Invalid;
+
+		public StatementNodeType Type
+		{
+			get { return type; }
+			set { type = value; }
+		}
 
         // 5.条件表达式(可以为空,表示恒成立)
         public string expression = string.Empty;
     }
 
     // 语句节点类型枚举
-    enum StatementNodeType
+    public enum StatementNodeType
     {
         Invalid,
         Root,                 // 根节点(函数体)

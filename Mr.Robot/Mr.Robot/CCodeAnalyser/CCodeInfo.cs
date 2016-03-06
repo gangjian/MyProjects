@@ -74,12 +74,12 @@ namespace Mr.Robot
 		public List<CFunctionInfo> fun_declare_list = new List<CFunctionInfo>();            // 函数声明列表
 		public List<CFunctionInfo> fun_define_list = new List<CFunctionInfo>();             // 函数定义列表
 		public List<UsrDefineTypeInfo> user_def_type_list = new List<UsrDefineTypeInfo>();  // 用户定义类型列表
-		public List<VariableInfo> global_var_declare_list = new List<VariableInfo>();     // 全局量声明列表
-		public List<VariableInfo> global_var_define_list = new List<VariableInfo>();      // 全局量定义列表
+		public List<VariableInfo> global_var_declare_list = new List<VariableInfo>();		// 全局量声明列表
+		public List<VariableInfo> global_var_define_list = new List<VariableInfo>();		// 全局量定义列表
 		public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
 		public List<TypeDefineInfo> type_define_list = new List<TypeDefineInfo>();          // typedef类型定义列表
 
-		public List<string> parsedCodeList = new List<string>();				// 解析后(去除注释, 宏展开等)的代码行内容列表
+		public List<string> parsedCodeList = new List<string>();							// 解析后(去除注释, 宏展开等)的代码行内容列表
 
 		public CFileParseInfo(string fileName)
 		{
@@ -149,7 +149,7 @@ namespace Mr.Robot
 			set { _sourceParseInfo = value; }
 		}
 
-		List<CFileParseInfo> _includeHeaderParseInfoList = new List<CFileParseInfo>();						// 源文件包含的头文件解析信息列表
+		List<CFileParseInfo> _includeHeaderParseInfoList = new List<CFileParseInfo>();	// 源文件包含的头文件解析信息列表
 
 		public List<CFileParseInfo> IncludeHeaderParseInfoList
 		{
