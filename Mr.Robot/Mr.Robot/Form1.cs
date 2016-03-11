@@ -155,7 +155,7 @@ namespace Mr.Robot
 				string path;
 				if (sourceFileName == IOProcess.GetFileName(srcResult.SourceParseInfo.full_name, out path))
 				{
-					foreach (CFunctionInfo functionInfo in srcResult.SourceParseInfo.fun_define_list)
+					foreach (CFunctionStructInfo functionInfo in srcResult.SourceParseInfo.fun_define_list)
 					{
 						ListViewItem item = new ListViewItem(functionInfo.name
                             //+ ": "

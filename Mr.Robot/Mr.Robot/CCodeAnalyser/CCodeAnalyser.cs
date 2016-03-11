@@ -477,7 +477,7 @@ namespace Mr.Robot
                         && IsUsrDefTypeKWD(qualifierList.Last()))
                     {
                     }
-					else if (MacroDetectAndExpand(nextId, codeList, foundPos, fi, parsedFileInfoList))
+					else if (MacroDetectAndExpand_File(nextId, codeList, foundPos, fi, parsedFileInfoList))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
@@ -495,11 +495,11 @@ namespace Mr.Robot
 							// 如果是匿名类型, 要给加个名字
 							if (0 == udti.nameList.Count)
 							{
-								udti.nameList.Add("USR_DEFINE_TYPE_ANONYMOUS_" + fi.user_def_type_list.Count.ToString());
+                                // 取得匿名类型的名字
+                                udti.nameList.Add(GetAnonymousTypeName(fi));
 							}
 							fi.user_def_type_list.Add(udti);
-							qualifierList.Clear();
-							qualifierList.Add(udti.nameList[0]);
+                            qualifierList.Add(udti.nameList[0]);
 						}
 					}
 				}
@@ -509,7 +509,7 @@ namespace Mr.Robot
 					// 遇到小括号了, 可能是碰上函数声明或定义了
 					if (("(" == nextId) && (0 != qualifierList.Count))
 					{
-						CFunctionInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
+						CFunctionStructInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
 						if (null != cfi)
 						{
 							if (null != cfi.body_start_pos)
@@ -593,9 +593,9 @@ namespace Mr.Robot
 		/// <param name="codeList"></param>
 		/// <param name="lineIdx"></param>
 		/// <param name="startIdx"></param>
-		static CFunctionInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos, File_Position bracketLeft)
+		static CFunctionStructInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos, File_Position bracketLeft)
 		{
-			CFunctionInfo cfi = new CFunctionInfo();
+			CFunctionStructInfo cfi = new CFunctionStructInfo();
 
 			// 先找匹配的小括号
 			File_Position bracketRight = FindNextMatchSymbol(codeList, searchPos, ')');
@@ -757,7 +757,6 @@ namespace Mr.Robot
 				return null;
 			}
 			string keyStr = qualifierList.Last();
-			string fstStr = qualifierList.First();
 
 			UsrDefineTypeInfo retUsrTypeInfo = new UsrDefineTypeInfo();
 			File_Position searchPos = new File_Position(startPos);
@@ -824,29 +823,6 @@ namespace Mr.Robot
 				}
 			}
 
-			if ("typedef" == fstStr)
-			{
-				searchPos = foundPos;   // 右侧大括号
-				searchPos.col_num += 1;
-				File_Position sPos = new File_Position(searchPos);
-				foundPos = FindNextSpecIdentifier(";", codeList, searchPos);    // 找到分号; 也就是typedef结束的位置
-				if (null == foundPos)
-				{
-					return null;
-				}
-				retUsrTypeInfo.nameList.Clear();
-				string nameStr = LineStringCat(codeList, sPos, foundPos);
-				string[] nameArr = nameStr.Split(',');
-				foreach (string name in nameArr)
-				{
-					if (IsStandardIdentifier(name.Trim()))
-					{
-						retUsrTypeInfo.nameList.Add(name.Trim());
-					}
-				}
-				foundPos.col_num -= 1;
-				searchPos = foundPos;
-			}
 			startPos = searchPos;
 
 			return retUsrTypeInfo;
@@ -976,16 +952,10 @@ namespace Mr.Robot
 		/// <summary>
 		/// 宏检测与宏展开
 		/// </summary>
-		/// <param name="idStr"></param>
-		/// <param name="codeList"></param>
-		/// <param name="foundPos"></param>
-		/// <param name="curFileInfo"></param>
-		/// <param name="includeHeaderInfoList"></param>
-		/// <returns></returns>
-		static bool MacroDetectAndExpand(string idStr, List<string> codeList,
-										 File_Position foundPos,
-										 CFileParseInfo curFileInfo,
-										 List<CFileParseInfo> includeHeaderInfoList)
+		static bool MacroDetectAndExpand_File(string idStr, List<string> codeList,
+										      File_Position foundPos,
+										      CFileParseInfo curFileInfo,
+										      List<CFileParseInfo> includeHeaderInfoList)
 		{
 			if (!IsStandardIdentifier(idStr))
 			{
@@ -1118,6 +1088,16 @@ namespace Mr.Robot
 			}
 			cfi.type_define_list.Add(tdi);
 		}
+
+        static string GetAnonymousTypeName(CFileParseInfo fi)
+        {
+            string fn, path;
+            fn = IOProcess.GetFileName(fi.full_name, out path);
+
+            string retName = fn.Replace('.', '_').ToUpper() + "_USR_DEF_TYPE_" + fi.user_def_type_list.Count.ToString();
+
+            return retName;
+        }
 
 		static void ErrReport(string errMsg = "Something is wrong!")
 		{

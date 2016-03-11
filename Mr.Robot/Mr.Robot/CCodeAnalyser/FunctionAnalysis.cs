@@ -16,7 +16,7 @@ namespace Mr.Robot
         /// <param name="parsedResultList"></param>
         static public void FunctionAnalysis(string fullPath, string funcName, List<CCodeParseResult> parsedResultList)
         {
-            CFunctionInfo funInfo = null;
+            CFunctionStructInfo funInfo = null;
             CFileParseInfo fileInfo = null;
 			List<CFileParseInfo> headerList = null;
             // 根据文件名, 函数名取得函数情报的引用
@@ -24,7 +24,7 @@ namespace Mr.Robot
             {
                 if (result.SourceParseInfo.full_name.Equals(fullPath))
                 {
-                    foreach (CFunctionInfo fi in result.SourceParseInfo.fun_define_list)
+                    foreach (CFunctionStructInfo fi in result.SourceParseInfo.fun_define_list)
                     {
                         if (fi.name.Equals(funcName))
                         {

@@ -57,7 +57,7 @@ namespace Mr.Robot
 	{
 		E_CTYPE_WHITE_SPACE,
 		E_CTYPE_LETTER,
-		E_CTYPE_NUMBER,
+		E_CTYPE_DIGIT,
 		E_CTYPE_UNDERLINE,
 		E_CTYPE_PUNCTUATION,
 		E_CTYPE_SYMBOL,
@@ -71,8 +71,8 @@ namespace Mr.Robot
 	{
 		public string full_name = "";
 		public List<string> include_file_list = new List<string>();                         // "include"头文件列表
-		public List<CFunctionInfo> fun_declare_list = new List<CFunctionInfo>();            // 函数声明列表
-		public List<CFunctionInfo> fun_define_list = new List<CFunctionInfo>();             // 函数定义列表
+		public List<CFunctionStructInfo> fun_declare_list = new List<CFunctionStructInfo>();            // 函数声明列表
+		public List<CFunctionStructInfo> fun_define_list = new List<CFunctionStructInfo>();             // 函数定义列表
 		public List<UsrDefineTypeInfo> user_def_type_list = new List<UsrDefineTypeInfo>();  // 用户定义类型列表
 		public List<VariableInfo> global_var_declare_list = new List<VariableInfo>();		// 全局量声明列表
 		public List<VariableInfo> global_var_define_list = new List<VariableInfo>();		// 全局量定义列表
@@ -88,9 +88,9 @@ namespace Mr.Robot
 	}
 
 	/// <summary>
-	/// C函数的情报
+	/// C函数的结构情报
 	/// </summary>
-	public class CFunctionInfo
+	public class CFunctionStructInfo
 	{
 		public string name = "";												// 函数名称
 		public List<string> qualifiers = new List<string>();					// 修饰符列表

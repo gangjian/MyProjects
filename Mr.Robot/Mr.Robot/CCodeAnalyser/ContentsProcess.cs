@@ -10,7 +10,7 @@ namespace Mr.Robot
 	public static partial class CCodeAnalyser
 	{
 		/// <summary>
-		/// 从当前位置处取得一个标识符(identifier)
+        /// 从(多行字符)当前位置取得下一个标识符(identifier)
 		/// </summary>
 		/// <param name="codeList"></param>
 		/// <param name="lineIdx"></param>
@@ -78,13 +78,14 @@ namespace Mr.Robot
 								e_pos = curIdx;
 							}
 							break;
-						case E_CHAR_TYPE.E_CTYPE_NUMBER:
+						case E_CHAR_TYPE.E_CTYPE_DIGIT:
 							if (false == startFlag)
 							{
 								// 标识符结束, 返回该数字
 								s_pos = curIdx;
 								e_pos = curIdx;
 								curIdx++;
+                                // TODO: 这里有疑问, 现在看如果遇到是连续的两位以上数字,不应该返回
 								goto RET_IDF;
 							}
 							else
@@ -108,7 +109,7 @@ namespace Mr.Robot
 								// 标识符结束
 								goto RET_IDF;
 							}
-						case E_CHAR_TYPE.E_CTYPE_UNKNOWN:
+						default:
 							ErrReport();
 							return null;
 					}
@@ -153,7 +154,7 @@ namespace Mr.Robot
 			}
 			else if (Char.IsDigit(ch))
 			{
-				return E_CHAR_TYPE.E_CTYPE_NUMBER;
+				return E_CHAR_TYPE.E_CTYPE_DIGIT;
 			}
 			else if (Char.IsLetter(ch))
 			{
