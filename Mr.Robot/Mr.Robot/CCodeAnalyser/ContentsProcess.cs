@@ -12,9 +12,9 @@ namespace Mr.Robot
 		/// <summary>
         /// 从(多行字符)当前位置取得下一个标识符(identifier)
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="lineIdx"></param>
-		/// <param name="startIdx"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="lineIdx"></param>
+		/// <param varName="startIdx"></param>
 		/// <returns></returns>
 		static string GetNextIdentifier(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
 		{
@@ -182,7 +182,7 @@ namespace Mr.Robot
 		/// 判断是否是"标准"标识符
 		/// 字母数字下划线组成且开头不是数字
 		/// </summary>
-		/// <param name="id"></param>
+		/// <param varName="id"></param>
 		/// <returns></returns>
 		static bool IsStandardIdentifier(string idStr)
 		{
@@ -209,10 +209,10 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从当前位置开始, 找到下一个指定符号出现的位置
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="lineIdx"></param>
-		/// <param name="startIdx"></param>
-		/// <param name="symbol"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="lineIdx"></param>
+		/// <param varName="startIdx"></param>
+		/// <param varName="symbol"></param>
 		static File_Position FindNextSymbol(List<string> codeList, File_Position searchPos, Char symbol)
 		{
 			string curLine = "";
@@ -256,9 +256,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 找到下一个配对的符号
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="searchPos"></param>
-		/// <param name="rightSymbol"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="searchPos"></param>
+		/// <param varName="rightSymbol"></param>
 		/// <returns></returns>
 		static File_Position FindNextMatchSymbol(List<string> codeList, File_Position searchPos, Char rightSymbol)
 		{
@@ -330,9 +330,9 @@ namespace Mr.Robot
         /// <summary>
         /// 将起止位置之间的内容连接成一个字符串(去掉换行)
         /// </summary>
-        /// <param name="codeList"></param>
-        /// <param name="startPos"></param>
-        /// <param name="endPos"></param>
+        /// <param varName="codeList"></param>
+        /// <param varName="startPos"></param>
+        /// <param varName="endPos"></param>
         /// <returns></returns>
 		static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
 		{
@@ -357,9 +357,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个表达式
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="searchPos"></param>
-		/// <param name="foundPos"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="searchPos"></param>
+		/// <param varName="foundPos"></param>
 		/// <returns></returns>
 		static string GetExpressionStr(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
 		{
@@ -377,9 +377,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断表达式是否已定义(#if defined)
 		/// </summary>
-		/// <param name="exp">表达式</param>
-		/// <param name="headerFileNameList">头文件列表</param>
-		/// <param name="defineList">宏定义列表</param>
+		/// <param varName="exp">表达式</param>
+		/// <param varName="headerFileNameList">头文件列表</param>
+		/// <param varName="defineList">宏定义列表</param>
 		/// <returns></returns>
 		static MacroDefineInfo JudgeExpressionDefined(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
 		{
@@ -406,9 +406,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断表达式的值
 		/// </summary>
-		/// <param name="exp">表达式</param>
-		/// <param name="headerFileNameList">头文件列表</param>
-		/// <param name="defineList">宏定义列表</param>
+		/// <param varName="exp">表达式</param>
+		/// <param varName="headerFileNameList">头文件列表</param>
+		/// <param varName="defineList">宏定义列表</param>
 		/// <returns></returns>
 		static int JudgeExpressionValue(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
 		{
@@ -441,9 +441,9 @@ namespace Mr.Robot
         /// <summary>
         /// 查找下一个指定的标识符
         /// </summary>
-        /// <param name="idStr"></param>
-        /// <param name="codeList"></param>
-        /// <param name="searchPos"></param>
+        /// <param varName="idStr"></param>
+        /// <param varName="codeList"></param>
+        /// <param varName="searchPos"></param>
         /// <returns></returns>
 		static File_Position FindNextSpecIdentifier(string idStr, List<string> codeList, File_Position searchPos)
 		{
@@ -467,8 +467,8 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的下一位置
         /// </summary>
-        /// <param name="codeList"></param>
-        /// <param name="thisPos"></param>
+        /// <param varName="codeList"></param>
+        /// <param varName="thisPos"></param>
         /// <returns></returns>
 		static File_Position PositionMoveNext(List<string> codeList, File_Position thisPos)
 		{
@@ -493,8 +493,8 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的前一位置
         /// </summary>
-        /// <param name="codeList"></param>
-        /// <param name="thisPos"></param>
+        /// <param varName="codeList"></param>
+        /// <param varName="thisPos"></param>
         /// <returns></returns>
         static File_Position PositionMovePrevious(List<string> codeList, File_Position thisPos)
         {

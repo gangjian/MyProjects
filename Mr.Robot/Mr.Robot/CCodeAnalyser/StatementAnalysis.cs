@@ -14,20 +14,22 @@ namespace Mr.Robot
 		static public void FunctionStatementsAnalysis(StatementNode root,
 													  CCodeParseResult parseResult)
 		{
+			List<VariableInfo> localVarList = new List<VariableInfo>();			// 局部变量列表
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
-				StatementAnalysis(childNode, parseResult);
+				StatementAnalysis(childNode, parseResult, localVarList);
 			}
 		}
 
 		static void StatementAnalysis(StatementNode node,
-									  CCodeParseResult parseResult)
+									  CCodeParseResult parseResult,
+									  List<VariableInfo> localVarList)
 		{
 			switch (node.Type)
 			{
 				case StatementNodeType.Simple:
-					SimpleStatementAnalysis(node, parseResult);
+					SimpleStatementAnalysis(node, parseResult, localVarList);
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -39,7 +41,8 @@ namespace Mr.Robot
 		/// 简单语句分析
 		/// </summary>
 		static void SimpleStatementAnalysis(StatementNode statementNode,
-											CCodeParseResult parseResult)
+											CCodeParseResult parseResult,
+											List<VariableInfo> localVarList)
 		{
 			// 取得完整的语句内容
 			string statementStr = LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
@@ -52,23 +55,51 @@ namespace Mr.Robot
 			do
 			{
 				// 提取语句的各个组成部分(操作数或者是操作符)
-				StatementComponent cpnt = GetSingleComponent(statementStr, ref offset, parseResult);
-				if (StatementComponentType.Invalid == cpnt.Type)
+				StatementComponent cpnt = GetSingleComponent(statementStr, ref offset, parseResult, localVarList);
+				if (StatementComponentType.StatementEnd == cpnt.Type)
 				{
+					// 语句结束
 					break;
 				}
-				componentList.Add(cpnt);
+				else if (StatementComponentType.Invalid == cpnt.Type)
+				{
+					ErrReport();
+					break;
+				}
+				else
+				{
+					componentList.Add(cpnt);
+				}
 			} while (true);
 
             // 对各组成部分进行分析
+			#region 局部变量定义
+			if (componentList.Count >= 2)
+			{
+				if (
+					(componentList[0].Type == StatementComponentType.UsrDefVarType
+						|| componentList[0].Type == StatementComponentType.BasicVarType)
+					&&
+					(componentList[1].Type == StatementComponentType.Unknown)
+					)
+				{
+					// 追加到局部变量列表里
+					VariableInfo localVar = new VariableInfo();
+					localVar.typeName = componentList[0].Text;
+					localVar.varName = componentList[1].Text;
+					localVarList.Add(localVar);
+				}
+			}
+			#endregion
 		}
 
 		/// <summary>
 		/// 从语句中提取出一个操作数/操作符
 		/// </summary>
 		static StatementComponent GetSingleComponent(string statementStr,
-												   ref int offset,
-												   CCodeParseResult parseResult)
+													 ref int offset,
+													 CCodeParseResult parseResult,
+													 List<VariableInfo> localVarList)
 		{
 			string idStr = null;
 			int offset_old = -1;
@@ -90,8 +121,9 @@ namespace Mr.Robot
 						offset = offset_old;
 						continue;
 					}
-					else if (StatementComponentType.Invalid != (idType = GetIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList)))
+					else
 					{
+						idType = GetIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList, localVarList);
 						if (	StatementComponentType.BasicVarType == idType
 							||	StatementComponentType.UsrDefVarType == idType	)
 						{
@@ -108,16 +140,21 @@ namespace Mr.Robot
 				}
 				else if ("(" == idStr)
 				{
-					
+					break;
 				}
 				else if ("=" == idStr)
 				{
-					
+					break;
 				}
                 else if ("*" == idStr)
                 {
-
+					break;
                 }
+				else if (";" == idStr)
+				{
+					retSC.Type = StatementComponentType.StatementEnd;
+					return retSC;
+				}
 			}
 
 			return retSC;
@@ -204,26 +241,22 @@ namespace Mr.Robot
 				}
 			}
 
-			//// typedef 用户自定义类型
-			//foreach (TypeDefineInfo tdi in typeDefineList)
-			//{
-			//	if (idStr == tdi.new_type_name)
-			//	{
-			//		string usrTypeName = tdi.new_type_name;
-			//		string realTypeName = tdi.old_type_name;
-			//		// 用原类型名去替换用户定义类型名
-			//		statementStr = statementStr.Replace(usrTypeName, realTypeName);
-			//		return true;
-			//	}
-			//}
-
 			return false;
         }
 
-		static StatementComponentType GetIdentifierType(string identifier, ref string statementStr, int offset, List<CFileParseInfo> headerList)
+		static StatementComponentType GetIdentifierType(string identifier,
+														ref string statementStr,
+														int offset,
+														List<CFileParseInfo> headerList,
+														List<VariableInfo> localVarList)
         {
+            // 可能是局部变量名
+			if (IsLocalVariable(identifier, localVarList))
+            {
+                return StatementComponentType.LocalVariable;
+            }
             // 可能是基本类型名
-            if (IsBasicVarType(identifier))
+            else if (IsBasicVarType(identifier))
             {
                 return StatementComponentType.BasicVarType;
             }
@@ -247,14 +280,9 @@ namespace Mr.Robot
             {
                 return StatementComponentType.GlobalVariable;
             }
-            // 可能是局部变量名
-            else if (IsLocalVariable(identifier, headerList))
-            {
-                return StatementComponentType.LocalVariable;
-            }
             else
             {
-                return StatementComponentType.Invalid;
+                return StatementComponentType.Unknown;
             }
         }
 
@@ -351,7 +379,7 @@ namespace Mr.Robot
             foreach (CFileParseInfo hfi in headerList)
             {
                 // 首先查用户定义类型列表
-                foreach (UsrDefineTypeInfo udi in hfi.user_def_type_list)
+                foreach (UsrDefTypeInfo udi in hfi.user_def_type_list)
                 {
                     foreach (string typeName in udi.nameList)
                     {
@@ -421,14 +449,38 @@ namespace Mr.Robot
         /// </summary>
         static bool IsGlobalVariable(string identifier, List<CFileParseInfo> headerList)
         {
+			foreach (CFileParseInfo hfi in headerList)
+			{
+				foreach (VariableInfo vi in hfi.global_var_declare_list)
+				{
+					if (vi.varName.Equals(identifier))
+					{
+						return true;
+					}
+				}
+				foreach (VariableInfo vi in hfi.global_var_define_list)
+				{
+					if (vi.varName.Equals(identifier))
+					{
+						return true;
+					}
+				}
+			}
             return false;
         }
 
         /// <summary>
         /// 判断标识符是否是局部(临时)变量
         /// </summary>
-        static bool IsLocalVariable(string identifier, List<CFileParseInfo> headerList)
+        static bool IsLocalVariable(string identifier, List<VariableInfo> localVarList)
         {
+			foreach (VariableInfo vi in localVarList)
+			{
+				if (vi.varName.Equals(identifier))
+				{
+					return true;
+				}
+			}
             return false;
         }
 	}
@@ -449,6 +501,7 @@ namespace Mr.Robot
 		FunctionName,		    // 函数名
 		EqualMark,				// 等号(赋值符号)
         StarMark,               // 星号
+		StatementEnd,			// 语句结束(分号)
         Symbol,                 // 其它运算符
 
 		Expression,				// 表达式

@@ -117,8 +117,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 源文件列表控件选中状态改变
 		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
+		/// <param varName="sender"></param>
+		/// <param varName="e"></param>
 		private void lvFileList_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			if (0 == lvFileList.SelectedItems.Count)
@@ -136,8 +136,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数列表控件选中状态改变
 		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
+		/// <param varName="sender"></param>
+		/// <param varName="e"></param>
 		private void lvFunctionList_SelectedIndexChanged(object sender, EventArgs e)
 		{
 
@@ -146,7 +146,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 更新函数列表控件
 		/// </summary>
-		/// <param name="sourceFileName"></param>
+		/// <param varName="sourceFileName"></param>
 		void UpdateFunctionListView(string sourceFileName)
 		{
 			lvFunctionList.Items.Clear();
@@ -174,8 +174,8 @@ namespace Mr.Robot
         /// <summary>
         /// 文件列表check all
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param varName="sender"></param>
+        /// <param varName="e"></param>
         private void cbxFile_CheckedChanged(object sender, EventArgs e)
         {
             CheckAllListViewItems(lvFileList, cbxFile.Checked);
@@ -184,8 +184,8 @@ namespace Mr.Robot
         /// <summary>
         /// 函数列表check all
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param varName="sender"></param>
+        /// <param varName="e"></param>
         private void cbxFunction_CheckedChanged(object sender, EventArgs e)
         {
             CheckAllListViewItems(lvFunctionList, cbxFunction.Checked);
@@ -202,8 +202,8 @@ namespace Mr.Robot
         /// <summary>
         /// 文件列表解析开始按钮Click
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param varName="sender"></param>
+        /// <param varName="e"></param>
         private void btnStartFile_Click(object sender, EventArgs e)
         {
             CCodeParseResultList.Clear();
@@ -236,8 +236,8 @@ namespace Mr.Robot
         /// <summary>
         /// 函数解析开始按钮Click
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param varName="sender"></param>
+        /// <param varName="e"></param>
         private void btnStartFunction_Click(object sender, EventArgs e)
         {
             if (   0 == CCodeParseResultList.Count

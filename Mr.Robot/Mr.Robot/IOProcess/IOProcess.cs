@@ -46,7 +46,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从完整路径中取得文件名
 		/// </summary>
-		/// <param name="fullName"></param>
+		/// <param varName="fullName"></param>
 		/// <returns></returns>
 		public static string GetFileName(string fullName, out string path)
 		{

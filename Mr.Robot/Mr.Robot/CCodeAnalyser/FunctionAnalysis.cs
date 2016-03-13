@@ -11,9 +11,9 @@ namespace Mr.Robot
         /// <summary>
         /// 函数解析
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <param name="funcName"></param>
-        /// <param name="parsedResultList"></param>
+        /// <param varName="fullPath"></param>
+        /// <param varName="funcName"></param>
+        /// <param varName="parsedResultList"></param>
         static public void FunctionAnalysis(string fullPath, string funcName, List<CCodeParseResult> parsedResultList)
         {
             CFunctionStructInfo funInfo = null;
@@ -43,8 +43,7 @@ namespace Mr.Robot
             // 函数语句树结构的分析提取
             StatementNode root = new StatementNode();
             root.Type = StatementNodeType.Root;
-            root.Scope.Start = funInfo.body_start_pos;
-            root.Scope.End = funInfo.body_end_pos;
+            root.Scope = funInfo.Scope;
 			GetCodeBlockStructure(parseResult.SourceParseInfo.parsedCodeList, root);
 
 			// 函数语句分析: 分析入出力
@@ -56,9 +55,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 解析一个代码块,提取语句树结构
 		/// </summary>
-		/// <param name="fileInfo">文件情报</param>
-		/// <param name="startPos">代码块开始位置</param>
-		/// <param name="endPos">代码块结束位置</param>
+		/// <param varName="fileInfo">文件情报</param>
+		/// <param varName="startPos">代码块开始位置</param>
+		/// <param varName="endPos">代码块结束位置</param>
 		static void GetCodeBlockStructure(List<string> codeList, StatementNode parentNode)
 		{
 			File_Position searchPos = new File_Position(parentNode.Scope.Start);
@@ -85,10 +84,10 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从当前位置提取一条语句(简单语句或者是复合语句)
 		/// </summary>
-		/// <param name="fileInfo"></param>
-		/// <param name="startPos"></param>
-		/// <param name="endPos"></param>
-		/// <param name="isSimpleStatement">true: 是简单语句; false: 是复合语句</param>
+		/// <param varName="fileInfo"></param>
+		/// <param varName="startPos"></param>
+		/// <param varName="endPos"></param>
+		/// <param varName="isSimpleStatement">true: 是简单语句; false: 是复合语句</param>
 		/// <returns></returns>
 		static StatementNode GetNextStatement(	List<string> codeList,
 											    ref File_Position startPos,
@@ -503,8 +502,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得下一个语句块的范围(起止位置)
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="startPos"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="startPos"></param>
 		/// <returns></returns>
 		static File_Scope GetBranchScope(List<string> codeList, ref File_Position startPos)
 		{
@@ -545,7 +544,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据关键字取得复合语句节点类型
 		/// </summary>
-		/// <param name="keyWord"></param>
+		/// <param varName="keyWord"></param>
 		/// <returns></returns>
 		static StatementNodeType GetNodeType(string keyWord)
 		{

@@ -73,7 +73,7 @@ namespace Mr.Robot
 		public List<string> include_file_list = new List<string>();                         // "include"头文件列表
 		public List<CFunctionStructInfo> fun_declare_list = new List<CFunctionStructInfo>();            // 函数声明列表
 		public List<CFunctionStructInfo> fun_define_list = new List<CFunctionStructInfo>();             // 函数定义列表
-		public List<UsrDefineTypeInfo> user_def_type_list = new List<UsrDefineTypeInfo>();  // 用户定义类型列表
+		public List<UsrDefTypeInfo> user_def_type_list = new List<UsrDefTypeInfo>();  // 用户定义类型列表
 		public List<VariableInfo> global_var_declare_list = new List<VariableInfo>();		// 全局量声明列表
 		public List<VariableInfo> global_var_define_list = new List<VariableInfo>();		// 全局量定义列表
 		public List<MacroDefineInfo> macro_define_list = new List<MacroDefineInfo>();       // 宏定义列表
@@ -95,20 +95,30 @@ namespace Mr.Robot
 		public string name = "";												// 函数名称
 		public List<string> qualifiers = new List<string>();					// 修饰符列表
 		public List<string> paras = new List<string>();							// 参数列表
-		public File_Position body_start_pos = null;								// 函数体开始位置
-		public File_Position body_end_pos = null;								// 函数体结束位置
+
+		private File_Scope scope = new File_Scope();							// 函数起止范围
+		public File_Scope Scope
+		{
+			get { return scope; }
+			set { scope = value; }
+		}
 	}
 
 	/// <summary>
 	/// 用户定义类型情报
 	/// </summary>
-	public class UsrDefineTypeInfo
+	public class UsrDefTypeInfo
 	{
 		public string type = "";												// "struct, enum, union"
 		public List<string> nameList = new List<string>();						// 可能有多个名(逗号分割)
 		public List<string> memberList = new List<string>();
-		public File_Position body_start_pos = null;
-		public File_Position body_end_pos = null;
+
+		private File_Scope scope = new File_Scope();
+		public File_Scope Scope
+		{
+			get { return scope; }
+			set { scope = value; }
+		}
 	}
 
 	/// <summary>
@@ -116,8 +126,8 @@ namespace Mr.Robot
 	/// </summary>
 	public class VariableInfo
 	{
-		public string type = "";
-		public string name = "";
+		public string typeName = "";											// 类型名
+		public string varName = "";												// 变量名
 		public List<string> qualifiers = new List<string>();					// 修饰符列表
 		public string array_size_string = "";									// (如果是数组的话)数组size字符串
 		public string initial_string = "";										// 初始化赋值字符串

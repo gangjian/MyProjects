@@ -39,7 +39,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// ".c"源文件处理
 		/// </summary>
-		/// <param name="srcName"></param>
+		/// <param varName="srcName"></param>
 		public static List<CCodeParseResult> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
 		{
 			// 初始化
@@ -68,8 +68,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		/// <param name="srcName"></param>
-		/// <param name="includeInfoList"></param>
+		/// <param varName="srcName"></param>
+		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		static CFileParseInfo CFileProcess(string srcName, ref List<CFileParseInfo> includeInfoList)
 		{
@@ -175,9 +175,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 预编译处理
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="fi"></param>
-		/// <param name="includeInfoList"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="fi"></param>
+		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		public static List<string> PrecompileProcess(List<string> codeList,
 													 ref CFileParseInfo fi,
@@ -412,8 +412,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得include头文件的解析情报
 		/// </summary>
-		/// <param name="incFileName"></param>
-		/// <param name="includeInfoList"></param>
+		/// <param varName="incFileName"></param>
+		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		static void ParseIncludeHeaderFile(string incFileName,
 										 ref List<CFileParseInfo> includeInfoList)
@@ -489,7 +489,7 @@ namespace Mr.Robot
 					if (IsUsrDefTypeKWD(nextId))
 					{
 						// 用户定义类型处理
-						UsrDefineTypeInfo udti = UserDefineTypeProcess(codeList, qualifierList, ref searchPos);
+						UsrDefTypeInfo udti = UserDefineTypeProcess(codeList, qualifierList, ref searchPos);
 						if (null != udti)
 						{
 							// 如果是匿名类型, 要给加个名字
@@ -512,7 +512,7 @@ namespace Mr.Robot
 						CFunctionStructInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
 						if (null != cfi)
 						{
-							if (null != cfi.body_start_pos)
+							if (null != cfi.Scope.Start)
 							{
 								fi.fun_define_list.Add(cfi);
 							}
@@ -590,9 +590,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数检测(声明, 定义)
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="lineIdx"></param>
-		/// <param name="startIdx"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="lineIdx"></param>
+		/// <param varName="startIdx"></param>
 		static CFunctionStructInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos, File_Position bracketLeft)
 		{
 			CFunctionStructInfo cfi = new CFunctionStructInfo();
@@ -665,8 +665,8 @@ namespace Mr.Robot
 				// 参数列表
 				cfi.paras = paraList;
 				// 函数体起始位置
-				cfi.body_start_pos = bodyStartPos;
-				cfi.body_end_pos = fp;
+				cfi.Scope.Start = bodyStartPos;
+				cfi.Scope.End = fp;
 			}
 			else
 			{
@@ -681,8 +681,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得包含头文件名
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="searchPos"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="searchPos"></param>
 		/// <returns></returns>
 		static string GetIncludeFileName(List<string> codeList, ref File_Position searchPos)
 		{
@@ -745,11 +745,11 @@ namespace Mr.Robot
 		/// <summary>
 		/// 用户定义类型处理
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="startPos"></param>
-		/// <param name="qualifierList"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="startPos"></param>
+		/// <param varName="qualifierList"></param>
 		/// <returns></returns>
-		static UsrDefineTypeInfo UserDefineTypeProcess(List<string> codeList, List<string> qualifierList, ref File_Position startPos)
+		static UsrDefTypeInfo UserDefineTypeProcess(List<string> codeList, List<string> qualifierList, ref File_Position startPos)
 		{
 			if (0 == qualifierList.Count)
 			{
@@ -758,7 +758,7 @@ namespace Mr.Robot
 			}
 			string keyStr = qualifierList.Last();
 
-			UsrDefineTypeInfo retUsrTypeInfo = new UsrDefineTypeInfo();
+			UsrDefTypeInfo retUsrTypeInfo = new UsrDefTypeInfo();
 			File_Position searchPos = new File_Position(startPos);
 			File_Position foundPos = null;
 			string nextIdStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
@@ -785,15 +785,15 @@ namespace Mr.Robot
 					return null;
 				}
 			}
-			retUsrTypeInfo.body_start_pos = foundPos;
+			retUsrTypeInfo.Scope.Start = foundPos;
 			foundPos = FindNextMatchSymbol(codeList, searchPos, '}');
 			if (null == foundPos)
 			{
 				ErrReport();
 				return null;
 			}
-			retUsrTypeInfo.body_end_pos = foundPos;
-			string catStr = LineStringCat(codeList, retUsrTypeInfo.body_start_pos, retUsrTypeInfo.body_end_pos);
+			retUsrTypeInfo.Scope.End = foundPos;
+			string catStr = LineStringCat(codeList, retUsrTypeInfo.Scope.Start, retUsrTypeInfo.Scope.End);
 			if (catStr.StartsWith("{"))
 			{
 				catStr = catStr.Remove(0, 1);
@@ -831,10 +831,10 @@ namespace Mr.Robot
 		/// <summary>
 		/// 全局变量处理
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="qualifierList"></param>
-		/// <param name="searchPos"></param>
-		/// <param name="cfi"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="qualifierList"></param>
+		/// <param varName="searchPos"></param>
+		/// <param varName="cfi"></param>
 		static void GlobalVarProcess(List<string> qualifierList, ref CFileParseInfo cfi)
 		{
 			VariableInfo gvi = new VariableInfo();
@@ -865,7 +865,7 @@ namespace Mr.Robot
 			qlfStr = qualifierList[idx].Trim();
 			if (IsStandardIdentifier(qlfStr))
 			{
-				gvi.name = qlfStr;
+				gvi.varName = qlfStr;
 			}
 			else
 			{
@@ -884,7 +884,7 @@ namespace Mr.Robot
 				qlfStr = qualifierList[idx].Trim();
 			}
 			type_name = qlfStr + type_name;
-			gvi.type = type_name;
+			gvi.typeName = type_name;
 
 			// 剩余的都放到修饰符列表里去
 			for (int i = 0; i < idx; i++)
@@ -905,9 +905,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 宏定义处理
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="searchPos"></param>
-		/// <param name="cfi"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="searchPos"></param>
+		/// <param varName="cfi"></param>
 		static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref CFileParseInfo cfi)
 		{
 			File_Position sPos, fPos;
@@ -1066,9 +1066,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 类型定义处理
 		/// </summary>
-		/// <param name="codeList"></param>
-		/// <param name="qualifierList"></param>
-		/// <param name="cfi"></param>
+		/// <param varName="codeList"></param>
+		/// <param varName="qualifierList"></param>
+		/// <param varName="cfi"></param>
 		static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref CFileParseInfo cfi)
 		{
 			TypeDefineInfo tdi = new TypeDefineInfo();
@@ -1101,6 +1101,7 @@ namespace Mr.Robot
 		static void ErrReport(string errMsg = "Something is wrong!")
 		{
 			System.Diagnostics.Trace.WriteLine(errMsg);
+			System.Diagnostics.Trace.Assert(false);
 		}
 	}
 }
