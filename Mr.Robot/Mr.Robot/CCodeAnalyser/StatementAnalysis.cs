@@ -47,17 +47,17 @@ namespace Mr.Robot
 												statementNode.Scope.End);
 
 			// 依次按顺序取出语句各组成部分
-			List<StatementOperand> operandList = new List<StatementOperand>();
+			List<StatementComponent> componentList = new List<StatementComponent>();
 			int offset = 0;
 			do
 			{
 				// 提取语句的各个组成部分(操作数或者是操作符)
-				StatementOperand cpnt = GetSingleComponent(statementStr, ref offset, parseResult);
-				if (null == cpnt)
+				StatementComponent cpnt = GetSingleComponent(statementStr, ref offset, parseResult);
+				if (StatementComponentType.Invalid == cpnt.Type)
 				{
 					break;
 				}
-				operandList.Add(cpnt);
+				componentList.Add(cpnt);
 			} while (true);
 
             // 对各组成部分进行分析
@@ -66,13 +66,14 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从语句中提取出一个操作数/操作符
 		/// </summary>
-        static StatementOperand GetSingleComponent(string statementStr,
+		static StatementComponent GetSingleComponent(string statementStr,
 												   ref int offset,
 												   CCodeParseResult parseResult)
 		{
 			string idStr = null;
-            StatementOperand retSO = null;
 			int offset_old = -1;
+			StatementComponent retSC = new StatementComponent();
+			StatementComponentType idType = StatementComponentType.Invalid;
 			while (true)
 			{
 				offset_old = offset;
@@ -89,10 +90,21 @@ namespace Mr.Robot
 						offset = offset_old;
 						continue;
 					}
-
-                    retSO = new StatementOperand();
-                    retSO.Text = idStr;
-					retSO.Type = GetIdentifierType(idStr, parseResult.IncHdParseInfoList);
+					else if (StatementComponentType.Invalid != (idType = GetIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList)))
+					{
+						if (	StatementComponentType.BasicVarType == idType
+							||	StatementComponentType.UsrDefVarType == idType	)
+						{
+							// 如果是类型名开头, 可能是变量定义
+							retSC.Type = idType;
+							return retSC;
+						}
+						else
+						{
+							retSC.Type = StatementComponentType.Unknown;
+							return retSC;
+						}
+					}
 				}
 				else if ("(" == idStr)
 				{
@@ -108,7 +120,7 @@ namespace Mr.Robot
                 }
 			}
 
-            return retSO;
+			return retSC;
 		}
 
 		/// <summary>
@@ -192,57 +204,57 @@ namespace Mr.Robot
 				}
 			}
 
-			// typedef 用户自定义类型
-			foreach (TypeDefineInfo tdi in typeDefineList)
-			{
-				if (idStr == tdi.new_type_name)
-				{
-					string usrTypeName = tdi.new_type_name;
-					string realTypeName = tdi.old_type_name;
-					// 用原类型名去替换用户定义类型名
-					statementStr = statementStr.Replace(usrTypeName, realTypeName);
-					return true;
-				}
-			}
+			//// typedef 用户自定义类型
+			//foreach (TypeDefineInfo tdi in typeDefineList)
+			//{
+			//	if (idStr == tdi.new_type_name)
+			//	{
+			//		string usrTypeName = tdi.new_type_name;
+			//		string realTypeName = tdi.old_type_name;
+			//		// 用原类型名去替换用户定义类型名
+			//		statementStr = statementStr.Replace(usrTypeName, realTypeName);
+			//		return true;
+			//	}
+			//}
 
 			return false;
         }
 
-		static StatementOperandType GetIdentifierType(string identifier, List<CFileParseInfo> headerList)
+		static StatementComponentType GetIdentifierType(string identifier, ref string statementStr, int offset, List<CFileParseInfo> headerList)
         {
             // 可能是基本类型名
             if (IsBasicVarType(identifier))
             {
-                return StatementOperandType.BasicVarType;
+                return StatementComponentType.BasicVarType;
             }
             // 可能是用户定义类型名
             else if (IsUsrDefVarType(identifier, headerList))
             {
-                return StatementOperandType.UsrDefVarType;
+                return StatementComponentType.UsrDefVarType;
             }
             // 可能是常量
             else if (IsConstantNumber(identifier))
             {
-                return StatementOperandType.Constant;
+                return StatementComponentType.Constant;
             }
             // 可能是函数名
             else if (IsFunctionName(identifier, headerList))
             {
-                return StatementOperandType.FunctionName;
+                return StatementComponentType.FunctionName;
             }
             // 可能是全局变量
             else if (IsGlobalVariable(identifier, headerList))
             {
-                return StatementOperandType.GlobalVariable;
+                return StatementComponentType.GlobalVariable;
             }
             // 可能是局部变量名
             else if (IsLocalVariable(identifier, headerList))
             {
-                return StatementOperandType.LocalVariable;
+                return StatementComponentType.LocalVariable;
             }
             else
             {
-                return StatementOperandType.Unknown;
+                return StatementComponentType.Invalid;
             }
         }
 
@@ -421,27 +433,9 @@ namespace Mr.Robot
         }
 	}
 
-	public class StatementOperand
+	public enum StatementComponentType
 	{
-		string text = string.Empty;
-
-		public string Text
-		{
-			get { return text; }
-			set { text = value; }
-		}
-
-		StatementOperandType type = StatementOperandType.Unknown;
-
-		public StatementOperandType Type
-		{
-			get { return type; }
-			set { type = value; }
-		}
-	}
-
-	public enum StatementOperandType
-	{
+		Invalid,				// 无效
 		Unknown,				// 未知
 
 		BasicVarType,			// 基本数据类型
@@ -458,6 +452,24 @@ namespace Mr.Robot
         Symbol,                 // 其它运算符
 
 		Expression,				// 表达式
+	}
+
+	public class StatementComponent
+	{
+		private StatementComponentType type = StatementComponentType.Invalid;
+
+		public StatementComponentType Type
+		{
+			get { return type; }
+			set { type = value; }
+		}
+		private string text = "";
+
+		public string Text
+		{
+			get { return text; }
+			set { text = value; }
+		}
 	}
 
     /// <summary>
