@@ -17,8 +17,7 @@ namespace Mr.Robot
         static public void FunctionAnalysis(string fullPath, string funcName, List<CCodeParseResult> parsedResultList)
         {
             CFunctionStructInfo funInfo = null;
-            CFileParseInfo fileInfo = null;
-			List<CFileParseInfo> headerList = null;
+			CCodeParseResult parseResult = null;
             // 根据文件名, 函数名取得函数情报的引用
             foreach (CCodeParseResult result in parsedResultList)
             {
@@ -29,8 +28,7 @@ namespace Mr.Robot
                         if (fi.name.Equals(funcName))
                         {
                             funInfo = fi;
-                            fileInfo = result.SourceParseInfo;
-							headerList = result.IncludeHeaderParseInfoList;
+							parseResult = result;
                             break;
                         }
                     }
@@ -47,10 +45,10 @@ namespace Mr.Robot
             root.Type = StatementNodeType.Root;
             root.Scope.Start = funInfo.body_start_pos;
             root.Scope.End = funInfo.body_end_pos;
-            GetCodeBlockStructure(fileInfo.parsedCodeList, root);
+			GetCodeBlockStructure(parseResult.SourceParseInfo.parsedCodeList, root);
 
 			// 函数语句分析: 分析入出力
-			FunctionStatementsAnalysis(root, fileInfo.parsedCodeList, headerList);
+			FunctionStatementsAnalysis(root, parseResult);
 
 			return;
         }

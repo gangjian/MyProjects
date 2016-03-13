@@ -11,21 +11,23 @@ namespace Mr.Robot
 		/// <summary>
 		/// 语句分析
 		/// </summary>
-		static public void FunctionStatementsAnalysis(StatementNode root, List<string> codeList, List<CFileParseInfo> headerList)
+		static public void FunctionStatementsAnalysis(StatementNode root,
+													  CCodeParseResult parseResult)
 		{
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
-				StatementAnalysis(childNode, codeList, headerList);
+				StatementAnalysis(childNode, parseResult);
 			}
 		}
 
-		static void StatementAnalysis(StatementNode node, List<string> codeList, List<CFileParseInfo> headerList)
+		static void StatementAnalysis(StatementNode node,
+									  CCodeParseResult parseResult)
 		{
 			switch (node.Type)
 			{
 				case StatementNodeType.Simple:
-					SimpleStatementAnalysis(node, codeList, headerList);
+					SimpleStatementAnalysis(node, parseResult);
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -36,17 +38,21 @@ namespace Mr.Robot
 		/// <summary>
 		/// 简单语句分析
 		/// </summary>
-		static void SimpleStatementAnalysis(StatementNode statementNode, List<string> codeList, List<CFileParseInfo> headerList)
+		static void SimpleStatementAnalysis(StatementNode statementNode,
+											CCodeParseResult parseResult)
 		{
 			// 取得完整的语句内容
-			string statementStr = LineStringCat(codeList, statementNode.Scope.Start, statementNode.Scope.End);
+			string statementStr = LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
+												statementNode.Scope.Start,
+												statementNode.Scope.End);
 
 			// 依次按顺序取出语句各组成部分
 			List<StatementOperand> operandList = new List<StatementOperand>();
 			int offset = 0;
 			do
 			{
-				StatementOperand cpnt = Get1OperandOrOperator(statementStr, ref offset, headerList);
+				// 提取语句的各个组成部分(操作数或者是操作符)
+				StatementOperand cpnt = GetSingleComponent(statementStr, ref offset, parseResult);
 				if (null == cpnt)
 				{
 					break;
@@ -60,19 +66,33 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从语句中提取出一个操作数/操作符
 		/// </summary>
-        static StatementOperand Get1OperandOrOperator(string statementStr, ref int offset, List<CFileParseInfo> headerList)
+        static StatementOperand GetSingleComponent(string statementStr,
+												   ref int offset,
+												   CCodeParseResult parseResult)
 		{
 			string idStr = null;
             StatementOperand retSO = null;
-			if (null != (idStr = GetNextIdentifier(statementStr, ref offset)))
+			int offset_old = -1;
+			while (true)
 			{
+				offset_old = offset;
+				idStr = GetNextIdentifier(statementStr, ref offset);
+				if (null == idStr)
+				{
+					break;
+				}
 				if (IsStandardIdentifier(idStr))
 				{
                     // 如果包含宏, 首先要进行宏展开
+					if (MacroDetectAndExpand_Function(idStr, ref statementStr, offset, parseResult))
+					{
+						offset = offset_old;
+						continue;
+					}
 
                     retSO = new StatementOperand();
                     retSO.Text = idStr;
-                    retSO.Type = GetIdentifierType(idStr, headerList);
+					retSO.Type = GetIdentifierType(idStr, parseResult.IncHdParseInfoList);
 				}
 				else if ("(" == idStr)
 				{
@@ -91,12 +111,104 @@ namespace Mr.Robot
             return retSO;
 		}
 
-        static void MacroDetectAndExpand_Function()
+		/// <summary>
+		/// 函数内的宏展开 TODO:以后考虑重构跟MacroDetectAndExpand_File合并
+		/// </summary>
+		static bool MacroDetectAndExpand_Function(string idStr, ref string statementStr, int offset, CCodeParseResult parseResult)
         {
+			// 作成一个所有包含头文件的宏定义的列表
+			List<MacroDefineInfo> macroDefineList = new List<MacroDefineInfo>();
+			List<TypeDefineInfo> typeDefineList = new List<TypeDefineInfo>();
+			foreach (CFileParseInfo hdInfo in parseResult.IncHdParseInfoList)
+			{
+				macroDefineList.AddRange(hdInfo.macro_define_list);
+				typeDefineList.AddRange(hdInfo.type_define_list);
+			}
+			// 添加上本文件所定义的宏
+			macroDefineList.AddRange(parseResult.SourceParseInfo.macro_define_list);
+			typeDefineList.AddRange(parseResult.SourceParseInfo.type_define_list);
+			// 遍历查找宏名
+			foreach (MacroDefineInfo di in macroDefineList)
+			{
+				// 判断宏名是否一致
+				if (idStr == di.name)
+				{
+					string macroName = di.name;
+					string replaceStr = di.value;
+					// 判断有无带参数
+					if (0 != di.paras.Count)
+					{
+						// 取得宏参数
+						offset += idStr.Length;
+						string paraStr = GetNextIdentifier(statementStr, ref offset);
+						if ("(" != paraStr)
+						{
+							ErrReport();
+							break;
+						}
+						int leftBracket = offset;
+						int rightBracket = statementStr.Substring(offset).IndexOf(')');
+						if (-1 == rightBracket)
+						{
+							ErrReport();
+							break;
+						}
+						paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
+						string[] realParas = paraStr.Split(',');
+						// 然后用实参去替换宏值里的形参
+						int idx = 0;
+						foreach (string rp in realParas)
+						{
+							if (string.Empty == rp)
+							{
+								// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
+								continue;
+							}
+							replaceStr = replaceStr.Replace(di.paras[idx], rp);
+							idx++;
+						}
+					}
+					// 应对宏里面出现的"##"
+					string[] seps = { "##" };
+					string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
+					if (arr.Length > 1)
+					{
+						string newStr = "";
+						foreach (string sepStr in arr)
+						{
+							newStr += sepStr.Trim();
+						}
+						replaceStr = newStr;
+					}
+					// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
+					if (replaceStr.Contains('#'))
+					{
+						ErrReport();
+						return false;
+					}
+					// 用宏值去替换原来的宏名(宏展开)
+					statementStr = statementStr.Replace(macroName, replaceStr);
+					return true;
+				}
+			}
 
+			// typedef 用户自定义类型
+			foreach (TypeDefineInfo tdi in typeDefineList)
+			{
+				if (idStr == tdi.new_type_name)
+				{
+					string usrTypeName = tdi.new_type_name;
+					string realTypeName = tdi.old_type_name;
+					// 用原类型名去替换用户定义类型名
+					statementStr = statementStr.Replace(usrTypeName, realTypeName);
+					return true;
+				}
+			}
+
+			return false;
         }
 
-        static StatementOperandType GetIdentifierType(string identifier, List<CFileParseInfo> headerList)
+		static StatementOperandType GetIdentifierType(string identifier, List<CFileParseInfo> headerList)
         {
             // 可能是基本类型名
             if (IsBasicVarType(identifier))

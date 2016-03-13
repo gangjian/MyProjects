@@ -151,7 +151,7 @@ namespace Mr.Robot
 
 		List<CFileParseInfo> _includeHeaderParseInfoList = new List<CFileParseInfo>();	// 源文件包含的头文件解析信息列表
 
-		public List<CFileParseInfo> IncludeHeaderParseInfoList
+		public List<CFileParseInfo> IncHdParseInfoList
 		{
 			get { return _includeHeaderParseInfoList; }
 			set { _includeHeaderParseInfoList = value; }

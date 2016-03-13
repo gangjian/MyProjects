@@ -54,7 +54,7 @@ namespace Mr.Robot
 				CCodeParseResult parseResult = new CCodeParseResult();
 				List<CFileParseInfo> hdList = new List<CFileParseInfo>();
 				parseResult.SourceParseInfo = CFileProcess(srcName, ref hdList);
-				parseResult.IncludeHeaderParseInfoList = hdList;
+				parseResult.IncHdParseInfoList = hdList;
 
 				resultList.Add(parseResult);
 			}
@@ -1021,7 +1021,6 @@ namespace Mr.Robot
 							replaceStr = replaceStr.Replace(di.paras[idx], rp);
 							idx++;
 						}
-
 					}
 					// 应对宏里面出现的"##"
 					string[] seps = { "##" };
