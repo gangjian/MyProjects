@@ -104,7 +104,6 @@ namespace Mr.Robot
 			string idStr = null;
 			int offset_old = -1;
 			StatementComponent retSC = new StatementComponent();
-			StatementComponentType idType = StatementComponentType.Invalid;
 			while (true)
 			{
 				offset_old = offset;
@@ -113,9 +112,14 @@ namespace Mr.Robot
 				{
 					break;
 				}
-				if (IsStandardIdentifier(idStr))
+				if (";" == idStr)
 				{
-                    // 如果包含宏, 首先要进行宏展开
+					retSC.Type = StatementComponentType.StatementEnd;
+					break;
+				}
+				else if (IsStandardIdentifier(idStr))							// 标准标识符
+				{
+					// 如果包含宏, 首先要进行宏展开
 					if (MacroDetectAndExpand_Function(idStr, ref statementStr, offset, parseResult))
 					{
 						offset = offset_old;
@@ -123,37 +127,16 @@ namespace Mr.Robot
 					}
 					else
 					{
-						idType = GetIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList, localVarList);
-						if (	StatementComponentType.BasicVarType == idType
-							||	StatementComponentType.UsrDefVarType == idType	)
-						{
-							// 如果是类型名开头, 可能是变量定义
-							retSC.Type = idType;
-							return retSC;
-						}
-						else
-						{
-							retSC.Type = StatementComponentType.Unknown;
-							return retSC;
-						}
+						retSC = GetStandardIdentifierComponent(idStr, statementStr, ref offset, parseResult, localVarList);
+						break;
 					}
 				}
-				else if ("(" == idStr)
+				else if (IsOperator(idStr, statementStr, ref offset, ref retSC))
 				{
 					break;
 				}
-				else if ("=" == idStr)
+				else
 				{
-					break;
-				}
-                else if ("*" == idStr)
-                {
-					break;
-                }
-				else if (";" == idStr)
-				{
-					retSC.Type = StatementComponentType.StatementEnd;
-					return retSC;
 				}
 			}
 
@@ -244,11 +227,11 @@ namespace Mr.Robot
 			return false;
         }
 
-		static StatementComponentType GetIdentifierType(string identifier,
-														ref string statementStr,
-														int offset,
-														List<CFileParseInfo> headerList,
-														List<VariableInfo> localVarList)
+		static StatementComponentType GetStandardIdentifierType(string identifier,
+																ref string statementStr,
+																int offset,
+																List<CFileParseInfo> headerList,
+																List<VariableInfo> localVarList)
         {
             // 可能是局部变量名
 			if (IsLocalVariable(identifier, localVarList))
@@ -285,6 +268,243 @@ namespace Mr.Robot
                 return StatementComponentType.Unknown;
             }
         }
+
+		static StatementComponent GetStandardIdentifierComponent(string idStr,
+																 string statementStr,
+																 ref int offset,
+																 CCodeParseResult parseResult,
+																 List<VariableInfo> localVarList)
+		{
+			int offset_old = -1;
+			int startOffset = offset;
+			StatementComponent retSC = new StatementComponent();
+			StatementComponentType idType = StatementComponentType.Invalid;
+
+			retSC.Text = idStr;
+			idType = GetStandardIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList, localVarList);
+			if (StatementComponentType.BasicVarType == idType
+				|| StatementComponentType.UsrDefVarType == idType)
+			{
+				// 如果是类型名开头, 可能是变量定义
+				retSC.Type = idType;
+			}
+			else if (StatementComponentType.FunctionName == idType)
+			{
+				// 函数名
+				retSC.Type = StatementComponentType.FunctionName;
+			}
+			else
+			{
+				retSC.Type = StatementComponentType.Unknown;
+			}
+			return retSC;
+		}
+
+		/// <summary>
+		/// 判断是否是运算符
+		/// </summary>
+		static bool IsOperator(string idStr, string statementStr, ref int offset, ref StatementComponent component)
+		{
+			System.Diagnostics.Trace.Assert(idStr.Length == 1);
+			component.Type = StatementComponentType.Operator;
+			int startOffset = offset;
+			offset += 1;
+			string nextIdStr = statementStr.Substring(offset, 1);
+			switch (idStr)
+			{
+				case "(":
+				case ")":
+				case "[":
+				case "]":
+				case ".":
+					component.Text = idStr;
+					component.Priority = 1;
+					break;
+				case "=":
+					if (nextIdStr == idStr)
+					{
+						// "==" : 等于
+						component.Text = idStr + nextIdStr;
+						component.Priority = 6;
+						offset += 1;
+					}
+					else
+					{
+						// "=" : 赋值
+						component.Text = idStr;
+						component.Priority = 10;
+					}
+					break;
+				case "+":
+				case "-":
+					if (nextIdStr == idStr)
+					{
+						// "++", "--" : 自增, 自减
+						component.Text = idStr + nextIdStr;
+						component.Priority = 2;
+						offset += 1;
+					}
+					else if ("=" == nextIdStr)
+					{
+						// "+=", "-=" : 加减运算赋值
+						component.Text = idStr + nextIdStr;
+						component.Priority = 10;
+						offset += 1;
+					}
+					else if ( "-" == idStr && ">" == nextIdStr)
+					{
+						// "->" : 指针成员
+						component.Text = idStr + nextIdStr;
+						component.Priority = 1;
+						offset += 1;
+					}
+					else
+					{
+						// "+", "-" : 加, 减
+						component.Text = idStr;
+						component.Priority = 4;									// 不确定, 也可能是单目运算符的正负号(优先级为2)
+					}
+					break;
+				case "*":														// 不确定, 可能是乘号, 也可能是指针运算符
+				case "/":
+					if ("=" == nextIdStr)
+					{
+						// "*=", "/=" : 乘除运算赋值
+						component.Text = idStr + nextIdStr;
+						component.Priority = 10;
+						offset += 1;
+					}
+					else
+					{
+						// "*", "/" : 乘, 除
+						component.Text = idStr;
+						component.Priority = 3;
+					}
+					break;
+				case ">":
+				case "<":
+					if (nextIdStr == idStr)
+					{
+						string thirdChar = statementStr.Substring(offset + 1, 1);
+						if ("=" == thirdChar)
+						{
+							// ">>=", "<<=" : 位移赋值
+							component.Text = idStr + nextIdStr + thirdChar;
+							component.Priority = 10;
+							offset += 2;
+						}
+						else
+						{
+							// ">>", "<<" : 左移, 右移
+							component.Text = idStr + nextIdStr;
+							component.Priority = 5;
+							offset += 1;
+						}
+					}
+					else if ("=" == nextIdStr)
+					{
+						// ">=", "<=" : 大于等于, 小于等于
+						component.Text = idStr + nextIdStr;
+						component.Priority = 6;
+						offset += 1;
+					}
+					else
+					{
+						// ">", "<" : 大于, 小于
+						component.Text = idStr;
+						component.Priority = 6;
+					}
+					break;
+				case "&":
+				case "|":
+					if (nextIdStr == idStr)
+					{
+						// "&&", "||" : 逻辑与, 逻辑或
+						component.Text = idStr + nextIdStr;
+						component.Priority = 8;
+						offset += 1;
+					}
+					else if ("=" == nextIdStr)
+					{
+						// "&=", "|=" : 位运算赋值
+						component.Text = idStr + nextIdStr;
+						component.Priority = 10;
+						offset += 1;
+					}
+					else
+					{
+						// "&", "|" : 位与, 位或
+						component.Text = idStr;
+						component.Priority = 7;									// 不确定, 可能是双目位与&,也可能是取地址符&(优先级2)
+					}
+
+					break;
+				case "!":
+					if ("=" == nextIdStr)
+					{
+						// "!=" : 不等于
+						component.Text = idStr + nextIdStr;
+						component.Priority = 6;
+						offset += 1;
+					}
+					else
+					{
+						// "!" : 逻辑非
+						component.Text = idStr;
+						component.Priority = 2;
+					}
+					break;
+				case "~":
+					// "~" : 按位取反
+					component.Text = idStr;
+					component.Priority = 2;
+					break;
+				case "%":
+					if ("=" == nextIdStr)
+					{
+						// "%=" : 取余赋值
+						component.Text = idStr + nextIdStr;
+						component.Priority = 10;
+						offset += 1;
+					}
+					else
+					{
+						// "%" : 取余
+						component.Text = idStr;
+						component.Priority = 3;
+					}
+					break;
+				case "^":
+					if ("=" == nextIdStr)
+					{
+						// "^=" : 位异或赋值
+						component.Text = idStr + nextIdStr;
+						component.Priority = 10;
+						offset += 1;
+					}
+					else
+					{
+						// "^" : 位异或
+						component.Text = idStr;
+						component.Priority = 7;
+					}
+					break;
+				case ",":
+					// "," : 逗号
+					component.Text = idStr;
+					component.Priority = 11;
+					break;
+				case "?":
+				case ":":
+					// "?:" : 条件(三目)
+					component.Text = idStr;
+					component.Priority = 9;
+					break;
+				default:
+					return false;
+			}
+			return true;
+		}
 
 		/// <summary>
 		/// 从指定位置开始取得(同一行内)的下一个标识符
@@ -499,10 +719,8 @@ namespace Mr.Robot
         Char,                   // 字符
 
 		FunctionName,		    // 函数名
-		EqualMark,				// 等号(赋值符号)
-        StarMark,               // 星号
 		StatementEnd,			// 语句结束(分号)
-        Symbol,                 // 其它运算符
+        Operator,               // 运算符
 
 		Expression,				// 表达式
 	}
@@ -522,6 +740,14 @@ namespace Mr.Robot
 		{
 			get { return text; }
 			set { text = value; }
+		}
+
+		private int priority = -1;	// (如果是运算符的话)运算符的优先级
+
+		public int Priority
+		{
+			get { return priority; }
+			set { priority = value; }
 		}
 	}
 
