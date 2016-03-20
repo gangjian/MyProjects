@@ -55,7 +55,7 @@ namespace Mr.Robot
 			do
 			{
 				// 提取语句的各个组成部分(操作数或者是操作符)
-				StatementComponent cpnt = GetSingleComponent(statementStr, ref offset, parseResult, localVarList);
+				StatementComponent cpnt = GetSingleComponent(ref statementStr, ref offset, parseResult, localVarList);
 				if (StatementComponentType.StatementEnd == cpnt.Type)
 				{
 					// 语句结束
@@ -96,7 +96,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从语句中提取出一个操作数/操作符
 		/// </summary>
-		static StatementComponent GetSingleComponent(string statementStr,
+		static StatementComponent GetSingleComponent(ref string statementStr,
 													 ref int offset,
 													 CCodeParseResult parseResult,
 													 List<VariableInfo> localVarList)
@@ -114,8 +114,16 @@ namespace Mr.Robot
 				}
 				if (";" == idStr)
 				{
-					retSC.Type = StatementComponentType.StatementEnd;
+					retSC.Type = StatementComponentType.StatementEnd;			// 语句结束
 					break;
+				}
+				else if (IsConstantNumber(idStr))
+				{
+					break;														// 数字常量
+				}
+				else if (IsStringOrChar(idStr, statementStr, ref offset))
+				{
+					break;														// 字符或者字符串
 				}
 				else if (IsStandardIdentifier(idStr))							// 标准标识符
 				{
@@ -248,11 +256,6 @@ namespace Mr.Robot
             {
                 return StatementComponentType.UsrDefVarType;
             }
-            // 可能是常量
-            else if (IsConstantNumber(identifier))
-            {
-                return StatementComponentType.Constant;
-            }
             // 可能是函数名
             else if (IsFunctionName(identifier, headerList))
             {
@@ -275,7 +278,6 @@ namespace Mr.Robot
 																 CCodeParseResult parseResult,
 																 List<VariableInfo> localVarList)
 		{
-			int offset_old = -1;
 			int startOffset = offset;
 			StatementComponent retSC = new StatementComponent();
 			StatementComponentType idType = StatementComponentType.Invalid;
@@ -305,7 +307,10 @@ namespace Mr.Robot
 		/// </summary>
 		static bool IsOperator(string idStr, string statementStr, ref int offset, ref StatementComponent component)
 		{
-			System.Diagnostics.Trace.Assert(idStr.Length == 1);
+			if (1 != idStr.Length)
+			{
+				return false;
+			}
 			component.Type = StatementComponentType.Operator;
 			int startOffset = offset;
 			offset += 1;
@@ -703,6 +708,11 @@ namespace Mr.Robot
 			}
             return false;
         }
+
+		static bool IsStringOrChar(string idStr, string statementStr, ref int offset)
+		{
+			return false;
+		}
 	}
 
 	public enum StatementComponentType
