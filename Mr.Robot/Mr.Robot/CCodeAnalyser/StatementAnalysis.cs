@@ -44,53 +44,115 @@ namespace Mr.Robot
 											CCodeParseResult parseResult,
 											List<VariableInfo> localVarList)
 		{
-			// 取得完整的语句内容
-			string statementStr = LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
-												statementNode.Scope.Start,
-												statementNode.Scope.End);
 
-			// 依次按顺序取出语句各组成部分
-			List<StatementComponent> componentList = new List<StatementComponent>();
-			int offset = 0;
-			do
+			// (1).按顺序取出语句各组成部分: 运算数(Operand)和运算符(Operator)
+            List<StatementComponent> componentList = GetStatementComponents(statementNode, parseResult);
+
+            // (2).对各组成部分进行分析
+			StatementComponentsAnalysis(componentList);
+		}
+
+        static List<StatementComponent> GetStatementComponents(StatementNode statementNode,
+                                                               CCodeParseResult parseResult)
+        {
+            // 取得完整的语句内容
+            string statementStr = LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
+                                                statementNode.Scope.Start,
+                                                statementNode.Scope.End);
+
+            List<StatementComponent> componentList = new List<StatementComponent>();
+            int offset = 0;
+            do
+            {
+                // 提取语句的各个组成部分(操作数或者是操作符)
+                StatementComponent cpnt = GetSingleComponent(ref statementStr, ref offset, parseResult);
+                if (StatementComponentType.StatementEnd == cpnt.Type)
+                {
+                    // 语句结束
+                    break;
+                }
+                else if (StatementComponentType.Invalid == cpnt.Type)
+                {
+                    ErrReport();
+                    break;
+                }
+                else
+                {
+                    componentList.Add(cpnt);
+                }
+            } while (true);
+
+            return componentList;
+        }
+
+		static void StatementComponentsAnalysis(List<StatementComponent> componentList)
+		{
+			// (1). 首先对所有组成部分进行分组: 将优先级为1的运算符连接的部分化为一组(一个整体)
+			List<ComponentsGroup> cpntsGroupList = GetComponentsGroupList(componentList);
+
+			return;
+		}
+
+		static List<ComponentsGroup> GetComponentsGroupList(List<StatementComponent> componentList)
+		{
+			List<ComponentsGroup> cpntsGroupList = new List<ComponentsGroup>();
+			ComponentsGroup newGroup = null;
+			for (int i = 0; i < componentList.Count; i++)
 			{
-				// 提取语句的各个组成部分(操作数或者是操作符)
-				StatementComponent cpnt = GetSingleComponent(ref statementStr, ref offset, parseResult, localVarList);
-				if (StatementComponentType.StatementEnd == cpnt.Type)
+				StatementComponent cpnt = componentList[i];
+				if (StatementComponentType.Operator == cpnt.Type)
 				{
-					// 语句结束
-					break;
-				}
-				else if (StatementComponentType.Invalid == cpnt.Type)
-				{
-					ErrReport();
-					break;
+					
 				}
 				else
 				{
-					componentList.Add(cpnt);
-				}
-			} while (true);
-
-            // 对各组成部分进行分析
-			#region 局部变量定义
-			if (componentList.Count >= 2)
-			{
-				if (
-					(componentList[0].Type == StatementComponentType.UsrDefVarType
-						|| componentList[0].Type == StatementComponentType.BasicVarType)
-					&&
-					(componentList[1].Type == StatementComponentType.Unknown)
-					)
-				{
-					// 追加到局部变量列表里
-					VariableInfo localVar = new VariableInfo();
-					localVar.typeName = componentList[0].Text;
-					localVar.varName = componentList[1].Text;
-					localVarList.Add(localVar);
 				}
 			}
-			#endregion
+			return cpntsGroupList;
+		}
+
+		/// <summary>
+		/// 取得括号括起来的一组操作数
+		/// </summary>
+		/// <returns></returns>
+		static List<StatementComponent> GetBraceComponents(List<StatementComponent> componentList, ref int idx)
+		{
+			List<StatementComponent> retList = new List<StatementComponent>();
+			StatementComponent cpnt = componentList[idx];
+			string matchOp = string.Empty;
+			// 
+			if ("(" == cpnt.Text)
+			{
+				matchOp = ")";
+			}
+			else if ("[" == cpnt.Text)
+			{
+				matchOp = "]";
+			}
+			if (string.Empty == matchOp)
+			{
+				return null;
+			}
+			retList.Add(cpnt);
+			int matchCount = 1;
+			for (int j = idx + 1; j < componentList.Count; j++)
+			{
+				idx = j;
+				retList.Add(componentList[j]);
+				if (cpnt.Text == componentList[j].Text)
+				{
+					matchCount += 1;
+				}
+				else if (matchOp == componentList[j].Text)
+				{
+					matchCount -= 1;
+				}
+				if (0 == matchCount)
+				{
+					break;
+				}
+			}
+			return null;
 		}
 
 		/// <summary>
@@ -98,8 +160,7 @@ namespace Mr.Robot
 		/// </summary>
 		static StatementComponent GetSingleComponent(ref string statementStr,
 													 ref int offset,
-													 CCodeParseResult parseResult,
-													 List<VariableInfo> localVarList)
+													 CCodeParseResult parseResult)
 		{
 			string idStr = null;
 			int offset_old = -1;
@@ -119,6 +180,8 @@ namespace Mr.Robot
 				}
 				else if (IsConstantNumber(idStr))
 				{
+                    retSC.Type = StatementComponentType.ConstantNumber;
+                    retSC.Text = idStr;
 					break;														// 数字常量
 				}
 				else if (IsStringOrChar(idStr, statementStr, ref offset))
@@ -135,7 +198,7 @@ namespace Mr.Robot
 					}
 					else
 					{
-						retSC = GetStandardIdentifierComponent(idStr, statementStr, ref offset, parseResult, localVarList);
+						retSC = GetStandardIdentifierComponent(idStr, statementStr, ref offset, parseResult);
 						break;
 					}
 				}
@@ -179,7 +242,6 @@ namespace Mr.Robot
 					if (0 != di.paras.Count)
 					{
 						// 取得宏参数
-						offset += idStr.Length;
 						string paraStr = GetNextIdentifier(statementStr, ref offset);
 						if ("(" != paraStr)
 						{
@@ -194,6 +256,7 @@ namespace Mr.Robot
 							break;
 						}
 						paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
+                        macroName += statementStr.Substring(leftBracket, rightBracket + 1);
 						string[] realParas = paraStr.Split(',');
 						// 然后用实参去替换宏值里的形参
 						int idx = 0;
@@ -238,16 +301,10 @@ namespace Mr.Robot
 		static StatementComponentType GetStandardIdentifierType(string identifier,
 																ref string statementStr,
 																int offset,
-																List<CFileParseInfo> headerList,
-																List<VariableInfo> localVarList)
+																List<CFileParseInfo> headerList)
         {
-            // 可能是局部变量名
-			if (IsLocalVariable(identifier, localVarList))
-            {
-                return StatementComponentType.LocalVariable;
-            }
             // 可能是基本类型名
-            else if (IsBasicVarType(identifier))
+            if (IsBasicVarType(identifier))
             {
                 return StatementComponentType.BasicVarType;
             }
@@ -275,15 +332,14 @@ namespace Mr.Robot
 		static StatementComponent GetStandardIdentifierComponent(string idStr,
 																 string statementStr,
 																 ref int offset,
-																 CCodeParseResult parseResult,
-																 List<VariableInfo> localVarList)
+																 CCodeParseResult parseResult)
 		{
 			int startOffset = offset;
 			StatementComponent retSC = new StatementComponent();
 			StatementComponentType idType = StatementComponentType.Invalid;
 
 			retSC.Text = idStr;
-			idType = GetStandardIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList, localVarList);
+			idType = GetStandardIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList);
 			if (StatementComponentType.BasicVarType == idType
 				|| StatementComponentType.UsrDefVarType == idType)
 			{
@@ -629,16 +685,26 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是立即数常量
         /// </summary>
-        static bool IsConstantNumber(string identifier)
+        static bool IsConstantNumber(string idStr)
         {
-            for (int i = 0; i < identifier.Length; i++)
+            int i = 0;
+            bool retVal = false;
+            for (; i < idStr.Length; i++)
             {
-                if (!Char.IsDigit(identifier[i]))
+                if (!Char.IsDigit(idStr[i]))
                 {
-                    return false;
+                    if (Char.IsLetter(idStr[i]) && (i > 0))
+                    {
+                    }
+                    else
+                    {
+                        retVal = false;
+                        break;
+                    }
                 }
+                retVal = true;
             }
-            return true;
+            return retVal;
         }
 
         /// <summary>
@@ -711,6 +777,18 @@ namespace Mr.Robot
 
 		static bool IsStringOrChar(string idStr, string statementStr, ref int offset)
 		{
+            if ("\"" == idStr)
+            {
+                
+            }
+            else if ("\'" == idStr)
+            {
+
+            }
+            else
+            {
+                return false;
+            }
 			return false;
 		}
 	}
@@ -724,7 +802,7 @@ namespace Mr.Robot
         UsrDefVarType,			// 用户定义数据类型/构造类型
 		GlobalVariable,			// 全局变量名
 		LocalVariable,			// 局部变量名
-        Constant,               // 常量
+        ConstantNumber,         // 数值常量
         String,                 // 字符串
         Char,                   // 字符
 
@@ -758,6 +836,17 @@ namespace Mr.Robot
 		{
 			get { return priority; }
 			set { priority = value; }
+		}
+	}
+
+	public class ComponentsGroup
+	{
+		List<StatementComponent> _componentList = new List<StatementComponent>();
+
+		public List<StatementComponent> ComponentList
+		{
+			get { return _componentList; }
+			set { _componentList = value; }
 		}
 	}
 
