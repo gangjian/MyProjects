@@ -87,28 +87,104 @@ namespace Mr.Robot
 
 		static void StatementComponentsAnalysis(List<StatementComponent> componentList)
 		{
-			// (1). 首先对所有组成部分进行分组: 将优先级为1的运算符连接的部分化为一组(一个整体)
+			// (1). 首先对语句所有组成部分进行结构分组, 每个组代表一个独立完整的语义结构
 			List<ComponentsGroup> cpntsGroupList = GetComponentsGroupList(componentList);
 
 			return;
 		}
 
+		/// <summary>
+		/// 对语句所有构成成分进行结构分组
+		/// </summary>
 		static List<ComponentsGroup> GetComponentsGroupList(List<StatementComponent> componentList)
 		{
-			List<ComponentsGroup> cpntsGroupList = new List<ComponentsGroup>();
-			ComponentsGroup newGroup = null;
-			for (int i = 0; i < componentList.Count; i++)
+			List<ComponentsGroup> groupList = new List<ComponentsGroup>();
+			int idx = 0;
+			while (true) 
 			{
-				StatementComponent cpnt = componentList[i];
-				if (StatementComponentType.Operator == cpnt.Type)
+				ComponentsGroup newGroup = GetOneComponentsGroup(componentList, ref idx);
+				if (0 != newGroup.ComponentList.Count)
 				{
-					
+					groupList.Add(newGroup);
 				}
 				else
 				{
+					break;
 				}
 			}
-			return cpntsGroupList;
+			return groupList;
+		}
+
+		/// <summary>
+		/// 取得一个构成分组
+		/// </summary>
+		static ComponentsGroup GetOneComponentsGroup(List<StatementComponent> componentList, ref int idx)
+		{
+			ComponentsGroup retGroup = new ComponentsGroup();
+			while (true)
+			{
+				if (idx > componentList.Count - 1)
+				{
+					break;
+				}
+				StatementComponent cpnt = componentList[idx];
+				if (StatementComponentType.Operator == cpnt.Type)				// 如果是操作符
+				{
+					if (	("(" == cpnt.Text)
+						||	("[" == cpnt.Text)	)
+					{
+						List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
+						if (null != braceList)
+						{
+							retGroup.ComponentList.AddRange(braceList);
+						}
+					}
+					else if (	("." == cpnt.Text)
+							 || ("->" == cpnt.Text)	)
+					{
+						retGroup.ComponentList.Add(cpnt);
+					}
+					else
+					{
+						if (0 != retGroup.ComponentList.Count)
+						{
+							break;
+						}
+						else
+						{
+							retGroup.ComponentList.Add(cpnt);
+							idx++;
+							break;
+						}
+					}
+				}
+				else
+				{																// 非操作符, 操作数
+					if (0 != retGroup.ComponentList.Count)
+					{
+						StatementComponent lastCpnt = retGroup.ComponentList.Last();
+						if (("." == lastCpnt.Text)
+							|| ("->" == lastCpnt.Text))
+						{
+							retGroup.ComponentList.Add(cpnt);
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						retGroup.ComponentList.Add(cpnt);
+					}
+				}
+				idx++;
+			}
+			foreach (StatementComponent cpnt in retGroup.ComponentList)
+			{
+				retGroup.Text += cpnt.Text;
+			}
+			return retGroup;
 		}
 
 		/// <summary>
@@ -117,7 +193,6 @@ namespace Mr.Robot
 		/// <returns></returns>
 		static List<StatementComponent> GetBraceComponents(List<StatementComponent> componentList, ref int idx)
 		{
-			List<StatementComponent> retList = new List<StatementComponent>();
 			StatementComponent cpnt = componentList[idx];
 			string matchOp = string.Empty;
 			// 
@@ -133,6 +208,7 @@ namespace Mr.Robot
 			{
 				return null;
 			}
+			List<StatementComponent> retList = new List<StatementComponent>();
 			retList.Add(cpnt);
 			int matchCount = 1;
 			for (int j = idx + 1; j < componentList.Count; j++)
@@ -152,7 +228,7 @@ namespace Mr.Robot
 					break;
 				}
 			}
-			return null;
+			return retList;
 		}
 
 		/// <summary>
@@ -839,10 +915,29 @@ namespace Mr.Robot
 		}
 	}
 
+	public enum StatementGroupType
+	{
+		Invalid,
+		VarType,
+		Variable,
+		FunctionCalling,
+	}
+
+	/// <summary>
+	/// 一组有意义的语句成分构成的分组
+	/// </summary>
 	public class ComponentsGroup
 	{
-		List<StatementComponent> _componentList = new List<StatementComponent>();
+		StatementGroupType Type = StatementGroupType.Invalid;
 
+		private string _text = string.Empty;
+		public string Text
+		{
+			get { return _text; }
+			set { _text = value; }
+		}
+
+		private List<StatementComponent> _componentList = new List<StatementComponent>();
 		public List<StatementComponent> ComponentList
 		{
 			get { return _componentList; }
