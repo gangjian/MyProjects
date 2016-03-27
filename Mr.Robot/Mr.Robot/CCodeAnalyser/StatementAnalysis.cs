@@ -65,7 +65,7 @@ namespace Mr.Robot
             do
             {
                 // 提取语句的各个组成部分(操作数或者是操作符)
-                StatementComponent cpnt = GetSingleComponent(ref statementStr, ref offset, parseResult);
+                StatementComponent cpnt = GetOneComponent(ref statementStr, ref offset, parseResult);
                 if (StatementComponentType.StatementEnd == cpnt.Type)
                 {
                     // 语句结束
@@ -89,6 +89,12 @@ namespace Mr.Robot
 		{
 			// (1). 首先对语句所有组成部分进行结构分组, 每个组代表一个独立完整的语义结构
 			List<ComponentsGroup> cpntsGroupList = GetComponentsGroupList(componentList);
+
+			// 如果以类型开头那应该是变量定义;
+			// 然后找有没有赋值运算符(优先级14), ++/--也可能表示有左值
+			// 是表达式的话要进一步递归解析
+			int a, b, c = 20;
+			(a) = b = c + 3;
 
 			return;
 		}
@@ -138,11 +144,14 @@ namespace Mr.Robot
 						{
 							retGroup.ComponentList.AddRange(braceList);
 						}
+						// TODO: 括号之间如果既有运算符又有运算数的话是表达式
+						// 如果括号里是个类型的话,则是"强制类型转换"运算符
 					}
 					else if (	("." == cpnt.Text)
 							 || ("->" == cpnt.Text)	)
 					{
 						retGroup.ComponentList.Add(cpnt);
+						// TODO: 有成员运算符的话是变量
 					}
 					else
 					{
@@ -234,9 +243,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从语句中提取出一个操作数/操作符
 		/// </summary>
-		static StatementComponent GetSingleComponent(ref string statementStr,
-													 ref int offset,
-													 CCodeParseResult parseResult)
+		static StatementComponent GetOneComponent(ref string statementStr,
+												  ref int offset,
+												  CCodeParseResult parseResult)
 		{
 			string idStr = null;
 			int offset_old = -1;
@@ -918,9 +927,12 @@ namespace Mr.Robot
 	public enum StatementGroupType
 	{
 		Invalid,
-		VarType,
-		Variable,
-		FunctionCalling,
+
+		VarType,					// 类型
+		Variable,					// 变量
+		FunctionCalling,			// 函数调用
+		Expression,					// 表达式
+		EqualMark,					// 赋值符号
 	}
 
 	/// <summary>
