@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace Mr.Robot
 {
@@ -15,23 +16,24 @@ namespace Mr.Robot
 		[DllImport("kernel32")]
 		private static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retVal, int size, string filePath);
 
-		private static string _fullname = System.Windows.Forms.Application.StartupPath + "\\data\\config.ini";
+		private static string _dirName = System.Windows.Forms.Application.StartupPath + "\\data\\";
+		private static string _cfgName = "config.ini";
 
-		public static string Fullname
-		{
-			get { return IniFileProcess._fullname; }
-			set { IniFileProcess._fullname = value; }
-		}
+		private static string _fullName = _dirName + _cfgName;
 
 		public static void IniWriteValue(string Section, string Key, string Value)
 		{
-			WritePrivateProfileString(Section, Key, Value, Fullname);
+			if (!Directory.Exists(_dirName))
+			{
+				Directory.CreateDirectory(_dirName);
+			}
+			WritePrivateProfileString(Section, Key, Value, _fullName);
 		}
 
 		public static string IniReadValue(string Section, string Key)
 		{
 			StringBuilder temp = new StringBuilder(500);
-			int i = GetPrivateProfileString(Section, Key, "", temp, 500, Fullname);
+			int i = GetPrivateProfileString(Section, Key, "", temp, 500, _fullName);
 			return temp.ToString();
 		}
 	}

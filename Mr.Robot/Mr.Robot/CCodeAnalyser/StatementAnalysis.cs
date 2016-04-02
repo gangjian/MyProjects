@@ -49,7 +49,7 @@ namespace Mr.Robot
             List<StatementComponent> componentList = GetStatementComponents(statementNode, parseResult);
 
             // (2).对各组成部分进行分析
-			StatementComponentsAnalysis(componentList);
+			StatementComponentsAnalysis(componentList, parseResult);
 		}
 
         static List<StatementComponent> GetStatementComponents(StatementNode statementNode,
@@ -85,10 +85,10 @@ namespace Mr.Robot
             return componentList;
         }
 
-		static void StatementComponentsAnalysis(List<StatementComponent> componentList)
+		static void StatementComponentsAnalysis(List<StatementComponent> componentList, CCodeParseResult parseResult)
 		{
 			// (1). 首先对语句所有组成部分进行结构分组, 每个组代表一个独立完整的语义结构
-			List<ComponentsGroup> cpntsGroupList = GetComponentsGroupList(componentList);
+			List<ComponentsGroup> cpntsGroupList = GetComponentsGroupList(componentList, parseResult);
 
 			// 如果以类型开头那应该是变量定义;
 			// 然后找有没有赋值运算符(优先级14), ++/--也可能表示有左值
@@ -102,13 +102,13 @@ namespace Mr.Robot
 		/// <summary>
 		/// 对语句所有构成成分进行结构分组
 		/// </summary>
-		static List<ComponentsGroup> GetComponentsGroupList(List<StatementComponent> componentList)
+		static List<ComponentsGroup> GetComponentsGroupList(List<StatementComponent> componentList, CCodeParseResult parseResult)
 		{
 			List<ComponentsGroup> groupList = new List<ComponentsGroup>();
 			int idx = 0;
 			while (true) 
 			{
-				ComponentsGroup newGroup = GetOneComponentsGroup(componentList, ref idx);
+				ComponentsGroup newGroup = GetOneComponentsGroup(componentList, ref idx, parseResult);
 				if (0 != newGroup.ComponentList.Count)
 				{
 					groupList.Add(newGroup);
@@ -124,7 +124,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个构成分组
 		/// </summary>
-		static ComponentsGroup GetOneComponentsGroup(List<StatementComponent> componentList, ref int idx)
+		static ComponentsGroup GetOneComponentsGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
 		{
 			ComponentsGroup retGroup = new ComponentsGroup();
 			while (true)
@@ -136,16 +136,27 @@ namespace Mr.Robot
 				StatementComponent cpnt = componentList[idx];
 				if (StatementComponentType.Operator == cpnt.Type)				// 如果是操作符
 				{
-					if (	("(" == cpnt.Text)
-						||	("[" == cpnt.Text)	)
+					if ("(" == cpnt.Text)
+					{
+						List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
+						if (null != braceList)
+						{
+							retGroup.ComponentList.AddRange(braceList);
+							// TODO: 括号之间如果既有运算符又有运算数的话是表达式
+							// 如果括号里是个类型的话,则是"强制类型转换"运算符
+							if (IsVarType(braceList, parseResult))
+							{
+								
+							}
+						}
+					}
+					else if ("[" == cpnt.Text)
 					{
 						List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
 						if (null != braceList)
 						{
 							retGroup.ComponentList.AddRange(braceList);
 						}
-						// TODO: 括号之间如果既有运算符又有运算数的话是表达式
-						// 如果括号里是个类型的话,则是"强制类型转换"运算符
 					}
 					else if (	("." == cpnt.Text)
 							 || ("->" == cpnt.Text)	)
@@ -283,7 +294,7 @@ namespace Mr.Robot
 					}
 					else
 					{
-						retSC = GetStandardIdentifierComponent(idStr, statementStr, ref offset, parseResult);
+						retSC = new StatementComponent(idStr);
 						break;
 					}
 				}
@@ -382,66 +393,6 @@ namespace Mr.Robot
 
 			return false;
         }
-
-		static StatementComponentType GetStandardIdentifierType(string identifier,
-																ref string statementStr,
-																int offset,
-																List<CFileParseInfo> headerList)
-        {
-            // 可能是基本类型名
-            if (IsBasicVarType(identifier))
-            {
-                return StatementComponentType.BasicVarType;
-            }
-            // 可能是用户定义类型名
-            else if (IsUsrDefVarType(identifier, headerList))
-            {
-                return StatementComponentType.UsrDefVarType;
-            }
-            // 可能是函数名
-            else if (IsFunctionName(identifier, headerList))
-            {
-                return StatementComponentType.FunctionName;
-            }
-            // 可能是全局变量
-            else if (IsGlobalVariable(identifier, headerList))
-            {
-                return StatementComponentType.GlobalVariable;
-            }
-            else
-            {
-                return StatementComponentType.Unknown;
-            }
-        }
-
-		static StatementComponent GetStandardIdentifierComponent(string idStr,
-																 string statementStr,
-																 ref int offset,
-																 CCodeParseResult parseResult)
-		{
-			int startOffset = offset;
-			StatementComponent retSC = new StatementComponent();
-			StatementComponentType idType = StatementComponentType.Invalid;
-
-			retSC.Text = idStr;
-			idType = GetStandardIdentifierType(idStr, ref statementStr, offset, parseResult.IncHdParseInfoList);
-			if (StatementComponentType.BasicVarType == idType
-				|| StatementComponentType.UsrDefVarType == idType)
-			{
-				// 如果是类型名开头, 可能是变量定义
-				retSC.Type = idType;
-			}
-			else if (StatementComponentType.FunctionName == idType)
-			{
-				// 函数名
-				retSC.Type = StatementComponentType.FunctionName;
-			}
-			else
-			{
-				retSC.Type = StatementComponentType.Unknown;
-			}
-			return retSC;
-		}
 
 		/// <summary>
 		/// 判断是否是运算符
@@ -712,29 +663,61 @@ namespace Mr.Robot
 			return null;
 		}
 
-        /// <summary>
-        /// 判断标识符是否是系统基本类型
-        /// </summary>
-        static bool IsBasicVarType(string identifier)
-        {
-            if (   ("int" == identifier)
-                || ("char" == identifier)
-                || ("short" == identifier)
-                || ("long" == identifier)
-                || ("double" == identifier)
-                || ("float" == identifier)
-                || ("signed" == identifier)
-                || ("unsigned" == identifier)
-                || ("void" == identifier)
-                )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+		/// <summary>
+		/// 判断一组标识符是否是一个基本类型名
+		/// </summary>
+		/// <param name="idStrList"></param>
+		/// <returns>0: 不是; 1: 是但不完整; 2: 是且完整</returns>
+		static int IsBasicVarType(List<string> idStrList)
+		{
+			// 开头 "const", "static"等限定符
+			List<string> qualifiers = new List<string>();
+			List<string> initialParts = new List<string>();
+			List<string> lastParts = new List<string>();
+			foreach (string str in idStrList)
+			{
+				if (("const" == str || "static" == str)
+					&& (0 == initialParts.Count)
+					&& (0 == lastParts.Count))
+				{
+					// 前置修饰符
+					qualifiers.Add(str);
+				}
+				else if (("signed" == str || "unsigned" == str)
+					     && (0 == lastParts.Count))
+				{
+					// 类型名开头部分
+					initialParts.Add(str);
+				}
+				else if (	("char" == str)
+						 || ("short" == str)
+						 || ("int" == str)
+						 || ("long" == str)
+						 || ("float" == str)
+						 || ("double" == str)
+						 || ("void" == str)
+						 )
+				{
+					lastParts.Add(str);
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			if (0 != lastParts.Count)
+			{
+				return 2;
+			}
+			else if (0 != qualifiers.Count || 0 != initialParts.Count)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
 
         /// <summary>
         /// 判断标识符是否是构造类型/用户定义类型
@@ -876,6 +859,61 @@ namespace Mr.Robot
             }
 			return false;
 		}
+
+		/// <summary>
+		/// 判断基本成分列表构成的是否是一个变量类型
+		/// </summary>
+		static bool IsVarType(List<StatementComponent> cpntList, CCodeParseResult parseResult)
+		{
+			#region 去掉外层括号
+			while (true)
+			{
+				if ("(" == cpntList.First().Text
+					&& ")" == cpntList.Last().Text)
+				{
+					cpntList.RemoveAt(cpntList.Count - 1);
+					cpntList.RemoveAt(0);
+				}
+				else
+				{
+					break;
+				}
+			}
+			#endregion
+			#region 计算末尾星号的个数
+			int starCount = 0;
+			for (int i = 0; i < cpntList.Count; i++)
+			{
+				StatementComponent cpnt = cpntList[cpntList.Count - 1 - i];
+				if ("*" == cpnt.Text)
+				{
+					starCount++;
+				}
+				else
+				{
+					break;
+				}
+			}
+			#endregion
+			#region 所有标识符是否是变量类型名
+			
+			#endregion
+			for (int i = 0; i < cpntList.Count - starCount; i++)
+			{
+				StatementComponent cpnt = cpntList[i];
+				//if (IsBasicVarType(cpnt.Text))
+				//{
+				//}
+				//else if (IsUsrDefVarType(cpnt.Text, parseResult.IncHdParseInfoList))
+				//{
+				//}
+				//else
+				//{
+				//	return false;
+				//}
+			}
+			return false;
+		}
 	}
 
 	public enum StatementComponentType
@@ -883,10 +921,6 @@ namespace Mr.Robot
 		Invalid,				// 无效
 		Unknown,				// 未知
 
-		BasicVarType,			// 基本数据类型
-        UsrDefVarType,			// 用户定义数据类型/构造类型
-		GlobalVariable,			// 全局变量名
-		LocalVariable,			// 局部变量名
         ConstantNumber,         // 数值常量
         String,                 // 字符串
         Char,                   // 字符
@@ -922,6 +956,15 @@ namespace Mr.Robot
 			get { return priority; }
 			set { priority = value; }
 		}
+
+		public StatementComponent()
+		{
+		}
+		public StatementComponent(string str)
+		{
+			Text = str;
+		}
+
 	}
 
 	public enum StatementGroupType
