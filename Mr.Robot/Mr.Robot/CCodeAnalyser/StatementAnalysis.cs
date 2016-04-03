@@ -52,21 +52,28 @@ namespace Mr.Robot
 			StatementComponentsAnalysis(componentList, parseResult);
 		}
 
+		/// <summary>
+		/// 取得语句内各基本成分(运算数或者是运算符)
+		/// </summary>
         static List<StatementComponent> GetStatementComponents(StatementNode statementNode,
                                                                CCodeParseResult parseResult)
         {
             // 取得完整的语句内容
             string statementStr = LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
                                                 statementNode.Scope.Start,
-                                                statementNode.Scope.End);
-
+                                                statementNode.Scope.End).Trim();
+			// 去掉结尾的分号
+			if (statementStr.EndsWith(";"))
+			{
+				statementStr.Remove(statementStr.Length - 1);
+			}
             List<StatementComponent> componentList = new List<StatementComponent>();
             int offset = 0;
             do
             {
                 // 提取语句的各个组成部分(操作数或者是操作符)
                 StatementComponent cpnt = GetOneComponent(ref statementStr, ref offset, parseResult);
-                if (StatementComponentType.StatementEnd == cpnt.Type)
+                if (string.Empty == cpnt.Text)
                 {
                     // 语句结束
                     break;
@@ -269,11 +276,6 @@ namespace Mr.Robot
 				{
 					break;
 				}
-				if (";" == idStr)
-				{
-					retSC.Type = StatementComponentType.StatementEnd;			// 语句结束
-					break;
-				}
 				else if (IsConstantNumber(idStr))
 				{
                     retSC.Type = StatementComponentType.ConstantNumber;
@@ -304,6 +306,7 @@ namespace Mr.Robot
 				}
 				else
 				{
+					System.Diagnostics.Trace.Assert(false);
 				}
 			}
 
@@ -926,7 +929,6 @@ namespace Mr.Robot
         Char,                   // 字符
 
 		FunctionName,		    // 函数名
-		StatementEnd,			// 语句结束(分号)
         Operator,               // 运算符
 
 		Expression,				// 表达式
@@ -983,7 +985,13 @@ namespace Mr.Robot
 	/// </summary>
 	public class ComponentsGroup
 	{
-		StatementGroupType Type = StatementGroupType.Invalid;
+		StatementGroupType _type = StatementGroupType.Invalid;
+
+		public StatementGroupType Type
+		{
+			get { return _type; }
+			set { _type = value; }
+		}
 
 		private string _text = string.Empty;
 		public string Text
