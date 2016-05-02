@@ -133,7 +133,39 @@ namespace Mr.Robot
 		/// </summary>
 		static ComponentsGroup GetOneComponentsGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
 		{
-			ComponentsGroup retGroup = new ComponentsGroup();
+			ComponentsGroup retGroup = null;
+			// 是类型名?
+			if (null != (retGroup = GetVarTypeGroup(componentList, ref idx, parseResult)))
+			{
+				return retGroup;
+			}
+			// 是变量名?
+			else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, parseResult)))
+			{
+				return retGroup;
+			}
+			// 是函数调用?
+			else if (null != (retGroup = GetFunctionCallingGroup(componentList, ref idx, parseResult)))
+			{
+				return retGroup;
+			}
+			// 是表达式?
+			else if (null != (retGroup = GetExpressionGroup(componentList, ref idx, parseResult)))
+			{
+				return retGroup;
+			}
+			// 是运算符
+			else if (null != (retGroup = GetOperatorGroup(componentList, ref idx, parseResult)))
+			{
+				return retGroup;
+			}
+			else
+			{
+				// What the hell is this?
+				System.Diagnostics.Trace.Assert(false);
+			}
+
+			retGroup = new ComponentsGroup();
 			while (true)
 			{
 				if (idx > componentList.Count - 1)
@@ -141,6 +173,7 @@ namespace Mr.Robot
 					break;
 				}
 				StatementComponent cpnt = componentList[idx];
+				#region MyRegion
 				if (StatementComponentType.Operator == cpnt.Type)				// 如果是操作符
 				{
 					if ("(" == cpnt.Text)
@@ -153,7 +186,7 @@ namespace Mr.Robot
 							// 如果括号里是个类型的话,则是"强制类型转换"运算符
 							if (IsVarType(braceList, parseResult))
 							{
-								
+								// TODO:
 							}
 						}
 					}
@@ -165,8 +198,8 @@ namespace Mr.Robot
 							retGroup.ComponentList.AddRange(braceList);
 						}
 					}
-					else if (	("." == cpnt.Text)
-							 || ("->" == cpnt.Text)	)
+					else if (("." == cpnt.Text)
+							 || ("->" == cpnt.Text))
 					{
 						retGroup.ComponentList.Add(cpnt);
 						// TODO: 有成员运算符的话是变量
@@ -187,6 +220,9 @@ namespace Mr.Robot
 				}
 				else
 				{																// 非操作符, 操作数
+					// 是类型名?
+					// 是函数名?
+					// 是变量名?
 					if (0 != retGroup.ComponentList.Count)
 					{
 						StatementComponent lastCpnt = retGroup.ComponentList.Last();
@@ -205,6 +241,7 @@ namespace Mr.Robot
 						retGroup.ComponentList.Add(cpnt);
 					}
 				}
+				#endregion
 				idx++;
 			}
 			foreach (StatementComponent cpnt in retGroup.ComponentList)
@@ -898,24 +935,58 @@ namespace Mr.Robot
 				}
 			}
 			#endregion
-			#region 所有标识符是否是变量类型名
-			
-			#endregion
+			List<string> strList = new List<string>();
 			for (int i = 0; i < cpntList.Count - starCount; i++)
 			{
 				StatementComponent cpnt = cpntList[i];
-				//if (IsBasicVarType(cpnt.Text))
-				//{
-				//}
-				//else if (IsUsrDefVarType(cpnt.Text, parseResult.IncHdParseInfoList))
-				//{
-				//}
-				//else
-				//{
-				//	return false;
-				//}
+				strList.Add(cpnt.Text);
 			}
-			return false;
+			if (0 != IsBasicVarType(strList))
+			{
+				return true;
+			}
+			else if (1 == strList.Count && IsUsrDefVarType(strList[0], parseResult.IncHdParseInfoList))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		static ComponentsGroup GetVarTypeGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
+		{
+			ComponentsGroup retGroup = new ComponentsGroup();
+			while (true)
+			{
+				if (idx > componentList.Count - 1)
+				{
+					break;
+				}
+				idx++;
+			}
+			return retGroup;
+		}
+
+		static ComponentsGroup GetVarNameGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
+		{
+			return null;
+		}
+
+		static ComponentsGroup GetFunctionCallingGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
+		{
+			return null;
+		}
+
+		static ComponentsGroup GetExpressionGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
+		{
+			return null;
+		}
+
+		static ComponentsGroup GetOperatorGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
+		{
+			return null;
 		}
 	}
 
@@ -973,11 +1044,13 @@ namespace Mr.Robot
 	{
 		Invalid,
 
-		VarType,					// 类型
-		Variable,					// 变量
+		VarTypeName,				// 类型名
+		Variable,					// 变量名
 		FunctionCalling,			// 函数调用
 		Expression,					// 表达式
 		EqualMark,					// 赋值符号
+		TypeCasting,				// 强制类型转换
+		OtherOperator,				// 其它运算符
 	}
 
 	/// <summary>
