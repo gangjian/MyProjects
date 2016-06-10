@@ -184,7 +184,7 @@ namespace Mr.Robot
 							retGroup.ComponentList.AddRange(braceList);
 							// TODO: 括号之间如果既有运算符又有运算数的话是表达式
 							// 如果括号里是个类型的话,则是"强制类型转换"运算符
-							if (IsVarType(braceList, parseResult))
+							//if (IsVarType(braceList, parseResult))
 							{
 								// TODO:
 							}
@@ -708,7 +708,7 @@ namespace Mr.Robot
 		/// </summary>
 		/// <param name="idStrList"></param>
 		/// <returns>0: 不是; 1: 是但不完整; 2: 是且完整</returns>
-		static int IsBasicVarType(List<string> idStrList)
+		static bool IsBasicVarType(List<string> idStrList)
 		{
 			// 开头 "const", "static"等限定符
 			List<string> qualifiers = new List<string>();
@@ -742,28 +742,29 @@ namespace Mr.Robot
 				}
 				else
 				{
-					return 0;
+					return false;
 				}
 			}
 			if (0 != lastParts.Count)
 			{
-				return 2;
+				return true;
 			}
 			else if (0 != qualifiers.Count || 0 != initialParts.Count)
 			{
-				return 1;
+				return false;
 			}
 			else
 			{
-				return 0;
+				return false;
 			}
 		}
 
         /// <summary>
         /// 判断标识符是否是构造类型/用户定义类型
         /// </summary>
-        static bool IsUsrDefVarType(string identifier, List<CFileParseInfo> headerList)
+        static bool IsUsrDefVarType(string identifier, CCodeParseResult parseResult)
         {
+			List<CFileParseInfo> headerList = parseResult.IncHdParseInfoList;
             // 遍历头文件列表
             foreach (CFileParseInfo hfi in headerList)
             {
@@ -903,70 +904,38 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断基本成分列表构成的是否是一个变量类型
 		/// </summary>
-		static bool IsVarType(List<StatementComponent> cpntList, CCodeParseResult parseResult)
+		static bool IsVarType(List<StatementComponent> cpntList, ref int index, CCodeParseResult parseResult)
 		{
-			#region 去掉外层括号
-			while (true)
-			{
-				if ("(" == cpntList.First().Text
-					&& ")" == cpntList.Last().Text)
-				{
-					cpntList.RemoveAt(cpntList.Count - 1);
-					cpntList.RemoveAt(0);
-				}
-				else
-				{
-					break;
-				}
-			}
-			#endregion
-			#region 计算末尾星号的个数
-			int starCount = 0;
-			for (int i = 0; i < cpntList.Count; i++)
-			{
-				StatementComponent cpnt = cpntList[cpntList.Count - 1 - i];
-				if ("*" == cpnt.Text)
-				{
-					starCount++;
-				}
-				else
-				{
-					break;
-				}
-			}
-			#endregion
-			List<string> strList = new List<string>();
-			for (int i = 0; i < cpntList.Count - starCount; i++)
-			{
-				StatementComponent cpnt = cpntList[i];
-				strList.Add(cpnt.Text);
-			}
-			if (0 != IsBasicVarType(strList))
+			int idx = index;
+			// IsBasicVarType
+			// IsUsrDefVarType
+
+			// 判断有无类型前缀
+
+			// 判断是否是类型名
+			List<string> idStrList = new List<string>();
+			idStrList.Add(cpntList[idx].Text);
+			if (IsBasicVarType(idStrList))
 			{
 				return true;
 			}
-			else if (1 == strList.Count && IsUsrDefVarType(strList[0], parseResult.IncHdParseInfoList))
+			else if (IsUsrDefVarType(cpntList[idx].Text, parseResult))
 			{
 				return true;
 			}
-			else
-			{
-				return false;
-			}
+
+			return false;
 		}
 
 		static ComponentsGroup GetVarTypeGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
 		{
+			int i = idx;
 			ComponentsGroup retGroup = new ComponentsGroup();
-			while (true)
+			if (IsVarType(componentList, ref idx, parseResult))
 			{
-				if (idx > componentList.Count - 1)
-				{
-					break;
-				}
-				idx++;
+				
 			}
-			return retGroup;
+			return null;
 		}
 
 		static ComponentsGroup GetVarNameGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
