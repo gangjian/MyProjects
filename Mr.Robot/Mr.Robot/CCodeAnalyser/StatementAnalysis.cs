@@ -59,7 +59,7 @@ namespace Mr.Robot
                                                                CCodeParseResult parseResult)
         {
             // 取得完整的语句内容
-            string statementStr = LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
+            string statementStr = CommonProcess.LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
                                                 statementNode.Scope.Start,
                                                 statementNode.Scope.End).Trim();
 			// 去掉结尾的分号
@@ -110,7 +110,7 @@ namespace Mr.Robot
 			int idx = 0;
 			while (true) 
 			{
-				ComponentsGroup newGroup = GetOneComponentsGroup(componentList, ref idx, parseResult);
+				ComponentsGroup newGroup = GetOneComponentsGroup(componentList, ref idx, parseResult, groupList);
 				if (0 != newGroup.ComponentList.Count)
 				{
 					groupList.Add(newGroup);
@@ -126,7 +126,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个构成分组
 		/// </summary>
-		static ComponentsGroup GetOneComponentsGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
+		static ComponentsGroup GetOneComponentsGroup(List<StatementComponent> componentList, ref int idx,
+                                                     CCodeParseResult parseResult,
+                                                     List<ComponentsGroup> groupList)
 		{
 			ComponentsGroup retGroup = null;
 			// 是类型名?
@@ -135,7 +137,7 @@ namespace Mr.Robot
 				return retGroup;
 			}
 			// 是变量名?
-			else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, parseResult)))
+            else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, parseResult, groupList)))
 			{
 				return retGroup;
 			}
@@ -154,7 +156,7 @@ namespace Mr.Robot
 			{
 				return retGroup;
 			}
-			else if (IsStandardIdentifier(componentList[idx].Text))
+            else if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
 			{
 				retGroup = new ComponentsGroup();
 				retGroup.Type = StatementGroupType.Unknown;
@@ -326,7 +328,7 @@ namespace Mr.Robot
 				{
 					break;														// 字符或者字符串
 				}
-				else if (IsStandardIdentifier(idStr))							// 标准标识符
+                else if (CommonProcess.IsStandardIdentifier(idStr))							// 标准标识符
 				{
 					// 如果包含宏, 首先要进行宏展开
 					if (MacroDetectAndExpand_Function(idStr, ref statementStr, offset, parseResult))
@@ -384,14 +386,14 @@ namespace Mr.Robot
 						string paraStr = GetNextIdentifier(statementStr, ref offset);
 						if ("(" != paraStr)
 						{
-							ErrReport();
+                            CommonProcess.ErrReport();
 							break;
 						}
 						int leftBracket = offset;
 						int rightBracket = statementStr.Substring(offset).IndexOf(')');
 						if (-1 == rightBracket)
 						{
-							ErrReport();
+                            CommonProcess.ErrReport();
 							break;
 						}
 						paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
@@ -425,7 +427,7 @@ namespace Mr.Robot
 					// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
 					if (replaceStr.Contains('#'))
 					{
-						ErrReport();
+                        CommonProcess.ErrReport();
 						return false;
 					}
 					// 用宏值去替换原来的宏名(宏展开)
@@ -656,7 +658,7 @@ namespace Mr.Robot
             for (; offset < statementStr.Length; offset++)
             {
                 char curChar = statementStr[offset];
-                E_CHAR_TYPE cType = GetCharType(curChar);
+                E_CHAR_TYPE cType = CommonProcess.GetCharType(curChar);
                 switch (cType)
                 {
                     case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:                       // 空格
@@ -695,7 +697,7 @@ namespace Mr.Robot
                         }
                         break;
                     default:
-                        ErrReport();
+                        CommonProcess.ErrReport();
                         return null;
                 }
                 if (-1 != s_pos && -1 != e_pos)
@@ -945,10 +947,10 @@ namespace Mr.Robot
 		static ComponentsGroup GetVarTypeGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
 		{
 			int old_idx = idx;
-			ComponentsGroup retGroup = new ComponentsGroup();
 			if (IsVarType(componentList, ref idx, parseResult))
 			{
-				retGroup.Type = StatementGroupType.VarTypeName;
+                ComponentsGroup retGroup = new ComponentsGroup();
+                retGroup.Type = StatementGroupType.VariableType;
 				for (int i = old_idx; i < idx; i++)
 				{
 					retGroup.ComponentList.Add(componentList[i]);
@@ -960,8 +962,24 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static ComponentsGroup GetVarNameGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
+		static ComponentsGroup GetVarNameGroup(List<StatementComponent> componentList, ref int idx,
+                                               CCodeParseResult parseResult,
+                                               List<ComponentsGroup> groupList)
 		{
+            if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
+            {
+                // 如果前面是类型名且是开头,那么可能是变量名
+                if (1 == groupList.Count
+                    && groupList[0].Type == StatementGroupType.VariableType)
+                {
+                    ComponentsGroup retGroup = new ComponentsGroup();
+                    retGroup.Type = StatementGroupType.VariableName;
+                    retGroup.ComponentList.Add(componentList[idx]);
+                    retGroup.Text = componentList[idx].Text;
+                    idx++;
+                    return retGroup;
+                }
+            }
 			return null;
 		}
 
@@ -1035,8 +1053,8 @@ namespace Mr.Robot
 	{
 		Unknown,
 
-		VarTypeName,				// 类型名
-		Variable,					// 变量名
+		VariableType,				// 类型名
+		VariableName,				// 变量名
 		FunctionCalling,			// 函数调用
 		Expression,					// 表达式
 		EqualMark,					// 赋值符号

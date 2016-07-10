@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Mr.Robot
 {
-	public static partial class CCodeAnalyser
+	public class CommonProcess
 	{
 		/// <summary>
         /// 从(多行字符)当前位置取得下一个标识符(identifier)
@@ -16,7 +16,7 @@ namespace Mr.Robot
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
 		/// <returns></returns>
-		static string GetNextIdentifier(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
+        public static string GetNextIdentifier(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
 		{
 			int lineIdx = searchPos.row_num;
 			int startIdx = searchPos.col_num;
@@ -146,7 +146,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static E_CHAR_TYPE GetCharType(Char ch)
+        public static E_CHAR_TYPE GetCharType(Char ch)
 		{
 			if (Char.IsWhiteSpace(ch))
 			{
@@ -184,7 +184,7 @@ namespace Mr.Robot
 		/// </summary>
 		/// <param varName="id"></param>
 		/// <returns></returns>
-		static bool IsStandardIdentifier(string idStr)
+        public static bool IsStandardIdentifier(string idStr)
 		{
 			int cnt = 0;
 			foreach (Char ch in idStr)
@@ -213,7 +213,7 @@ namespace Mr.Robot
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
 		/// <param varName="symbol"></param>
-		static File_Position FindNextSymbol(List<string> codeList, File_Position searchPos, Char symbol)
+        public static File_Position FindNextSymbol(List<string> codeList, File_Position searchPos, Char symbol)
 		{
 			string curLine = "";
 			int lineIdx = searchPos.row_num;
@@ -260,7 +260,7 @@ namespace Mr.Robot
 		/// <param varName="searchPos"></param>
 		/// <param varName="rightSymbol"></param>
 		/// <returns></returns>
-		static File_Position FindNextMatchSymbol(List<string> codeList, File_Position searchPos, Char rightSymbol)
+        public static File_Position FindNextMatchSymbol(List<string> codeList, File_Position searchPos, Char rightSymbol)
 		{
 			Char leftSymbol;
 			if ('}' == rightSymbol)
@@ -334,7 +334,7 @@ namespace Mr.Robot
         /// <param varName="startPos"></param>
         /// <param varName="endPos"></param>
         /// <returns></returns>
-		static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
+		public static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
 		{
 			int startRow = startPos.row_num;
 			int startCol = startPos.col_num;
@@ -361,7 +361,7 @@ namespace Mr.Robot
 		/// <param varName="searchPos"></param>
 		/// <param varName="foundPos"></param>
 		/// <returns></returns>
-		static string GetExpressionStr(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
+		public static string GetExpressionStr(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
 		{
 			foundPos = new File_Position(searchPos);
 
@@ -381,7 +381,7 @@ namespace Mr.Robot
 		/// <param varName="headerFileNameList">头文件列表</param>
 		/// <param varName="defineList">宏定义列表</param>
 		/// <returns></returns>
-		static MacroDefineInfo JudgeExpressionDefined(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
+        public static MacroDefineInfo JudgeExpressionDefined(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
 		{
 			foreach (var di in defineList)
 			{
@@ -410,7 +410,7 @@ namespace Mr.Robot
 		/// <param varName="headerFileNameList">头文件列表</param>
 		/// <param varName="defineList">宏定义列表</param>
 		/// <returns></returns>
-		static int JudgeExpressionValue(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
+        public static int JudgeExpressionValue(string exp, List<CFileParseInfo> headerList, List<MacroDefineInfo> defineList)
 		{
 			// TODO: 暂不考虑复合表达式的情况
 			// 对于复合表达式, 拆分成单独表达式分别求值
@@ -433,7 +433,7 @@ namespace Mr.Robot
 			return 0;
 		}
 
-		static string GetSimpleExpression(string complexExp, int idx)
+        public static string GetSimpleExpression(string complexExp, int idx)
 		{
 			return null;
 		}
@@ -445,7 +445,7 @@ namespace Mr.Robot
         /// <param varName="codeList"></param>
         /// <param varName="searchPos"></param>
         /// <returns></returns>
-		static File_Position FindNextSpecIdentifier(string idStr, List<string> codeList, File_Position searchPos)
+        public static File_Position FindNextSpecIdentifier(string idStr, List<string> codeList, File_Position searchPos)
 		{
 			File_Position foundPos = null;
 			string retStr = null;
@@ -470,7 +470,7 @@ namespace Mr.Robot
         /// <param varName="codeList"></param>
         /// <param varName="thisPos"></param>
         /// <returns></returns>
-		static File_Position PositionMoveNext(List<string> codeList, File_Position thisPos)
+        public static File_Position PositionMoveNext(List<string> codeList, File_Position thisPos)
 		{
 			File_Position nextPos = new File_Position(thisPos);
             if (thisPos.col_num == codeList[thisPos.row_num].Length - 1)
@@ -496,7 +496,7 @@ namespace Mr.Robot
         /// <param varName="codeList"></param>
         /// <param varName="thisPos"></param>
         /// <returns></returns>
-        static File_Position PositionMovePrevious(List<string> codeList, File_Position thisPos)
+        public static File_Position PositionMovePrevious(List<string> codeList, File_Position thisPos)
         {
             File_Position prevPos = new File_Position(thisPos);
             if (0 == thisPos.col_num)
@@ -520,7 +520,7 @@ namespace Mr.Robot
 		/// 比较两个位置 0:一致; 1:前者大(靠后); -1:后者大(靠后);
 		/// </summary>
 		/// <returns></returns>
-		static int PositionCompare(File_Position p1, File_Position p2)
+        public static int PositionCompare(File_Position p1, File_Position p2)
 		{
 			if (p1.row_num > p2.row_num)
 			{
@@ -544,7 +544,7 @@ namespace Mr.Robot
 			}
 		}
 
-        static bool IsUsrDefTypeKWD(string keyWord)
+        public static bool IsUsrDefTypeKWD(string keyWord)
         {
             switch (keyWord)
             {
@@ -560,7 +560,7 @@ namespace Mr.Robot
 
 		////////////////////////////////////////////////
 
-		static void Save2File(List<string> writeList, string saveName)
+        public static void Save2File(List<string> writeList, string saveName)
 		{
 			try
 			{
@@ -576,5 +576,12 @@ namespace Mr.Robot
 				ErrReport(ex.ToString());
 			}
 		}
+
+        public static void ErrReport(string errMsg = "Something is wrong!")
+        {
+            System.Diagnostics.Trace.WriteLine(errMsg);
+            System.Diagnostics.Trace.Assert(false);
+        }
+
 	}
 }

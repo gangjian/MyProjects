@@ -64,7 +64,7 @@ namespace Mr.Robot
 			// 如果开头第一个字符是左花括号"{", 先要移到下一个位置开始检索
 			if ('{' == codeList[searchPos.row_num][searchPos.col_num])
 			{
-				searchPos = PositionMoveNext(codeList, searchPos);
+				searchPos = CommonProcess.PositionMoveNext(codeList, searchPos);
 			}
 
 			// 循环提取每一条语句(简单语句或者复合语句)
@@ -96,12 +96,12 @@ namespace Mr.Robot
             StatementNode retNode = new StatementNode();
 			string nextIdStr = null;
 			File_Position foundPos = null;
-			nextIdStr = GetNextIdentifier(codeList, ref startPos, out foundPos);
+            nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref startPos, out foundPos);
 			File_Position searchPos = new File_Position(startPos);
 			startPos = new File_Position(foundPos);
 
             if (null != endPos
-                && PositionCompare(searchPos, endPos) >= 0)
+                && CommonProcess.PositionCompare(searchPos, endPos) >= 0)
 			{
 				// 对于检索范围超出区块结束位置的判断
 				return null;
@@ -119,7 +119,7 @@ namespace Mr.Robot
 			{
 				// 取得简单语句节点
 				retNode = GetSimpleStatementNode(codeList, ref searchPos, foundPos);
-                startPos = PositionMoveNext(codeList, retNode.Scope.End);
+                startPos = CommonProcess.PositionMoveNext(codeList, retNode.Scope.End);
 				return retNode;
 			}
 		}
@@ -178,10 +178,10 @@ namespace Mr.Robot
 			File_Position searchPos = new File_Position(foundPos);
 			File_Position oldPos = new File_Position(foundPos);
 			// 找到语句结束,也就是分号的位置
-			foundPos = FindNextSpecIdentifier(";", codeList, searchPos);
+            foundPos = CommonProcess.FindNextSpecIdentifier(";", codeList, searchPos);
 			if (null != foundPos)
 			{
-				string statementStr = LineStringCat(codeList, oldPos, foundPos);
+                string statementStr = CommonProcess.LineStringCat(codeList, oldPos, foundPos);
 				retNode.Scope.Start = new File_Position(oldPos);
 				retNode.Scope.End = new File_Position(foundPos);
 				retNode.Type = StatementNodeType.Simple;
@@ -232,13 +232,13 @@ namespace Mr.Robot
             if (null != scope)
             {
                 retNode.Scope = scope;
-                searchPos = PositionMoveNext(codeList, scope.End);
+                searchPos = CommonProcess.PositionMoveNext(codeList, scope.End);
                 File_Position foundPos;
-                string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
                 if ("while" == idStr)
                 {
                     string expression = GetCompoundStatementExpression(codeList, ref searchPos);
-                    idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                    idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if (string.Empty != expression
                         && ";" == idStr)
                     {
@@ -321,13 +321,13 @@ namespace Mr.Robot
 			{
 				retNode.expression = expression;
 				// 取得switch分支范围
-				File_Position oldPos = PositionMoveNext(codeList, searchPos);	// 移到左{的位置
+                File_Position oldPos = CommonProcess.PositionMoveNext(codeList, searchPos);	// 移到左{的位置
 				File_Scope scope = GetBranchScope(codeList, ref searchPos);
                 searchPos = oldPos;
 				if (null != scope)
 				{
                     retNode.Scope = scope;
-                    searchPos = PositionMoveNext(codeList, searchPos);          // 移到左{的下一个位置
+                    searchPos = CommonProcess.PositionMoveNext(codeList, searchPos);          // 移到左{的下一个位置
 					// 取得各case或default分支
 					StatementNode caseBranch = GetNextCaseBranchNode(codeList, ref searchPos);
 					while (null != caseBranch)
@@ -344,7 +344,7 @@ namespace Mr.Robot
 						}
                         caseBranch = GetNextCaseBranchNode(codeList, ref searchPos);
 					}
-                    startPos = PositionMoveNext(codeList, retNode.Scope.End);
+                    startPos = CommonProcess.PositionMoveNext(codeList, retNode.Scope.End);
 					return retNode;
 				}
 			}
@@ -359,11 +359,11 @@ namespace Mr.Robot
 			StatementNode retNode = new StatementNode();
 			File_Position searchPos = new File_Position(startPos);
 			File_Position foundPos = new File_Position(searchPos);
-			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			if ("else" == idStr)
 			{
 				File_Position oldPos = new File_Position(searchPos);
-				idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 				if ("if" == idStr)
 				{
 					// 表示这是一个"else if"分支
@@ -411,22 +411,22 @@ namespace Mr.Robot
 			File_Position searchPos = new File_Position(startPos);
 			File_Position foundPos = new File_Position(searchPos);
             File_Position oldPos = null;
-			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 
             // 定位"case"或"default"关键字的位置
             // 定位分号":"的位置
             oldPos = new File_Position(foundPos);
-            foundPos = FindNextSpecIdentifier(":", codeList, searchPos);
+            foundPos = CommonProcess.FindNextSpecIdentifier(":", codeList, searchPos);
             if (null != foundPos)
             {
-                string caseStr = LineStringCat(codeList, oldPos, foundPos);
+                string caseStr = CommonProcess.LineStringCat(codeList, oldPos, foundPos);
                 retNode.expression = caseStr;
                 retNode.Type = GetNodeType(idStr);
                 if (StatementNodeType.Invalid == retNode.Type)
                 {
                     return null;
                 }
-                retNode.Scope.Start = PositionMoveNext(codeList, foundPos);
+                retNode.Scope.Start = CommonProcess.PositionMoveNext(codeList, foundPos);
                 retNode.Scope.End = retNode.Scope.Start;
                 // 取得整个case分支的范围: 逐一提取子语句, 直到遇到"break;"或者下一case/default分支开始
                 // 注意也可能没有子语句
@@ -438,7 +438,7 @@ namespace Mr.Robot
                         //retNode.childList.Add(sn);
                         retNode.Scope.End = sn.Scope.End;
                         oldPos = new File_Position(searchPos);
-                        idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                        idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
                         searchPos = oldPos;
                         // 分支结束的判断
                         if ("case" == idStr
@@ -446,7 +446,7 @@ namespace Mr.Robot
                             || "}" == idStr)
                         {
                             // TODO: 移到前一位
-                            searchPos = PositionMovePrevious(codeList, foundPos);
+                            searchPos = CommonProcess.PositionMovePrevious(codeList, foundPos);
                             break;
                         }
                     }
@@ -470,16 +470,16 @@ namespace Mr.Robot
 			File_Position searchPos = new File_Position(startPos);
 			File_Position foundPos = new File_Position(searchPos);
 
-			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			if ("(" == idStr)
 			{
 				File_Position leftBracePos = new File_Position(foundPos);
-				searchPos = PositionMoveNext(codeList, leftBracePos);
-				File_Position rightBracePos = FindNextMatchSymbol(codeList, searchPos, ')');
+                searchPos = CommonProcess.PositionMoveNext(codeList, leftBracePos);
+                File_Position rightBracePos = CommonProcess.FindNextMatchSymbol(codeList, searchPos, ')');
 				if (null != rightBracePos)
 				{
 					startPos = searchPos;
-					string exp = LineStringCat(codeList, leftBracePos, rightBracePos);
+                    string exp = CommonProcess.LineStringCat(codeList, leftBracePos, rightBracePos);
 					return exp;
 				}
 			}
@@ -495,7 +495,7 @@ namespace Mr.Robot
 			File_Position foundPos = new File_Position(searchPos);
 
 			// 找到冒号":"的位置
-			foundPos = FindNextSpecIdentifier(":", codeList, searchPos);
+            foundPos = CommonProcess.FindNextSpecIdentifier(":", codeList, searchPos);
 			return null;
 		}
 
@@ -511,13 +511,13 @@ namespace Mr.Robot
 			File_Position searchPos = new File_Position(startPos);
 			File_Position foundPos = new File_Position(searchPos);
 
-			string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			if ("{" == idStr)
 			{
 				// 通常语句块会以花括号括起来
 				File_Position leftBrace = new File_Position(foundPos);
 				// 找到配对的花括号
-				File_Position rightBrace = FindNextMatchSymbol(codeList, searchPos, '}');
+                File_Position rightBrace = CommonProcess.FindNextMatchSymbol(codeList, searchPos, '}');
 				if (null != rightBrace)
 				{
 					startPos = searchPos;
