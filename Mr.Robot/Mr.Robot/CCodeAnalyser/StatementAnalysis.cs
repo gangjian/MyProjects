@@ -110,6 +110,10 @@ namespace Mr.Robot
 			int idx = 0;
 			while (true) 
 			{
+                if (idx >= componentList.Count)
+                {
+                    break;
+                }
 				ComponentsGroup newGroup = GetOneComponentsGroup(componentList, ref idx, parseResult, groupList);
 				if (0 != newGroup.ComponentList.Count)
 				{

@@ -45,7 +45,7 @@ namespace Mr.Robot
 				if (di.Exists)
 				{
 					tbxRootPath.Text = root_path;
-					LoadCSourceFiles();
+                    LoadCSourceFiles(root_path);
 				}
 			}
 		}
@@ -60,51 +60,51 @@ namespace Mr.Robot
 				DirectoryInfo di = new DirectoryInfo(tbxRootPath.Text);
 				if (di.Exists)
 				{
-					LoadCSourceFiles();
+                    LoadCSourceFiles(tbxRootPath.Text);
 					IniFileProcess.IniWriteValue("PATH_INFO", "root_path", tbxRootPath.Text);
 				}
 			}
 		}
 
-		private void LoadCSourceFiles()
+		private void LoadCSourceFiles(string path_name)
 		{
 			// 检查文件夹路径的合法性
-			if (string.Empty == tbxRootPath.Text)
-			{
-				return;
-			}
-			DirectoryInfo di = new DirectoryInfo(tbxRootPath.Text);
-			if (!di.Exists)
+			if (string.IsNullOrEmpty(path_name)
+                || !Directory.Exists(path_name))
 			{
 				return;
 			}
 
-			// 遍历文件夹, 取得所有.c源文件和.h头文件
 			_CSourceFilesList = new List<string>();
 			_CHeaderFilesList = new List<string>();
+            // 遍历文件夹, 取得所有.c源文件和.h头文件
+            IOProcess.GetAllCCodeFiles(path_name, ref _CSourceFilesList, ref _CHeaderFilesList);
 
-			IOProcess.GetFiles(tbxRootPath.Text, ref _CSourceFilesList, ref _CHeaderFilesList);
-
-			lvFileList.Items.Clear();
-			// 将得到的.c源文件加入UI文件列表
-			foreach (string cfile in _CSourceFilesList)
-			{
-				// 分别取得文件名和路径名
-				string path;
-				string fname = IOProcess.GetFileName(cfile, out path);
-				// 暂时只在文件列表里显示不包含完整路径的文件名
-				ListViewItem new_item = new ListViewItem(fname);
-				// 完整路径放在SubItem里
-				new_item.SubItems.Add(cfile);
-				lvFileList.Items.Add(new_item);
-			}
-			lvFunctionList.Items.Clear();
-			lvFunctionList.Enabled = false;
-			lvVariableList.Items.Clear();
-			lvVariableList.Enabled = false;
-			lvBranchList.Items.Clear();
-			lvBranchList.Enabled = false;
+            UpdateFileListViewCtrl(_CSourceFilesList);
 		}
+
+        void UpdateFileListViewCtrl(List<string> CSourceFileList)
+        {
+            lvFileList.Items.Clear();
+            // 将得到的.c源文件加入UI文件列表
+            foreach (string cfile in CSourceFileList)
+            {
+                // 分别取得文件名和路径名
+                string path;
+                string fname = IOProcess.GetFileName(cfile, out path);
+                // 暂时只在文件列表里显示不包含完整路径的文件名
+                ListViewItem new_item = new ListViewItem(fname);
+                // 完整路径放在SubItem里
+                new_item.SubItems.Add(cfile);
+                lvFileList.Items.Add(new_item);
+            }
+            lvFunctionList.Items.Clear();
+            lvFunctionList.Enabled = false;
+            lvVariableList.Items.Clear();
+            lvVariableList.Enabled = false;
+            lvBranchList.Items.Clear();
+            lvBranchList.Enabled = false;
+        }
 
 		List<CCodeParseResult> _ccodeParseResultList = new List<CCodeParseResult>();
 
@@ -130,7 +130,7 @@ namespace Mr.Robot
 				return;
 			}
 			labelStatus.Text = lvFileList.SelectedItems[0].Text;
-			UpdateFunctionListView(lvFileList.SelectedItems[0].Text);
+			UpdateFunctionListViewCtrl(lvFileList.SelectedItems[0].Text);
 		}
 
 		/// <summary>
@@ -147,7 +147,7 @@ namespace Mr.Robot
 		/// 更新函数列表控件
 		/// </summary>
 		/// <param varName="sourceFileName"></param>
-		void UpdateFunctionListView(string sourceFileName)
+		void UpdateFunctionListViewCtrl(string sourceFileName)
 		{
 			lvFunctionList.Items.Clear();
 			foreach (CCodeParseResult srcResult in CCodeParseResultList)
@@ -229,7 +229,7 @@ namespace Mr.Robot
                 && lvFileList.SelectedItems[0].Checked)
             {
                 labelStatus.Text = lvFileList.SelectedItems[0].Text;
-                UpdateFunctionListView(lvFileList.SelectedItems[0].Text);
+                UpdateFunctionListViewCtrl(lvFileList.SelectedItems[0].Text);
             }
         }
 

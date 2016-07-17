@@ -13,14 +13,14 @@ namespace Mr.Robot
 		/// <summary>
 		/// 遍历文件夹
 		/// </summary>
-		public static void GetFiles(string rootPath, ref List<string> cSourceFilesList, ref List<string> cHeaderFilesList)
+		public static void GetAllCCodeFiles(string rootPath, ref List<string> cSourceFilesList, ref List<string> cHeaderFilesList)
 		{
 			DirectoryInfo di = new DirectoryInfo(rootPath);
 			try
 			{
 				foreach (DirectoryInfo subDir in di.GetDirectories())
 				{
-					GetFiles(subDir.FullName, ref cSourceFilesList, ref cHeaderFilesList);
+					GetAllCCodeFiles(subDir.FullName, ref cSourceFilesList, ref cHeaderFilesList);
 				}
 				foreach (FileInfo fi in di.GetFiles())
 				{
