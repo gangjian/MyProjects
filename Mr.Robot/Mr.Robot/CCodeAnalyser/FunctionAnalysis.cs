@@ -14,42 +14,46 @@ namespace Mr.Robot
         /// <param varName="fullPath"></param>
         /// <param varName="funcName"></param>
         /// <param varName="parsedResultList"></param>
-        static public void FunctionAnalysis(string fullPath, string funcName, List<CCodeParseResult> parsedResultList)
+        public static void FunctionAnalysis(string fullPath, string funcName, List<CCodeParseResult> parsedResultList)
+        {
+            // 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
+            CCodeParseResult c_file_result = null;
+            CFunctionStructInfo funInfo = FindFileAndFunctionStructInfoFromParseResult(fullPath, funcName, parsedResultList, out c_file_result);
+
+            // 函数语句树结构的分析提取
+            StatementNode root = new StatementNode();
+            root.Type = StatementNodeType.Root;
+            root.Scope = funInfo.Scope;
+            GetCodeBlockStructure(c_file_result.SourceParseInfo.parsedCodeList, root);
+
+			// 函数语句分析: 分析入出力
+            FunctionStatementsAnalysis(root, c_file_result);
+        }
+
+        public static CFunctionStructInfo FindFileAndFunctionStructInfoFromParseResult(string fileName, string funcName,
+                                                                                List<CCodeParseResult> parsedResultList,
+                                                                                out CCodeParseResult parseResult)
         {
             CFunctionStructInfo funInfo = null;
-			CCodeParseResult parseResult = null;
+            parseResult = null;
             // 根据文件名, 函数名取得函数情报的引用
             foreach (CCodeParseResult result in parsedResultList)
             {
-                if (result.SourceParseInfo.full_name.Equals(fullPath))
-                {
+                if (result.SourceParseInfo.full_name.Equals(fileName))
+                {                                                                       // 找到指定的文件(根据文件名)
                     foreach (CFunctionStructInfo fi in result.SourceParseInfo.fun_define_list)
                     {
                         if (fi.name.Equals(funcName))
-                        {
+                        {                                                               // 找到指定的函数(根据函数名)
                             funInfo = fi;
-							parseResult = result;
+                            parseResult = result;
                             break;
                         }
                     }
                     break;
                 }
             }
-            if (null == funInfo)
-            {
-                return;
-            }
-
-            // 函数语句树结构的分析提取
-            StatementNode root = new StatementNode();
-            root.Type = StatementNodeType.Root;
-            root.Scope = funInfo.Scope;
-			GetCodeBlockStructure(parseResult.SourceParseInfo.parsedCodeList, root);
-
-			// 函数语句分析: 分析入出力
-			FunctionStatementsAnalysis(root, parseResult);
-
-			return;
+            return funInfo;
         }
 
 		/// <summary>
@@ -58,7 +62,7 @@ namespace Mr.Robot
 		/// <param varName="fileInfo">文件情报</param>
 		/// <param varName="startPos">代码块开始位置</param>
 		/// <param varName="endPos">代码块结束位置</param>
-		static void GetCodeBlockStructure(List<string> codeList, StatementNode parentNode)
+		public static void GetCodeBlockStructure(List<string> codeList, StatementNode parentNode)
 		{
 			File_Position searchPos = new File_Position(parentNode.Scope.Start);
 			// 如果开头第一个字符是左花括号"{", 先要移到下一个位置开始检索

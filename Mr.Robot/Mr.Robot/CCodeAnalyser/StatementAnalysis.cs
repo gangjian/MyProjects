@@ -11,7 +11,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 语句分析
 		/// </summary>
-		static public void FunctionStatementsAnalysis(StatementNode root,
+		public static void FunctionStatementsAnalysis(StatementNode root,
 													  CCodeParseResult parseResult)
 		{
 			List<VariableInfo> localVarList = new List<VariableInfo>();			// 局部变量列表
