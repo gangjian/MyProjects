@@ -130,7 +130,8 @@ namespace Mr.Robot
 		public string varName = "";												        // 变量名
 		public List<string> qualifiers = new List<string>();					        // 修饰符列表
 		public string array_size_string = "";									        // (如果是数组的话)数组size字符串
-		public string initial_string = "";										        // 初始化赋值字符串
+        public string initial_string = "";						                        // 初始化赋值字符串
+        public List<MeaningGroup> initial_list = new List<MeaningGroup>();				// 初始化含义组(解析分组后)跟initial_string可能有重复
 	}
 
 	public class MacroDefineInfo
