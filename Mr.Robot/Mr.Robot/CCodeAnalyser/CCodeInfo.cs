@@ -128,6 +128,7 @@ namespace Mr.Robot
 	{
 		public string typeName = "";											        // 类型名
 		public string varName = "";												        // 变量名
+        public bool isLocal = true;                                                     // 是否是局部变量(true:局部变量; false:全局变量)
 		public List<string> qualifiers = new List<string>();					        // 修饰符列表
 		public string array_size_string = "";									        // (如果是数组的话)数组size字符串
         public string initial_string = "";						                        // 初始化赋值字符串
