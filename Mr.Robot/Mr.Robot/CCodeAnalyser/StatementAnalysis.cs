@@ -876,30 +876,45 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是函数名
         /// </summary>
-        static bool IsFunctionName(string identifier, List<CFileParseInfo> headerList)
+		static bool IsFunctionName(string identifier, CCodeParseResult parsedResult)
         {
-            // 遍历头文件列表
-            foreach (CFileParseInfo hfi in headerList)
+			int idx;
+			// 遍历头文件列表
+			foreach (CFileParseInfo hfi in parsedResult.IncHdParseInfoList)
             {
-                // 首先是函数声明列表
-                foreach (CFunctionStructInfo fi in hfi.fun_declare_list)
-                {
-                    if (fi.name.Equals(identifier))
-                    {
-                        return true;
-                    }
-                }
-                // 然后是函数定义列表
-                foreach (CFunctionStructInfo fi in hfi.fun_define_list)
-                {
-                    if (fi.name.Equals(identifier))
-                    {
-                        return true;
-                    }
-                }
+				if (-1 != (idx = SearchFunctionInfoListByName(identifier, hfi.fun_declare_list)))
+				{
+					return true;
+				}
+				else if (-1 != (idx = SearchFunctionInfoListByName(identifier, hfi.fun_define_list)))
+				{
+					return true;
+				}
             }
+			// 是否是本文件內前面定义/声明的函数
+			if (-1 != (idx = SearchFunctionInfoListByName(identifier, parsedResult.SourceParseInfo.fun_declare_list)))
+			{
+				return true;
+			}
+			else if (-1 != (idx = SearchFunctionInfoListByName(identifier, parsedResult.SourceParseInfo.fun_define_list)))
+			{
+				return true;
+			}
+
             return false;
         }
+
+		static int SearchFunctionInfoListByName(string fun_name, List<CFunctionStructInfo> funInfoList)
+		{
+			for (int i = 0; i < funInfoList.Count; i++)
+			{
+				if (funInfoList[i].name.Equals(fun_name))
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
 
         /// <summary>
         /// 判断标识符是否是全局变量
@@ -1090,6 +1105,30 @@ namespace Mr.Robot
 
 		static MeaningGroup GetFunctionCallingGroup(List<StatementComponent> componentList, ref int idx, CCodeParseResult parseResult)
 		{
+			if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
+			{
+				// 判断是否是函数名
+				if (IsFunctionName(componentList[idx].Text, parseResult)
+					&& "(" == componentList[idx + 1].Text)
+				{
+					MeaningGroup retGroup = new MeaningGroup();
+					retGroup.Type = MeaningGroupType.FunctionCalling;
+					retGroup.ComponentList.Add(componentList[idx]);
+					retGroup.Text += componentList[idx].Text;
+					idx += 1;
+					List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
+					if (null != braceList)
+					{
+						foreach (StatementComponent item in braceList)
+						{
+							retGroup.Text += item.Text;
+						}
+						retGroup.ComponentList.AddRange(braceList);
+						idx += 1;
+						return retGroup;
+					}
+				}
+			}
 			return null;
 		}
 
