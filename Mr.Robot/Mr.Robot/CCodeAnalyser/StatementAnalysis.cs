@@ -11,29 +11,27 @@ namespace Mr.Robot
 		/// <summary>
 		/// 语句分析
 		/// </summary>
-        public static CFunctionAnalysisInfo FunctionStatementsAnalysis(StatementNode root,
-													                   CCodeParseResult parseResult)
+        public static AnalysisContext FunctionStatementsAnalysis(StatementNode root,
+													             CCodeParseResult parseResult)
 		{
-            CFunctionAnalysisInfo func_analysis_result = new CFunctionAnalysisInfo();
-			List<VariableInfo> localVarList = new List<VariableInfo>();			        // 局部变量列表
+            AnalysisContext analysisContext = new AnalysisContext();					// (变量)解析上下文
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
-                StatementAnalysis(childNode, parseResult, localVarList, ref func_analysis_result);
+                StatementAnalysis(childNode, parseResult, analysisContext);
 			}
 
-            return func_analysis_result;
+            return analysisContext;
 		}
 
 		public static void StatementAnalysis(StatementNode node,
 									         CCodeParseResult parseResult,
-									         List<VariableInfo> localVarList,
-                                             ref CFunctionAnalysisInfo func_analysis_result)
+                                             AnalysisContext analysisContext)
 		{
 			switch (node.Type)
 			{
 				case StatementNodeType.Simple:
-					SimpleStatementAnalysis(node, parseResult, localVarList, ref func_analysis_result);
+					SimpleStatementAnalysis(node, parseResult, analysisContext);
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -46,26 +44,23 @@ namespace Mr.Robot
 		/// </summary>
 		static void SimpleStatementAnalysis(StatementNode statementNode,
 											CCodeParseResult parseResult,
-											List<VariableInfo> localVarList,
-                                            ref CFunctionAnalysisInfo func_analysis_result)
+                                            AnalysisContext analysisContext)
 		{
-
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
             List<StatementComponent> componentList = GetComponents(statementNode, parseResult);
 
-            ExpressionAnalysis(componentList, parseResult, localVarList, ref func_analysis_result);
+            ExpressionAnalysis(componentList, parseResult, analysisContext);
 		}
 
         static void ExpressionAnalysis(List<StatementComponent> componentList,
                                        CCodeParseResult parseResult,
-                                       List<VariableInfo> localVarList,
-                                       ref CFunctionAnalysisInfo func_analysis_result)
+                                       AnalysisContext analysisContext)
         {
             // 提取含义分组
-            List<MeaningGroup> meaningGroupList = GetMeaningGroups(componentList, parseResult, localVarList);
+			List<MeaningGroup> meaningGroupList = GetMeaningGroups(componentList, parseResult, analysisContext);
 
             // 含义分组解析
-			MeaningGroupsAnalysis(meaningGroupList, localVarList, ref func_analysis_result);
+			MeaningGroupsAnalysis(meaningGroupList, analysisContext);
         }
 
 		/// <summary>
@@ -105,13 +100,13 @@ namespace Mr.Robot
 
         public static List<MeaningGroup> GetMeaningGroups(List<StatementComponent> componentList,
                                                           CCodeParseResult parseResult,
-                                                          List<VariableInfo> localVarList)
+														  AnalysisContext analysisContext)
 		{
             List<MeaningGroup> meaningGroupList;
             while (true)
             {
                 // (1). 首先对语句所有组成部分进行结构分组, 每个组代表一个独立完整的语义结构
-                meaningGroupList = GetMeaningGroupList(componentList, parseResult, localVarList);
+				meaningGroupList = GetMeaningGroupList(componentList, parseResult, analysisContext);
                 if (1 == meaningGroupList.Count
                     && "(" == meaningGroupList[0].ComponentList.First().Text
                     && ")" == meaningGroupList[0].ComponentList.Last().Text)
@@ -140,7 +135,7 @@ namespace Mr.Robot
 		/// </summary>
 		static List<MeaningGroup> GetMeaningGroupList(List<StatementComponent> componentList,
                                                       CCodeParseResult parseResult,
-                                                      List<VariableInfo> localVarList)
+													  AnalysisContext analysisContext)
 		{
 			List<MeaningGroup> groupList = new List<MeaningGroup>();
 			int idx = 0;
@@ -150,7 +145,7 @@ namespace Mr.Robot
                 {
                     break;
                 }
-                MeaningGroup newGroup = GetOneMeaningGroup(componentList, ref idx, parseResult, groupList, localVarList);
+				MeaningGroup newGroup = GetOneMeaningGroup(componentList, ref idx, parseResult, groupList, analysisContext);
 				if (0 != newGroup.ComponentList.Count)
 				{
 					groupList.Add(newGroup);
@@ -166,10 +161,11 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个构成分组
 		/// </summary>
-		static MeaningGroup GetOneMeaningGroup(List<StatementComponent> componentList, ref int idx,
+		static MeaningGroup GetOneMeaningGroup(List<StatementComponent> componentList,
+											   ref int idx,
                                                CCodeParseResult parseResult,
                                                List<MeaningGroup> groupList,
-                                               List<VariableInfo> localVarList)
+											   AnalysisContext analysisContext)
 		{
 			MeaningGroup retGroup = null;
 			// 是类型名?
@@ -178,7 +174,7 @@ namespace Mr.Robot
 				return retGroup;
 			}
 			// 是变量名?
-            else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, parseResult, groupList, localVarList)))
+			else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, parseResult, groupList, analysisContext)))
 			{
 				return retGroup;
 			}
@@ -948,11 +944,11 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是局部(临时)变量
         /// </summary>
-        static bool IsLocalVariable(string identifier, List<VariableInfo> localVarList)
+		static bool IsLocalVariable(string identifier, AnalysisContext analysisContext)
         {
-			foreach (VariableInfo vi in localVarList)
+			foreach (VAR_CTX vctx in analysisContext.local_list)
 			{
-				if (vi.varName.Equals(identifier))
+				if (vctx.name.Equals(identifier))
 				{
 					return true;
 				}
@@ -1027,13 +1023,13 @@ namespace Mr.Robot
                                             ref int idx,
                                             CCodeParseResult parseResult,
                                             List<MeaningGroup> groupList,
-                                            List<VariableInfo> localVarList)
+											AnalysisContext analysisContext)
 		{
             if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
             {
                 // 是否是函数参数
                 // 是否为局部变量
-                if (IsLocalVariable(componentList[idx].Text, localVarList))
+				if (IsLocalVariable(componentList[idx].Text, analysisContext))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
                     retGroup.Type = MeaningGroupType.LocalVariable;
@@ -1089,8 +1085,8 @@ namespace Mr.Robot
 		}
 
         static void GetVarMemberGroup(List<StatementComponent> componentList,
-                                              ref int idx,
-                                              ref MeaningGroup retGroup)
+                                      ref int idx,
+                                      ref MeaningGroup retGroup)
         {
             int i = idx + 1;
             for (i = idx + 1; i < componentList.Count; i++)
@@ -1184,71 +1180,77 @@ namespace Mr.Robot
 		}
 
         static void MeaningGroupsAnalysis(List<MeaningGroup> mgList,
-										  List<VariableInfo> localVarList,
-										  ref CFunctionAnalysisInfo func_analysis_result)
+										  AnalysisContext analysisContext)
         {
-            // 新定义变量
-            VariableInfo varInfo = null;
-            if (null != (varInfo = IsNewDefineVarible(mgList)))
-            {
-                localVarList.Add(varInfo);
-            }
-			else if (FindAssignmentOp(mgList))											// 是否存在赋值操作
-            {
+            // 先检查是否是新定义的局部变量
+			VAR_CTX varCtx = null;
+			if (null != (varCtx = IsNewDefineVarible(mgList)))
+			{
+				// 如果是,为此新定义局部变量创建上下文记录项
+				analysisContext.local_list.Add(varCtx);
+			}
+			// 分析左值
+			if (LeftValueAnalysis(mgList, analysisContext))
+			{
                 
-            }
+			}
+			// 分析右值
         }
 
-		static bool FindAssignmentOp(List<MeaningGroup> mgList)
+		static bool LeftValueAnalysis(List<MeaningGroup> mgList,
+									  AnalysisContext analysisContext)
         {
-			List<MeaningGroup> leftValue = new List<MeaningGroup>();
 			List<MeaningGroup> rightValue = new List<MeaningGroup>();
-			for (int i = 0; i < mgList.Count; i++)
+			int eqIdx = -1;
+			if (-1 != (eqIdx = FindEqualMarkIndex(mgList)))
 			{
-				if (mgList[i].Type == MeaningGroupType.EqualMark)						// "=", 等号赋值符
+				// 如果有赋值符号"="
+				List<MeaningGroup> leftGroupList = new List<MeaningGroup>();
+				for (int i = 0; i < eqIdx; i++)
 				{
-					for (int j = 0; j < i; j++)
-					{
-						leftValue.Add(mgList[j]);
-					}
-					for (int j = i + 1; j < mgList.Count; j++)
-					{
-						rightValue.Add(mgList[j]);
-					}
-					return true;
+					leftGroupList.Add(mgList[i]);
 				}
+				LeftValGroupProcess(leftGroupList, analysisContext);
+			}
+			else
+			{
+				// 如果没有赋值符号
+				// 可能是没有初始化赋值的临时变量定义
+				// 可能是函数调用
+				// 可能是自增,自减等一元运算符
 			}
             return false;
         }
 
-        static VariableInfo IsNewDefineVarible(List<MeaningGroup> mgList)
+        static VAR_CTX IsNewDefineVarible(List<MeaningGroup> mgList)
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-                VariableInfo varInfo = new VariableInfo();
-                varInfo.typeName = mgList[0].Text;
-                varInfo.varName = mgList[1].Text;
-                varInfo.initial_list = GetVarInitialList(mgList);
-                return varInfo;
+				VAR_CTX varCtx = new VAR_CTX();
+                varCtx.type = mgList[0].Text;
+                varCtx.name = mgList[1].Text;
+                return varCtx;
             }
             return null;
         }
 
-        static List<MeaningGroup> GetVarInitialList(List<MeaningGroup> mgList)
-        {
-            List<MeaningGroup> retList = new List<MeaningGroup>();
-            for (int i = 0; i < mgList.Count; i++)
-            {
-                if (mgList[i].Type == MeaningGroupType.EqualMark)
-                {
-                    for (int j = i + 1; j < mgList.Count; j++)
-                    {
-                        retList.Add(mgList[j]);
-                    }
-                }
-            }
-            return retList;
-        }
+		static int FindEqualMarkIndex(List<MeaningGroup> mgList)
+		{
+			for (int i = 0; i < mgList.Count; i++)
+			{
+				if (mgList[i].Type == MeaningGroupType.EqualMark)						// "=", 等号赋值符
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+
+		static void LeftValGroupProcess(List<MeaningGroup> leftList,
+									    AnalysisContext analysisContext)
+		{
+
+		}
 	}
 
 	public enum StatementComponentType
@@ -1343,25 +1345,28 @@ namespace Mr.Robot
 		}
 	}
 
+	/// <summary>
+	/// 变量上下文
+	/// </summary>
+	public class VAR_CTX
+	{
+		public string name = string.Empty;
+		public string type = string.Empty;
+		public object cur_val = new object();
+		public List<VAR_CTX> memberList = new List<VAR_CTX>();
+	}
+
     /// <summary>
-    /// C函数解析情报类
+    /// 解析上下文
     /// </summary>
-    public class CFunctionAnalysisInfo
+    public class AnalysisContext
     {
-        string name = "";
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
-
-        // 参数列表
-        public List<VariableInfo> parameter_list = new List<VariableInfo>();
-        // 入力列表
-        public List<VariableInfo> input_list = new List<VariableInfo>();
-        // 出力列表
-        public List<VariableInfo> output_list = new List<VariableInfo>();
-
+        // 引数列表
+		public List<VAR_CTX> parameter_list = new List<VAR_CTX>();
+        // 局部变量列表
+		public List<VAR_CTX> local_list = new List<VAR_CTX>();
+        // 全局变量列表
+		public List<VAR_CTX> global_list = new List<VAR_CTX>();
     }
 
 }
