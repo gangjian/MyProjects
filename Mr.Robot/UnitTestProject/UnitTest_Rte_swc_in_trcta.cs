@@ -15,7 +15,7 @@ namespace UnitTestProject
         [ClassInitialize]
         public static void TestClassSetup(TestContext ctx)
         {
-			string folder_name = "..\\..\\..\\TestSrc";
+			string folder_name = "..\\..\\..\\TestSrc\\swc_in_trcta";
             string source_name = folder_name + "\\Rte_swc_in_trcta.c";
             string function_name = "sym_rbl_in_trcta_igoff";
 
@@ -135,7 +135,7 @@ namespace UnitTestProject
 		[ClassInitialize]
 		public static void TestClassSetup(TestContext ctx)
 		{
-			string folder_name = "..\\..\\..\\TestSrc";
+			string folder_name = "..\\..\\..\\TestSrc\\swc_in_trcta";
 			string source_name = folder_name + "\\Rte_swc_in_trcta.c";
 			string function_name = "sym_rbl_in_trcta_igon";
 
@@ -359,8 +359,13 @@ namespace UnitTestProject
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
 			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].Text);
+
 			Assert.AreEqual(1, analysisContext.calledFunctionList.Count);
 			Assert.AreEqual("ShareLibStepFailJudgeVal(&varInStep,&rctasw_can_mng_tbl,&varOutStep)", analysisContext.calledFunctionList[0].Text);
+
+			Assert.AreEqual(2, analysisContext.inputGlobalList.Count);
+			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value", analysisContext.inputGlobalList[0].Text);
+			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val)).value", analysisContext.inputGlobalList[1].Text);
 		}
 	}
 
