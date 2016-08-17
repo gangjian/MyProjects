@@ -15,23 +15,23 @@ namespace Mr.Robot
 													             CCodeParseResult parseResult)
 		{
             AnalysisContext analysisContext = new AnalysisContext();					// (变量)解析上下文
+			analysisContext.parseResult = parseResult;
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
-                StatementAnalysis(childNode, parseResult, analysisContext);
+                StatementAnalysis(childNode, analysisContext);
 			}
 
             return analysisContext;
 		}
 
 		public static void StatementAnalysis(StatementNode node,
-									         CCodeParseResult parseResult,
                                              AnalysisContext analysisContext)
 		{
 			switch (node.Type)
 			{
 				case StatementNodeType.Simple:
-					SimpleStatementAnalysis(node, parseResult, analysisContext);
+					SimpleStatementAnalysis(node, analysisContext);
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -43,21 +43,19 @@ namespace Mr.Robot
 		/// 简单语句分析
 		/// </summary>
 		static void SimpleStatementAnalysis(StatementNode statementNode,
-											CCodeParseResult parseResult,
                                             AnalysisContext analysisContext)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
-            List<StatementComponent> componentList = GetComponents(statementNode, parseResult);
+			List<StatementComponent> componentList = GetComponents(statementNode, analysisContext.parseResult);
 
-            ExpressionAnalysis(componentList, parseResult, analysisContext);
+            ExpressionAnalysis(componentList, analysisContext);
 		}
 
-        static void ExpressionAnalysis(List<StatementComponent> componentList,
-                                       CCodeParseResult parseResult,
-                                       AnalysisContext analysisContext)
+        public static void ExpressionAnalysis(List<StatementComponent> componentList,
+											  AnalysisContext analysisContext)
         {
             // 提取含义分组
-			List<MeaningGroup> meaningGroupList = GetMeaningGroups(componentList, parseResult, analysisContext);
+			List<MeaningGroup> meaningGroupList = GetMeaningGroups(componentList, analysisContext);
 
             // 含义分组解析
 			MeaningGroupsAnalysis(meaningGroupList, analysisContext);
@@ -99,14 +97,13 @@ namespace Mr.Robot
         }
 
         public static List<MeaningGroup> GetMeaningGroups(List<StatementComponent> componentList,
-                                                          CCodeParseResult parseResult,
 														  AnalysisContext analysisContext)
 		{
             List<MeaningGroup> meaningGroupList;
             while (true)
             {
                 // (1). 首先对语句所有组成部分进行结构分组, 每个组代表一个独立完整的语义结构
-				meaningGroupList = GetMeaningGroupList(componentList, parseResult, analysisContext);
+				meaningGroupList = GetMeaningGroupList(componentList, analysisContext);
                 if (1 == meaningGroupList.Count
                     && "(" == meaningGroupList[0].ComponentList.First().Text
                     && ")" == meaningGroupList[0].ComponentList.Last().Text)
@@ -134,7 +131,6 @@ namespace Mr.Robot
 		/// 对语句所有构成成分进行结构分组
 		/// </summary>
 		static List<MeaningGroup> GetMeaningGroupList(List<StatementComponent> componentList,
-                                                      CCodeParseResult parseResult,
 													  AnalysisContext analysisContext)
 		{
 			List<MeaningGroup> groupList = new List<MeaningGroup>();
@@ -145,7 +141,7 @@ namespace Mr.Robot
                 {
                     break;
                 }
-				MeaningGroup newGroup = GetOneMeaningGroup(componentList, ref idx, parseResult, groupList, analysisContext);
+				MeaningGroup newGroup = GetOneMeaningGroup(componentList, ref idx, groupList, analysisContext);
 				if (0 != newGroup.ComponentList.Count)
 				{
 					groupList.Add(newGroup);
@@ -163,28 +159,27 @@ namespace Mr.Robot
 		/// </summary>
 		static MeaningGroup GetOneMeaningGroup(List<StatementComponent> componentList,
 											   ref int idx,
-                                               CCodeParseResult parseResult,
                                                List<MeaningGroup> groupList,
 											   AnalysisContext analysisContext)
 		{
 			MeaningGroup retGroup = null;
 			// 是类型名?
-			if (null != (retGroup = GetVarTypeGroup(componentList, ref idx, parseResult)))
+			if (null != (retGroup = GetVarTypeGroup(componentList, ref idx, analysisContext.parseResult)))
 			{
 				return retGroup;
 			}
 			// 是变量名?
-			else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, parseResult, groupList, analysisContext)))
+			else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, groupList, analysisContext)))
 			{
 				return retGroup;
 			}
 			// 是函数调用?
-			else if (null != (retGroup = GetFunctionCallingGroup(componentList, ref idx, parseResult)))
+			else if (null != (retGroup = GetFunctionCallingGroup(componentList, ref idx, analysisContext.parseResult)))
 			{
 				return retGroup;
 			}
-			// 是表达式?
-			else if (null != (retGroup = GetExpressionGroup(componentList, ref idx, parseResult)))
+			// 是表达式? 或者是强制类型转换运算符
+			else if (null != (retGroup = GetExpressionGroup(componentList, ref idx, analysisContext.parseResult)))
 			{
 				return retGroup;
 			}
@@ -199,6 +194,16 @@ namespace Mr.Robot
 				retGroup.Type = MeaningGroupType.Unknown;
 				retGroup.ComponentList.Add(componentList[idx]);
 				retGroup.Text = componentList[idx].Text;
+				idx += 1;
+				return retGroup;
+			}
+			else if (IsConstantNumber(componentList[idx].Text))
+			{
+				retGroup = new MeaningGroup();
+				retGroup.Type = MeaningGroupType.Constant;
+				retGroup.ComponentList.Add(componentList[idx]);
+				retGroup.Text = componentList[idx].Text;
+				idx += 1;
 				return retGroup;
 			}
 			else
@@ -1021,7 +1026,6 @@ namespace Mr.Robot
 
 		static MeaningGroup GetVarNameGroup(List<StatementComponent> componentList,
                                             ref int idx,
-                                            CCodeParseResult parseResult,
                                             List<MeaningGroup> groupList,
 											AnalysisContext analysisContext)
 		{
@@ -1039,7 +1043,7 @@ namespace Mr.Robot
                     return retGroup;
                 }
                 // 是否为全局变量
-                else if (IsGlobalVariable(componentList[idx].Text, parseResult.IncHdParseInfoList))
+				else if (IsGlobalVariable(componentList[idx].Text, analysisContext.parseResult.IncHdParseInfoList))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
                     retGroup.Type = MeaningGroupType.GlobalVariable;
@@ -1070,7 +1074,7 @@ namespace Mr.Robot
                         || "->" == componentList[tmp_idx + 1].Text))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
-                    retGroup.Type = MeaningGroupType.LocalVariable;
+					retGroup.Type = GetVariableType(braceList, analysisContext.parseResult.IncHdParseInfoList);
                     foreach (StatementComponent item in braceList)
                     {
                         retGroup.ComponentList.Add(item);
@@ -1082,6 +1086,25 @@ namespace Mr.Robot
                 }
             }
             return null;
+		}
+
+		static MeaningGroupType GetVariableType(List<StatementComponent> braceList, List<CFileParseInfo> headerList)
+		{
+			foreach (StatementComponent item in braceList)
+			{
+				if (CommonProcess.IsStandardIdentifier(item.Text))
+				{
+					if (IsGlobalVariable(item.Text, headerList))
+					{
+						return MeaningGroupType.GlobalVariable;
+					}
+					else
+					{
+						return MeaningGroupType.LocalVariable;
+					}
+				}
+			}
+			return MeaningGroupType.LocalVariable;
 		}
 
         static void GetVarMemberGroup(List<StatementComponent> componentList,
@@ -1144,16 +1167,25 @@ namespace Mr.Robot
                 List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
                 if (null != braceList)
                 {
-                    MeaningGroup retGroup = new MeaningGroup();
-                    retGroup.Type = MeaningGroupType.Expression;
-                    foreach (StatementComponent item in braceList)
-                    {
-                        retGroup.Text += item.Text;
-                    }
-                    retGroup.ComponentList.AddRange(braceList);
-                    idx += 1;
-                    return retGroup;
-                }
+					MeaningGroup retGroup = new MeaningGroup();
+					int tmpIdx = 1;
+					if (IsVarType(braceList, ref tmpIdx, parseResult)
+						&& tmpIdx == braceList.Count - 1)
+					{
+						retGroup.Type = MeaningGroupType.TypeCasting;
+					}
+					else
+					{
+						retGroup.Type = MeaningGroupType.Expression;
+					}
+					foreach (StatementComponent item in braceList)
+					{
+						retGroup.Text += item.Text;
+					}
+					retGroup.ComponentList.AddRange(braceList);
+					idx += 1;
+					return retGroup;
+				}
             }
 			return null;
 		}
@@ -1189,37 +1221,8 @@ namespace Mr.Robot
 				// 如果是,为此新定义局部变量创建上下文记录项
 				analysisContext.local_list.Add(varCtx);
 			}
-			// 分析左值
-			if (LeftValueAnalysis(mgList, analysisContext))
-			{
-                
-			}
-			// 分析右值
-        }
-
-		static bool LeftValueAnalysis(List<MeaningGroup> mgList,
-									  AnalysisContext analysisContext)
-        {
-			List<MeaningGroup> rightValue = new List<MeaningGroup>();
-			int eqIdx = -1;
-			if (-1 != (eqIdx = FindEqualMarkIndex(mgList)))
-			{
-				// 如果有赋值符号"="
-				List<MeaningGroup> leftGroupList = new List<MeaningGroup>();
-				for (int i = 0; i < eqIdx; i++)
-				{
-					leftGroupList.Add(mgList[i]);
-				}
-				LeftValGroupProcess(leftGroupList, analysisContext);
-			}
-			else
-			{
-				// 如果没有赋值符号
-				// 可能是没有初始化赋值的临时变量定义
-				// 可能是函数调用
-				// 可能是自增,自减等一元运算符
-			}
-            return false;
+			// 分析左值/右值
+			InOutAnalysis.LeftRightValueAnalysis(mgList, analysisContext);
         }
 
         static VAR_CTX IsNewDefineVarible(List<MeaningGroup> mgList)
@@ -1234,23 +1237,6 @@ namespace Mr.Robot
             return null;
         }
 
-		static int FindEqualMarkIndex(List<MeaningGroup> mgList)
-		{
-			for (int i = 0; i < mgList.Count; i++)
-			{
-				if (mgList[i].Type == MeaningGroupType.EqualMark)						// "=", 等号赋值符
-				{
-					return i;
-				}
-			}
-			return -1;
-		}
-
-		static void LeftValGroupProcess(List<MeaningGroup> leftList,
-									    AnalysisContext analysisContext)
-		{
-
-		}
 	}
 
 	public enum StatementComponentType
@@ -1315,6 +1301,7 @@ namespace Mr.Robot
 		EqualMark,					// 赋值符号
 		TypeCasting,				// 强制类型转换
 		OtherOperator,				// 其它运算符
+		Constant,					// 常量
 	}
 
 	/// <summary>
@@ -1366,8 +1353,17 @@ namespace Mr.Robot
         // 局部变量列表
 		public List<VAR_CTX> local_list = new List<VAR_CTX>();
         // 全局变量列表
-		public List<VAR_CTX> global_list = new List<VAR_CTX>();
-    }
+		//public List<VAR_CTX> global_list = new List<VAR_CTX>();
+		// 入力全局变量列表
+		public List<MeaningGroup> inputGlobalList = new List<MeaningGroup>();
+		// 出力全局变量列表
+		public List<MeaningGroup> outputGlobalList = new List<MeaningGroup>();
+		// 调用函数列表
+		public List<MeaningGroup> calledFunctionList = new List<MeaningGroup>();
+
+		// 源文件分析结果
+		public CCodeParseResult parseResult = null;
+	}
 
 }
 

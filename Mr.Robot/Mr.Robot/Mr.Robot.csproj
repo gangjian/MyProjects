@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="CCodeAnalyser\CCodeAnalyser.cs" />
     <Compile Include="CCodeAnalyser\CCodeInfo.cs" />
+    <Compile Include="CCodeAnalyser\InOutAnalysis.cs" />
     <Compile Include="CCodeAnalyser\StatementAnalysis.cs" />
     <Compile Include="CCodeAnalyser\ContentsProcess.cs" />
     <Compile Include="CCodeAnalyser\FunctionAnalysis.cs" />
