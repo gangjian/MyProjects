@@ -209,94 +209,10 @@ namespace Mr.Robot
 			else
 			{
 				// What the hell is this?
+				System.Windows.Forms.MessageBox.Show("=== GetOneMeaningGroup === Assert!!!");
 				System.Diagnostics.Trace.Assert(false);
                 return null;
 			}
-
-			retGroup = new MeaningGroup();
-			while (true)
-			{
-				if (idx > componentList.Count - 1)
-				{
-					break;
-				}
-				StatementComponent cpnt = componentList[idx];
-				#region MyRegion
-				if (StatementComponentType.Operator == cpnt.Type)				        // 如果是操作符
-				{
-					if ("(" == cpnt.Text)
-					{
-						List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
-						if (null != braceList)
-						{
-							retGroup.ComponentList.AddRange(braceList);
-							// TODO: 括号之间如果既有运算符又有运算数的话是表达式
-							// 如果括号里是个类型的话,则是"强制类型转换"运算符
-							//if (IsVarType(braceList, parseResult))
-							{
-								// TODO:
-							}
-						}
-					}
-					else if ("[" == cpnt.Text)
-					{
-						List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
-						if (null != braceList)
-						{
-							retGroup.ComponentList.AddRange(braceList);
-						}
-					}
-					else if (("." == cpnt.Text)
-							 || ("->" == cpnt.Text))
-					{
-						retGroup.ComponentList.Add(cpnt);
-						// TODO: 有成员运算符的话是变量
-					}
-					else
-					{
-						if (0 != retGroup.ComponentList.Count)
-						{
-							break;
-						}
-						else
-						{
-							retGroup.ComponentList.Add(cpnt);
-							idx++;
-							break;
-						}
-					}
-				}
-				else
-				{																        // 非操作符, 操作数
-					// 是类型名?
-					// 是函数名?
-					// 是变量名?
-					if (0 != retGroup.ComponentList.Count)
-					{
-						StatementComponent lastCpnt = retGroup.ComponentList.Last();
-						if (("." == lastCpnt.Text)
-							|| ("->" == lastCpnt.Text))
-						{
-							retGroup.ComponentList.Add(cpnt);
-						}
-						else
-						{
-							break;
-						}
-					}
-					else
-					{
-						retGroup.ComponentList.Add(cpnt);
-					}
-				}
-				#endregion
-				idx++;
-			}
-			foreach (StatementComponent cpnt in retGroup.ComponentList)
-			{
-				retGroup.Text += cpnt.Text;
-			}
-			return retGroup;
 		}
 
 		/// <summary>
