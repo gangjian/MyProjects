@@ -15,28 +15,9 @@ namespace UnitTestProject
         [ClassInitialize]
         public static void TestClassSetup(TestContext ctx)
         {
-			string folder_name = "..\\..\\..\\TestSrc\\swc_in_trcta";
-            string source_name = folder_name + "\\Rte_swc_in_trcta.c";
-            string function_name = "sym_rbl_in_trcta_igoff";
-
-            List<string> source_list = new List<string>();
-            List<string> header_list = new List<string>();
-            // 取得所有源文件和头文件列表
-            IOProcess.GetAllCCodeFiles(folder_name, ref source_list, ref header_list);
-            // 解析指定的源文件,并取得解析结果
-            List<string> csfList = new List<string>();
-            csfList.Add(source_name);
-            List<CCodeParseResult> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
-
-            // FunctionAnalysis
-            // 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
-            CFunctionStructInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(source_name, function_name, parseResultList, out c_source_file_parse_result);
-
-            // 指定函数语句树结构的分析提取
-            root = new StatementNode();
-            root.Type = StatementNodeType.Root;
-            root.Scope = funInfo.Scope;
-            CCodeAnalyser.GetCodeBlockStructure(c_source_file_parse_result.SourceParseInfo.parsedCodeList, root);
+			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
+			string function_name = "sym_rbl_in_trcta_igoff";
+			c_source_file_parse_result = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -76,7 +57,6 @@ namespace UnitTestProject
 			Assert.AreEqual(1, analysisContext.local_list.Count);
 			Assert.AreEqual("pvU1NoSts", analysisContext.local_list[0].type);
 			Assert.AreEqual("pvOut", analysisContext.local_list[0].name);
-			//Assert.AreEqual(0, analysisContext.local_list[0].initial_list.Count);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -116,7 +96,7 @@ namespace UnitTestProject
             Assert.AreEqual("(*&pvOut)", meaningGroupList[2].Text);
         }
 
-		[TestMethod]
+		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igoff_IO()
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
@@ -135,28 +115,9 @@ namespace UnitTestProject
 		[ClassInitialize]
 		public static void TestClassSetup(TestContext ctx)
 		{
-			string folder_name = "..\\..\\..\\TestSrc\\swc_in_trcta";
-			string source_name = folder_name + "\\Rte_swc_in_trcta.c";
+			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
 			string function_name = "sym_rbl_in_trcta_igon";
-
-			List<string> source_list = new List<string>();
-			List<string> header_list = new List<string>();
-			// 取得所有源文件和头文件列表
-			IOProcess.GetAllCCodeFiles(folder_name, ref source_list, ref header_list);
-			// 解析指定的源文件,并取得解析结果
-			List<string> csfList = new List<string>();
-			csfList.Add(source_name);
-			List<CCodeParseResult> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
-
-			// FunctionAnalysis
-			// 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
-			CFunctionStructInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(source_name, function_name, parseResultList, out c_source_file_parse_result);
-
-			// 指定函数语句树结构的分析提取
-			root = new StatementNode();
-			root.Type = StatementNodeType.Root;
-			root.Scope = funInfo.Scope;
-			CCodeAnalyser.GetCodeBlockStructure(c_source_file_parse_result.SourceParseInfo.parsedCodeList, root);
+			c_source_file_parse_result = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -353,7 +314,7 @@ namespace UnitTestProject
 			Assert.AreEqual("(*&pvOut)", meaningGroupList[2].Text);
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_IO()
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
@@ -369,4 +330,49 @@ namespace UnitTestProject
 		}
 	}
 
+	[TestClass]
+	public class sym_rbl_in_trcta_initReset
+	{
+		static StatementNode root;                                                      // 函数语句结构的根节点
+		static CCodeParseResult c_source_file_parse_result;
+
+		[ClassInitialize]
+		public static void TestClassSetup(TestContext ctx)
+		{
+			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
+			string function_name = "sym_rbl_in_trcta_initReset";
+			c_source_file_parse_result = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
+		}
+
+		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
+		public void sym_rbl_in_trcta_initReset_IO()
+		{
+			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
+			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].Text);
+		}
+	}
+
+	[TestClass]
+	public class sym_rbl_in_trcta_initWakeup
+	{
+		static StatementNode root;                                                      // 函数语句结构的根节点
+		static CCodeParseResult c_source_file_parse_result;
+
+		[ClassInitialize]
+		public static void TestClassSetup(TestContext ctx)
+		{
+			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
+			string function_name = "sym_rbl_in_trcta_initWakeup";
+			c_source_file_parse_result = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
+		}
+
+		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
+		public void sym_rbl_in_trcta_initWakeup_IO()
+		{
+			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
+			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].Text);
+		}
+	}
 }

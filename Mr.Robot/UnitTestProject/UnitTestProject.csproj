@@ -50,6 +50,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Common.cs" />
     <Compile Include="UnitTest_Rte_swc_in_trcta.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

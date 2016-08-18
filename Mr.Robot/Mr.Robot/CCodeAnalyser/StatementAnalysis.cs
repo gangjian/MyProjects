@@ -1352,8 +1352,6 @@ namespace Mr.Robot
 		public List<VAR_CTX> parameter_list = new List<VAR_CTX>();
         // 局部变量列表
 		public List<VAR_CTX> local_list = new List<VAR_CTX>();
-        // 全局变量列表
-		//public List<VAR_CTX> global_list = new List<VAR_CTX>();
 		// 入力全局变量列表
 		public List<MeaningGroup> inputGlobalList = new List<MeaningGroup>();
 		// 出力全局变量列表
