@@ -37,14 +37,14 @@ namespace Mr.Robot
 
 	public class File_Scope
 	{
-		File_Position start = new File_Position(0, 0);
+		File_Position start = new File_Position(-1, -1);
 
 		public File_Position Start
 		{
 			get { return start; }
 			set { start = value; }
 		}
-		File_Position end = new File_Position(0, 0);
+		File_Position end = new File_Position(-1, -1);
 
 		public File_Position End
 		{
@@ -167,6 +167,42 @@ namespace Mr.Robot
 			get { return _includeHeaderParseInfoList; }
 			set { _includeHeaderParseInfoList = value; }
 		}
+
+		#region 以下方法,是针对代码解析结果的各种操作(查找,判断...)
+		/// <summary>
+		/// 根据函数名查找函数的解析结果
+		/// </summary>
+		public CFunctionStructInfo GetFunctionParseInfoByName(string fun_name)
+		{
+			foreach (CFileParseInfo pi in IncHdParseInfoList)							// 先遍历包含头文件
+			{
+				foreach (CFunctionStructInfo fi in pi.fun_declare_list)
+				{
+					if (fi.name.Equals(fun_name))
+					{
+						return fi;
+					}
+				}
+			}
+
+			foreach (CFunctionStructInfo fi in SourceParseInfo.fun_declare_list)		// 然后是本文件内的函数声明
+			{
+				if (fi.name.Equals(fun_name))
+				{
+					return fi;
+				}
+			}
+			foreach (CFunctionStructInfo fi in SourceParseInfo.fun_declare_list)		// 再然后是本文件内的函数定义
+			{
+				if (fi.name.Equals(fun_name))
+				{
+					return fi;
+				}
+			}
+			return null;																// 没找到
+		}
+		
+		#endregion
 	}
 
 }

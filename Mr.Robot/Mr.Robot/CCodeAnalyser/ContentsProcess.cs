@@ -146,6 +146,71 @@ namespace Mr.Robot
 			}
 		}
 
+		/// <summary>
+		/// 从指定位置开始取得(同一行内)的下一个标识符
+		/// </summary>
+		/// <returns></returns>
+		public static string GetNextIdentifier2(string statementStr, ref int offset)
+		{
+			int s_pos = -1, e_pos = -1;     // 标识符的起止位置
+			for (; offset < statementStr.Length; offset++)
+			{
+				char curChar = statementStr[offset];
+				E_CHAR_TYPE cType = CommonProcess.GetCharType(curChar);
+				switch (cType)
+				{
+					case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:                       // 空格
+						if (-1 == s_pos)
+						{
+							// do nothing
+						}
+						else
+						{
+							// 标识符结束
+							e_pos = offset - 1;
+						}
+						break;
+					case E_CHAR_TYPE.E_CTYPE_LETTER:                            // 字母
+					case E_CHAR_TYPE.E_CTYPE_UNDERLINE:                         // 下划线
+					case E_CHAR_TYPE.E_CTYPE_DIGIT:                             // 数字
+						if (-1 == s_pos)
+						{
+							s_pos = offset;
+						}
+						else
+						{
+							// do nothing
+						}
+						break;
+					case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:                       // 标点
+					case E_CHAR_TYPE.E_CTYPE_SYMBOL:                            // 运算符
+						if (-1 == s_pos)
+						{
+							s_pos = offset;
+							e_pos = offset;
+						}
+						else
+						{
+							e_pos = offset - 1;
+						}
+						break;
+					default:
+						CommonProcess.ErrReport();
+						return null;
+				}
+				if (-1 != s_pos && -1 != e_pos)
+				{
+					return statementStr.Substring(s_pos, e_pos - s_pos + 1);
+				}
+			}
+			if (-1 != s_pos && -1 == e_pos)
+			{
+				e_pos = offset - 1;
+				return statementStr.Substring(s_pos, e_pos - s_pos + 1);
+			}
+			return null;
+		}
+
         public static E_CHAR_TYPE GetCharType(Char ch)
 		{
 			if (Char.IsWhiteSpace(ch))

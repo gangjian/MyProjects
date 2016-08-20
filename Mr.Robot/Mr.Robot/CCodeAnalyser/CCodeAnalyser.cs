@@ -512,7 +512,10 @@ namespace Mr.Robot
 						CFunctionStructInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
 						if (null != cfi)
 						{
-							if (null != cfi.Scope.Start)
+							if (   -1 != cfi.Scope.Start.row_num
+								&& -1 != cfi.Scope.Start.col_num
+								&& -1 != cfi.Scope.End.row_num
+								&& -1 != cfi.Scope.End.col_num)
 							{
 								fi.fun_define_list.Add(cfi);
 							}

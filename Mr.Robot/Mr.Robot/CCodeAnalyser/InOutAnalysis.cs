@@ -77,19 +77,71 @@ namespace Mr.Robot
 		{
 			foreach (MeaningGroup item in rightList)
 			{
-				if (item.Type == MeaningGroupType.GlobalVariable)
+				if (item.Type == MeaningGroupType.GlobalVariable)						// 全局变量
 				{
 					analysisContext.inputGlobalList.Add(item);
 				}
-				else if (item.Type == MeaningGroupType.FunctionCalling)
+				else if (item.Type == MeaningGroupType.FunctionCalling)					// 函数调用
 				{
-					analysisContext.calledFunctionList.Add(item);
+					CalledFunctionProcess(item, analysisContext);
 				}
-				else if (item.Type == MeaningGroupType.Expression)
+				else if (item.Type == MeaningGroupType.Expression)						// 表达式
 				{
 					CCodeAnalyser.ExpressionAnalysis(item.ComponentList, analysisContext);
 				}
 			}
 		}
+
+		static void CalledFunctionProcess(MeaningGroup mg, AnalysisContext ctx)
+		{
+			CalledFunction cf = new CalledFunction();
+			cf.meaningGroup = mg;
+			// 根据函数名查找函数声明(暂时不考虑C++的函数重载)
+			CFunctionStructInfo fi = ctx.parseResult.GetFunctionParseInfoByName(mg.ComponentList[0].Text);
+			if (null == fi)
+			{
+				// 不应该找不到
+				System.Windows.Forms.MessageBox.Show("CalledFunctionProcess(...) : 没找到调用函数的解析结果!");
+				return;
+			}
+			// 分别判断各引数是值类型还是引用类型
+			foreach (var pds in fi.paras)
+			{
+				cf.paraTypeList.Add(JudgeParaType(pds));
+			}
+
+			ctx.calledFunctionList.Add(cf);
+		}
+
+		// 判断引数的种别(值类型或者是引用类型)
+		static FunParaType JudgeParaType(string para_def)
+		{
+			int offset = 0;
+			int old_offset = 0;
+			// 前缀 + 类型部分 + 引数名
+			//while (true)
+			//{
+			//	old_offset = offset;
+			//	string idStr = CommonProcess.GetNextIdentifier2(para_def, ref offset);
+			//	if (string.IsNullOrEmpty(idStr))
+			//	{
+			//		break;
+			//	}
+			//	else
+			//	{
+			//		offset = old_offset + idStr.Length;
+			//	}
+			//}
+			return FunParaType.Value;
+		}
+	}
+
+	/// <summary>
+	/// 函数引数的种别(引用类型或者值类型)
+	/// </summary>
+	public enum FunParaType
+	{
+		Reference,
+		Value,
 	}
 }

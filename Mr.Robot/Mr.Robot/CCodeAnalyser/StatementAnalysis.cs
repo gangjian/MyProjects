@@ -272,7 +272,7 @@ namespace Mr.Robot
 			while (true)
 			{
 				offset_old = offset;
-				idStr = GetNextIdentifier(statementStr, ref offset);
+				idStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
 				if (null == idStr)
 				{
 					break;
@@ -342,7 +342,7 @@ namespace Mr.Robot
 					if (0 != di.paras.Count)
 					{
 						// 取得宏参数
-						string paraStr = GetNextIdentifier(statementStr, ref offset);
+						string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
 						if ("(" != paraStr)
 						{
                             CommonProcess.ErrReport();
@@ -609,71 +609,6 @@ namespace Mr.Robot
 					return false;
 			}
 			return true;
-		}
-
-		/// <summary>
-		/// 从指定位置开始取得(同一行内)的下一个标识符
-		/// </summary>
-		/// <returns></returns>
-		static string GetNextIdentifier(string statementStr, ref int offset)
-		{
-            int s_pos = -1, e_pos = -1;     // 标识符的起止位置
-            for (; offset < statementStr.Length; offset++)
-            {
-                char curChar = statementStr[offset];
-                E_CHAR_TYPE cType = CommonProcess.GetCharType(curChar);
-                switch (cType)
-                {
-                    case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:                       // 空格
-                        if (-1 == s_pos)
-					    {
-                            // do nothing
-					    }
-					    else
-					    {
-						    // 标识符结束
-                            e_pos = offset - 1;
-					    }
-						break;
-                    case E_CHAR_TYPE.E_CTYPE_LETTER:                            // 字母
-                    case E_CHAR_TYPE.E_CTYPE_UNDERLINE:                         // 下划线
-                    case E_CHAR_TYPE.E_CTYPE_DIGIT:                             // 数字
-                        if (-1 == s_pos)
-                        {
-                            s_pos = offset;
-                        }
-                        else
-                        {
-                            // do nothing
-                        }
-                        break;
-                    case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:                       // 标点
-                    case E_CHAR_TYPE.E_CTYPE_SYMBOL:                            // 运算符
-                        if (-1 == s_pos)
-                        {
-                            s_pos = offset;
-                            e_pos = offset;
-                        }
-                        else
-                        {
-                            e_pos = offset - 1;
-                        }
-                        break;
-                    default:
-                        CommonProcess.ErrReport();
-                        return null;
-                }
-                if (-1 != s_pos && -1 != e_pos)
-                {
-                    return statementStr.Substring(s_pos, e_pos - s_pos + 1);
-                }
-            }
-			if (-1 != s_pos && -1 == e_pos)
-			{
-				e_pos = offset - 1;
-				return statementStr.Substring(s_pos, e_pos - s_pos + 1);
-			}
-			return null;
 		}
 
 		/// <summary>
@@ -1273,12 +1208,18 @@ namespace Mr.Robot
 		// 出力全局变量列表
 		public List<MeaningGroup> outputGlobalList = new List<MeaningGroup>();
 		// 调用函数列表
-		public List<MeaningGroup> calledFunctionList = new List<MeaningGroup>();
+		public List<CalledFunction> calledFunctionList = new List<CalledFunction>();
 
 		// 源文件分析结果
 		public CCodeParseResult parseResult = null;
 	}
 
+	public class CalledFunction
+	{
+		public MeaningGroup meaningGroup = new MeaningGroup();
+		public List<FunParaType> paraTypeList = new List<FunParaType>();				// 引数种别(值类型或者引用类型)列表
+		public string returnValType = string.Empty;
+	}
 }
 
 
