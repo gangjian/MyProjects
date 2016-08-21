@@ -96,43 +96,111 @@ namespace Mr.Robot
 		{
 			CalledFunction cf = new CalledFunction();
 			cf.meaningGroup = mg;
-			// 根据函数名查找函数声明(暂时不考虑C++的函数重载)
-			CFunctionStructInfo fi = ctx.parseResult.GetFunctionParseInfoByName(mg.ComponentList[0].Text);
-			if (null == fi)
+			// 找出实参列表, 根据实参的类型确定是传值,还是传引用
+			if (mg.ComponentList.Count >= 3
+				&& CommonProcess.IsStandardIdentifier(mg.ComponentList.First().Text)	// 函数名
+				&& "(" == mg.ComponentList[1].Text										// 函数名后跟着左括号
+				&& ")" == mg.ComponentList.Last().Text)									// 最后是右括号
 			{
-				// 不应该找不到
-				System.Windows.Forms.MessageBox.Show("CalledFunctionProcess(...) : 没找到调用函数的解析结果!");
-				return;
+				// 取得实参列表
+				MeaningGroup act_para = new MeaningGroup();
+				List<MeaningGroup> act_para_list = new List<MeaningGroup>();
+				for (int i = 2; i < mg.ComponentList.Count - 1; i++)
+				{
+					if (	"," == mg.ComponentList[i].Text
+						&&	(0 != act_para.ComponentList.Count) )
+					{
+						act_para_list.Add(act_para);
+						act_para = new MeaningGroup();
+					}
+					else
+					{
+						act_para.ComponentList.Add(mg.ComponentList[i]);
+						act_para.Text += mg.ComponentList[i].Text;
+					}
+				}
+				if (0 != act_para.ComponentList.Count)
+				{
+					act_para_list.Add(act_para);
+				}
+				foreach (MeaningGroup ap in act_para_list)
+				{
+					// 分别判断各实参是传值还是传引用
+					cf.paraTypeList.Add(JudgeActualParaType(ap, ctx));
+				}
 			}
-			// 分别判断各引数是值类型还是引用类型
-			foreach (var pds in fi.paras)
+			else
 			{
-				cf.paraTypeList.Add(JudgeParaType(pds));
+				return;
 			}
 
 			ctx.calledFunctionList.Add(cf);
 		}
 
-		// 判断引数的种别(值类型或者是引用类型)
-		static FunParaType JudgeParaType(string para_def)
+		// 判断实参的种别(传值或者传引用)
+		static FunParaType JudgeActualParaType(MeaningGroup act_para, AnalysisContext ctx)
 		{
-			int offset = 0;
-			int old_offset = 0;
-			// 前缀 + 类型部分 + 引数名
-			//while (true)
-			//{
-			//	old_offset = offset;
-			//	string idStr = CommonProcess.GetNextIdentifier2(para_def, ref offset);
-			//	if (string.IsNullOrEmpty(idStr))
-			//	{
-			//		break;
-			//	}
-			//	else
-			//	{
-			//		offset = old_offset + idStr.Length;
-			//	}
-			//}
+			// 前缀 + 变量名
+			// 最后面是变量名
+			string var_name = act_para.ComponentList.Last().Text;
+			// 确定变量的类型, 是值类型还是引用类型(指针类型)
+			FunParaType var_type = JudgeVarParaType(var_name, ctx);
+			// 在确定前缀(取地址&, 或者取指针指向的变量*)
+			if (2 == act_para.ComponentList.Count)
+			{
+				if ("&" == act_para.ComponentList.First().Text
+					&& var_type == FunParaType.Value)
+				{
+					return FunParaType.Reference;
+				}
+				else if ("*" == act_para.ComponentList.First().Text
+						 && var_type == FunParaType.Reference)
+				{
+					return FunParaType.Value;
+				}
+				else
+				{
+					return var_type;
+				}
+			}
+			else
+			{
+				return var_type;
+			}
+		}
+
+		/// <summary>
+		/// 判断变量的类型是值类型亦或是指针类型
+		/// </summary>
+		static FunParaType JudgeVarParaType(string var_name, AnalysisContext ctx)
+		{
+			// 在当前的上下文中查找该名称的变量, 取得其类型名
+			string var_type = GetVarTypeName(var_name, ctx);
+			if (string.IsNullOrEmpty(var_type))
+			{
+				return FunParaType.Value;
+			}
 			return FunParaType.Value;
+		}
+
+		static string GetVarTypeName(string var_name, AnalysisContext ctx)
+		{
+			// 临时变量?
+			foreach (VAR_CTX local_var in ctx.local_list)
+			{
+				if (local_var.name.Equals(var_name))
+				{
+					return local_var.type;
+				}
+			}
+			// 全局变量?
+			VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(var_name);
+			if (null != vi)
+			{
+				return vi.typeName;
+			}
+			
+			return string.Empty;
 		}
 	}
 

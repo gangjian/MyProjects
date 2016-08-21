@@ -172,36 +172,89 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据函数名查找函数的解析结果
 		/// </summary>
-		public CFunctionStructInfo GetFunctionParseInfoByName(string fun_name)
+		public CFunctionStructInfo FindFuncParseInfoByName(string fun_name)
 		{
-			foreach (CFileParseInfo pi in IncHdParseInfoList)							// 先遍历包含头文件
+			CFunctionStructInfo retFuncInfo = null;
+			foreach (CFileParseInfo pi in this.IncHdParseInfoList)						// 先遍历包含头文件
 			{
-				foreach (CFunctionStructInfo fi in pi.fun_declare_list)
+				if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, pi.fun_declare_list)))
 				{
-					if (fi.name.Equals(fun_name))
-					{
-						return fi;
-					}
+					return retFuncInfo;
+				}
+				if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, pi.fun_define_list)))
+				{
+					return retFuncInfo;
 				}
 			}
-
-			foreach (CFunctionStructInfo fi in SourceParseInfo.fun_declare_list)		// 然后是本文件内的函数声明
+			// 然后是本文件内的函数声明
+			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, SourceParseInfo.fun_declare_list)))
 			{
-				if (fi.name.Equals(fun_name))
-				{
-					return fi;
-				}
+				return retFuncInfo;
 			}
-			foreach (CFunctionStructInfo fi in SourceParseInfo.fun_declare_list)		// 再然后是本文件内的函数定义
+			// 再然后是本文件内的函数定义
+			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, SourceParseInfo.fun_define_list)))
 			{
-				if (fi.name.Equals(fun_name))
-				{
-					return fi;
-				}
+				return retFuncInfo;
 			}
 			return null;																// 没找到
 		}
-		
+
+		static CFunctionStructInfo SearchFuncStructInfoList(string fun_name, List<CFunctionStructInfo> funInfoList)
+		{
+			foreach (CFunctionStructInfo fsi in funInfoList)
+			{
+				if (fsi.name.Equals(fun_name))
+				{
+					return fsi;
+				}
+			}
+			return null;
+		}
+
+
+		/// <summary>
+		/// 根据变量名查找全局变量
+		/// </summary>
+		public VariableInfo FindGlobalVarInfoByName(string var_name)
+		{
+			VariableInfo retVarInfo = null;
+			foreach (CFileParseInfo hfi in this.IncHdParseInfoList)
+			{
+				if (null != (retVarInfo = SearchVariableList(var_name, hfi.global_var_declare_list)))
+				{
+					return retVarInfo;
+				}
+				else if (null != (retVarInfo = SearchVariableList(var_name, hfi.global_var_define_list)))
+				{
+					return retVarInfo;
+				}
+			}
+			if (null != (retVarInfo = SearchVariableList(var_name, this.SourceParseInfo.global_var_declare_list)))
+			{
+				return retVarInfo;
+			}
+			else if (null != (retVarInfo = SearchVariableList(var_name, this.SourceParseInfo.global_var_define_list)))
+			{
+				return retVarInfo;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		static VariableInfo SearchVariableList(string var_name, List<VariableInfo> var_list)
+		{
+			foreach (VariableInfo vi in var_list)
+			{
+				if (vi.varName.Equals(var_name))
+				{
+					return vi;
+				}
+			}
+			return null;
+		}
+
 		#endregion
 	}
 

@@ -730,74 +730,6 @@ namespace Mr.Robot
         }
 
         /// <summary>
-        /// 判断标识符是否是函数名
-        /// </summary>
-		static bool IsFunctionName(string identifier, CCodeParseResult parsedResult)
-        {
-			int idx;
-			// 遍历头文件列表
-			foreach (CFileParseInfo hfi in parsedResult.IncHdParseInfoList)
-            {
-				if (-1 != (idx = SearchFunctionInfoListByName(identifier, hfi.fun_declare_list)))
-				{
-					return true;
-				}
-				else if (-1 != (idx = SearchFunctionInfoListByName(identifier, hfi.fun_define_list)))
-				{
-					return true;
-				}
-            }
-			// 是否是本文件內前面定义/声明的函数
-			if (-1 != (idx = SearchFunctionInfoListByName(identifier, parsedResult.SourceParseInfo.fun_declare_list)))
-			{
-				return true;
-			}
-			else if (-1 != (idx = SearchFunctionInfoListByName(identifier, parsedResult.SourceParseInfo.fun_define_list)))
-			{
-				return true;
-			}
-
-            return false;
-        }
-
-		static int SearchFunctionInfoListByName(string fun_name, List<CFunctionStructInfo> funInfoList)
-		{
-			for (int i = 0; i < funInfoList.Count; i++)
-			{
-				if (funInfoList[i].name.Equals(fun_name))
-				{
-					return i;
-				}
-			}
-			return -1;
-		}
-
-        /// <summary>
-        /// 判断标识符是否是全局变量
-        /// </summary>
-        static bool IsGlobalVariable(string identifier, List<CFileParseInfo> headerList)
-        {
-			foreach (CFileParseInfo hfi in headerList)
-			{
-				foreach (VariableInfo vi in hfi.global_var_declare_list)
-				{
-					if (vi.varName.Equals(identifier))
-					{
-						return true;
-					}
-				}
-				foreach (VariableInfo vi in hfi.global_var_define_list)
-				{
-					if (vi.varName.Equals(identifier))
-					{
-						return true;
-					}
-				}
-			}
-            return false;
-        }
-
-        /// <summary>
         /// 判断标识符是否是局部(临时)变量
         /// </summary>
 		static bool IsLocalVariable(string identifier, AnalysisContext analysisContext)
@@ -894,7 +826,7 @@ namespace Mr.Robot
                     return retGroup;
                 }
                 // 是否为全局变量
-				else if (IsGlobalVariable(componentList[idx].Text, analysisContext.parseResult.IncHdParseInfoList))
+				else if (null != analysisContext.parseResult.FindGlobalVarInfoByName(componentList[idx].Text))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
                     retGroup.Type = MeaningGroupType.GlobalVariable;
@@ -925,7 +857,7 @@ namespace Mr.Robot
                         || "->" == componentList[tmp_idx + 1].Text))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
-					retGroup.Type = GetVariableType(braceList, analysisContext.parseResult.IncHdParseInfoList);
+					retGroup.Type = GetVariableType(braceList, analysisContext.parseResult);
                     foreach (StatementComponent item in braceList)
                     {
                         retGroup.ComponentList.Add(item);
@@ -939,13 +871,13 @@ namespace Mr.Robot
             return null;
 		}
 
-		static MeaningGroupType GetVariableType(List<StatementComponent> braceList, List<CFileParseInfo> headerList)
+		static MeaningGroupType GetVariableType(List<StatementComponent> braceList, CCodeParseResult parseResult)
 		{
 			foreach (StatementComponent item in braceList)
 			{
 				if (CommonProcess.IsStandardIdentifier(item.Text))
 				{
-					if (IsGlobalVariable(item.Text, headerList))
+					if (null != parseResult.FindGlobalVarInfoByName(item.Text))
 					{
 						return MeaningGroupType.GlobalVariable;
 					}
@@ -987,7 +919,7 @@ namespace Mr.Robot
 			if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
 			{
 				// 判断是否是函数名
-				if (IsFunctionName(componentList[idx].Text, parseResult)
+				if (null != parseResult.FindFuncParseInfoByName(componentList[idx].Text)
 					&& "(" == componentList[idx + 1].Text)
 				{
 					MeaningGroup retGroup = new MeaningGroup();
@@ -1137,7 +1069,6 @@ namespace Mr.Robot
 		{
 			Text = str;
 		}
-
 	}
 
 	public enum MeaningGroupType

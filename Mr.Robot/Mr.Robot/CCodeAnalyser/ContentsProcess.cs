@@ -10,7 +10,7 @@ namespace Mr.Robot
 	public class CommonProcess
 	{
 		/// <summary>
-        /// 从(多行字符)当前位置取得下一个标识符(identifier)
+        /// 从(多行字符)当前位置取得下一个标识符
 		/// </summary>
 		/// <param varName="codeList"></param>
 		/// <param varName="lineIdx"></param>
