@@ -995,31 +995,58 @@ namespace Mr.Robot
 		}
 
         static void MeaningGroupsAnalysis(List<MeaningGroup> mgList,
-										  AnalysisContext analysisContext)
+										  AnalysisContext ctx)
         {
             // 先检查是否是新定义的局部变量
 			VAR_CTX varCtx = null;
-			if (null != (varCtx = IsNewDefineVarible(mgList)))
+			if (null != (varCtx = IsNewDefineVarible(mgList, ctx)))
 			{
 				// 如果是,为此新定义局部变量创建上下文记录项
-				analysisContext.local_list.Add(varCtx);
+				ctx.local_list.Add(varCtx);
 			}
 			// 分析左值/右值
-			InOutAnalysis.LeftRightValueAnalysis(mgList, analysisContext);
+			InOutAnalysis.LeftRightValueAnalysis(mgList, ctx);
         }
 
-        static VAR_CTX IsNewDefineVarible(List<MeaningGroup> mgList)
+		static VAR_CTX IsNewDefineVarible(List<MeaningGroup> mgList, AnalysisContext ctx)
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
 				VAR_CTX varCtx = new VAR_CTX();
                 varCtx.type = mgList[0].Text;
+				string orgTypeName;
+				if (string.Empty != (orgTypeName = IsTypeDefTypeName(mgList[0], ctx)))
+				{
+					varCtx.real_type = orgTypeName;
+				}
                 varCtx.name = mgList[1].Text;
                 return varCtx;
             }
             return null;
         }
 
+		/// <summary>
+		/// 判断类型名是否是一个typedef定义的类型别名
+		/// </summary>
+		/// <returns>返回原类型名</returns>
+		static string IsTypeDefTypeName(MeaningGroup type_name_group, AnalysisContext ctx)
+		{
+			foreach (StatementComponent cpnt in type_name_group.ComponentList)
+			{
+				if (CommonProcess.IsStandardIdentifier(cpnt.Text))
+				{
+					string real_type;
+					List<CFileParseInfo> fpiList = new List<CFileParseInfo>();
+					fpiList.AddRange(ctx.parseResult.IncHdParseInfoList);
+					fpiList.Add(ctx.parseResult.SourceParseInfo);
+					if (string.Empty != (real_type = CommonProcess.FindTypeDefName(cpnt.Text, fpiList)))
+					{
+						return real_type;
+					}
+				}
+			}
+			return null;
+		}
 	}
 
 	public enum StatementComponentType
@@ -1119,8 +1146,9 @@ namespace Mr.Robot
 	/// </summary>
 	public class VAR_CTX
 	{
-		public string name = string.Empty;
-		public string type = string.Empty;
+		public string name = string.Empty;												// 变量名
+		public string type = string.Empty;												// 类型名
+		public string real_type = string.Empty;											// 如果类型名是"typedef"定义的别名的话,原类型名
 		public object cur_val = new object();
 		public List<VAR_CTX> memberList = new List<VAR_CTX>();
 	}

@@ -648,5 +648,20 @@ namespace Mr.Robot
             System.Diagnostics.Trace.Assert(false);
         }
 
+		public static string FindTypeDefName(string type_name, List<CFileParseInfo> fpiList)
+		{
+			foreach (CFileParseInfo fpi in fpiList)
+			{
+				foreach (TypeDefineInfo tdi in fpi.type_define_list)
+				{
+					if (tdi.new_type_name.Equals(type_name))
+					{
+						return tdi.old_type_name;
+					}
+				}
+			}
+			fpiList.Clear();
+			return string.Empty;
+		}
 	}
 }

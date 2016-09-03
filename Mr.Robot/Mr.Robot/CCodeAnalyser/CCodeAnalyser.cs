@@ -566,13 +566,12 @@ namespace Mr.Robot
 						// 注意用户定义类型后面的分号不是全局量
 						else if (2 <= qualifierList.Count)
 						{
-							// TODO: struct Rte_CDS_swc_in_trcta
-							GlobalVarProcess(qualifierList, ref fi);
+							GlobalVarProcess(qualifierList, ref fi, parsedFileInfoList);
 						}
 					}
 					else if ("," == nextId)
 					{
-						GlobalVarProcess(qualifierList, ref fi);
+						GlobalVarProcess(qualifierList, ref fi, parsedFileInfoList);
 						continue;
 					}
 					else
@@ -851,7 +850,9 @@ namespace Mr.Robot
 		/// <param varName="qualifierList"></param>
 		/// <param varName="searchPos"></param>
 		/// <param varName="cfi"></param>
-		static void GlobalVarProcess(List<string> qualifierList, ref CFileParseInfo cfi)
+		static void GlobalVarProcess(List<string> qualifierList,
+									 ref CFileParseInfo cfi,
+									 List<CFileParseInfo> parsedFileInfoList)
 		{
 			VariableInfo gvi = new VariableInfo();
 
@@ -877,8 +878,7 @@ namespace Mr.Robot
 			}
 
 			// 变量名
-			idx = qualifierList.Count - 1;
-			qlfStr = qualifierList[idx].Trim();
+			qlfStr = qualifierList.Last().Trim();
             if (CommonProcess.IsStandardIdentifier(qlfStr))
 			{
 				gvi.varName = qlfStr;
@@ -887,26 +887,22 @@ namespace Mr.Robot
 			{
 				return;
 			}
-			qualifierList.RemoveAt(idx);
+			qualifierList.RemoveAt(qualifierList.Count - 1);
 
+			List<string> prefixList;													// 前缀列表
 			// 类型名
-			idx = qualifierList.Count - 1;
-			qlfStr = qualifierList[idx].Trim();
-			string type_name = "";
-            while (false == CommonProcess.IsStandardIdentifier(qlfStr))
+			gvi.typeName = ExtractGlobalVarTypeName(ref qualifierList, out prefixList);
+			gvi.qualifiers.AddRange(prefixList);
+			// 类型名可能是typedef定义的别名, 要找出原类型名
+			string real_type;
+			List<CFileParseInfo> fpiList = new List<CFileParseInfo>();
+			fpiList.AddRange(parsedFileInfoList);
+			fpiList.Add(cfi);
+			if (string.Empty != (real_type = CommonProcess.FindTypeDefName(gvi.typeName, fpiList)))
 			{
-				type_name = qlfStr + type_name;
-				idx--;
-				qlfStr = qualifierList[idx].Trim();
+				gvi.realTypeName = real_type;
 			}
-			type_name = qlfStr + type_name;
-			gvi.typeName = type_name;
 
-			// 剩余的都放到修饰符列表里去
-			for (int i = 0; i < idx; i++)
-			{
-				gvi.qualifiers.Add(qualifierList[i].Trim());
-			}
 			if ((0 != gvi.qualifiers.Count)
 				&& ("extern" == gvi.qualifiers.First().Trim().ToLower()))
 			{
@@ -916,6 +912,40 @@ namespace Mr.Robot
 			{
 				cfi.global_var_define_list.Add(gvi);
 			}
+		}
+
+		static string ExtractGlobalVarTypeName(ref List<string> qualifierList, out List<string> prefixList)
+		{
+			int idx = qualifierList.Count - 1;
+			string qlfStr = qualifierList[idx].Trim();
+			string type_name = string.Empty;
+			while (false == CommonProcess.IsStandardIdentifier(qlfStr))
+			{
+				type_name = qlfStr + type_name;
+				idx--;
+				qlfStr = qualifierList[idx].Trim();
+			}
+			type_name = qlfStr + type_name;
+			// 如果前面还有"struct", "enum", "union", "signed", "unsigned"等前缀, 那也要加到类型名中去
+			if (0 != idx)
+			{
+				if ("struct" == qualifierList[idx - 1]
+					|| "enum" == qualifierList[idx - 1]
+					|| "union" == qualifierList[idx - 1]
+					|| "signed" == qualifierList[idx - 1]
+					|| "unsigned" == qualifierList[idx - 1])
+				{
+					type_name = qualifierList[idx - 1] + " " + type_name;
+					idx -= 1;
+				}
+			}
+			// 剩余的都放到修饰符列表里去
+			prefixList = new List<string>();
+			for (int i = 0; i < idx; i++)
+			{
+				prefixList.Add(qualifierList[i].Trim());
+			}
+			return type_name;
 		}
 
 		/// <summary>
@@ -1094,7 +1124,7 @@ namespace Mr.Robot
 				if (qualifierList.Count - 1 == i)
 				{
 					tdi.new_type_name = qualifierList[i];
-					tdi.old_type_name = old_type;
+					tdi.old_type_name = old_type.Trim();
 				}
 				else
 				{

@@ -9,7 +9,7 @@ namespace Mr.Robot
 	// 条件编译处理情报
 	class CC_INFO
 	{
-		public string exp = "";
+		public string exp = string.Empty;
 		public bool unidentified_flag = false;
 		public bool write_flag = true;
 		public bool write_next_flag = false;
@@ -69,7 +69,7 @@ namespace Mr.Robot
 	/// </summary>
 	public class CFileParseInfo
 	{
-		public string full_name = "";
+		public string full_name = string.Empty;
 		public List<string> include_file_list = new List<string>();                     // "include"头文件列表
 		public List<CFunctionStructInfo> fun_declare_list = new List<CFunctionStructInfo>();// 函数声明列表
 		public List<CFunctionStructInfo> fun_define_list = new List<CFunctionStructInfo>(); // 函数定义列表
@@ -92,7 +92,7 @@ namespace Mr.Robot
 	/// </summary>
 	public class CFunctionStructInfo
 	{
-		public string name = "";												        // 函数名称
+		public string name = string.Empty;												// 函数名称
 		public List<string> qualifiers = new List<string>();					        // 修饰符列表
 		public List<string> paras = new List<string>();							        // 参数列表
 
@@ -109,7 +109,7 @@ namespace Mr.Robot
 	/// </summary>
 	public class UsrDefTypeInfo
 	{
-		public string type = "";												        // "struct, enum, union"
+		public string type = string.Empty;												// "struct, enum, union"
 		public List<string> nameList = new List<string>();						        // 可能有多个名(逗号分割)
 		public List<string> memberList = new List<string>();
 
@@ -126,25 +126,26 @@ namespace Mr.Robot
 	/// </summary>
 	public class VariableInfo
 	{
-		public string typeName = "";											        // 类型名
-		public string varName = "";												        // 变量名
+		public string typeName = string.Empty;											// 类型名
+		public string realTypeName = string.Empty;										// (如果类型名是"typedef"定义的别名的话)原类型名
+		public string varName = string.Empty;											// 变量名
 		public List<string> qualifiers = new List<string>();					        // 修饰符列表
-		public string array_size_string = "";									        // (如果是数组的话)数组size字符串
-        public string initial_string = "";						                        // 初始化赋值字符串
+		public string array_size_string = string.Empty;									// (如果是数组的话)数组size字符串
+		public string initial_string = string.Empty;						            // 初始化赋值字符串
         public List<MeaningGroup> initial_list = new List<MeaningGroup>();				// 初始化含义组(解析分组后)跟initial_string可能有重复
 	}
 
 	public class MacroDefineInfo
 	{
-		public string name = "";												        // 宏名
+		public string name = string.Empty;												// 宏名
 		public List<string> paras = new List<string>();							        // 参数列表
-		public string value = "";												        // 宏值
+		public string value = string.Empty;												// 宏值
 	}
 
 	public class TypeDefineInfo
 	{
-		public string old_type_name = "";
-		public string new_type_name = "";
+		public string old_type_name = string.Empty;
+		public string new_type_name = string.Empty;
 	}
 
 	/// <summary>

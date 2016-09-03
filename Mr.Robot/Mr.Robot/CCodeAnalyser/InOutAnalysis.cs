@@ -185,21 +185,36 @@ namespace Mr.Robot
 
 		static string GetVarTypeName(string var_name, AnalysisContext ctx)
 		{
+			// TODO: 引数?
+
 			// 临时变量?
 			foreach (VAR_CTX local_var in ctx.local_list)
 			{
 				if (local_var.name.Equals(var_name))
 				{
-					return local_var.type;
+					if (string.Empty != local_var.real_type)
+					{
+						return local_var.real_type;
+					}
+					else
+					{
+						return local_var.type;
+					}
 				}
 			}
 			// 全局变量?
 			VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(var_name);
 			if (null != vi)
 			{
-				return vi.typeName;
+				if (string.Empty != vi.realTypeName)
+				{
+					return vi.realTypeName;
+				}
+				else
+				{
+					return vi.typeName;
+				}
 			}
-
 			return string.Empty;
 		}
 	}
