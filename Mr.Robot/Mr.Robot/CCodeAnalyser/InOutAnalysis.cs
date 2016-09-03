@@ -199,7 +199,7 @@ namespace Mr.Robot
 			{
 				return vi.typeName;
 			}
-			
+
 			return string.Empty;
 		}
 	}

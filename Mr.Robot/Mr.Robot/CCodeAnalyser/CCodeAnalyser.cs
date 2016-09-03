@@ -489,17 +489,10 @@ namespace Mr.Robot
                     if (CommonProcess.IsUsrDefTypeKWD(nextId))
 					{
 						// 用户定义类型处理
-						UsrDefTypeInfo udti = UserDefineTypeProcess(codeList, qualifierList, ref searchPos);
+						UsrDefTypeInfo udti = UserDefineTypeProcess(codeList, qualifierList, ref searchPos, fi);
 						if (null != udti)
 						{
-							// 如果是匿名类型, 要给加个名字
-							if (0 == udti.nameList.Count)
-							{
-                                // 取得匿名类型的名字
-                                udti.nameList.Add(GetAnonymousTypeName(fi));
-							}
 							fi.user_def_type_list.Add(udti);
-                            qualifierList.Add(udti.nameList[0]);
 						}
 					}
 				}
@@ -573,6 +566,7 @@ namespace Mr.Robot
 						// 注意用户定义类型后面的分号不是全局量
 						else if (2 <= qualifierList.Count)
 						{
+							// TODO: struct Rte_CDS_swc_in_trcta
 							GlobalVarProcess(qualifierList, ref fi);
 						}
 					}
@@ -752,7 +746,7 @@ namespace Mr.Robot
 		/// <param varName="startPos"></param>
 		/// <param varName="qualifierList"></param>
 		/// <returns></returns>
-		static UsrDefTypeInfo UserDefineTypeProcess(List<string> codeList, List<string> qualifierList, ref File_Position startPos)
+		static UsrDefTypeInfo UserDefineTypeProcess(List<string> codeList, List<string> qualifierList, ref File_Position startPos, CFileParseInfo fi)
 		{
 			if (0 == qualifierList.Count)
 			{
@@ -825,7 +819,26 @@ namespace Mr.Robot
 					retUsrTypeInfo.memberList.Add(m.Trim());
 				}
 			}
-
+			// 如果是匿名类型, 要给加个名字
+			if (0 == retUsrTypeInfo.nameList.Count)
+			{
+				// 取得匿名类型的名字
+				retUsrTypeInfo.nameList.Add(GetAnonymousTypeName(fi));
+			}
+			qualifierList.Add(retUsrTypeInfo.nameList[0]);
+			// 检查后面是否跟着分号(判断类型定义结束)
+			File_Position old_pos = new File_Position(searchPos);
+			nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if (";" == nextIdStr)
+			{
+				// 如果后面是分号说明该类型定义结束, 检索位置要跳过该分号
+				qualifierList.Clear();
+			}
+			else
+			{
+				// 否则可能是以该类型定义全局变量, 恢复检索位置到右括号后面
+				searchPos = old_pos;
+			}
 			startPos = searchPos;
 
 			return retUsrTypeInfo;
