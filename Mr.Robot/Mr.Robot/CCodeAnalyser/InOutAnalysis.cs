@@ -126,8 +126,10 @@ namespace Mr.Robot
 				foreach (MeaningGroup ap in act_para_list)
 				{
 					// 分别判断各实参是传值还是传引用
-					cf.paraTypeList.Add(JudgeActualParaType(ap, ctx));
+					cf.actParaInfoList.Add(GetActualParaInfo(ap, ctx));
 				}
+				// TODO:
+				int a = 100;
 			}
 			else
 			{
@@ -138,49 +140,61 @@ namespace Mr.Robot
 		}
 
 		// 判断实参的种别(传值或者传引用)
-		static FunParaType JudgeActualParaType(MeaningGroup act_para, AnalysisContext ctx)
+		static ActualParaInfo GetActualParaInfo(MeaningGroup act_para, AnalysisContext ctx)
 		{
+			ActualParaInfo actParaInfo = new ActualParaInfo();
 			// 前缀 + 变量名
-			// 最后面是变量名
-			string var_name = act_para.ComponentList.Last().Text;
+			actParaInfo.varName = act_para.ComponentList.Last().Text;
+			actParaInfo.typeName = GetVarTypeName(actParaInfo.varName, ctx);
+			for (int i = 0; i < act_para.ComponentList.Count - 1; i++)
+			{
+				actParaInfo.prefixList.Add(act_para.ComponentList[i].Text);
+			}
+			// 根据变量类型和前缀,判定实参的传递方式(传值或者传引用)
+
 			// 确定变量的类型, 是值类型还是引用类型(指针类型)
-			FunParaType var_type = JudgeVarParaType(var_name, ctx);
+			ActParaPassType var_type = JudgeVarParaType(actParaInfo.varName, ctx);
 			// 在确定前缀(取地址&, 或者取指针指向的变量*)
 			if (2 == act_para.ComponentList.Count)
 			{
 				if ("&" == act_para.ComponentList.First().Text
-					&& var_type == FunParaType.Value)
+					&& var_type == ActParaPassType.Value)
 				{
-					return FunParaType.Reference;
+					//return ActParaPassType.Reference;
 				}
 				else if ("*" == act_para.ComponentList.First().Text
-						 && var_type == FunParaType.Reference)
+						 && var_type == ActParaPassType.Reference)
 				{
-					return FunParaType.Value;
+					//return ActParaPassType.Value;
 				}
 				else
 				{
-					return var_type;
+					//return var_type;
 				}
 			}
 			else
 			{
-				return var_type;
+				//return var_type;
 			}
+			return actParaInfo;
 		}
 
 		/// <summary>
 		/// 判断变量的类型是值类型亦或是指针类型
 		/// </summary>
-		static FunParaType JudgeVarParaType(string var_name, AnalysisContext ctx)
+		static ActParaPassType JudgeVarParaType(string var_name, AnalysisContext ctx)
 		{
 			// 在当前的上下文中查找该名称的变量, 取得其类型名
 			string var_type = GetVarTypeName(var_name, ctx);
-			if (string.IsNullOrEmpty(var_type))
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(var_type));
+			if (var_type.Trim().EndsWith("*"))
 			{
-				return FunParaType.Value;
+				return ActParaPassType.Reference;
 			}
-			return FunParaType.Value;
+			else
+			{
+				return ActParaPassType.Value;
+			}
 		}
 
 		static string GetVarTypeName(string var_name, AnalysisContext ctx)
@@ -220,11 +234,19 @@ namespace Mr.Robot
 	}
 
 	/// <summary>
-	/// 函数引数的种别(引用类型或者值类型)
+	/// 函数调用实参的传递方式(传值或者传引用)
 	/// </summary>
-	public enum FunParaType
+	public enum ActParaPassType
 	{
 		Reference,
 		Value,
+	}
+
+	public class ActualParaInfo
+	{
+		public string varName = string.Empty;
+		public string typeName = string.Empty;
+		public List<string> prefixList = new List<string>();
+		public ActParaPassType passType = ActParaPassType.Value;
 	}
 }

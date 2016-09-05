@@ -1176,7 +1176,7 @@ namespace Mr.Robot
 	public class CalledFunction
 	{
 		public MeaningGroup meaningGroup = new MeaningGroup();
-		public List<FunParaType> paraTypeList = new List<FunParaType>();				// 引数种别(值类型或者引用类型)列表
+		public List<ActualParaInfo> actParaInfoList = new List<ActualParaInfo>();		// 实参情报列表
 		public string returnValType = string.Empty;
 	}
 }
