@@ -1149,8 +1149,9 @@ namespace Mr.Robot
 		public string name = string.Empty;												// 变量名
 		public string type = string.Empty;												// 类型名
 		public string real_type = string.Empty;											// 如果类型名是"typedef"定义的别名的话,原类型名
-		public object cur_val = new object();
-		public List<VAR_CTX> memberList = new List<VAR_CTX>();
+		public MeaningGroup meanning_group = null;										// 构成该变量的成分组合
+		//public object cur_val = new object();
+		//public List<VAR_CTX> memberList = new List<VAR_CTX>();
 	}
 
     /// <summary>
@@ -1163,9 +1164,9 @@ namespace Mr.Robot
         // 局部变量列表
 		public List<VAR_CTX> local_list = new List<VAR_CTX>();
 		// 入力全局变量列表
-		public List<MeaningGroup> inputGlobalList = new List<MeaningGroup>();
+		public List<VAR_CTX> inputGlobalList = new List<VAR_CTX>();
 		// 出力全局变量列表
-		public List<MeaningGroup> outputGlobalList = new List<MeaningGroup>();
+		public List<VAR_CTX> outputGlobalList = new List<VAR_CTX>();
 		// 调用函数列表
 		public List<CalledFunction> calledFunctionList = new List<CalledFunction>();
 

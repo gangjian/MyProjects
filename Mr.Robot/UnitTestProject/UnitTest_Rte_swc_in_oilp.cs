@@ -47,8 +47,8 @@ namespace UnitTestProject
 			Assert.AreEqual(1, analysisContext.calledFunctionList.Count);
 			Assert.AreEqual("initPvOilp()", analysisContext.calledFunctionList[0].meaningGroup.Text);
 			Assert.AreEqual(2, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvEngOnOff3s_struct)->value", analysisContext.outputGlobalList[0].Text);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvOilpAd_struct)->value", analysisContext.outputGlobalList[1].Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvEngOnOff3s_struct)->value", analysisContext.outputGlobalList[0].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvOilpAd_struct)->value", analysisContext.outputGlobalList[1].meanning_group.Text);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
@@ -60,8 +60,8 @@ namespace UnitTestProject
 			Assert.AreEqual(1, analysisContext.calledFunctionList.Count);
 			Assert.AreEqual("initPvOilp()", analysisContext.calledFunctionList[0].meaningGroup.Text);
 			Assert.AreEqual(2, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvEngOnOff3s_struct)->value", analysisContext.outputGlobalList[0].Text);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvOilpAd_struct)->value", analysisContext.outputGlobalList[1].Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvEngOnOff3s_struct)->value", analysisContext.outputGlobalList[0].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvOilpAd_struct)->value", analysisContext.outputGlobalList[1].meanning_group.Text);
 		}
 	}
 }

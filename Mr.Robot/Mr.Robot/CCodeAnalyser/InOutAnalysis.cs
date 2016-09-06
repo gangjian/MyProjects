@@ -26,7 +26,9 @@ namespace Mr.Robot
 				MeaningGroup leftVal = LeftValProcess(leftGroupList);
 				if (null != leftVal)
 				{
-					analysisContext.outputGlobalList.Add(leftVal);
+					VAR_CTX varContext = new VAR_CTX();
+					varContext.meanning_group = leftVal;
+					analysisContext.outputGlobalList.Add(varContext);
 				}
 
 				List<MeaningGroup> rightGroupList = new List<MeaningGroup>();
@@ -73,21 +75,23 @@ namespace Mr.Robot
 			}
 		}
 
-		static void RightValProcess(List<MeaningGroup> rightList, AnalysisContext analysisContext)
+		static void RightValProcess(List<MeaningGroup> rightList, AnalysisContext ctx)
 		{
 			foreach (MeaningGroup item in rightList)
 			{
 				if (item.Type == MeaningGroupType.GlobalVariable)						// 全局变量
 				{
-					analysisContext.inputGlobalList.Add(item);
+					VAR_CTX varContext = new VAR_CTX();
+					varContext.meanning_group = item;
+					ctx.inputGlobalList.Add(varContext);
 				}
 				else if (item.Type == MeaningGroupType.FunctionCalling)					// 函数调用
 				{
-					CalledFunctionProcess(item, analysisContext);
+					CalledFunctionProcess(item, ctx);
 				}
 				else if (item.Type == MeaningGroupType.Expression)						// 表达式
 				{
-					CCodeAnalyser.ExpressionAnalysis(item.ComponentList, analysisContext);
+					CCodeAnalyser.ExpressionAnalysis(item.ComponentList, ctx);
 				}
 			}
 		}
@@ -128,7 +132,10 @@ namespace Mr.Robot
 					// 分别判断各实参是传值还是传引用
 					cf.actParaInfoList.Add(GetActualParaInfo(ap, ctx));
 				}
-				// TODO:
+				// TODO: 如果实参是传引用, 那可能是函数调用读出值
+				// 在上下文中标记该变量曾作为函数实参传引用(可能是读出值)
+				// 在上下文中登录该函数调用可能是读出值
+				// 以后若该标记的变量作为右值, 那就证实该函数调用的实参是读出值;
 				int a = 100;
 			}
 			else
