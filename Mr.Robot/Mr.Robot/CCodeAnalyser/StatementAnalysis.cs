@@ -1150,6 +1150,7 @@ namespace Mr.Robot
 		public string type = string.Empty;												// 类型名
 		public string real_type = string.Empty;											// 如果类型名是"typedef"定义的别名的话,原类型名
 		public MeaningGroup meanning_group = null;										// 构成该变量的成分组合
+		public string called_function_readout = string.Empty;							// 可能被函数调用的读出值赋值(函数名)
 		//public object cur_val = new object();
 		//public List<VAR_CTX> memberList = new List<VAR_CTX>();
 	}
@@ -1167,6 +1168,8 @@ namespace Mr.Robot
 		public List<VAR_CTX> inputGlobalList = new List<VAR_CTX>();
 		// 出力全局变量列表
 		public List<VAR_CTX> outputGlobalList = new List<VAR_CTX>();
+		// 其它未确定入出力的全局变量(比如函数调用读出值)
+		public List<VAR_CTX> otherGlobalList = new List<VAR_CTX>();
 		// 调用函数列表
 		public List<CalledFunction> calledFunctionList = new List<CalledFunction>();
 
@@ -1174,8 +1177,12 @@ namespace Mr.Robot
 		public CCodeParseResult parseResult = null;
 	}
 
+	/// <summary>
+	/// 函数调用
+	/// </summary>
 	public class CalledFunction
 	{
+		public string functionName = string.Empty;										// 函数名
 		public MeaningGroup meaningGroup = new MeaningGroup();
 		public List<ActualParaInfo> actParaInfoList = new List<ActualParaInfo>();		// 实参情报列表
 		public string returnValType = string.Empty;

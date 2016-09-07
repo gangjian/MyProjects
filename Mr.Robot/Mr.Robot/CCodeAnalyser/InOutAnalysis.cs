@@ -28,6 +28,7 @@ namespace Mr.Robot
 				{
 					VAR_CTX varContext = new VAR_CTX();
 					varContext.meanning_group = leftVal;
+					varContext.name = leftVal.Text;
 					analysisContext.outputGlobalList.Add(varContext);
 				}
 
@@ -77,21 +78,30 @@ namespace Mr.Robot
 
 		static void RightValProcess(List<MeaningGroup> rightList, AnalysisContext ctx)
 		{
-			foreach (MeaningGroup item in rightList)
+			foreach (MeaningGroup rightVal in rightList)
 			{
-				if (item.Type == MeaningGroupType.GlobalVariable)						// 全局变量
+				if (rightVal.Type == MeaningGroupType.GlobalVariable)					// 全局变量
 				{
 					VAR_CTX varContext = new VAR_CTX();
-					varContext.meanning_group = item;
+					varContext.meanning_group = rightVal;
+					varContext.name = rightVal.Text;
 					ctx.inputGlobalList.Add(varContext);
 				}
-				else if (item.Type == MeaningGroupType.FunctionCalling)					// 函数调用
+				else if (rightVal.Type == MeaningGroupType.FunctionCalling)				// 函数调用
 				{
-					CalledFunctionProcess(item, ctx);
+					CalledFunctionProcess(rightVal, ctx);
 				}
-				else if (item.Type == MeaningGroupType.Expression)						// 表达式
+				else if (rightVal.Type == MeaningGroupType.Expression)					// 表达式
 				{
-					CCodeAnalyser.ExpressionAnalysis(item.ComponentList, ctx);
+					CCodeAnalyser.ExpressionAnalysis(rightVal.ComponentList, ctx);
+				}
+
+				if (   MeaningGroupType.GlobalVariable == rightVal.Type
+					|| MeaningGroupType.LocalVariable == rightVal.Type)
+				{
+					// 如果是变量, 确认其是否被标记为曾做过函数调用的实参并传引用,
+					// 如果是, 找到该函数调用并标记该调用对应实参位置是读出值
+					CheckRightVarReadOut(rightVal, ctx);
 				}
 			}
 		}
@@ -100,7 +110,94 @@ namespace Mr.Robot
 		{
 			CalledFunction cf = new CalledFunction();
 			cf.meaningGroup = mg;
-			// 找出实参列表, 根据实参的类型确定是传值,还是传引用
+			if (CommonProcess.IsStandardIdentifier(mg.ComponentList[0].Text))
+			{
+				cf.functionName = mg.ComponentList[0].Text;
+			}
+			// 找出实参列表, 根据实参的类型和前缀确定是传值,还是传引用
+			List<MeaningGroup> act_para_list = GetActualParameterList(mg, ctx);
+			int order_num = 0;
+			foreach (MeaningGroup ap in act_para_list)
+			{
+				// 分别判断各实参是传值还是传引用
+				cf.actParaInfoList.Add(GetActualParaInfo(ap, ctx, order_num++));
+			}
+			foreach (ActualParaInfo api in cf.actParaInfoList)
+			{
+				// TODO: 如果实参是传引用, 那可能是函数调用读出值
+				if (api.passType == ActParaPassType.Reference)
+				{
+					// 在上下文中标记该变量曾作为函数实参传引用(可能是读出值)
+					// 在上下文中登录该函数调用可能是读出值
+					// 以后若该标记的变量作为右值, 那就证实该函数调用的实参是读出值;
+					RegisterVarPossibleReadOut(api, cf, ctx);
+				}
+			}
+
+			ctx.calledFunctionList.Add(cf);
+		}
+
+		/// <summary>
+		/// 在上下文中登录该变量可能被函数调用读出值赋值
+		/// </summary>
+		static void RegisterVarPossibleReadOut(ActualParaInfo api,
+											   CalledFunction cf,
+											   AnalysisContext ctx)
+		{
+			// 在上下文中找出该变量
+			VAR_CTX var_ctx = SearchVarInContext(api.varName, ctx);
+			if (null != var_ctx)
+			{
+				var_ctx.called_function_readout = cf.functionName;
+			}
+			// 如果在上下文中没找到, 看是否是在其它地方定义的全局变量
+			else
+			{
+				VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(api.varName);
+				if (null != vi)
+				{
+					var_ctx = new VAR_CTX();
+					var_ctx.name = vi.varName;
+					var_ctx.type = vi.typeName;
+					var_ctx.real_type = vi.realTypeName;
+					var_ctx.called_function_readout = cf.functionName;
+				}
+			}
+		}
+
+		static VAR_CTX SearchVarInContext(string var_name, AnalysisContext ctx)
+		{
+			VAR_CTX var_ctx = null;
+			if (   (null != (var_ctx = SearchVarInContextList(var_name, ctx.parameter_list)))	// (1)参数?
+				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.local_list)))		// (2)临时变量?
+				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.inputGlobalList)))	// (3)全局变量?
+				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.outputGlobalList)))
+				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.otherGlobalList)))
+				)
+			{
+				return var_ctx;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		static VAR_CTX SearchVarInContextList(string var_name, List<VAR_CTX> ctx_list)
+		{
+			foreach (VAR_CTX ctx in ctx_list)
+			{
+				if (ctx.name.Equals(var_name))
+				{
+					return ctx;
+				}
+			}
+			return null;
+		}
+
+		static List<MeaningGroup> GetActualParameterList(MeaningGroup mg, AnalysisContext ctx)
+		{
+			List<MeaningGroup> act_para_list = new List<MeaningGroup>();
 			if (mg.ComponentList.Count >= 3
 				&& CommonProcess.IsStandardIdentifier(mg.ComponentList.First().Text)	// 函数名
 				&& "(" == mg.ComponentList[1].Text										// 函数名后跟着左括号
@@ -108,11 +205,10 @@ namespace Mr.Robot
 			{
 				// 取得实参列表
 				MeaningGroup act_para = new MeaningGroup();
-				List<MeaningGroup> act_para_list = new List<MeaningGroup>();
 				for (int i = 2; i < mg.ComponentList.Count - 1; i++)
 				{
-					if (	"," == mg.ComponentList[i].Text
-						&&	(0 != act_para.ComponentList.Count) )
+					if ("," == mg.ComponentList[i].Text
+						&& (0 != act_para.ComponentList.Count))
 					{
 						act_para_list.Add(act_para);
 						act_para = new MeaningGroup();
@@ -127,32 +223,18 @@ namespace Mr.Robot
 				{
 					act_para_list.Add(act_para);
 				}
-				foreach (MeaningGroup ap in act_para_list)
-				{
-					// 分别判断各实参是传值还是传引用
-					cf.actParaInfoList.Add(GetActualParaInfo(ap, ctx));
-				}
-				// TODO: 如果实参是传引用, 那可能是函数调用读出值
-				// 在上下文中标记该变量曾作为函数实参传引用(可能是读出值)
-				// 在上下文中登录该函数调用可能是读出值
-				// 以后若该标记的变量作为右值, 那就证实该函数调用的实参是读出值;
-				int a = 100;
 			}
-			else
-			{
-				return;
-			}
-
-			ctx.calledFunctionList.Add(cf);
+			return act_para_list;
 		}
 
 		// 判断实参的种别(传值或者传引用)
-		static ActualParaInfo GetActualParaInfo(MeaningGroup act_para, AnalysisContext ctx)
+		static ActualParaInfo GetActualParaInfo(MeaningGroup act_para, AnalysisContext ctx, int orderNum)
 		{
 			ActualParaInfo actParaInfo = new ActualParaInfo();
 			// 前缀 + 变量名
 			actParaInfo.varName = act_para.ComponentList.Last().Text;
 			actParaInfo.typeName = GetVarTypeName(actParaInfo.varName, ctx);
+			actParaInfo.orderNum = orderNum;
 			for (int i = 0; i < act_para.ComponentList.Count - 1; i++)
 			{
 				actParaInfo.prefixList.Add(act_para.ComponentList[i].Text);
@@ -238,6 +320,35 @@ namespace Mr.Robot
 			}
 			return string.Empty;
 		}
+
+		/// <summary>
+		/// 确定一个作右值的变量是否被标记过做过函数调用的实参并传引用
+		/// </summary>
+		static void CheckRightVarReadOut(MeaningGroup rightVal, AnalysisContext ctx)
+		{
+			VAR_CTX varCtx = SearchVarInContext(rightVal.Text, ctx);
+			if (null != varCtx)
+			{
+				// 如果该变量曾被标记过作为函数调用的实参并传引用
+				if (string.Empty != varCtx.called_function_readout)
+				{
+					// 找到该函数调用并且标记其对应的实参位置为函数调用读出值
+					foreach (CalledFunction cf in ctx.calledFunctionList)
+					{
+						if (cf.functionName.Equals(varCtx.called_function_readout))
+						{
+							foreach (ActualParaInfo api in cf.actParaInfoList)
+							{
+								if (api.varName.Equals(varCtx.name))
+								{
+									api.readOut = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	/// <summary>
@@ -255,5 +366,7 @@ namespace Mr.Robot
 		public string typeName = string.Empty;
 		public List<string> prefixList = new List<string>();
 		public ActParaPassType passType = ActParaPassType.Value;
+		public int orderNum = -1;														// 序号
+		public bool readOut = false;													// 是否是读出值
 	}
 }
