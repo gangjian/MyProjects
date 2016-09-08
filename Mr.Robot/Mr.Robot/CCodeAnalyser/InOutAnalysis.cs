@@ -116,11 +116,10 @@ namespace Mr.Robot
 			}
 			// 找出实参列表, 根据实参的类型和前缀确定是传值,还是传引用
 			List<MeaningGroup> act_para_list = GetActualParameterList(mg, ctx);
-			int order_num = 0;
 			foreach (MeaningGroup ap in act_para_list)
 			{
 				// 分别判断各实参是传值还是传引用
-				cf.actParaInfoList.Add(GetActualParaInfo(ap, ctx, order_num++));
+				cf.actParaInfoList.Add(GetActualParaInfo(ap, ctx));
 			}
 			foreach (ActualParaInfo api in cf.actParaInfoList)
 			{
@@ -228,13 +227,12 @@ namespace Mr.Robot
 		}
 
 		// 判断实参的种别(传值或者传引用)
-		static ActualParaInfo GetActualParaInfo(MeaningGroup act_para, AnalysisContext ctx, int orderNum)
+		static ActualParaInfo GetActualParaInfo(MeaningGroup act_para, AnalysisContext ctx)
 		{
 			ActualParaInfo actParaInfo = new ActualParaInfo();
 			// 前缀 + 变量名
 			actParaInfo.varName = act_para.ComponentList.Last().Text;
 			actParaInfo.typeName = GetVarTypeName(actParaInfo.varName, ctx);
-			actParaInfo.orderNum = orderNum;
 			for (int i = 0; i < act_para.ComponentList.Count - 1; i++)
 			{
 				actParaInfo.prefixList.Add(act_para.ComponentList[i].Text);
@@ -249,21 +247,19 @@ namespace Mr.Robot
 				if ("&" == act_para.ComponentList.First().Text
 					&& var_type == ActParaPassType.Value)
 				{
-					//return ActParaPassType.Reference;
+					actParaInfo.passType = ActParaPassType.Reference;
 				}
 				else if ("*" == act_para.ComponentList.First().Text
 						 && var_type == ActParaPassType.Reference)
 				{
-					//return ActParaPassType.Value;
+					actParaInfo.passType = ActParaPassType.Value;
 				}
 				else
 				{
-					//return var_type;
 				}
 			}
 			else
 			{
-				//return var_type;
 			}
 			return actParaInfo;
 		}
@@ -326,7 +322,12 @@ namespace Mr.Robot
 		/// </summary>
 		static void CheckRightVarReadOut(MeaningGroup rightVal, AnalysisContext ctx)
 		{
-			VAR_CTX varCtx = SearchVarInContext(rightVal.Text, ctx);
+			string rVarName = GetPrimaryVarName(rightVal);
+			if (string.Empty == rVarName)
+			{
+				return;
+			}
+			VAR_CTX varCtx = SearchVarInContext(rVarName, ctx);
 			if (null != varCtx)
 			{
 				// 如果该变量曾被标记过作为函数调用的实参并传引用
@@ -349,6 +350,18 @@ namespace Mr.Robot
 				}
 			}
 		}
+
+		static string GetPrimaryVarName(MeaningGroup mg)
+		{
+			foreach (StatementComponent sc in mg.ComponentList)
+			{
+				if (CommonProcess.IsStandardIdentifier(sc.Text))
+				{
+					return sc.Text;
+				}
+			}
+			return string.Empty;
+		}
 	}
 
 	/// <summary>
@@ -366,7 +379,6 @@ namespace Mr.Robot
 		public string typeName = string.Empty;
 		public List<string> prefixList = new List<string>();
 		public ActParaPassType passType = ActParaPassType.Value;
-		public int orderNum = -1;														// 序号
 		public bool readOut = false;													// 是否是读出值
 	}
 }
