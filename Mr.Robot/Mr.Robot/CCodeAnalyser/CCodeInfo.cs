@@ -133,6 +133,18 @@ namespace Mr.Robot
 		public string array_size_string = string.Empty;									// (如果是数组的话)数组size字符串
 		public string initial_string = string.Empty;						            // 初始化赋值字符串
         public List<MeaningGroup> initial_list = new List<MeaningGroup>();				// 初始化含义组(解析分组后)跟initial_string可能有重复
+
+		public string GetVarTypeName()
+		{
+			if (string.Empty != this.realTypeName)
+			{
+				return this.realTypeName;
+			}
+			else
+			{
+				return typeName;
+			}
+		}
 	}
 
 	public class MacroDefineInfo

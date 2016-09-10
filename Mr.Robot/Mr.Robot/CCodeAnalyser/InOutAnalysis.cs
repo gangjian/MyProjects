@@ -82,10 +82,11 @@ namespace Mr.Robot
 			{
 				if (rightVal.Type == MeaningGroupType.GlobalVariable)					// 全局变量
 				{
-					VAR_CTX varContext = new VAR_CTX();
-					varContext.meanning_group = rightVal;
-					varContext.name = rightVal.Text;
-					ctx.inputGlobalList.Add(varContext);
+					List<VAR_CTX> varCtxList = GetGlobalVarCtxFromMeanningGroup(rightVal, ctx);
+					foreach (VAR_CTX vctx in varCtxList)
+					{
+						ctx.inputGlobalList.Add(vctx);
+					}
 				}
 				else if (rightVal.Type == MeaningGroupType.FunctionCalling)				// 函数调用
 				{
@@ -361,6 +362,22 @@ namespace Mr.Robot
 				}
 			}
 			return string.Empty;
+		}
+
+		static List<VAR_CTX> GetGlobalVarCtxFromMeanningGroup(MeaningGroup mg, AnalysisContext ctx)
+		{
+			List<VAR_CTX> varCtxList = new List<VAR_CTX>();
+			VAR_CTX varContext = new VAR_CTX();
+			varContext.meanning_group = mg;
+			varContext.name = mg.Text;
+			// 如果变量是构造类型,要细化到成员变量
+			VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(varContext.name);
+			if (vi.GetVarTypeName().StartsWith("struct "))
+			{
+				
+			}
+			varCtxList.Add(varContext);
+			return varCtxList;
 		}
 	}
 
