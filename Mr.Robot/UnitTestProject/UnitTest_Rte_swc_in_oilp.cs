@@ -45,12 +45,12 @@ namespace UnitTestProject
 
 			AnalysisContext ctx = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, ctx.inputGlobalList.Count);
-			Assert.AreEqual("pvEngOnOff3s", ctx.inputGlobalList[0].name);
+			Assert.AreEqual("pvEngOnOff3s", ctx.inputGlobalList[0].Name);
 			Assert.AreEqual(1, ctx.calledFunctionList.Count);
 			Assert.AreEqual("initPvOilp()", ctx.calledFunctionList[0].meaningGroup.Text);
 			Assert.AreEqual(2, ctx.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvEngOnOff3s_struct)->value", ctx.outputGlobalList[0].meanning_group.Text);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvOilpAd_struct)->value", ctx.outputGlobalList[1].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvEngOnOff3s_struct)->value", ctx.outputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvOilpAd_struct)->value", ctx.outputGlobalList[1].MeanningGroup.Text);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
@@ -60,12 +60,12 @@ namespace UnitTestProject
 
 			AnalysisContext ctx = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, ctx.inputGlobalList.Count);
-			Assert.AreEqual("pvEngOnOff3s", ctx.inputGlobalList[0].name);
+			Assert.AreEqual("pvEngOnOff3s", ctx.inputGlobalList[0].Name);
 			Assert.AreEqual(1, ctx.calledFunctionList.Count);
 			Assert.AreEqual("initPvOilp()", ctx.calledFunctionList[0].meaningGroup.Text);
 			Assert.AreEqual(2, ctx.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvEngOnOff3s_struct)->value", ctx.outputGlobalList[0].meanning_group.Text);
-			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvOilpAd_struct)->value", ctx.outputGlobalList[1].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvEngOnOff3s_struct)->value", ctx.outputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvOilpAd_struct)->value", ctx.outputGlobalList[1].MeanningGroup.Text);
 		}
 	}
 }

@@ -27,8 +27,8 @@ namespace Mr.Robot
 				if (null != leftVal)
 				{
 					VAR_CTX varContext = new VAR_CTX();
-					varContext.meanning_group = leftVal;
-					varContext.name = leftVal.Text;
+					varContext.MeanningGroup = leftVal;
+					varContext.Name = leftVal.Text;
 					analysisContext.outputGlobalList.Add(varContext);
 				}
 
@@ -148,7 +148,7 @@ namespace Mr.Robot
 			VAR_CTX var_ctx = SearchVarInContext(api.varName, ctx);
 			if (null != var_ctx)
 			{
-				var_ctx.called_function_readout = cf.functionName;
+				var_ctx.CalledFunctionReadOut = cf.functionName;
 			}
 			// 如果在上下文中没找到, 看是否是在其它地方定义的全局变量
 			else
@@ -157,10 +157,10 @@ namespace Mr.Robot
 				if (null != vi)
 				{
 					var_ctx = new VAR_CTX();
-					var_ctx.name = vi.varName;
-					var_ctx.type = vi.typeName;
-					var_ctx.real_type = vi.realTypeName;
-					var_ctx.called_function_readout = cf.functionName;
+					var_ctx.Name = vi.varName;
+					var_ctx.Type = vi.typeName;
+					var_ctx.RealType = vi.realTypeName;
+					var_ctx.CalledFunctionReadOut = cf.functionName;
 				}
 			}
 		}
@@ -187,7 +187,7 @@ namespace Mr.Robot
 		{
 			foreach (VAR_CTX ctx in ctx_list)
 			{
-				if (ctx.name.Equals(var_name))
+				if (ctx.Name.Equals(var_name))
 				{
 					return ctx;
 				}
@@ -290,15 +290,15 @@ namespace Mr.Robot
 			// 临时变量?
 			foreach (VAR_CTX local_var in ctx.local_list)
 			{
-				if (local_var.name.Equals(var_name))
+				if (local_var.Name.Equals(var_name))
 				{
-					if (string.Empty != local_var.real_type)
+					if (string.Empty != local_var.RealType)
 					{
-						return local_var.real_type;
+						return local_var.RealType;
 					}
 					else
 					{
-						return local_var.type;
+						return local_var.Type;
 					}
 				}
 			}
@@ -332,16 +332,16 @@ namespace Mr.Robot
 			if (null != varCtx)
 			{
 				// 如果该变量曾被标记过作为函数调用的实参并传引用
-				if (string.Empty != varCtx.called_function_readout)
+				if (string.Empty != varCtx.CalledFunctionReadOut)
 				{
 					// 找到该函数调用并且标记其对应的实参位置为函数调用读出值
 					foreach (CalledFunction cf in ctx.calledFunctionList)
 					{
-						if (cf.functionName.Equals(varCtx.called_function_readout))
+						if (cf.functionName.Equals(varCtx.CalledFunctionReadOut))
 						{
 							foreach (ActualParaInfo api in cf.actParaInfoList)
 							{
-								if (api.varName.Equals(varCtx.name))
+								if (api.varName.Equals(varCtx.Name))
 								{
 									api.readOut = true;
 								}
@@ -368,10 +368,10 @@ namespace Mr.Robot
 		{
 			List<VAR_CTX> varCtxList = new List<VAR_CTX>();
 			VAR_CTX varContext = new VAR_CTX();
-			varContext.meanning_group = mg;
-			varContext.name = mg.Text;
+			varContext.MeanningGroup = mg;
+			varContext.Name = mg.Text;
 			// 如果变量是构造类型,要细化到成员变量
-			VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(varContext.name);
+			VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(varContext.Name);
 			if (null != vi
                 && vi.GetVarTypeName().StartsWith("struct "))
 			{

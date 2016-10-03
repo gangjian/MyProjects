@@ -53,6 +53,7 @@
     <Compile Include="CCodeAnalyser\CommonProcess.cs" />
     <Compile Include="CCodeAnalyser\FunctionAnalysis.cs" />
     <Compile Include="CCodeAnalyser\StatementTree.cs" />
+    <Compile Include="CCodeAnalyser\VAR_CTX.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

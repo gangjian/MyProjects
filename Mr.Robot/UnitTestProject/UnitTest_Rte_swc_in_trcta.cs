@@ -55,8 +55,8 @@ namespace UnitTestProject
 			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
 
 			Assert.AreEqual(1, analysisContext.local_list.Count);
-			Assert.AreEqual("pvU1NoSts", analysisContext.local_list[0].type);
-			Assert.AreEqual("pvOut", analysisContext.local_list[0].name);
+			Assert.AreEqual("pvU1NoSts", analysisContext.local_list[0].Type);
+			Assert.AreEqual("pvOut", analysisContext.local_list[0].Name);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -101,7 +101,7 @@ namespace UnitTestProject
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].MeanningGroup.Text);
 		}
     }
 
@@ -320,21 +320,21 @@ namespace UnitTestProject
 
 			Assert.AreEqual(3, ctx.local_list.Count);
 
-			Assert.AreEqual("varInStep", ctx.local_list[0].name);
-			Assert.AreEqual("VAR_IN_STEP", ctx.local_list[0].type);
-			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_0", ctx.local_list[0].real_type);
+			Assert.AreEqual("varInStep", ctx.local_list[0].Name);
+			Assert.AreEqual("VAR_IN_STEP", ctx.local_list[0].Type);
+			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_0", ctx.local_list[0].RealType);
 
-			Assert.AreEqual("varOutStep", ctx.local_list[1].name);
-			Assert.AreEqual("VAR_OUT_STEP", ctx.local_list[1].type);
-			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_4", ctx.local_list[1].real_type);
+			Assert.AreEqual("varOutStep", ctx.local_list[1].Name);
+			Assert.AreEqual("VAR_OUT_STEP", ctx.local_list[1].Type);
+			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_4", ctx.local_list[1].RealType);
 
-			Assert.AreEqual("pvOut", ctx.local_list[2].name);
-			Assert.AreEqual("pvU1NoSts", ctx.local_list[2].type);
-			Assert.AreEqual("struct RTE_TYPE_H_USR_DEF_TYPE_0", ctx.local_list[2].real_type);
+			Assert.AreEqual("pvOut", ctx.local_list[2].Name);
+			Assert.AreEqual("pvU1NoSts", ctx.local_list[2].Type);
+			Assert.AreEqual("struct RTE_TYPE_H_USR_DEF_TYPE_0", ctx.local_list[2].RealType);
 
 			Assert.AreEqual(2, ctx.inputGlobalList.Count);
-			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value", ctx.inputGlobalList[0].meanning_group.Text);
-			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val)).value", ctx.inputGlobalList[1].meanning_group.Text);
+			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value", ctx.inputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val)).value", ctx.inputGlobalList[1].MeanningGroup.Text);
 
 			Assert.AreEqual(1, ctx.calledFunctionList.Count);
 			Assert.AreEqual("ShareLibStepFailJudgeVal", ctx.calledFunctionList[0].functionName);
@@ -346,7 +346,7 @@ namespace UnitTestProject
 			Assert.AreEqual(true,						ctx.calledFunctionList[0].actParaInfoList[2].readOut);
 
 			Assert.AreEqual(1, ctx.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct)->value", ctx.outputGlobalList[0].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct)->value", ctx.outputGlobalList[0].MeanningGroup.Text);
 
 			Assert.AreEqual("ShareLibStepFailJudgeVal(&varInStep,&rctasw_can_mng_tbl,&varOutStep)", ctx.calledFunctionList[0].meaningGroup.Text);
 		}
@@ -371,7 +371,7 @@ namespace UnitTestProject
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].MeanningGroup.Text);
 		}
 	}
 
@@ -394,7 +394,7 @@ namespace UnitTestProject
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].meanning_group.Text);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].MeanningGroup.Text);
 		}
 	}
 }

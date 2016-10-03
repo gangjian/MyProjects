@@ -736,7 +736,7 @@ namespace Mr.Robot
         {
 			foreach (VAR_CTX vctx in analysisContext.local_list)
 			{
-				if (vctx.name.Equals(identifier))
+				if (vctx.Name.Equals(identifier))
 				{
 					return true;
 				}
@@ -1013,13 +1013,13 @@ namespace Mr.Robot
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
 				VAR_CTX varCtx = new VAR_CTX();
-                varCtx.type = mgList[0].Text;
+                varCtx.Type = mgList[0].Text;
 				string orgTypeName;
 				if (string.Empty != (orgTypeName = IsTypeDefTypeName(mgList[0], ctx)))
 				{
-					varCtx.real_type = orgTypeName;
+					varCtx.RealType = orgTypeName;
 				}
-                varCtx.name = mgList[1].Text;
+                varCtx.Name = mgList[1].Text;
                 return varCtx;
             }
             return null;
@@ -1139,20 +1139,6 @@ namespace Mr.Robot
 			get { return _componentList; }
 			set { _componentList = value; }
 		}
-	}
-
-	/// <summary>
-	/// 变量上下文
-	/// </summary>
-	public class VAR_CTX
-	{
-		public string name = string.Empty;												// 变量名
-		public string type = string.Empty;												// 类型名
-		public string real_type = string.Empty;											// 如果类型名是"typedef"定义的别名的话,原类型名
-		public MeaningGroup meanning_group = null;										// 构成该变量的成分组合
-		public string called_function_readout = string.Empty;							// 可能被函数调用的读出值赋值(函数名)
-		//public object cur_val = new object();
-		//public List<VAR_CTX> memberList = new List<VAR_CTX>();
 	}
 
     /// <summary>
