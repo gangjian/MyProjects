@@ -372,7 +372,8 @@ namespace Mr.Robot
 			varContext.name = mg.Text;
 			// 如果变量是构造类型,要细化到成员变量
 			VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(varContext.name);
-			if (vi.GetVarTypeName().StartsWith("struct "))
+			if (null != vi
+                && vi.GetVarTypeName().StartsWith("struct "))
 			{
 				
 			}
