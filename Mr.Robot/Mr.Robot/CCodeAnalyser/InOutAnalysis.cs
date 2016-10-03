@@ -8,7 +8,7 @@ namespace Mr.Robot
 	/// <summary>
 	/// 入出力分析
 	/// </summary>
-	public class InOutAnalysis
+	public partial class InOutAnalysis
 	{
 		public static bool LeftRightValueAnalysis(List<MeaningGroup> mgList,
 												  AnalysisContext analysisContext)
@@ -80,19 +80,16 @@ namespace Mr.Robot
 		{
 			foreach (MeaningGroup rightVal in rightList)
 			{
-				if (rightVal.Type == MeaningGroupType.GlobalVariable)					// 全局变量
+				if (MeaningGroupType.GlobalVariable == rightVal.Type)					// 全局变量
 				{
-					List<VAR_CTX> varCtxList = GetGlobalVarCtxFromMeanningGroup(rightVal, ctx);
-					foreach (VAR_CTX vctx in varCtxList)
-					{
-						ctx.inputGlobalList.Add(vctx);
-					}
+					VAR_CTX varCtx = GetGlobalVarCtxFromMeanningGroup(rightVal, ctx);
+					ctx.inputGlobalList.Add(varCtx);
 				}
-				else if (rightVal.Type == MeaningGroupType.FunctionCalling)				// 函数调用
+				else if (MeaningGroupType.FunctionCalling == rightVal.Type)				// 函数调用
 				{
 					CalledFunctionProcess(rightVal, ctx);
 				}
-				else if (rightVal.Type == MeaningGroupType.Expression)					// 表达式
+				else if (MeaningGroupType.Expression == rightVal.Type)					// 表达式
 				{
 					CCodeAnalyser.ExpressionAnalysis(rightVal.ComponentList, ctx);
 				}
@@ -145,54 +142,11 @@ namespace Mr.Robot
 											   AnalysisContext ctx)
 		{
 			// 在上下文中找出该变量
-			VAR_CTX var_ctx = SearchVarInContext(api.varName, ctx);
+			VAR_CTX var_ctx = GetVarCtx(api.varName, ctx);
 			if (null != var_ctx)
 			{
 				var_ctx.CalledFunctionReadOut = cf.functionName;
 			}
-			// 如果在上下文中没找到, 看是否是在其它地方定义的全局变量
-			else
-			{
-				VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(api.varName);
-				if (null != vi)
-				{
-					var_ctx = new VAR_CTX();
-					var_ctx.Name = vi.varName;
-					var_ctx.Type = vi.typeName;
-					var_ctx.RealType = vi.realTypeName;
-					var_ctx.CalledFunctionReadOut = cf.functionName;
-				}
-			}
-		}
-
-		static VAR_CTX SearchVarInContext(string var_name, AnalysisContext ctx)
-		{
-			VAR_CTX var_ctx = null;
-			if (   (null != (var_ctx = SearchVarInContextList(var_name, ctx.parameter_list)))	// (1)参数?
-				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.local_list)))		// (2)临时变量?
-				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.inputGlobalList)))	// (3)全局变量?
-				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.outputGlobalList)))
-				|| (null != (var_ctx = SearchVarInContextList(var_name, ctx.otherGlobalList)))
-				)
-			{
-				return var_ctx;
-			}
-			else
-			{
-				return null;
-			}
-		}
-
-		static VAR_CTX SearchVarInContextList(string var_name, List<VAR_CTX> ctx_list)
-		{
-			foreach (VAR_CTX ctx in ctx_list)
-			{
-				if (ctx.Name.Equals(var_name))
-				{
-					return ctx;
-				}
-			}
-			return null;
 		}
 
 		static List<MeaningGroup> GetActualParameterList(MeaningGroup mg, AnalysisContext ctx)
@@ -328,7 +282,7 @@ namespace Mr.Robot
 			{
 				return;
 			}
-			VAR_CTX varCtx = SearchVarInContext(rVarName, ctx);
+			VAR_CTX varCtx = GetVarCtx(rVarName, ctx);
 			if (null != varCtx)
 			{
 				// 如果该变量曾被标记过作为函数调用的实参并传引用
@@ -364,9 +318,8 @@ namespace Mr.Robot
 			return string.Empty;
 		}
 
-		static List<VAR_CTX> GetGlobalVarCtxFromMeanningGroup(MeaningGroup mg, AnalysisContext ctx)
+		static VAR_CTX GetGlobalVarCtxFromMeanningGroup(MeaningGroup mg, AnalysisContext ctx)
 		{
-			List<VAR_CTX> varCtxList = new List<VAR_CTX>();
 			VAR_CTX varContext = new VAR_CTX();
 			varContext.MeanningGroup = mg;
 			varContext.Name = mg.Text;
@@ -377,8 +330,7 @@ namespace Mr.Robot
 			{
 				
 			}
-			varCtxList.Add(varContext);
-			return varCtxList;
+			return varContext;
 		}
 	}
 
