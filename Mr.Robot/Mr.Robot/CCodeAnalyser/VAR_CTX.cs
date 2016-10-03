@@ -87,8 +87,14 @@ namespace Mr.Robot
 					var_ctx.RealType = vi.realTypeName;
 					return var_ctx;
 				}
+				else
+				{
+					// 临时
+					var_ctx = new VAR_CTX();
+					var_ctx.Name = var_name;
+					return var_ctx;
+				}
 			}
-			return null;
 		}
 
 		static VAR_CTX SearchVarCtxList(string var_name, AnalysisContext ctx)

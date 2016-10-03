@@ -1012,14 +1012,16 @@ namespace Mr.Robot
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-				VAR_CTX varCtx = new VAR_CTX();
-                varCtx.Type = mgList[0].Text;
+				VAR_CTX varCtx = InOutAnalysis.GetVarCtx(mgList[1].Text, ctx);
+				if (string.Empty == varCtx.Type)
+				{
+					varCtx.Type = mgList[0].Text;
+				}
 				string orgTypeName;
 				if (string.Empty != (orgTypeName = IsTypeDefTypeName(mgList[0], ctx)))
 				{
 					varCtx.RealType = orgTypeName;
 				}
-                varCtx.Name = mgList[1].Text;
                 return varCtx;
             }
             return null;

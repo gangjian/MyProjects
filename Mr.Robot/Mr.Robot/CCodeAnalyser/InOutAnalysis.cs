@@ -11,7 +11,7 @@ namespace Mr.Robot
 	public partial class InOutAnalysis
 	{
 		public static bool LeftRightValueAnalysis(List<MeaningGroup> mgList,
-												  AnalysisContext analysisContext)
+												  AnalysisContext ctx)
 		{
 			List<MeaningGroup> rightValue = new List<MeaningGroup>();
 			int eqIdx = -1;
@@ -23,13 +23,15 @@ namespace Mr.Robot
 				{
 					leftGroupList.Add(mgList[i]);
 				}
-				MeaningGroup leftVal = LeftValProcess(leftGroupList);
-				if (null != leftVal)
+				if (1 == leftGroupList.Count
+					&& MeaningGroupType.GlobalVariable == leftGroupList[0].Type)
 				{
-					VAR_CTX varContext = new VAR_CTX();
-					varContext.MeanningGroup = leftVal;
-					varContext.Name = leftVal.Text;
-					analysisContext.outputGlobalList.Add(varContext);
+					VAR_CTX varCtx = GetVarCtx(leftGroupList[0].Text, ctx);
+					if (null == varCtx.MeanningGroup)
+					{
+						varCtx.MeanningGroup = leftGroupList[0];
+					}
+					ctx.outputGlobalList.Add(varCtx);
 				}
 
 				List<MeaningGroup> rightGroupList = new List<MeaningGroup>();
@@ -37,7 +39,7 @@ namespace Mr.Robot
 				{
 					rightGroupList.Add(mgList[i]);
 				}
-				RightValProcess(rightGroupList, analysisContext);
+				RightValProcess(rightGroupList, ctx);
 			}
 			else
 			{
@@ -45,7 +47,7 @@ namespace Mr.Robot
 				// 可能是没有初始化赋值的临时变量定义
 				// 可能是函数调用
 				// 可能是自增,自减等一元运算符
-				RightValProcess(mgList, analysisContext);
+				RightValProcess(mgList, ctx);
 			}
 			return false;
 		}
@@ -62,27 +64,14 @@ namespace Mr.Robot
 			return -1;
 		}
 
-		static MeaningGroup LeftValProcess(List<MeaningGroup> leftList)
-		{
-			if (leftList.Count == 1
-				&& leftList[0].Type == MeaningGroupType.GlobalVariable)
-			{
-				// 局部或者全局变量做左值
-				return leftList[0];
-			}
-			else
-			{
-				return null;
-			}
-		}
-
 		static void RightValProcess(List<MeaningGroup> rightList, AnalysisContext ctx)
 		{
 			foreach (MeaningGroup rightVal in rightList)
 			{
 				if (MeaningGroupType.GlobalVariable == rightVal.Type)					// 全局变量
 				{
-					VAR_CTX varCtx = GetGlobalVarCtxFromMeanningGroup(rightVal, ctx);
+					VAR_CTX varCtx = GetVarCtx(rightVal.Text, ctx);
+					varCtx.MeanningGroup = rightVal;
 					ctx.inputGlobalList.Add(varCtx);
 				}
 				else if (MeaningGroupType.FunctionCalling == rightVal.Type)				// 函数调用
@@ -316,21 +305,6 @@ namespace Mr.Robot
 				}
 			}
 			return string.Empty;
-		}
-
-		static VAR_CTX GetGlobalVarCtxFromMeanningGroup(MeaningGroup mg, AnalysisContext ctx)
-		{
-			VAR_CTX varContext = new VAR_CTX();
-			varContext.MeanningGroup = mg;
-			varContext.Name = mg.Text;
-			// 如果变量是构造类型,要细化到成员变量
-			VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(varContext.Name);
-			if (null != vi
-                && vi.GetVarTypeName().StartsWith("struct "))
-			{
-				
-			}
-			return varContext;
 		}
 	}
 
