@@ -270,6 +270,11 @@ namespace Mr.Robot
 			return null;
 		}
 
+		static void SearchVaribleType()
+		{
+
+		}
+
 		#endregion
 	}
 

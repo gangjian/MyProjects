@@ -684,7 +684,10 @@ namespace Mr.Robot
 
 			if (1 == strList.Count)
 			{
-				coreTypeName = strList[0];
+				if (IsStandardIdentifier(strList[0]))
+				{
+					coreTypeName = strList[0];
+				}
 			}
 			else
 			{
@@ -707,6 +710,11 @@ namespace Mr.Robot
 						{
 							coreTypeName = strList[i] + " " + coreTypeName;
 						}
+						else if ("unsigned" == strList[i]
+								|| "signed" == strList[i])
+						{
+							coreTypeName = strList[i] + " " + coreTypeName;
+						}
 						else
 						{
 							prefixList.Add(strList[i]);
@@ -717,5 +725,117 @@ namespace Mr.Robot
 
 			return coreTypeName;
 		}
+
+		/// <summary>
+		/// 判断一组标识符是否是一个基本类型名
+		/// </summary>
+		/// <param name="idStrList"></param>
+		public static bool IsBasicVarType(List<string> idStrList, ref int count)
+		{
+			// 开头 "const", "static"等限定符
+			List<string> qualifiers = new List<string>();
+			List<string> initialParts = new List<string>();
+			List<string> lastParts = new List<string>();
+			count = 0;
+			foreach (string str in idStrList)
+			{
+				if (("const" == str || "static" == str)
+					&& (0 == initialParts.Count)
+					&& (0 == lastParts.Count))
+				{
+					// 前置修饰符
+					qualifiers.Add(str);
+				}
+				else if (("signed" == str || "unsigned" == str)
+						 && (0 == lastParts.Count))
+				{
+					// 类型名开头部分
+					initialParts.Add(str);
+				}
+				else if (("char" == str)
+						 || ("short" == str)
+						 || ("int" == str)
+						 || ("long" == str)
+						 || ("float" == str)
+						 || ("double" == str)
+						 || ("void" == str)
+						 )
+				{
+					lastParts.Add(str);
+				}
+				else
+				{
+					return false;
+				}
+				count += 1;
+			}
+			if (0 != lastParts.Count)
+			{
+				return true;
+			}
+			else if (0 != qualifiers.Count || 0 != initialParts.Count)
+			{
+				return false;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// 判断一个类型名是否是基本类型名
+		/// </summary>
+		/// <param name="type_name"></param>
+		/// <returns></returns>
+		public static bool IsBasicVarType(string type_name)
+		{
+			if (string.IsNullOrEmpty(type_name.Trim()))
+			{
+				return false;
+			}
+			string[] strArr = type_name.Trim().Split(' ');
+			string typeName = string.Empty;
+			if (2 == strArr.Length)
+			{
+				if ("unsigned" == strArr[0] || "signed" == strArr[0])
+				{
+					typeName = strArr[1];
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else if (1 == strArr.Length)
+			{
+				typeName = strArr[0];
+			}
+
+			if (string.Empty != typeName)
+			{
+				if ("char" == typeName
+					|| "short" == typeName
+					|| "int" == typeName
+					|| "long" == typeName)
+				{
+					return true;
+				}
+				else if (("float" == typeName || "double" == typeName)
+						 && 1 == strArr.Length)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 	}
 }

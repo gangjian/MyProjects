@@ -611,63 +611,6 @@ namespace Mr.Robot
 			return true;
 		}
 
-		/// <summary>
-		/// 判断一组标识符是否是一个基本类型名
-		/// </summary>
-		/// <param name="idStrList"></param>
-		static bool IsBasicVarType(List<string> idStrList, ref int count)
-		{
-			// 开头 "const", "static"等限定符
-			List<string> qualifiers = new List<string>();
-			List<string> initialParts = new List<string>();
-			List<string> lastParts = new List<string>();
-			count = 0;
-			foreach (string str in idStrList)
-			{
-				if (("const" == str || "static" == str)
-					&& (0 == initialParts.Count)
-					&& (0 == lastParts.Count))
-				{
-					// 前置修饰符
-					qualifiers.Add(str);
-				}
-				else if (("signed" == str || "unsigned" == str)
-					     && (0 == lastParts.Count))
-				{
-					// 类型名开头部分
-					initialParts.Add(str);
-				}
-				else if (	("char" == str)
-						 || ("short" == str)
-						 || ("int" == str)
-						 || ("long" == str)
-						 || ("float" == str)
-						 || ("double" == str)
-						 || ("void" == str)
-						 )
-				{
-					lastParts.Add(str);
-				}
-				else
-				{
-					return false;
-				}
-				count += 1;
-			}
-			if (0 != lastParts.Count)
-			{
-				return true;
-			}
-			else if (0 != qualifiers.Count || 0 != initialParts.Count)
-			{
-				return false;
-			}
-			else
-			{
-				return false;
-			}
-		}
-
         /// <summary>
         /// 判断标识符是否是构造类型/用户定义类型
         /// </summary>
@@ -772,7 +715,7 @@ namespace Mr.Robot
 				idStrList.Add(cpntList[i].Text);
 			}
 			int count = 0;
-			if (IsBasicVarType(idStrList, ref count))
+			if (CommonProcess.IsBasicVarType(idStrList, ref count))
 			{
 				index += count;
 				return true;

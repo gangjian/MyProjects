@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace Mr.Robot
 {
@@ -66,6 +67,14 @@ namespace Mr.Robot
 			get { return _parent; }
 			set { _parent = value; }
 		}
+
+		public VAR_CTX(string type_name, string var_name)								// 构造方法
+		{
+			Trace.Assert(!string.IsNullOrEmpty(type_name));
+			Trace.Assert(!string.IsNullOrEmpty(var_name));
+			this.Type = type_name;
+			this.Name = var_name;
+		}
 	}
 
 	public partial class InOutAnalysis
@@ -89,17 +98,17 @@ namespace Mr.Robot
 				VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(var_name);
 				if (null != vi)
 				{
-					var_ctx = new VAR_CTX();
-					var_ctx.Name = vi.varName;
-					var_ctx.Type = vi.typeName;
+					var_ctx = new VAR_CTX(vi.typeName, vi.varName);
 					var_ctx.RealType = vi.realTypeName;
 				}
 				else
 				{
 					// 临时变量
-					//System.Diagnostics.Trace.Assert(null != type_name);
-					var_ctx = new VAR_CTX();
-					var_ctx.Name = var_name;
+					if (null == type_name)
+					{
+						type_name = "Unknown";
+					}
+					var_ctx = new VAR_CTX(type_name, var_name);
 				}
 				// 如果是构造类型, 要遍历生成各成员上下文直至基本类型
 				return var_ctx;
@@ -143,10 +152,17 @@ namespace Mr.Robot
 			// 提取类型名(分离前缀,后缀)
 			List<string> prefixList, suffixList;
 			string typeName = CommonProcess.ExtractCoreTypeName(type_name, out prefixList, out suffixList);
-			// TODO 20161005 : 根据类型名检索类型定义
+			// 根据类型名检索类型定义
+			if (CommonProcess.IsBasicVarType(typeName))
+			{
+				
+			}
+			else
+			{
 
-			VAR_CTX var_ctx = new VAR_CTX();
-			var_ctx.Name = var_name;
+			}
+
+			VAR_CTX var_ctx = new VAR_CTX(typeName, var_name);
 			return var_ctx;
 		}
 
