@@ -1012,7 +1012,7 @@ namespace Mr.Robot
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-				VAR_CTX varCtx = InOutAnalysis.GetVarCtx(mgList[1].Text, ctx);
+				VAR_CTX varCtx = InOutAnalysis.GetVarCtx(mgList[1].Text, ctx, mgList[0].Text);
 				if (string.Empty == varCtx.Type)
 				{
 					varCtx.Type = mgList[0].Text;

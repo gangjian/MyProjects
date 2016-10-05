@@ -68,7 +68,7 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtx(string var_name, AnalysisContext ctx)
+		static public VAR_CTX GetVarCtx(string var_name, AnalysisContext ctx, string type_name = null)
 		{
 			VAR_CTX var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, ctx)))
@@ -85,15 +85,16 @@ namespace Mr.Robot
 					var_ctx.Name = vi.varName;
 					var_ctx.Type = vi.typeName;
 					var_ctx.RealType = vi.realTypeName;
-					return var_ctx;
 				}
 				else
 				{
-					// 临时
+					// 临时变量
+					//System.Diagnostics.Trace.Assert(null != type_name);
 					var_ctx = new VAR_CTX();
 					var_ctx.Name = var_name;
-					return var_ctx;
 				}
+				// 如果是构造类型, 要遍历生成各成员上下文直至基本类型
+				return var_ctx;
 			}
 		}
 
