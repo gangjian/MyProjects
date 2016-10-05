@@ -52,11 +52,19 @@ namespace Mr.Robot
 			set { _cur_val = value; }
 		}
 
-		private List<VAR_CTX> _memberList = new List<VAR_CTX>();						// 成员列表
+		private List<VAR_CTX> _memberList = new List<VAR_CTX>();						// 成员列表(下一层级)
 		public List<VAR_CTX> MemberList
 		{
 			get { return _memberList; }
 			set { _memberList = value; }
+		}
+
+		VAR_CTX _parent = null;															// 上一层级
+
+		public VAR_CTX Parent
+		{
+			get { return _parent; }
+			set { _parent = value; }
 		}
 	}
 
@@ -127,5 +135,20 @@ namespace Mr.Robot
 			}
 			return null;
 		}
+
+		public static VAR_CTX CreateNewVarCtx(string type_name, string var_name)
+		{
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(type_name) && !string.IsNullOrEmpty(var_name));
+
+			// 提取类型名(分离前缀,后缀)
+			List<string> prefixList, suffixList;
+			string typeName = CommonProcess.ExtractCoreTypeName(type_name, out prefixList, out suffixList);
+			// TODO 20161005 : 根据类型名检索类型定义
+
+			VAR_CTX var_ctx = new VAR_CTX();
+			var_ctx.Name = var_name;
+			return var_ctx;
+		}
+
 	}
 }

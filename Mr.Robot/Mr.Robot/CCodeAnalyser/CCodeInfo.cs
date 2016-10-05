@@ -134,6 +134,8 @@ namespace Mr.Robot
 		public string initial_string = string.Empty;						            // 初始化赋值字符串
         public List<MeaningGroup> initial_list = new List<MeaningGroup>();				// 初始化含义组(解析分组后)跟initial_string可能有重复
 
+		public VAR_CTX var_ctx = null;													// 上下文
+
 		public string GetVarTypeName()
 		{
 			if (string.Empty != this.realTypeName)

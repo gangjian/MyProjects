@@ -671,10 +671,9 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是构造类型/用户定义类型
         /// </summary>
-		static bool IsUsrDefVarType(List<string> idStrList, CCodeParseResult parseResult, ref int count)
+		static bool IsUsrDefVarType(List<string> idStrList, CCodeParseResult parseResult)
         {
 			string idStr = idStrList[0];
-			count = 0;
 			List<CFileParseInfo> headerList = parseResult.IncHdParseInfoList;
             // 遍历头文件列表
             foreach (CFileParseInfo hfi in headerList)
@@ -686,7 +685,6 @@ namespace Mr.Robot
                     {
 						if (typeName.Equals(idStr))
                         {
-							count = 1;
                             return true;
                         }
                     }
@@ -696,7 +694,6 @@ namespace Mr.Robot
                 {
 					if (tdi.new_type_name.Equals(idStr))
                     {
-						count = 1;
                         return true;
                     }
                 }
@@ -780,9 +777,9 @@ namespace Mr.Robot
 				index += count;
 				return true;
 			}
-			else if (IsUsrDefVarType(idStrList, parseResult, ref count))
+			else if (IsUsrDefVarType(idStrList, parseResult))
 			{
-				index += count;
+				index += 1;
 				return true;
 			}
 

@@ -110,7 +110,7 @@ namespace Mr.Robot
 			}
 			foreach (ActualParaInfo api in cf.actParaInfoList)
 			{
-				// TODO: 如果实参是传引用, 那可能是函数调用读出值
+				// 如果实参是传引用, 那可能是函数调用读出值
 				if (api.passType == ActParaPassType.Reference)
 				{
 					// 在上下文中标记该变量曾作为函数实参传引用(可能是读出值)

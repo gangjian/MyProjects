@@ -449,7 +449,7 @@ namespace Mr.Robot
                             || "default" == idStr
                             || "}" == idStr)
                         {
-                            // TODO: 移到前一位
+                            // 移到前一位
                             searchPos = CommonProcess.PositionMovePrevious(codeList, foundPos);
                             break;
                         }

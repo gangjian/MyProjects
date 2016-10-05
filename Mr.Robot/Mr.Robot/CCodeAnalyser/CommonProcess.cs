@@ -498,11 +498,6 @@ namespace Mr.Robot
 			return 0;
 		}
 
-        public static string GetSimpleExpression(string complexExp, int idx)
-		{
-			return null;
-		}
-
         /// <summary>
         /// 查找下一个指定的标识符
         /// </summary>
@@ -662,6 +657,65 @@ namespace Mr.Robot
 			}
 			fpiList.Clear();
 			return string.Empty;
+		}
+
+		/// <summary>
+		/// 提取变量定义/声明的核心类型名以及前缀和后缀列表
+		/// </summary>
+		/// <param name="prefixList">前缀列表</param>
+		/// <param name="suffixList">后缀列表</param>
+		/// <returns></returns>
+		public static string ExtractCoreTypeName(string full_name, out List<string> prefixList, out List<string> suffixList)
+		{
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(full_name));
+			prefixList = new List<string>();
+			suffixList = new List<string>();
+			string coreTypeName = null;
+
+			string[] strArr = full_name.Split(' ');
+			List<string> strList = new List<string>();
+			foreach (string str in strArr)
+			{
+				if (string.Empty != str.Trim())
+				{
+					strList.Add(str);
+				}
+			}
+
+			if (1 == strList.Count)
+			{
+				coreTypeName = strList[0];
+			}
+			else
+			{
+				for (int i = strList.Count - 1; i >= 0; i--)
+				{
+					if (null == coreTypeName)
+					{
+						if (IsStandardIdentifier(strList[i]))
+						{
+							coreTypeName = strList[i];
+						}
+						else
+						{
+							suffixList.Add(strList[i]);
+						}
+					}
+					else
+					{
+						if (IsUsrDefTypeKWD(strList[i]))
+						{
+							coreTypeName = strList[i] + " " + coreTypeName;
+						}
+						else
+						{
+							prefixList.Add(strList[i]);
+						}
+					}
+				}
+			}
+
+			return coreTypeName;
 		}
 	}
 }
