@@ -15,7 +15,7 @@ namespace Mr.Robot
 													             CCodeParseResult parseResult)
 		{
             AnalysisContext analysisContext = new AnalysisContext();					// (变量)解析上下文
-			analysisContext.parseResult = parseResult;
+			analysisContext.ParseResult = parseResult;
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
@@ -46,7 +46,7 @@ namespace Mr.Robot
                                             AnalysisContext analysisContext)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
-			List<StatementComponent> componentList = GetComponents(statementNode, analysisContext.parseResult);
+			List<StatementComponent> componentList = GetComponents(statementNode, analysisContext.ParseResult);
 
             ExpressionAnalysis(componentList, analysisContext);
 		}
@@ -164,7 +164,7 @@ namespace Mr.Robot
 		{
 			MeaningGroup retGroup = null;
 			// 是类型名?
-			if (null != (retGroup = GetVarTypeGroup(componentList, ref idx, analysisContext.parseResult)))
+			if (null != (retGroup = GetVarTypeGroup(componentList, ref idx, analysisContext.ParseResult)))
 			{
 				return retGroup;
 			}
@@ -174,12 +174,12 @@ namespace Mr.Robot
 				return retGroup;
 			}
 			// 是函数调用?
-			else if (null != (retGroup = GetFunctionCallingGroup(componentList, ref idx, analysisContext.parseResult)))
+			else if (null != (retGroup = GetFunctionCallingGroup(componentList, ref idx, analysisContext.ParseResult)))
 			{
 				return retGroup;
 			}
 			// 是表达式? 或者是强制类型转换运算符
-			else if (null != (retGroup = GetExpressionGroup(componentList, ref idx, analysisContext.parseResult)))
+			else if (null != (retGroup = GetExpressionGroup(componentList, ref idx, analysisContext.ParseResult)))
 			{
 				return retGroup;
 			}
@@ -674,7 +674,7 @@ namespace Mr.Robot
         /// </summary>
 		static bool IsLocalVariable(string identifier, AnalysisContext analysisContext)
         {
-			foreach (VAR_CTX vctx in analysisContext.local_list)
+			foreach (VAR_CTX vctx in analysisContext.LocalVarList)
 			{
 				if (vctx.Name.Equals(identifier))
 				{
@@ -766,7 +766,7 @@ namespace Mr.Robot
                     return retGroup;
                 }
                 // 是否为全局变量
-				else if (null != analysisContext.parseResult.FindGlobalVarInfoByName(componentList[idx].Text))
+				else if (null != analysisContext.ParseResult.FindGlobalVarInfoByName(componentList[idx].Text))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
                     retGroup.Type = MeaningGroupType.GlobalVariable;
@@ -797,7 +797,7 @@ namespace Mr.Robot
                         || "->" == componentList[tmp_idx + 1].Text))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
-					retGroup.Type = GetVariableType(braceList, analysisContext.parseResult);
+					retGroup.Type = GetVariableType(braceList, analysisContext.ParseResult);
                     foreach (StatementComponent item in braceList)
                     {
                         retGroup.ComponentList.Add(item);
@@ -942,7 +942,7 @@ namespace Mr.Robot
 			if (null != (varCtx = IsNewDefineVarible(mgList, ctx)))
 			{
 				// 如果是,为此新定义局部变量创建上下文记录项
-				ctx.local_list.Add(varCtx);
+				ctx.LocalVarList.Add(varCtx);
 			}
 			// 分析左值/右值
 			InOutAnalysis.LeftRightValueAnalysis(mgList, ctx);
@@ -952,7 +952,7 @@ namespace Mr.Robot
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-				VAR_CTX varCtx = InOutAnalysis.GetVarCtx(mgList[1].Text, ctx, mgList[0].Text);
+				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, ctx, mgList[0].Text);
 				if (string.Empty == varCtx.Type)
 				{
 					varCtx.Type = mgList[0].Text;
@@ -979,8 +979,8 @@ namespace Mr.Robot
 				{
 					string real_type;
 					List<CFileParseInfo> fpiList = new List<CFileParseInfo>();
-					fpiList.AddRange(ctx.parseResult.IncHdParseInfoList);
-					fpiList.Add(ctx.parseResult.SourceParseInfo);
+					fpiList.AddRange(ctx.ParseResult.IncHdParseInfoList);
+					fpiList.Add(ctx.ParseResult.SourceParseInfo);
 					if (string.Empty != (real_type = CommonProcess.FindTypeDefName(cpnt.Text, fpiList)))
 					{
 						return real_type;
@@ -1089,20 +1089,20 @@ namespace Mr.Robot
     public class AnalysisContext
     {
         // 引数列表
-		public List<VAR_CTX> parameter_list = new List<VAR_CTX>();
+		public List<VAR_CTX> ParameterList = new List<VAR_CTX>();
         // 局部变量列表
-		public List<VAR_CTX> local_list = new List<VAR_CTX>();
+		public List<VAR_CTX> LocalVarList = new List<VAR_CTX>();
 		// 入力全局变量列表
-		public List<VAR_CTX> inputGlobalList = new List<VAR_CTX>();
+		public List<VAR_CTX> InputGlobalList = new List<VAR_CTX>();
 		// 出力全局变量列表
-		public List<VAR_CTX> outputGlobalList = new List<VAR_CTX>();
+		public List<VAR_CTX> OutputGlobalList = new List<VAR_CTX>();
 		// 其它未确定入出力的全局变量(比如函数调用读出值)
-		public List<VAR_CTX> otherGlobalList = new List<VAR_CTX>();
+		public List<VAR_CTX> OtherGlobalList = new List<VAR_CTX>();
 		// 调用函数列表
-		public List<CalledFunction> calledFunctionList = new List<CalledFunction>();
+		public List<CalledFunction> CalledFunctionList = new List<CalledFunction>();
 
 		// 源文件分析结果
-		public CCodeParseResult parseResult = null;
+		public CCodeParseResult ParseResult = null;
 	}
 
 	/// <summary>
@@ -1110,11 +1110,9 @@ namespace Mr.Robot
 	/// </summary>
 	public class CalledFunction
 	{
-		public string functionName = string.Empty;										// 函数名
-		public MeaningGroup meaningGroup = new MeaningGroup();
-		public List<ActualParaInfo> actParaInfoList = new List<ActualParaInfo>();		// 实参情报列表
-		public string returnValType = string.Empty;
+		public string FunctionName = string.Empty;										// 函数名
+		public MeaningGroup MeaningGroup = new MeaningGroup();
+		public List<ActualParaInfo> ActualParaInfoList = new List<ActualParaInfo>();	// 实参情报列表
+		public string ReturnValType = string.Empty;
 	}
 }
-
-

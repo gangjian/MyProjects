@@ -11,26 +11,11 @@ namespace Mr.Robot
 	/// </summary>
 	public class VAR_CTX
 	{
-		private string _name = string.Empty;											// 变量名
-		public string Name
-		{
-			get { return _name; }
-			set { _name = value; }
-		}
+		public string Name = string.Empty;												// 变量名
 
-		private string _type = string.Empty;											// 类型名
-		public string Type
-		{
-			get { return _type; }
-			set { _type = value; }
-		}
+		public string Type = string.Empty;												// 类型名
 
-		private string _real_type = string.Empty;										// 如果类型名是"typedef"定义的别名的话,原类型名
-		public string RealType
-		{
-			get { return _real_type; }
-			set { _real_type = value; }
-		}
+		public string RealType = string.Empty;											// 如果类型名是"typedef"定义的别名的话,原类型名
 
 		private MeaningGroup _meanning_group = null;									// 构成该变量的成分组合
 		public MeaningGroup MeanningGroup
@@ -39,34 +24,9 @@ namespace Mr.Robot
 			set { _meanning_group = value; }
 		}
 
-		private string _called_function_readout = string.Empty;							// 可能被函数调用的读出值赋值(函数名)
-		public string CalledFunctionReadOut
-		{
-			get { return _called_function_readout; }
-			set { _called_function_readout = value; }
-		}
+		public string CalledFunctionReadOut = string.Empty;								// 可能被函数调用的读出值赋值(函数名)
 
-		private object _cur_val = new object();											// 当前值
-		public object CurVal
-		{
-			get { return _cur_val; }
-			set { _cur_val = value; }
-		}
-
-		private List<VAR_CTX> _memberList = new List<VAR_CTX>();						// 成员列表(下一层级)
-		public List<VAR_CTX> MemberList
-		{
-			get { return _memberList; }
-			set { _memberList = value; }
-		}
-
-		VAR_CTX _parent = null;															// 上一层级
-
-		public VAR_CTX Parent
-		{
-			get { return _parent; }
-			set { _parent = value; }
-		}
+		public List<VAR_CTX> MemberList = new List<VAR_CTX>();							// 成员列表(下一层级)
 
 		public VAR_CTX(string type_name, string var_name)								// 构造方法
 		{
@@ -85,7 +45,7 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtx(string var_name, AnalysisContext ctx, string type_name = null)
+		static public VAR_CTX GetVarCtxByName(string var_name, AnalysisContext ctx, string type_name = null)
 		{
 			VAR_CTX var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, ctx)))
@@ -95,7 +55,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				VariableInfo vi = ctx.parseResult.FindGlobalVarInfoByName(var_name);
+				VariableInfo vi = ctx.ParseResult.FindGlobalVarInfoByName(var_name);
 				if (null != vi)
 				{
 					var_ctx = new VAR_CTX(vi.typeName, vi.varName);
@@ -118,11 +78,11 @@ namespace Mr.Robot
 		static VAR_CTX SearchVarCtxList(string var_name, AnalysisContext ctx)
 		{
 			VAR_CTX var_ctx = null;
-			if ((null != (var_ctx = FindVarInVarCtxList(var_name, ctx.parameter_list)))		// (1)参数?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.local_list)))		// (2)临时变量?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.inputGlobalList)))	// (3)全局变量?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.outputGlobalList)))
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.otherGlobalList)))
+			if ((null != (var_ctx = FindVarInVarCtxList(var_name, ctx.ParameterList)))		// (1)参数?
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.LocalVarList)))		// (2)临时变量?
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.InputGlobalList)))	// (3)全局变量?
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.OutputGlobalList)))
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.OtherGlobalList)))
 				)
 			{
 				return var_ctx;
@@ -145,7 +105,7 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static VAR_CTX CreateNewVarCtx(string type_name, string var_name)
+		public static VAR_CTX CreateVarCtx(string type_name, string var_name)
 		{
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(type_name) && !string.IsNullOrEmpty(var_name));
 

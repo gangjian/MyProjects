@@ -36,10 +36,10 @@ namespace UnitTestProject
         {
             // 顺次分析各语句
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, ctx);
 
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[0], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[0], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
             Assert.AreEqual(2, meaningGroupList.Count);
@@ -51,22 +51,22 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_1_2()
         {
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
 
-			Assert.AreEqual(1, analysisContext.local_list.Count);
-			Assert.AreEqual("pvU1NoSts", analysisContext.local_list[0].Type);
-			Assert.AreEqual("pvOut", analysisContext.local_list[0].Name);
+			Assert.AreEqual(1, analysisContext.LocalVarList.Count);
+			Assert.AreEqual("pvU1NoSts", analysisContext.LocalVarList[0].Type);
+			Assert.AreEqual("pvOut", analysisContext.LocalVarList[0].Name);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
         public void sym_rbl_in_trcta_igoff_2()
         {
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
 
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[1], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[1], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
@@ -81,11 +81,11 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_3()
         {
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
 			CCodeAnalyser.StatementAnalysis(root.childList[1], analysisContext);
 
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[2], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[2], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
@@ -100,8 +100,8 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igoff_IO()
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
-			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.OutputGlobalList[0].MeanningGroup.Text);
 		}
     }
 
@@ -142,11 +142,11 @@ namespace UnitTestProject
 		{
 			// 顺次分析各语句
 			AnalysisContext ctx = new AnalysisContext();
-			ctx.parseResult = c_source_file_parse_result;
+			ctx.ParseResult = c_source_file_parse_result;
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, localVarList);
 
 			// 第一条语句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[0], ctx.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[0], ctx.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -154,7 +154,7 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第二条语句
-			componentList = CCodeAnalyser.GetComponents(root.childList[1], ctx.parseResult);
+			componentList = CCodeAnalyser.GetComponents(root.childList[1], ctx.ParseResult);
 			meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -162,7 +162,7 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第三条语句
-			componentList = CCodeAnalyser.GetComponents(root.childList[2], ctx.parseResult);
+			componentList = CCodeAnalyser.GetComponents(root.childList[2], ctx.ParseResult);
 			meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -174,12 +174,12 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_4()
 		{
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
 			CCodeAnalyser.StatementAnalysis(root.childList[1], analysisContext);
 			CCodeAnalyser.StatementAnalysis(root.childList[2], analysisContext);
 			// 第4句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[3], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[3], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -194,13 +194,13 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_5()
 		{
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 4; i++)
 			{
 				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
 			}
 			// 第5句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[4], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[4], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -215,13 +215,13 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_6()
 		{
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 5; i++)
 			{
 				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
 			}
 			// 第6句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[5], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[5], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -236,13 +236,13 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_7()
 		{
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 6; i++)
 			{
 				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
 			}
 			// 第7句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[6], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[6], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -257,13 +257,13 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_8()
 		{
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 7; i++)
 			{
 				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
 			}
 			// 第8句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[7], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[7], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
 			Assert.AreEqual(1, meaningGroupList.Count);
@@ -275,13 +275,13 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_9()
 		{
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 8; i++)
 			{
 				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
 			}
 			// 第9句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[8], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[8], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -296,13 +296,13 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_10()
 		{
 			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.parseResult = c_source_file_parse_result;
+			analysisContext.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 9; i++)
 			{
 				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
 			}
 			// 第9句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[9], analysisContext.parseResult);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[9], analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -318,37 +318,37 @@ namespace UnitTestProject
 		{
 			AnalysisContext ctx = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 
-			Assert.AreEqual(3, ctx.local_list.Count);
+			Assert.AreEqual(3, ctx.LocalVarList.Count);
 
-			Assert.AreEqual("varInStep", ctx.local_list[0].Name);
-			Assert.AreEqual("VAR_IN_STEP", ctx.local_list[0].Type);
-			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_0", ctx.local_list[0].RealType);
+			Assert.AreEqual("varInStep", ctx.LocalVarList[0].Name);
+			Assert.AreEqual("VAR_IN_STEP", ctx.LocalVarList[0].Type);
+			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_0", ctx.LocalVarList[0].RealType);
 
-			Assert.AreEqual("varOutStep", ctx.local_list[1].Name);
-			Assert.AreEqual("VAR_OUT_STEP", ctx.local_list[1].Type);
-			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_4", ctx.local_list[1].RealType);
+			Assert.AreEqual("varOutStep", ctx.LocalVarList[1].Name);
+			Assert.AreEqual("VAR_OUT_STEP", ctx.LocalVarList[1].Type);
+			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_4", ctx.LocalVarList[1].RealType);
 
-			Assert.AreEqual("pvOut", ctx.local_list[2].Name);
-			Assert.AreEqual("pvU1NoSts", ctx.local_list[2].Type);
-			Assert.AreEqual("struct RTE_TYPE_H_USR_DEF_TYPE_0", ctx.local_list[2].RealType);
+			Assert.AreEqual("pvOut", ctx.LocalVarList[2].Name);
+			Assert.AreEqual("pvU1NoSts", ctx.LocalVarList[2].Type);
+			Assert.AreEqual("struct RTE_TYPE_H_USR_DEF_TYPE_0", ctx.LocalVarList[2].RealType);
 
-			Assert.AreEqual(2, ctx.inputGlobalList.Count);
-			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value", ctx.inputGlobalList[0].MeanningGroup.Text);
-			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val)).value", ctx.inputGlobalList[1].MeanningGroup.Text);
+			Assert.AreEqual(2, ctx.InputGlobalList.Count);
+			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value", ctx.InputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val)).value", ctx.InputGlobalList[1].MeanningGroup.Text);
 
-			Assert.AreEqual(1, ctx.calledFunctionList.Count);
-			Assert.AreEqual("ShareLibStepFailJudgeVal", ctx.calledFunctionList[0].functionName);
-			Assert.AreEqual(ActParaPassType.Reference,	ctx.calledFunctionList[0].actParaInfoList[0].passType);
-			Assert.AreEqual(false,						ctx.calledFunctionList[0].actParaInfoList[0].readOut);
-			Assert.AreEqual(ActParaPassType.Reference,	ctx.calledFunctionList[0].actParaInfoList[1].passType);
-			Assert.AreEqual(false,						ctx.calledFunctionList[0].actParaInfoList[1].readOut);
-			Assert.AreEqual(ActParaPassType.Reference,	ctx.calledFunctionList[0].actParaInfoList[2].passType);
-			Assert.AreEqual(true,						ctx.calledFunctionList[0].actParaInfoList[2].readOut);
+			Assert.AreEqual(1, ctx.CalledFunctionList.Count);
+			Assert.AreEqual("ShareLibStepFailJudgeVal", ctx.CalledFunctionList[0].FunctionName);
+			Assert.AreEqual(ActParaPassType.Reference,	ctx.CalledFunctionList[0].ActualParaInfoList[0].passType);
+			Assert.AreEqual(false,						ctx.CalledFunctionList[0].ActualParaInfoList[0].readOut);
+			Assert.AreEqual(ActParaPassType.Reference,	ctx.CalledFunctionList[0].ActualParaInfoList[1].passType);
+			Assert.AreEqual(false,						ctx.CalledFunctionList[0].ActualParaInfoList[1].readOut);
+			Assert.AreEqual(ActParaPassType.Reference,	ctx.CalledFunctionList[0].ActualParaInfoList[2].passType);
+			Assert.AreEqual(true,						ctx.CalledFunctionList[0].ActualParaInfoList[2].readOut);
 
-			Assert.AreEqual(1, ctx.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct)->value", ctx.outputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual(1, ctx.OutputGlobalList.Count);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct)->value", ctx.OutputGlobalList[0].MeanningGroup.Text);
 
-			Assert.AreEqual("ShareLibStepFailJudgeVal(&varInStep,&rctasw_can_mng_tbl,&varOutStep)", ctx.calledFunctionList[0].meaningGroup.Text);
+			Assert.AreEqual("ShareLibStepFailJudgeVal(&varInStep,&rctasw_can_mng_tbl,&varOutStep)", ctx.CalledFunctionList[0].MeaningGroup.Text);
 		}
 	}
 
@@ -370,8 +370,8 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_initReset_IO()
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
-			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.OutputGlobalList[0].MeanningGroup.Text);
 		}
 	}
 
@@ -393,8 +393,8 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_initWakeup_IO()
 		{
 			AnalysisContext analysisContext = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
-			Assert.AreEqual(1, analysisContext.outputGlobalList.Count);
-			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.outputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
+			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.OutputGlobalList[0].MeanningGroup.Text);
 		}
 	}
 }
