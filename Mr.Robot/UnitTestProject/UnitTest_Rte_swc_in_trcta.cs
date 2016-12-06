@@ -10,7 +10,7 @@ namespace UnitTestProject
 	public class sym_rbl_in_trcta_igoff
     {
         static StatementNode root;                                                      // 函数语句结构的根节点
-        static CCodeParseResult c_source_file_parse_result;
+        static CodeParseInfo c_source_file_parse_result;
 
         [ClassInitialize]
         public static void TestClassSetup(TestContext ctx)
@@ -109,7 +109,7 @@ namespace UnitTestProject
 	public class sym_rbl_in_trcta_igon
 	{
 		static StatementNode root;                                                      // 函数语句结构的根节点
-		static CCodeParseResult c_source_file_parse_result;
+		static CodeParseInfo c_source_file_parse_result;
 
 		[ClassInitialize]
 		public static void TestClassSetup(TestContext ctx)
@@ -353,7 +353,7 @@ namespace UnitTestProject
 	public class sym_rbl_in_trcta_initReset
 	{
 		static StatementNode root;                                                      // 函数语句结构的根节点
-		static CCodeParseResult c_source_file_parse_result;
+		static CodeParseInfo c_source_file_parse_result;
 
 		[ClassInitialize]
 		public static void TestClassSetup(TestContext ctx)
@@ -376,7 +376,7 @@ namespace UnitTestProject
 	public class sym_rbl_in_trcta_initWakeup
 	{
 		static StatementNode root;                                                      // 函数语句结构的根节点
-		static CCodeParseResult c_source_file_parse_result;
+		static CodeParseInfo c_source_file_parse_result;
 
 		[ClassInitialize]
 		public static void TestClassSetup(TestContext ctx)

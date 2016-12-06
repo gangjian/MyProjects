@@ -106,9 +106,9 @@ namespace Mr.Robot
             lvBranchList.Enabled = false;
         }
 
-		List<CCodeParseResult> _ccodeParseResultList = new List<CCodeParseResult>();
+		List<CodeParseInfo> _ccodeParseResultList = new List<CodeParseInfo>();
 
-		public List<CCodeParseResult> CCodeParseResultList
+		public List<CodeParseInfo> CCodeParseResultList
 		{
 			get { return _ccodeParseResultList; }
 			set { _ccodeParseResultList = value; }
@@ -150,12 +150,12 @@ namespace Mr.Robot
 		void UpdateFunctionListViewCtrl(string sourceFileName)
 		{
 			lvFunctionList.Items.Clear();
-			foreach (CCodeParseResult srcResult in CCodeParseResultList)
+			foreach (CodeParseInfo srcResult in CCodeParseResultList)
 			{
 				string path;
 				if (sourceFileName == IOProcess.GetFileName(srcResult.SourceParseInfo.full_name, out path))
 				{
-					foreach (CFunctionStructInfo functionInfo in srcResult.SourceParseInfo.fun_define_list)
+					foreach (FunctionParseInfo functionInfo in srcResult.SourceParseInfo.fun_define_list)
 					{
 						ListViewItem item = new ListViewItem(functionInfo.name
                             //+ ": "

@@ -32,6 +32,7 @@ Global
 		{D2AC3292-9E87-49F2-A7C9-1CE54C74A0A8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
 		{D2AC3292-9E87-49F2-A7C9-1CE54C74A0A8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{D2AC3292-9E87-49F2-A7C9-1CE54C74A0A8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D2AC3292-9E87-49F2-A7C9-1CE54C74A0A8}.Debug|x86.Build.0 = Debug|Any CPU
 		{D2AC3292-9E87-49F2-A7C9-1CE54C74A0A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2AC3292-9E87-49F2-A7C9-1CE54C74A0A8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D2AC3292-9E87-49F2-A7C9-1CE54C74A0A8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU

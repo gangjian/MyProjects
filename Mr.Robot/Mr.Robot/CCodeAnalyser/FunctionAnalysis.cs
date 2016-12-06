@@ -14,11 +14,11 @@ namespace Mr.Robot
         /// <param varName="fullPath"></param>
         /// <param varName="funcName"></param>
         /// <param varName="parsedResultList"></param>
-        public static void FunctionAnalysis(string fullPath, string funcName, List<CCodeParseResult> parsedResultList)
+        public static void FunctionAnalysis(string fullPath, string funcName, List<CodeParseInfo> parsedResultList)
         {
             // 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
-            CCodeParseResult c_file_result = null;
-            CFunctionStructInfo funInfo = FindFileAndFunctionStructInfoFromParseResult(fullPath, funcName, parsedResultList, out c_file_result);
+            CodeParseInfo c_file_result = null;
+            FunctionParseInfo funInfo = FindFileAndFunctionStructInfoFromParseResult(fullPath, funcName, parsedResultList, out c_file_result);
 
             // 函数语句树结构的分析提取
             StatementNode root = new StatementNode();
@@ -30,18 +30,18 @@ namespace Mr.Robot
             FunctionStatementsAnalysis(root, c_file_result);
         }
 
-        public static CFunctionStructInfo FindFileAndFunctionStructInfoFromParseResult(string fileName, string funcName,
-                                                                                List<CCodeParseResult> parsedResultList,
-                                                                                out CCodeParseResult parseResult)
+        public static FunctionParseInfo FindFileAndFunctionStructInfoFromParseResult(string fileName, string funcName,
+                                                                                List<CodeParseInfo> parsedResultList,
+                                                                                out CodeParseInfo parseResult)
         {
-            CFunctionStructInfo funInfo = null;
+            FunctionParseInfo funInfo = null;
             parseResult = null;
             // 根据文件名, 函数名取得函数情报的引用
-            foreach (CCodeParseResult result in parsedResultList)
+            foreach (CodeParseInfo result in parsedResultList)
             {
                 if (result.SourceParseInfo.full_name.Equals(fileName))
                 {                                                                       // 找到指定的文件(根据文件名)
-                    foreach (CFunctionStructInfo fi in result.SourceParseInfo.fun_define_list)
+                    foreach (FunctionParseInfo fi in result.SourceParseInfo.fun_define_list)
                     {
                         if (fi.name.Equals(funcName))
                         {                                                               // 找到指定的函数(根据函数名)

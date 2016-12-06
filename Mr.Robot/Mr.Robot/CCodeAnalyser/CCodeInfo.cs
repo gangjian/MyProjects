@@ -67,12 +67,12 @@ namespace Mr.Robot
 	/// <summary>
 	/// C源代码文件解析结果情报类
 	/// </summary>
-	public class CFileParseInfo
+	public class FileParseInfo
 	{
 		public string full_name = string.Empty;
 		public List<string> include_file_list = new List<string>();                     // "include"头文件列表
-		public List<CFunctionStructInfo> fun_declare_list = new List<CFunctionStructInfo>();// 函数声明列表
-		public List<CFunctionStructInfo> fun_define_list = new List<CFunctionStructInfo>(); // 函数定义列表
+		public List<FunctionParseInfo> fun_declare_list = new List<FunctionParseInfo>();// 函数声明列表
+		public List<FunctionParseInfo> fun_define_list = new List<FunctionParseInfo>(); // 函数定义列表
 		public List<UsrDefTypeInfo> user_def_type_list = new List<UsrDefTypeInfo>();    // 用户定义类型列表
 		public List<VariableInfo> global_var_declare_list = new List<VariableInfo>();	// 全局量声明列表
 		public List<VariableInfo> global_var_define_list = new List<VariableInfo>();	// 全局量定义列表
@@ -81,7 +81,7 @@ namespace Mr.Robot
 
 		public List<string> parsedCodeList = new List<string>();						// 解析后(去除注释, 宏展开等)的代码行内容列表
 
-		public CFileParseInfo(string fileName)
+		public FileParseInfo(string fileName)
 		{
 			full_name = fileName;
 		}
@@ -90,7 +90,7 @@ namespace Mr.Robot
 	/// <summary>
 	/// C函数的结构情报
 	/// </summary>
-	public class CFunctionStructInfo
+	public class FunctionParseInfo
 	{
 		public string name = string.Empty;												// 函数名称
 		public List<string> qualifiers = new List<string>();					        // 修饰符列表
@@ -151,20 +151,20 @@ namespace Mr.Robot
 	/// <summary>
 	/// C代码解析结果类: 包含一个源文件解析信息和其包含的头文件解析信息列表
 	/// </summary>
-	public class CCodeParseResult
+	public class CodeParseInfo
 	{
-		public CFileParseInfo SourceParseInfo;											// 源文件解析信息
+		public FileParseInfo SourceParseInfo;											// 源文件解析信息
 
-		public List<CFileParseInfo> IncHdParseInfoList = new List<CFileParseInfo>();	// 源文件包含的头文件解析信息列表
+		public List<FileParseInfo> IncHdParseInfoList = new List<FileParseInfo>();	// 源文件包含的头文件解析信息列表
 
 		#region 以下方法,是针对代码解析结果的各种操作(查找,判断...)
 		/// <summary>
 		/// 根据函数名查找函数的解析结果
 		/// </summary>
-		public CFunctionStructInfo FindFuncParseInfoByName(string fun_name)
+		public FunctionParseInfo FindFuncParseInfo(string fun_name)
 		{
-			CFunctionStructInfo retFuncInfo = null;
-			foreach (CFileParseInfo pi in this.IncHdParseInfoList)						// 先遍历包含头文件
+			FunctionParseInfo retFuncInfo = null;
+			foreach (FileParseInfo pi in this.IncHdParseInfoList)						// 先遍历包含头文件
 			{
 				if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, pi.fun_declare_list)))
 				{
@@ -188,9 +188,9 @@ namespace Mr.Robot
 			return null;																// 没找到
 		}
 
-		static CFunctionStructInfo SearchFuncStructInfoList(string fun_name, List<CFunctionStructInfo> funInfoList)
+		static FunctionParseInfo SearchFuncStructInfoList(string fun_name, List<FunctionParseInfo> funInfoList)
 		{
-			foreach (CFunctionStructInfo fsi in funInfoList)
+			foreach (FunctionParseInfo fsi in funInfoList)
 			{
 				if (fsi.name.Equals(fun_name))
 				{
@@ -207,7 +207,7 @@ namespace Mr.Robot
 		public VariableInfo FindGlobalVarInfoByName(string var_name)
 		{
 			VariableInfo retVarInfo = null;
-			foreach (CFileParseInfo hfi in this.IncHdParseInfoList)
+			foreach (FileParseInfo hfi in this.IncHdParseInfoList)
 			{
 				if (null != (retVarInfo = SearchVariableList(var_name, hfi.global_var_declare_list)))
 				{

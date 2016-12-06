@@ -26,9 +26,9 @@ namespace Mr.Robot
 			set { CCodeAnalyser._sourceNameList = value; }
 		}
 
-		static List<CFileParseInfo> _totalParsedInfoList = new List<CFileParseInfo>();
+		static List<FileParseInfo> _totalParsedInfoList = new List<FileParseInfo>();
 
-		public static List<CFileParseInfo> TotalParsedInfoList					// 所有已经解析过的文件的解析情报列表(暂未使用)
+		public static List<FileParseInfo> TotalParsedInfoList					// 所有已经解析过的文件的解析情报列表(暂未使用)
 		{
 			get { return CCodeAnalyser._totalParsedInfoList; }
 			set { CCodeAnalyser._totalParsedInfoList = value; }
@@ -40,19 +40,19 @@ namespace Mr.Robot
 		/// ".c"源文件处理
 		/// </summary>
 		/// <param varName="srcName"></param>
-		public static List<CCodeParseResult> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
+		public static List<CodeParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
 		{
 			// 初始化
 			SourceNameList = srcFileList;
 			HeaderNameList = hdFileList;
 
-			List<CCodeParseResult> resultList = new List<CCodeParseResult>();
+			List<CodeParseInfo> resultList = new List<CodeParseInfo>();
 
 			// 逐个解析源文件
 			foreach (string srcName in SourceNameList)
 			{
-				CCodeParseResult parseResult = new CCodeParseResult();
-				List<CFileParseInfo> hdList = new List<CFileParseInfo>();
+				CodeParseInfo parseResult = new CodeParseInfo();
+				List<FileParseInfo> hdList = new List<FileParseInfo>();
 				parseResult.SourceParseInfo = CFileProcess(srcName, ref hdList);
 				parseResult.IncHdParseInfoList = hdList;
 
@@ -71,11 +71,11 @@ namespace Mr.Robot
 		/// <param varName="srcName"></param>
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
-		static CFileParseInfo CFileProcess(string srcName, ref List<CFileParseInfo> includeInfoList)
+		static FileParseInfo CFileProcess(string srcName, ref List<FileParseInfo> includeInfoList)
 		{
 			// 去掉注释
 			List<string> codeList = RemoveComments(srcName);
-			CFileParseInfo fi = new CFileParseInfo(srcName);
+			FileParseInfo fi = new FileParseInfo(srcName);
 			// 预编译处理
 			codeList = PrecompileProcess(codeList, ref fi, ref includeInfoList);
 			fi.parsedCodeList = codeList;
@@ -180,8 +180,8 @@ namespace Mr.Robot
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		public static List<string> PrecompileProcess(List<string> codeList,
-													 ref CFileParseInfo fi,
-													 ref List<CFileParseInfo> includeInfoList)
+													 ref FileParseInfo fi,
+													 ref List<FileParseInfo> includeInfoList)
 		{
 			List<string> retList = new List<string>();
 			Stack<CC_INFO> ccStack = new Stack<CC_INFO>();						// 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
@@ -416,7 +416,7 @@ namespace Mr.Robot
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		static void ParseIncludeHeaderFile(string incFileName,
-										 ref List<CFileParseInfo> includeInfoList)
+										 ref List<FileParseInfo> includeInfoList)
 		{
 			// 先在已解析过的文件list里找
 			foreach (var pi in includeInfoList)
@@ -438,7 +438,7 @@ namespace Mr.Robot
 				if (fName.ToLower() == incFileName.ToLower())
 				{
 					// 如果找到了, 则要先解析这个头文件
-					CFileParseInfo fi = CFileProcess(hd_name, ref includeInfoList);
+					FileParseInfo fi = CFileProcess(hd_name, ref includeInfoList);
 					// 解析完后, 加到头文件解析列表中去
 					includeInfoList.Add(fi);
 					// TODO: 注意当有多个同名文件符合条件时的情况应对
@@ -454,8 +454,8 @@ namespace Mr.Robot
 		public static void CCodeFileAnalysis(string fullName,
 											List<string> codeList,
 											ref File_Position searchPos,
-											ref CFileParseInfo fi,
-											List<CFileParseInfo> parsedFileInfoList)
+											ref FileParseInfo fi,
+											List<FileParseInfo> parsedFileInfoList)
 		{
 			System.Diagnostics.Trace.Assert((null != codeList));
 			if (0 == codeList.Count)
@@ -502,7 +502,7 @@ namespace Mr.Robot
 					// 遇到小括号了, 可能是碰上函数声明或定义了
 					if (("(" == nextId) && (0 != qualifierList.Count))
 					{
-						CFunctionStructInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
+						FunctionParseInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
 						if (null != cfi)
 						{
 							if (   -1 != cfi.Scope.Start.row_num
@@ -589,9 +589,9 @@ namespace Mr.Robot
 		/// <param varName="codeList"></param>
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
-		static CFunctionStructInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos, File_Position bracketLeft)
+		static FunctionParseInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref File_Position searchPos, File_Position bracketLeft)
 		{
-			CFunctionStructInfo cfi = new CFunctionStructInfo();
+			FunctionParseInfo cfi = new FunctionParseInfo();
 
 			// 先找匹配的小括号
             File_Position bracketRight = CommonProcess.FindNextMatchSymbol(codeList, searchPos, ')');
@@ -745,7 +745,7 @@ namespace Mr.Robot
 		/// <param varName="startPos"></param>
 		/// <param varName="qualifierList"></param>
 		/// <returns></returns>
-		static UsrDefTypeInfo UserDefineTypeProcess(List<string> codeList, List<string> qualifierList, ref File_Position startPos, CFileParseInfo fi)
+		static UsrDefTypeInfo UserDefineTypeProcess(List<string> codeList, List<string> qualifierList, ref File_Position startPos, FileParseInfo fi)
 		{
 			if (0 == qualifierList.Count)
 			{
@@ -851,8 +851,8 @@ namespace Mr.Robot
 		/// <param varName="searchPos"></param>
 		/// <param varName="cfi"></param>
 		static void GlobalVarProcess(List<string> qualifierList,
-									 ref CFileParseInfo cfi,
-									 List<CFileParseInfo> parsedFileInfoList)
+									 ref FileParseInfo cfi,
+									 List<FileParseInfo> parsedFileInfoList)
 		{
 			VariableInfo gvi = new VariableInfo();
 
@@ -895,7 +895,7 @@ namespace Mr.Robot
 			gvi.qualifiers.AddRange(prefixList);
 			// 类型名可能是typedef定义的别名, 要找出原类型名
 			string real_type;
-			List<CFileParseInfo> fpiList = new List<CFileParseInfo>();
+			List<FileParseInfo> fpiList = new List<FileParseInfo>();
 			fpiList.AddRange(parsedFileInfoList);
 			fpiList.Add(cfi);
 			if (string.Empty != (real_type = CommonProcess.FindTypeDefName(gvi.typeName, fpiList)))
@@ -954,7 +954,7 @@ namespace Mr.Robot
 		/// <param varName="codeList"></param>
 		/// <param varName="searchPos"></param>
 		/// <param varName="cfi"></param>
-		static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref CFileParseInfo cfi)
+		static void DefineProcess(List<string> codeList, ref File_Position searchPos, ref FileParseInfo cfi)
 		{
 			File_Position sPos, fPos;
 			sPos = new File_Position(searchPos);
@@ -1000,8 +1000,8 @@ namespace Mr.Robot
 		/// </summary>
 		static bool MacroDetectAndExpand_File(string idStr, List<string> codeList,
 										      File_Position foundPos,
-										      CFileParseInfo curFileInfo,
-										      List<CFileParseInfo> includeHeaderInfoList)
+										      FileParseInfo curFileInfo,
+										      List<FileParseInfo> includeHeaderInfoList)
 		{
             if (!CommonProcess.IsStandardIdentifier(idStr))
 			{
@@ -1010,7 +1010,7 @@ namespace Mr.Robot
 			// 作成一个所有包含头文件的宏定义的列表
 			List<MacroDefineInfo> defineList = new List<MacroDefineInfo>();
 			List<TypeDefineInfo> typeDefineList = new List<TypeDefineInfo>();
-			foreach (CFileParseInfo hdInfo in includeHeaderInfoList)
+			foreach (FileParseInfo hdInfo in includeHeaderInfoList)
 			{
 				defineList.AddRange(hdInfo.macro_define_list);
 				typeDefineList.AddRange(hdInfo.type_define_list);
@@ -1115,7 +1115,7 @@ namespace Mr.Robot
 		/// <param varName="codeList"></param>
 		/// <param varName="qualifierList"></param>
 		/// <param varName="cfi"></param>
-		static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref CFileParseInfo cfi)
+		static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref FileParseInfo cfi)
 		{
 			TypeDefineInfo tdi = new TypeDefineInfo();
 			string old_type = "";
@@ -1134,7 +1134,7 @@ namespace Mr.Robot
 			cfi.type_define_list.Add(tdi);
 		}
 
-        static string GetAnonymousTypeName(CFileParseInfo fi)
+        static string GetAnonymousTypeName(FileParseInfo fi)
         {
             string fn, path;
             fn = IOProcess.GetFileName(fi.full_name, out path);

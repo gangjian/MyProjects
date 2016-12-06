@@ -9,7 +9,7 @@ namespace UnitTestProject
 {
 	class Common
 	{
-		public static CCodeParseResult UnitTest_SourceFileProcess(string full_path, string fun_name, ref StatementNode root_node)
+		public static CodeParseInfo UnitTest_SourceFileProcess(string full_path, string fun_name, ref StatementNode root_node)
 		{
 			if (string.IsNullOrEmpty(full_path))
 			{
@@ -29,9 +29,9 @@ namespace UnitTestProject
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
-			List<CCodeParseResult> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
-			CCodeParseResult code_parse_result;
-			CFunctionStructInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
+			List<CodeParseInfo> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
+			CodeParseInfo code_parse_result;
+			FunctionParseInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
 
 			// 指定函数语句树结构的分析提取
 			root_node = new StatementNode();
@@ -41,7 +41,7 @@ namespace UnitTestProject
 			return code_parse_result;
 		}
 
-		public static List<CCodeParseResult> UnitTest_SourceFileProcess2(string full_path)
+		public static List<CodeParseInfo> UnitTest_SourceFileProcess2(string full_path)
 		{
 			if (string.IsNullOrEmpty(full_path))
 			{
@@ -61,15 +61,15 @@ namespace UnitTestProject
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
-			List<CCodeParseResult> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
+			List<CodeParseInfo> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
 
 			return parseResultList;
 		}
 
-		public static CCodeParseResult UnitTest_GetFuncParseResult(string full_path, string fun_name, List<CCodeParseResult> parseResultList, ref StatementNode root_node)
+		public static CodeParseInfo UnitTest_GetFuncParseResult(string full_path, string fun_name, List<CodeParseInfo> parseResultList, ref StatementNode root_node)
 		{
-			CCodeParseResult code_parse_result;
-			CFunctionStructInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
+			CodeParseInfo code_parse_result;
+			FunctionParseInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
 
 			// 指定函数语句树结构的分析提取
 			root_node = new StatementNode();

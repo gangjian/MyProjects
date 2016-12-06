@@ -16,6 +16,8 @@ namespace Mr.Robot
 		public VAR_Type Type = new VAR_Type();											// 类型名
 
 		public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
+																						// TODO: 这个成员在VAR_CTX类改造完成后要删掉!
+																						// 即函数出入力列表与变量上下文分离, 20161206
 
 		public string CalledFunctionReadOut = string.Empty;								// 可能被函数调用的读出值赋值(函数名)
 
@@ -104,26 +106,24 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static VAR_CTX CreateVarCtx(string type_name, string var_name)
+		public static VAR_CTX CreateVarCtx(string type_name, string var_name, CodeParseInfo code_info)
 		{
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(type_name) && !string.IsNullOrEmpty(var_name));
 
 			// 提取类型名(分离前缀,后缀)
 			List<string> prefixList, suffixList;
-			string typeName = CommonProcess.ExtractCoreTypeName(type_name, out prefixList, out suffixList);
+			string coreTypeName = CommonProcess.ExtractCoreTypeName(type_name, out prefixList, out suffixList);
 			// 根据类型名检索类型定义
-			if (CommonProcess.IsBasicVarType(typeName))
+			if (CommonProcess.IsBasicVarType(coreTypeName))
 			{
-				
+				VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
+				return var_ctx;
 			}
 			else
 			{
-
+				VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
+				return var_ctx;
 			}
-
-			VAR_CTX var_ctx = new VAR_CTX(typeName, var_name);
-			return var_ctx;
 		}
-
 	}
 }
