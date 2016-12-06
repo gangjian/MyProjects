@@ -762,7 +762,7 @@ namespace Mr.Robot
 			{
                 if (CommonProcess.IsStandardIdentifier(nextIdStr))
 				{
-					retUsrTypeInfo.nameList.Add(nextIdStr);
+					retUsrTypeInfo.NameList.Add(nextIdStr);
                     nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 					if ("{" != nextIdStr)
 					{
@@ -799,7 +799,7 @@ namespace Mr.Robot
 				catStr = catStr.Remove(catStr.LastIndexOf('}'));
 			}
 			char sepStr = ';';
-			retUsrTypeInfo.type = keyStr;
+			retUsrTypeInfo.Category = keyStr;
 			if ("enum" == keyStr)
 			{
 				sepStr = ',';
@@ -815,16 +815,16 @@ namespace Mr.Robot
 				string memStr = m.Trim();
 				if (string.Empty != memStr)
 				{
-					retUsrTypeInfo.memberList.Add(m.Trim());
+					retUsrTypeInfo.MemberList.Add(m.Trim());
 				}
 			}
 			// 如果是匿名类型, 要给加个名字
-			if (0 == retUsrTypeInfo.nameList.Count)
+			if (0 == retUsrTypeInfo.NameList.Count)
 			{
 				// 取得匿名类型的名字
-				retUsrTypeInfo.nameList.Add(GetAnonymousTypeName(fi));
+				retUsrTypeInfo.NameList.Add(GetAnonymousTypeName(fi));
 			}
-			qualifierList.Add(retUsrTypeInfo.nameList[0]);
+			qualifierList.Add(retUsrTypeInfo.NameList[0]);
 			// 检查后面是否跟着分号(判断类型定义结束)
 			File_Position old_pos = new File_Position(searchPos);
 			nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);

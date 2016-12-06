@@ -622,24 +622,17 @@ namespace Mr.Robot
             foreach (FileParseInfo hfi in headerList)
             {
                 // 首先查用户定义类型列表
-                foreach (UsrDefTypeInfo udi in hfi.user_def_type_list)
-                {
-                    foreach (string typeName in udi.nameList)
-                    {
-						if (typeName.Equals(idStr))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                // 然后是typedef列表
-                foreach (TypeDefineInfo tdi in hfi.type_define_list)
-                {
-					if (tdi.new_type_name.Equals(idStr))
-                    {
-                        return true;
-                    }
-                }
+				if (null != parseResult.FindUsrDefTypeInfo(idStr))
+				{
+					return true;
+				}
+				else if (null != parseResult.FindTypeDefInfo(idStr))
+				{
+					return true;
+				}
+				else
+				{
+				}
             }
             return false;
         }

@@ -85,6 +85,33 @@ namespace Mr.Robot
 		{
 			full_name = fileName;
 		}
+
+		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name)
+		{
+			foreach (UsrDefTypeInfo udti in this.user_def_type_list)
+			{
+				foreach (string name in udti.NameList)
+				{
+					if (name.Equals(type_name))
+					{
+						return udti;
+					}
+				}
+			}
+			return null;
+		}
+
+		public TypeDefineInfo FindTypeDefInfo(string type_name)
+		{
+			foreach (TypeDefineInfo tdi in this.type_define_list)
+			{
+				if (tdi.new_type_name.Equals(type_name))
+				{
+					return tdi;
+				}
+			}
+			return null;
+		}
 	}
 
 	/// <summary>
@@ -109,16 +136,11 @@ namespace Mr.Robot
 	/// </summary>
 	public class UsrDefTypeInfo
 	{
-		public string type = string.Empty;												// "struct, enum, union"
-		public List<string> nameList = new List<string>();						        // 可能有多个名(逗号分割)
-		public List<string> memberList = new List<string>();
+		public string Category = string.Empty;											// "struct, enum, union"
+		public List<string> NameList = new List<string>();						        // 可能有多个名(逗号分割)
+		public List<string> MemberList = new List<string>();
 
-		private File_Scope scope = new File_Scope();
-		public File_Scope Scope
-		{
-			get { return scope; }
-			set { scope = value; }
-		}
+		public File_Scope Scope = new File_Scope();
 	}
 
 	/// <summary>
@@ -244,9 +266,38 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static void SearchVaribleType()
+		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name)
 		{
+			UsrDefTypeInfo udti = null;
+			foreach (FileParseInfo headerInfo in this.IncHdParseInfoList)
+			{
+				if (null != (udti = headerInfo.FindUsrDefTypeInfo(type_name)))
+				{
+					return udti;
+				}
+			}
+			if (null != (udti = this.SourceParseInfo.FindUsrDefTypeInfo(type_name)))
+			{
+				return udti;
+			}
+			return null;
+		}
 
+		public TypeDefineInfo FindTypeDefInfo(string type_name)
+		{
+			TypeDefineInfo tdi = null;
+			foreach (FileParseInfo headerInfo in this.IncHdParseInfoList)
+			{
+				if (null != (tdi = headerInfo.FindTypeDefInfo(type_name)))
+				{
+					return tdi;
+				}
+			}
+			if (null != (tdi = this.SourceParseInfo.FindTypeDefInfo(type_name)))
+			{
+				return tdi;
+			}
+			return null;
 		}
 
 		#endregion
