@@ -235,14 +235,7 @@ namespace Mr.Robot
 			{
 				if (local_var.Name.Equals(var_name))
 				{
-					if (string.Empty != local_var.RealType)
-					{
-						return local_var.RealType;
-					}
-					else
-					{
-						return local_var.Type;
-					}
+					return local_var.Type.Name;
 				}
 			}
 			// 全局变量?

@@ -153,21 +153,9 @@ namespace Mr.Robot
 	/// </summary>
 	public class CCodeParseResult
 	{
-		CFileParseInfo _sourceParseInfo;
+		public CFileParseInfo SourceParseInfo;											// 源文件解析信息
 
-		public CFileParseInfo SourceParseInfo									        // 源文件解析信息
-		{
-			get { return _sourceParseInfo; }
-			set { _sourceParseInfo = value; }
-		}
-
-		List<CFileParseInfo> _includeHeaderParseInfoList = new List<CFileParseInfo>();	// 源文件包含的头文件解析信息列表
-
-		public List<CFileParseInfo> IncHdParseInfoList
-		{
-			get { return _includeHeaderParseInfoList; }
-			set { _includeHeaderParseInfoList = value; }
-		}
+		public List<CFileParseInfo> IncHdParseInfoList = new List<CFileParseInfo>();	// 源文件包含的头文件解析信息列表
 
 		#region 以下方法,是针对代码解析结果的各种操作(查找,判断...)
 		/// <summary>

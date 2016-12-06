@@ -953,14 +953,14 @@ namespace Mr.Robot
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
 				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, ctx, mgList[0].Text);
-				if (string.Empty == varCtx.Type)
+				if (string.Empty == varCtx.Type.Name)
 				{
-					varCtx.Type = mgList[0].Text;
+					varCtx.Type.Name = mgList[0].Text;
 				}
 				string orgTypeName;
 				if (string.Empty != (orgTypeName = IsTypeDefTypeName(mgList[0], ctx)))
 				{
-					varCtx.RealType = orgTypeName;
+					varCtx.Type.Name = orgTypeName;
 				}
                 return varCtx;
             }

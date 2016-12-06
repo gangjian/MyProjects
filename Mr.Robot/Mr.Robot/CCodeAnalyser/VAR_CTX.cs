@@ -13,16 +13,9 @@ namespace Mr.Robot
 	{
 		public string Name = string.Empty;												// 变量名
 
-		public string Type = string.Empty;												// 类型名
+		public VAR_Type Type = new VAR_Type();											// 类型名
 
-		public string RealType = string.Empty;											// 如果类型名是"typedef"定义的别名的话,原类型名
-
-		private MeaningGroup _meanning_group = null;									// 构成该变量的成分组合
-		public MeaningGroup MeanningGroup
-		{
-			get { return _meanning_group; }
-			set { _meanning_group = value; }
-		}
+		public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
 
 		public string CalledFunctionReadOut = string.Empty;								// 可能被函数调用的读出值赋值(函数名)
 
@@ -32,9 +25,15 @@ namespace Mr.Robot
 		{
 			Trace.Assert(!string.IsNullOrEmpty(type_name));
 			Trace.Assert(!string.IsNullOrEmpty(var_name));
-			this.Type = type_name;
+			this.Type.Name = type_name;
 			this.Name = var_name;
 		}
+	}
+
+	public class VAR_Type
+	{
+		public string Name = string.Empty;
+		public string Qualifier = string.Empty;
 	}
 
 	public partial class InOutAnalysis
@@ -59,7 +58,7 @@ namespace Mr.Robot
 				if (null != vi)
 				{
 					var_ctx = new VAR_CTX(vi.typeName, vi.varName);
-					var_ctx.RealType = vi.realTypeName;
+					var_ctx.Type.Name = vi.realTypeName;
 				}
 				else
 				{
