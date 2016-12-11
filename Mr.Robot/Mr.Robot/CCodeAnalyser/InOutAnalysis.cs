@@ -242,13 +242,13 @@ namespace Mr.Robot
 			VariableInfo vi = ctx.ParseResult.FindGlobalVarInfoByName(var_name);
 			if (null != vi)
 			{
-				if (string.Empty != vi.realTypeName)
+				if (string.Empty != vi.RealTypeName)
 				{
-					return vi.realTypeName;
+					return vi.RealTypeName;
 				}
 				else
 				{
-					return vi.typeName;
+					return vi.TypeName;
 				}
 			}
 			return string.Empty;

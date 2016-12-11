@@ -8,9 +8,9 @@ namespace Mr.Robot
     public class StatementNode
     {
         // 1.语句范围(起止位置)
-		private File_Scope scope = new File_Scope();
+		private CodeScope scope = new CodeScope();
 
-		public File_Scope Scope
+		public CodeScope Scope
 		{
 			get { return scope; }
 			set { scope = value; }

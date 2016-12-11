@@ -322,24 +322,24 @@ namespace Mr.Robot
 			// 作成一个所有包含头文件的宏定义的列表
 			List<MacroDefineInfo> macroDefineList = new List<MacroDefineInfo>();
 			List<TypeDefineInfo> typeDefineList = new List<TypeDefineInfo>();
-			foreach (FileParseInfo hdInfo in parseResult.IncHdParseInfoList)
+			foreach (FileParseInfo hdInfo in parseResult.HeaderParseInfoList)
 			{
-				macroDefineList.AddRange(hdInfo.macro_define_list);
-				typeDefineList.AddRange(hdInfo.type_define_list);
+				macroDefineList.AddRange(hdInfo.MacroDefineList);
+				typeDefineList.AddRange(hdInfo.TypeDefineList);
 			}
 			// 添加上本文件所定义的宏
-			macroDefineList.AddRange(parseResult.SourceParseInfo.macro_define_list);
-			typeDefineList.AddRange(parseResult.SourceParseInfo.type_define_list);
+			macroDefineList.AddRange(parseResult.SourceParseInfo.MacroDefineList);
+			typeDefineList.AddRange(parseResult.SourceParseInfo.TypeDefineList);
 			// 遍历查找宏名
 			foreach (MacroDefineInfo di in macroDefineList)
 			{
 				// 判断宏名是否一致
-				if (idStr == di.name)
+				if (idStr == di.Name)
 				{
-					string macroName = di.name;
-					string replaceStr = di.value;
+					string macroName = di.Name;
+					string replaceStr = di.Value;
 					// 判断有无带参数
-					if (0 != di.paras.Count)
+					if (0 != di.ParaList.Count)
 					{
 						// 取得宏参数
 						string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
@@ -367,7 +367,7 @@ namespace Mr.Robot
 								// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
 								continue;
 							}
-							replaceStr = replaceStr.Replace(di.paras[idx], rp);
+							replaceStr = replaceStr.Replace(di.ParaList[idx], rp);
 							idx++;
 						}
 					}
@@ -617,7 +617,7 @@ namespace Mr.Robot
 		static bool IsUsrDefVarType(List<string> idStrList, CodeParseInfo parseResult)
         {
 			string idStr = idStrList[0];
-			List<FileParseInfo> headerList = parseResult.IncHdParseInfoList;
+			List<FileParseInfo> headerList = parseResult.HeaderParseInfoList;
             // 遍历头文件列表
             foreach (FileParseInfo hfi in headerList)
             {
@@ -972,7 +972,7 @@ namespace Mr.Robot
 				{
 					string real_type;
 					List<FileParseInfo> fpiList = new List<FileParseInfo>();
-					fpiList.AddRange(ctx.ParseResult.IncHdParseInfoList);
+					fpiList.AddRange(ctx.ParseResult.HeaderParseInfoList);
 					fpiList.Add(ctx.ParseResult.SourceParseInfo);
 					if (string.Empty != (real_type = CommonProcess.FindTypeDefName(cpnt.Text, fpiList)))
 					{

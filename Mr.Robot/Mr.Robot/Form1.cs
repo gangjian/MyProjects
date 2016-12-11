@@ -153,11 +153,11 @@ namespace Mr.Robot
 			foreach (CodeParseInfo srcResult in CCodeParseResultList)
 			{
 				string path;
-				if (sourceFileName == IOProcess.GetFileName(srcResult.SourceParseInfo.full_name, out path))
+				if (sourceFileName == IOProcess.GetFileName(srcResult.SourceParseInfo.FullName, out path))
 				{
-					foreach (FunctionParseInfo functionInfo in srcResult.SourceParseInfo.fun_define_list)
+					foreach (FuncParseInfo functionInfo in srcResult.SourceParseInfo.FunDefineList)
 					{
-						ListViewItem item = new ListViewItem(functionInfo.name
+						ListViewItem item = new ListViewItem(functionInfo.Name
                             //+ ": "
                             //+ functionInfo.body_start_pos.row_num.ToString() + ", "
                             //+ functionInfo.body_start_pos.col_num.ToString() + "; "

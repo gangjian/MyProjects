@@ -31,7 +31,7 @@ namespace UnitTestProject
 			csfList.Add(full_path);
 			List<CodeParseInfo> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
 			CodeParseInfo code_parse_result;
-			FunctionParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
+			FuncParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
 
 			// 指定函数语句树结构的分析提取
 			root_node = new StatementNode();
@@ -71,7 +71,7 @@ namespace UnitTestProject
 																ref StatementNode root_node)
 		{
 			CodeParseInfo code_parse_result;
-			FunctionParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
+			FuncParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
 
 			// 指定函数语句树结构的分析提取
 			root_node = new StatementNode();

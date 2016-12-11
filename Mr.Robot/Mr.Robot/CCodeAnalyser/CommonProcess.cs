@@ -16,11 +16,11 @@ namespace Mr.Robot
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
 		/// <returns></returns>
-        public static string GetNextIdentifier(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
+        public static string GetNextIdentifier(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
 		{
-			int lineIdx = searchPos.row_num;
-			int startIdx = searchPos.col_num;
-			foundPos = new File_Position(searchPos);
+			int lineIdx = searchPos.RowNum;
+			int startIdx = searchPos.ColNum;
+			foundPos = new CodePosition(searchPos);
 			System.Diagnostics.Trace.Assert(lineIdx >= 0);
 			if (lineIdx >= codeList.Count)
 			{
@@ -128,15 +128,15 @@ namespace Mr.Robot
 		RET_IDF:
 			if (-1 != s_pos && -1 != e_pos)
 			{
-				foundPos = new File_Position(lineIdx, s_pos);
+				foundPos = new CodePosition(lineIdx, s_pos);
 				if (curIdx >= curLine.Length)
 				{
 					lineIdx++;
 					curIdx = 0;
 				}
 				startIdx = curIdx;
-				searchPos.row_num = lineIdx;
-				searchPos.col_num = startIdx;
+				searchPos.RowNum = lineIdx;
+				searchPos.ColNum = startIdx;
 				return curLine.Substring(s_pos, e_pos - s_pos + 1);
 			}
 			else
@@ -278,11 +278,11 @@ namespace Mr.Robot
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
 		/// <param varName="symbol"></param>
-        public static File_Position FindNextSymbol(List<string> codeList, File_Position searchPos, Char symbol)
+        public static CodePosition FindNextSymbol(List<string> codeList, CodePosition searchPos, Char symbol)
 		{
 			string curLine = "";
-			int lineIdx = searchPos.row_num;
-			int startIdx = searchPos.col_num;
+			int lineIdx = searchPos.RowNum;
+			int startIdx = searchPos.ColNum;
 			int curIdx = startIdx;
 			while (true)
 			{
@@ -305,7 +305,7 @@ namespace Mr.Robot
 					if (symbol == curChar)
 					{
 						// 找到了
-						File_Position fpos = new File_Position(lineIdx, curIdx);
+						CodePosition fpos = new CodePosition(lineIdx, curIdx);
 						return fpos;
 					}
 				}
@@ -325,7 +325,7 @@ namespace Mr.Robot
 		/// <param varName="searchPos"></param>
 		/// <param varName="rightSymbol"></param>
 		/// <returns></returns>
-        public static File_Position FindNextMatchSymbol(List<string> codeList, File_Position searchPos, Char rightSymbol)
+        public static CodePosition FindNextMatchSymbol(List<string> codeList, CodePosition searchPos, Char rightSymbol)
 		{
 			Char leftSymbol;
 			if ('}' == rightSymbol)
@@ -343,7 +343,7 @@ namespace Mr.Robot
 			}
 
 			int matchCount = 1;
-			File_Position foundPos = null;
+			CodePosition foundPos = null;
             bool quoteStart = false;
             string quoteStr = string.Empty;
             while (true)
@@ -399,12 +399,12 @@ namespace Mr.Robot
         /// <param varName="startPos"></param>
         /// <param varName="endPos"></param>
         /// <returns></returns>
-		public static string LineStringCat(List<string> codeList, File_Position startPos, File_Position endPos)
+		public static string LineStringCat(List<string> codeList, CodePosition startPos, CodePosition endPos)
 		{
-			int startRow = startPos.row_num;
-			int startCol = startPos.col_num;
-			int endRow = endPos.row_num;
-			int endCol = endPos.col_num;
+			int startRow = startPos.RowNum;
+			int startCol = startPos.ColNum;
+			int endRow = endPos.RowNum;
+			int endCol = endPos.ColNum;
 			string retStr = "";
 			string lineStr = "";
 			while (startRow < endRow)
@@ -426,15 +426,15 @@ namespace Mr.Robot
 		/// <param varName="searchPos"></param>
 		/// <param varName="foundPos"></param>
 		/// <returns></returns>
-		public static string GetExpressionStr(List<string> codeList, ref File_Position searchPos, out File_Position foundPos)
+		public static string GetExpressionStr(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
 		{
-			foundPos = new File_Position(searchPos);
+			foundPos = new CodePosition(searchPos);
 
-			string lineStr = codeList[searchPos.row_num];
-			string exprStr = lineStr.Substring(searchPos.col_num).Trim();
-			foundPos.col_num = lineStr.IndexOf(exprStr);
-			searchPos.row_num += 1;
-			searchPos.col_num = 0;
+			string lineStr = codeList[searchPos.RowNum];
+			string exprStr = lineStr.Substring(searchPos.ColNum).Trim();
+			foundPos.ColNum = lineStr.IndexOf(exprStr);
+			searchPos.RowNum += 1;
+			searchPos.ColNum = 0;
 
 			return exprStr;
 		}
@@ -450,16 +450,16 @@ namespace Mr.Robot
 		{
 			foreach (var di in defineList)
 			{
-				if (exp == di.name)
+				if (exp == di.Name)
 				{
 					return di;
 				}
 			}
 			foreach (var fi in headerList)
 			{
-				foreach (var di in fi.macro_define_list)
+				foreach (var di in fi.MacroDefineList)
 				{
-					if (exp == di.name)
+					if (exp == di.Name)
 					{
 						return di;
 					}
@@ -489,7 +489,7 @@ namespace Mr.Robot
 				MacroDefineInfo mdi = JudgeExpressionDefined(exp, headerList, defineList);
 				if (null != mdi)
 				{
-					if (int.TryParse(mdi.value, out retVal))
+					if (int.TryParse(mdi.Value, out retVal))
 					{
 						return retVal;
 					}
@@ -505,9 +505,9 @@ namespace Mr.Robot
         /// <param varName="codeList"></param>
         /// <param varName="searchPos"></param>
         /// <returns></returns>
-        public static File_Position FindNextSpecIdentifier(string idStr, List<string> codeList, File_Position searchPos)
+        public static CodePosition FindNextSpecIdentifier(string idStr, List<string> codeList, CodePosition searchPos)
 		{
-			File_Position foundPos = null;
+			CodePosition foundPos = null;
 			string retStr = null;
 			while (true)
 			{
@@ -530,22 +530,22 @@ namespace Mr.Robot
         /// <param varName="codeList"></param>
         /// <param varName="thisPos"></param>
         /// <returns></returns>
-        public static File_Position PositionMoveNext(List<string> codeList, File_Position thisPos)
+        public static CodePosition PositionMoveNext(List<string> codeList, CodePosition thisPos)
 		{
-			File_Position nextPos = new File_Position(thisPos);
-            if (thisPos.col_num == codeList[thisPos.row_num].Length - 1)
+			CodePosition nextPos = new CodePosition(thisPos);
+            if (thisPos.ColNum == codeList[thisPos.RowNum].Length - 1)
 			{
 				// 已经是最后一列了, 就移到下一行开头
-                if (thisPos.row_num < codeList.Count - 1)
+                if (thisPos.RowNum < codeList.Count - 1)
                 {
-                    nextPos.row_num += 1;
-                    nextPos.col_num = 0;
+                    nextPos.RowNum += 1;
+                    nextPos.ColNum = 0;
                 }
 			}
 			else
 			{
 				// 否则移到下一列
-				nextPos.col_num += 1;
+				nextPos.ColNum += 1;
 			}
 			return nextPos;
 		}
@@ -556,22 +556,22 @@ namespace Mr.Robot
         /// <param varName="codeList"></param>
         /// <param varName="thisPos"></param>
         /// <returns></returns>
-        public static File_Position PositionMovePrevious(List<string> codeList, File_Position thisPos)
+        public static CodePosition PositionMovePrevious(List<string> codeList, CodePosition thisPos)
         {
-            File_Position prevPos = new File_Position(thisPos);
-            if (0 == thisPos.col_num)
+            CodePosition prevPos = new CodePosition(thisPos);
+            if (0 == thisPos.ColNum)
             {
                 // 已经是第一列了, 就移到上一行末尾
-                if (thisPos.row_num > 0)
+                if (thisPos.RowNum > 0)
                 {
-                    prevPos.row_num -= 1;
-                    prevPos.col_num = codeList[prevPos.row_num].Length - 1;
+                    prevPos.RowNum -= 1;
+                    prevPos.ColNum = codeList[prevPos.RowNum].Length - 1;
                 }
             }
             else
             {
                 // 否则移到前一列
-                prevPos.col_num -= 1;
+                prevPos.ColNum -= 1;
             }
             return prevPos;
         }
@@ -580,21 +580,21 @@ namespace Mr.Robot
 		/// 比较两个位置 0:一致; 1:前者大(靠后); -1:后者大(靠后);
 		/// </summary>
 		/// <returns></returns>
-        public static int PositionCompare(File_Position p1, File_Position p2)
+        public static int PositionCompare(CodePosition p1, CodePosition p2)
 		{
-			if (p1.row_num > p2.row_num)
+			if (p1.RowNum > p2.RowNum)
 			{
 				return 1;
 			}
-			else if (p1.row_num < p2.row_num)
+			else if (p1.RowNum < p2.RowNum)
 			{
 				return -1;
 			}
-			else if (p1.col_num > p2.col_num)
+			else if (p1.ColNum > p2.ColNum)
 			{
 				return 1;
 			}
-			else if (p1.col_num < p2.col_num)
+			else if (p1.ColNum < p2.ColNum)
 			{
 				return -1;
 			}
@@ -647,11 +647,11 @@ namespace Mr.Robot
 		{
 			foreach (FileParseInfo fpi in fpiList)
 			{
-				foreach (TypeDefineInfo tdi in fpi.type_define_list)
+				foreach (TypeDefineInfo tdi in fpi.TypeDefineList)
 				{
-					if (tdi.new_type_name.Equals(type_name))
+					if (tdi.NewName.Equals(type_name))
 					{
-						return tdi.old_type_name;
+						return tdi.OldName;
 					}
 				}
 			}

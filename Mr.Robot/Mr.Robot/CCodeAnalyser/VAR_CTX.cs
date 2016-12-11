@@ -59,8 +59,8 @@ namespace Mr.Robot
 				VariableInfo vi = ctx.ParseResult.FindGlobalVarInfoByName(var_name);
 				if (null != vi)
 				{
-					var_ctx = new VAR_CTX(vi.typeName, vi.varName);
-					var_ctx.Type.Name = vi.realTypeName;
+					var_ctx = new VAR_CTX(vi.TypeName, vi.VarName);
+					var_ctx.Type.Name = vi.RealTypeName;
 				}
 				else
 				{
