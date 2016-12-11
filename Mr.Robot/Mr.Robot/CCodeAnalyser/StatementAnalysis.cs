@@ -290,7 +290,7 @@ namespace Mr.Robot
                 else if (CommonProcess.IsStandardIdentifier(idStr))						// 标准标识符
 				{
 					// 如果包含宏, 首先要进行宏展开
-					if (MacroDetectAndExpand_Function(idStr, ref statementStr, offset, parseResult))
+					if (MacroDetectAndExpand_Statement(idStr, ref statementStr, offset, parseResult))
 					{
 						offset = offset_old;
 						continue;
@@ -317,7 +317,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数内的宏展开 TODO:以后考虑重构跟MacroDetectAndExpand_File合并
 		/// </summary>
-		static bool MacroDetectAndExpand_Function(string idStr, ref string statementStr, int offset, CodeParseInfo parseResult)
+		static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, CodeParseInfo parseResult)
         {
 			// 作成一个所有包含头文件的宏定义的列表
 			List<MacroDefineInfo> macroDefineList = new List<MacroDefineInfo>();

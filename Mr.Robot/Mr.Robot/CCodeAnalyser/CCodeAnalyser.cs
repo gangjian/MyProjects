@@ -71,20 +71,20 @@ namespace Mr.Robot
 		/// <param varName="srcName"></param>
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
-		static FileParseInfo CFileProcess(string srcName, ref List<FileParseInfo> includeInfoList)
+		static FileParseInfo CFileProcess(string srcName, ref List<FileParseInfo> header_list)
 		{
 			// 去掉注释
 			List<string> codeList = RemoveComments(srcName);
 			FileParseInfo fi = new FileParseInfo(srcName);
 			// 预编译处理
-			codeList = PrecompileProcess(codeList, ref fi, ref includeInfoList);
+			codeList = PrecompileProcess(codeList, ref fi, ref header_list);
 			fi.parsedCodeList = codeList;
 //          Save2File(codeList, srcName + ".bak");
 
 			// 从文件开头开始解析
 			CodePosition sPos = new CodePosition(0, 0);
 			// 文件解析
-			CCodeFileAnalysis(srcName, codeList, ref sPos, ref fi, includeInfoList);
+			CCodeFileAnalysis(srcName, codeList, ref sPos, ref fi, header_list);
 
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
@@ -451,14 +451,14 @@ namespace Mr.Robot
 		/// <summary>
 		/// 文件代码解析
 		/// </summary>
-		public static void CCodeFileAnalysis(string fullName,
-											List<string> codeList,
-											ref CodePosition searchPos,
+		public static void CCodeFileAnalysis(string full_name,
+											List<string> code_list,
+											ref CodePosition search_pos,
 											ref FileParseInfo fi,
-											List<FileParseInfo> parsedFileInfoList)
+											List<FileParseInfo> header_info_list)
 		{
-			System.Diagnostics.Trace.Assert((null != codeList));
-			if (0 == codeList.Count)
+			System.Diagnostics.Trace.Assert((null != code_list));
+			if (0 == code_list.Count)
 			{
                 CommonProcess.ErrReport();
 				return;
@@ -467,7 +467,7 @@ namespace Mr.Robot
 			List<string> qualifierList = new List<string>();     // 修饰符暂存列表
 			string nextId = null;
 			CodePosition foundPos = null;
-            while (null != (nextId = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos)))
+            while (null != (nextId = CommonProcess.GetNextIdentifier(code_list, ref search_pos, out foundPos)))
 			{
 				// 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
                 if (CommonProcess.IsStandardIdentifier(nextId)
@@ -477,11 +477,11 @@ namespace Mr.Robot
                         && CommonProcess.IsUsrDefTypeKWD(qualifierList.Last()))
                     {
                     }
-					else if (MacroDetectAndExpand_File(nextId, codeList, foundPos, fi, parsedFileInfoList))
+					else if (MacroDetectAndExpand_File(nextId, code_list, foundPos, fi, header_info_list))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
-						searchPos = new CodePosition(foundPos);
+						search_pos = new CodePosition(foundPos);
 						continue;
 					}
 
@@ -489,7 +489,7 @@ namespace Mr.Robot
                     if (CommonProcess.IsUsrDefTypeKWD(nextId))
 					{
 						// 用户定义类型处理
-						UsrDefTypeInfo udti = UsrDefTypeProc(codeList, qualifierList, ref searchPos, fi);
+						UsrDefTypeInfo udti = UsrDefTypeProc(code_list, qualifierList, ref search_pos, fi, header_info_list);
 						if (null != udti)
 						{
 							fi.UsrDefTypeList.Add(udti);
@@ -502,7 +502,7 @@ namespace Mr.Robot
 					// 遇到小括号了, 可能是碰上函数声明或定义了
 					if (("(" == nextId) && (0 != qualifierList.Count))
 					{
-						FuncParseInfo cfi = FunctionDetectProcess(codeList, qualifierList, ref searchPos, foundPos);
+						FuncParseInfo cfi = FunctionDetectProcess(code_list, qualifierList, ref search_pos, foundPos);
 						if (null != cfi)
 						{
 							if (   -1 != cfi.Scope.Start.RowNum
@@ -521,23 +521,23 @@ namespace Mr.Robot
 					else if ("#" == nextId)
 					{
 						// 预编译命令, 因为已经处理过了, 不在这里解析, 跳到宏定义结束
-						while (codeList[searchPos.RowNum].EndsWith("\\"))
+						while (code_list[search_pos.RowNum].EndsWith("\\"))
 						{
-							searchPos.RowNum += 1;
+							search_pos.RowNum += 1;
 						}
-						searchPos.ColNum = codeList[searchPos.RowNum].Length;
+						search_pos.ColNum = code_list[search_pos.RowNum].Length;
 					}
 					// 全局量(包含全局数组)
 					else if ("[" == nextId)
 					{
 						// 到下一个"]"出现的位置是数组长度
-                        CodePosition fp = CommonProcess.FindNextSymbol(codeList, searchPos, ']');
+                        CodePosition fp = CommonProcess.FindNextSymbol(code_list, search_pos, ']');
 						if (null != fp)
 						{
-                            string arraySize = CommonProcess.LineStringCat(codeList, foundPos, fp);
+                            string arraySize = CommonProcess.LineStringCat(code_list, foundPos, fp);
 							qualifierList.Add(arraySize);
 							fp.ColNum += 1;
-							searchPos = fp;
+							search_pos = fp;
 							continue;
 						}
 					}
@@ -545,13 +545,13 @@ namespace Mr.Robot
 					{
 						// 直到下一个分号出现的位置, 都是初始化语句
 						qualifierList.Add(nextId);
-                        CodePosition fp = CommonProcess.FindNextSymbol(codeList, searchPos, ';');
+                        CodePosition fp = CommonProcess.FindNextSymbol(code_list, search_pos, ';');
 						if (null != fp)
 						{
 							foundPos.ColNum += 1;
-                            string initialStr = CommonProcess.LineStringCat(codeList, foundPos, fp);
+                            string initialStr = CommonProcess.LineStringCat(code_list, foundPos, fp);
 							qualifierList.Add(initialStr.Trim());
-							searchPos = fp;
+							search_pos = fp;
 							continue;
 						}
 					}
@@ -561,17 +561,17 @@ namespace Mr.Robot
 						if ((0 != qualifierList.Count)
 							&& ("typedef" == qualifierList[0]))
 						{
-							TypeDefProcess(codeList, qualifierList, ref fi);
+							TypeDefProcess(code_list, qualifierList, ref fi);
 						}
 						// 注意用户定义类型后面的分号不是全局量
 						else if (2 <= qualifierList.Count)
 						{
-							GlobalVarProcess(qualifierList, ref fi, parsedFileInfoList);
+							GlobalVarProcess(qualifierList, ref fi, header_info_list);
 						}
 					}
 					else if ("," == nextId)
 					{
-						GlobalVarProcess(qualifierList, ref fi, parsedFileInfoList);
+						GlobalVarProcess(qualifierList, ref fi, header_info_list);
 						continue;
 					}
 					else
@@ -745,30 +745,34 @@ namespace Mr.Robot
 		/// <param varName="startPos"></param>
 		/// <param varName="qualifierList"></param>
 		/// <returns></returns>
-		static UsrDefTypeInfo UsrDefTypeProc(List<string> codeList, List<string> qualifierList, ref CodePosition startPos, FileParseInfo fi)
+		static UsrDefTypeInfo UsrDefTypeProc(List<string> code_list,
+											 List<string> qualifier_list,
+											 ref CodePosition start_pos,
+											 FileParseInfo source_info,
+											 List<FileParseInfo> header_info_list)
 		{
-			if (0 == qualifierList.Count)
+			if (0 == qualifier_list.Count)
 			{
                 CommonProcess.ErrReport();
 				return null;
 			}
-			string keyStr = qualifierList.Last();
+			string keyStr = qualifier_list.Last();
 
 			UsrDefTypeInfo retUsrTypeInfo = new UsrDefTypeInfo();
-			CodePosition searchPos = new CodePosition(startPos);
+			CodePosition searchPos = new CodePosition(start_pos);
 			CodePosition foundPos = null;
-            string nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            string nextIdStr = CommonProcess.GetNextIdentifier(code_list, ref searchPos, out foundPos);
 			if ("{" != nextIdStr)
 			{
                 if (CommonProcess.IsStandardIdentifier(nextIdStr))
 				{
 					retUsrTypeInfo.NameList.Add(nextIdStr);
-                    nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+                    nextIdStr = CommonProcess.GetNextIdentifier(code_list, ref searchPos, out foundPos);
 					if ("{" != nextIdStr)
 					{
 						// 没找到最大括号, 说明这不是一个新的用户定义类型
-						if ((0 != qualifierList.Count)
-							&& ("typedef" == qualifierList[0]))
+						if ((0 != qualifier_list.Count)
+							&& ("typedef" == qualifier_list[0]))
 						{
 							// 说明这是一个typedef类型定义, 这里返回不做处理, 等后面解析到分号";"的时候再进行typedef类型定义处理
 						}
@@ -782,14 +786,14 @@ namespace Mr.Robot
 				}
 			}
 			retUsrTypeInfo.Scope.Start = foundPos;
-            foundPos = CommonProcess.FindNextMatchSymbol(codeList, searchPos, '}');
+            foundPos = CommonProcess.FindNextMatchSymbol(code_list, searchPos, '}');
 			if (null == foundPos)
 			{
                 CommonProcess.ErrReport();
 				return null;
 			}
 			retUsrTypeInfo.Scope.End = foundPos;
-            string catStr = CommonProcess.LineStringCat(codeList, retUsrTypeInfo.Scope.Start, retUsrTypeInfo.Scope.End);
+            string catStr = CommonProcess.LineStringCat(code_list, retUsrTypeInfo.Scope.Start, retUsrTypeInfo.Scope.End);
 			if (catStr.StartsWith("{"))
 			{
 				catStr = catStr.Remove(0, 1);
@@ -812,35 +816,72 @@ namespace Mr.Robot
 			}
 			foreach (string m in members)
 			{
-				string memStr = m.Trim();
+				string memStr = GetUsrDefTypeMemberStr(m.Trim(), source_info, header_info_list);
 				if (string.Empty != memStr)
 				{
-					retUsrTypeInfo.MemberList.Add(m.Trim());
+					retUsrTypeInfo.MemberList.Add(memStr);
 				}
 			}
 			// 如果是匿名类型, 要给加个名字
 			if (0 == retUsrTypeInfo.NameList.Count)
 			{
 				// 取得匿名类型的名字
-				retUsrTypeInfo.NameList.Add(GetAnonymousTypeName(fi));
+				retUsrTypeInfo.NameList.Add(GetAnonymousTypeName(source_info));
 			}
-			qualifierList.Add(retUsrTypeInfo.NameList[0]);
+			qualifier_list.Add(retUsrTypeInfo.NameList[0]);
 			// 检查后面是否跟着分号(判断类型定义结束)
 			CodePosition old_pos = new CodePosition(searchPos);
-			nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			nextIdStr = CommonProcess.GetNextIdentifier(code_list, ref searchPos, out foundPos);
 			if (";" == nextIdStr)
 			{
 				// 如果后面是分号说明该类型定义结束, 检索位置要跳过该分号
-				qualifierList.Clear();
+				qualifier_list.Clear();
 			}
 			else
 			{
 				// 否则可能是以该类型定义全局变量, 恢复检索位置到右括号后面
 				searchPos = old_pos;
 			}
-			startPos = searchPos;
+			start_pos = searchPos;
 
 			return retUsrTypeInfo;
+		}
+
+		/// <summary>
+		/// 取得自定义类型表示成员的字符串
+		/// </summary>
+		/// <returns></returns>
+		static string GetUsrDefTypeMemberStr(string in_mem_str,
+											 FileParseInfo source_info,
+											 List<FileParseInfo> header_info_list)
+		{
+			CodeParseInfo parseInfo = new CodeParseInfo();
+			parseInfo.SourceParseInfo = source_info;
+			parseInfo.HeaderParseInfoList = header_info_list;
+			string memberStr = in_mem_str;
+			string idStr;
+			int offset = 0, old_offset;
+			// 可能包含宏, 所有要检测宏, 有的话要做宏展开
+			while (true)
+			{
+				old_offset = offset;
+				idStr = CommonProcess.GetNextIdentifier2(memberStr, ref offset);
+				if (null == idStr)
+				{
+					break;
+				}
+				else if (CommonProcess.IsStandardIdentifier(idStr)
+						 && MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, parseInfo))
+				{
+					offset = old_offset;
+					continue;
+				}
+				else
+				{
+					offset += idStr.Length;
+				}
+			}
+			return memberStr.Trim();
 		}
 
 		/// <summary>
