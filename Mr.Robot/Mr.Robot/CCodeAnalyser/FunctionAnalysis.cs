@@ -18,19 +18,19 @@ namespace Mr.Robot
         {
             // 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
             CodeParseInfo c_file_result = null;
-            FunctionParseInfo funInfo = FindFileAndFunctionStructInfoFromParseResult(fullPath, funcName, parsedResultList, out c_file_result);
+            FunctionParseInfo funInfo = GetFuncInfoFromParseResult(fullPath, funcName, parsedResultList, out c_file_result);
 
             // 函数语句树结构的分析提取
             StatementNode root = new StatementNode();
             root.Type = StatementNodeType.Root;
             root.Scope = funInfo.Scope;
-            GetCodeBlockStructure(c_file_result.SourceParseInfo.parsedCodeList, root);
+            GetFuncBlockStruct(c_file_result.SourceParseInfo.parsedCodeList, root);
 
 			// 函数语句分析: 分析入出力
             FunctionStatementsAnalysis(root, c_file_result);
         }
 
-        public static FunctionParseInfo FindFileAndFunctionStructInfoFromParseResult(string fileName, string funcName,
+        public static FunctionParseInfo GetFuncInfoFromParseResult(string fileName, string funcName,
                                                                                 List<CodeParseInfo> parsedResultList,
                                                                                 out CodeParseInfo parseResult)
         {
@@ -62,9 +62,9 @@ namespace Mr.Robot
 		/// <param varName="fileInfo">文件情报</param>
 		/// <param varName="startPos">代码块开始位置</param>
 		/// <param varName="endPos">代码块结束位置</param>
-		public static void GetCodeBlockStructure(List<string> codeList, StatementNode parentNode)
+		public static void GetFuncBlockStruct(List<string> codeList, StatementNode root)
 		{
-			File_Position searchPos = new File_Position(parentNode.Scope.Start);
+			File_Position searchPos = new File_Position(root.Scope.Start);
 			// 如果开头第一个字符是左花括号"{", 先要移到下一个位置开始检索
 			if ('{' == codeList[searchPos.row_num][searchPos.col_num])
 			{
@@ -75,13 +75,13 @@ namespace Mr.Robot
             StatementNode statementNode = null;
             while (true)
 			{
-				statementNode = GetNextStatement(codeList, ref searchPos, parentNode.Scope.End);
+				statementNode = GetNextStatement(codeList, ref searchPos, root.Scope.End);
                 if (null == statementNode)
 	            {
                     break;
 	            }
-				statementNode.parent = parentNode;
-                parentNode.childList.Add(statementNode);
+				statementNode.parent = root;
+                root.childList.Add(statementNode);
 			}
 		}
 
@@ -216,7 +216,7 @@ namespace Mr.Robot
 					startPos = searchPos;
 					retNode.Scope = scope;
 					// 递归解析语句块
-					GetCodeBlockStructure(codeList, retNode);
+					GetFuncBlockStruct(codeList, retNode);
 					return retNode;
 				}
 			}
@@ -248,7 +248,7 @@ namespace Mr.Robot
                     {
                         retNode.expression = expression;
                         // 递归解析语句块
-                        GetCodeBlockStructure(codeList, retNode);
+                        GetFuncBlockStruct(codeList, retNode);
                         startPos = searchPos;
                         return retNode;
                     }
@@ -281,7 +281,7 @@ namespace Mr.Robot
 					ifBranch.Type = StatementNodeType.Branch_If;
 					ifBranch.Scope = scope;
 					// 递归解析分支语句块
-					GetCodeBlockStructure(codeList, ifBranch);
+					GetFuncBlockStruct(codeList, ifBranch);
 
 					retNode.Scope.Start = scope.Start;							// if分支的开始位置, 作为整个if else复合语句的起始位置
 					retNode.childList.Add(ifBranch);
@@ -293,7 +293,7 @@ namespace Mr.Robot
 						lastElseEnd = elseBranch.Scope.End;
 						elseBranch.parent = retNode;
 						// 递归解析分支语句块
-						GetCodeBlockStructure(codeList, elseBranch);
+						GetFuncBlockStruct(codeList, elseBranch);
 
 						retNode.childList.Add(elseBranch);
 						if (StatementNodeType.Branch_Else == elseBranch.Type)
@@ -338,7 +338,7 @@ namespace Mr.Robot
 					{
 						caseBranch.parent = retNode;
 						// 递归解析分支语句块
-						GetCodeBlockStructure(codeList, caseBranch);
+						GetFuncBlockStruct(codeList, caseBranch);
 
 						retNode.childList.Add(caseBranch);
 						if (StatementNodeType.Branch_Default == caseBranch.Type)

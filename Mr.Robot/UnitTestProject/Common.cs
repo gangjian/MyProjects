@@ -31,13 +31,13 @@ namespace UnitTestProject
 			csfList.Add(full_path);
 			List<CodeParseInfo> parseResultList = CCodeAnalyser.CFileListProcess(csfList, header_list);
 			CodeParseInfo code_parse_result;
-			FunctionParseInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
+			FunctionParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
 
 			// 指定函数语句树结构的分析提取
 			root_node = new StatementNode();
 			root_node.Type = StatementNodeType.Root;
 			root_node.Scope = funInfo.Scope;
-			CCodeAnalyser.GetCodeBlockStructure(code_parse_result.SourceParseInfo.parsedCodeList, root_node);
+			CCodeAnalyser.GetFuncBlockStruct(code_parse_result.SourceParseInfo.parsedCodeList, root_node);
 			return code_parse_result;
 		}
 
@@ -66,16 +66,18 @@ namespace UnitTestProject
 			return parseResultList;
 		}
 
-		public static CodeParseInfo UnitTest_GetFuncParseResult(string full_path, string fun_name, List<CodeParseInfo> parseResultList, ref StatementNode root_node)
+		public static CodeParseInfo UnitTest_GetFuncParseResult(string full_path, string fun_name,
+																List<CodeParseInfo> parseResultList,
+																ref StatementNode root_node)
 		{
 			CodeParseInfo code_parse_result;
-			FunctionParseInfo funInfo = CCodeAnalyser.FindFileAndFunctionStructInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
+			FunctionParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, fun_name, parseResultList, out code_parse_result);
 
 			// 指定函数语句树结构的分析提取
 			root_node = new StatementNode();
 			root_node.Type = StatementNodeType.Root;
 			root_node.Scope = funInfo.Scope;
-			CCodeAnalyser.GetCodeBlockStructure(code_parse_result.SourceParseInfo.parsedCodeList, root_node);
+			CCodeAnalyser.GetFuncBlockStruct(code_parse_result.SourceParseInfo.parsedCodeList, root_node);
 			return code_parse_result;
 		}
 	}

@@ -88,13 +88,38 @@ namespace Mr.Robot
 
 		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name)
 		{
+			List<string> type_name_split = GetTypeNameSplit(type_name);
+			string category_name = string.Empty;
+			string typeName = type_name;
+			if (1 == type_name_split.Count)
+			{
+			}
+			else if (2 == type_name_split.Count)
+			{
+				category_name = type_name_split[0];
+				typeName = type_name_split[1];
+			}
+			else
+			{
+				return null;
+			}
 			foreach (UsrDefTypeInfo udti in this.user_def_type_list)
 			{
 				foreach (string name in udti.NameList)
 				{
-					if (name.Equals(type_name))
+					if (name.Equals(typeName))
 					{
-						return udti;
+						if (string.Empty != category_name)
+						{
+							if (udti.Category.Equals(category_name))
+							{
+								return udti;
+							}
+						}
+						else
+						{
+							return udti;
+						}
 					}
 				}
 			}
@@ -111,6 +136,21 @@ namespace Mr.Robot
 				}
 			}
 			return null;
+		}
+
+		List<string> GetTypeNameSplit(string type_name)
+		{
+			char[] spliters = new char[] {' ', '\t'};
+			string[] typeNameArr = type_name.Split(spliters);
+			List<string> retList = new List<string>();
+			foreach (string item in typeNameArr)
+			{
+				if (!string.IsNullOrEmpty(item))
+				{
+					retList.Add(item);
+				}
+			}
+			return retList;
 		}
 	}
 
@@ -266,23 +306,6 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name)
-		{
-			UsrDefTypeInfo udti = null;
-			foreach (FileParseInfo headerInfo in this.IncHdParseInfoList)
-			{
-				if (null != (udti = headerInfo.FindUsrDefTypeInfo(type_name)))
-				{
-					return udti;
-				}
-			}
-			if (null != (udti = this.SourceParseInfo.FindUsrDefTypeInfo(type_name)))
-			{
-				return udti;
-			}
-			return null;
-		}
-
 		public TypeDefineInfo FindTypeDefInfo(string type_name)
 		{
 			TypeDefineInfo tdi = null;
@@ -296,6 +319,38 @@ namespace Mr.Robot
 			if (null != (tdi = this.SourceParseInfo.FindTypeDefInfo(type_name)))
 			{
 				return tdi;
+			}
+			return null;
+		}
+
+		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name)
+		{
+			TypeDefineInfo tdi = null;
+			string new_type_name = string.Empty;
+			while (true)
+			{
+				tdi = FindTypeDefInfo(type_name);
+				if (null != tdi)
+				{
+					type_name = tdi.old_type_name;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			UsrDefTypeInfo udti = null;
+			foreach (FileParseInfo headerInfo in this.IncHdParseInfoList)
+			{
+				if (null != (udti = headerInfo.FindUsrDefTypeInfo(type_name)))
+				{
+					return udti;
+				}
+			}
+			if (null != (udti = this.SourceParseInfo.FindUsrDefTypeInfo(type_name)))
+			{
+				return udti;
 			}
 			return null;
 		}

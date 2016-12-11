@@ -121,8 +121,20 @@ namespace Mr.Robot
 			}
 			else
 			{
-				VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
-				return var_ctx;
+				UsrDefTypeInfo udti = code_info.FindUsrDefTypeInfo(type_name);
+				if (null != udti)
+				{
+					VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
+					foreach (string memStr in udti.MemberList)
+					{
+						
+					}
+					return var_ctx;
+				}
+				else
+				{
+					return null;
+				}
 			}
 		}
 	}
