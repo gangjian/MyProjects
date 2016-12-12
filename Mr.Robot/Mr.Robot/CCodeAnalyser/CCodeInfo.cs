@@ -13,7 +13,7 @@ namespace Mr.Robot
 		public bool UnidentifiedFlag = false;
 		public bool WriteFlag = true;
 		public bool WriteNextFlag = false;
-		public bool PopUpFlag = false;
+		public bool PopUpStack = false;
 	}
 
 	// 文件当中某个内容的位置(行列号)

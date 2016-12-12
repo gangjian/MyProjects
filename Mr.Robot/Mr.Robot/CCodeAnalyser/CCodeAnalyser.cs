@@ -75,21 +75,21 @@ namespace Mr.Robot
 		{
 			// 去掉注释
 			List<string> codeList = RemoveComments(srcName);
-			FileParseInfo fi = new FileParseInfo(srcName);
+			FileParseInfo fileInfo = new FileParseInfo(srcName);
 			// 预编译处理
-			codeList = PrecompileProcess(codeList, ref fi, ref header_list);
-			fi.parsedCodeList = codeList;
+			codeList = PrecompileProcess(codeList, ref fileInfo, ref header_list);
+			fileInfo.parsedCodeList = codeList;
 //          Save2File(codeList, srcName + ".bak");
 
 			// 从文件开头开始解析
 			CodePosition sPos = new CodePosition(0, 0);
 			// 文件解析
-			CCodeFileAnalysis(srcName, codeList, ref sPos, ref fi, header_list);
+			CCodeFileAnalysis(codeList, ref sPos, ref fileInfo, header_list);
 
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
 
-			return fi;
+			return fileInfo;
 		}
 
 		/// <summary>
@@ -377,7 +377,7 @@ namespace Mr.Robot
 								cc_info.WriteNextFlag = true;
 							}
 
-							cc_info.PopUpFlag = true;
+							cc_info.PopUpStack = true;
 						}
 						else
 						{
@@ -400,7 +400,7 @@ namespace Mr.Robot
 				}
 
 				// 嵌套时弹出堆栈, 恢复之前的情报
-				if (true == cc_info.PopUpFlag)
+				if (true == cc_info.PopUpStack)
 				{
 					cc_info = ccStack.Pop();
 				}
@@ -451,11 +451,10 @@ namespace Mr.Robot
 		/// <summary>
 		/// 文件代码解析
 		/// </summary>
-		public static void CCodeFileAnalysis(string full_name,
-											List<string> code_list,
-											ref CodePosition search_pos,
-											ref FileParseInfo fi,
-											List<FileParseInfo> header_info_list)
+		public static void CCodeFileAnalysis(List<string> code_list,
+											 ref CodePosition search_pos,
+											 ref FileParseInfo fi,
+											 List<FileParseInfo> header_info_list)
 		{
 			System.Diagnostics.Trace.Assert((null != code_list));
 			if (0 == code_list.Count)
