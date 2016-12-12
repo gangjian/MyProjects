@@ -81,14 +81,10 @@ namespace Mr.Robot
 			fileInfo.parsedCodeList = codeList;
 //          Save2File(codeList, srcName + ".bak");
 
-			// 从文件开头开始解析
-			CodePosition sPos = new CodePosition(0, 0);
 			// 文件解析
-			CCodeFileAnalysis(codeList, ref sPos, ref fileInfo, header_list);
-
+			CCodeFileAnalysis(codeList, ref fileInfo, header_list);
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
-
 			return fileInfo;
 		}
 
@@ -184,7 +180,7 @@ namespace Mr.Robot
 													 ref List<FileParseInfo> includeInfoList)
 		{
 			List<string> retList = new List<string>();
-			Stack<ConditionalCompilationInfo> ccStack = new Stack<ConditionalCompilationInfo>();						// 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
+			Stack<ConditionalCompilationInfo> ccStack = new Stack<ConditionalCompilationInfo>(); // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
 			ConditionalCompilationInfo cc_info = new ConditionalCompilationInfo();
 
 			string rdLine = "";
@@ -416,7 +412,7 @@ namespace Mr.Robot
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		static void ParseIncludeHeaderFile(string incFileName,
-										 ref List<FileParseInfo> includeInfoList)
+										   ref List<FileParseInfo> includeInfoList)
 		{
 			// 先在已解析过的文件list里找
 			foreach (var pi in includeInfoList)
@@ -452,7 +448,6 @@ namespace Mr.Robot
 		/// 文件代码解析
 		/// </summary>
 		public static void CCodeFileAnalysis(List<string> code_list,
-											 ref CodePosition search_pos,
 											 ref FileParseInfo fi,
 											 List<FileParseInfo> header_info_list)
 		{
@@ -462,7 +457,8 @@ namespace Mr.Robot
                 CommonProcess.ErrReport();
 				return;
 			}
-
+			// 从文件开头开始解析
+			CodePosition search_pos = new CodePosition(0, 0);
 			List<string> qualifierList = new List<string>();     // 修饰符暂存列表
 			string nextId = null;
 			CodePosition foundPos = null;
@@ -472,18 +468,13 @@ namespace Mr.Robot
                 if (CommonProcess.IsStandardIdentifier(nextId)
 					|| ("*" == nextId))
 				{
-                    if (0 != qualifierList.Count
-                        && CommonProcess.IsUsrDefTypeKWD(qualifierList.Last()))
-                    {
-                    }
-					else if (MacroDetectAndExpand_File(nextId, code_list, foundPos, fi, header_info_list))
+					if (MacroDetectAndExpand_File(nextId, code_list, foundPos, fi, header_info_list))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
 						search_pos = new CodePosition(foundPos);
 						continue;
 					}
-
 					qualifierList.Add(nextId);
                     if (CommonProcess.IsUsrDefTypeKWD(nextId))
 					{
@@ -580,6 +571,13 @@ namespace Mr.Robot
 					qualifierList.Clear();
 				}
 			}
+		}
+
+		public static void CCodeFileAnalysis2(List<string> code_list,
+											 ref FileParseInfo fi,
+											 List<FileParseInfo> header_info_list)
+		{
+
 		}
 
 		/// <summary>
@@ -886,10 +884,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 全局变量处理
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="qualifierList"></param>
-		/// <param varName="searchPos"></param>
-		/// <param varName="cfi"></param>
 		static void GlobalVarProcess(List<string> qualifierList,
 									 ref FileParseInfo cfi,
 									 List<FileParseInfo> parsedFileInfoList)
@@ -1184,5 +1178,24 @@ namespace Mr.Robot
             return retName;
         }
 
+		///////////////
+		static string GetSingleSentence(List<string> code_list, CodePosition search_pos)
+		{
+			System.Diagnostics.Trace.Assert(null != code_list
+											&& null != search_pos
+											&& search_pos.RowNum < code_list.Count
+											&& search_pos.ColNum < code_list[search_pos.RowNum].Length);
+
+			string lineStr = code_list[search_pos.RowNum].Substring(search_pos.ColNum).Trim();
+			if (lineStr.StartsWith("#"))
+			{
+				
+			}
+			else
+			{
+
+			}
+			return null;
+		}
 	}
 }
