@@ -577,7 +577,7 @@ namespace Mr.Robot
 											 ref FileParseInfo fi,
 											 List<FileParseInfo> header_info_list)
 		{
-
+			throw new NotImplementedException();
 		}
 
 		/// <summary>
@@ -1179,7 +1179,7 @@ namespace Mr.Robot
         }
 
 		///////////////
-		static string GetSingleSentence(List<string> code_list, CodePosition search_pos)
+		static string PickOut1Sentence(List<string> code_list, ref CodePosition search_pos)
 		{
 			System.Diagnostics.Trace.Assert(null != code_list
 											&& null != search_pos
@@ -1187,9 +1187,24 @@ namespace Mr.Robot
 											&& search_pos.ColNum < code_list[search_pos.RowNum].Length);
 
 			string lineStr = code_list[search_pos.RowNum].Substring(search_pos.ColNum).Trim();
+			string retStr = string.Empty;
 			if (lineStr.StartsWith("#"))
 			{
-				
+				while (lineStr.EndsWith("\\"))											// 分行连接符
+				{
+					retStr += lineStr;
+					if (search_pos.RowNum < code_list.Count - 1)
+					{
+						lineStr = code_list[search_pos.RowNum++];
+						search_pos.ColNum = lineStr.Length - 1;
+					}
+					else
+					{
+						search_pos.ColNum = lineStr.Length - 1;
+						break;
+					}
+				}
+				retStr += lineStr;
 			}
 			else
 			{
