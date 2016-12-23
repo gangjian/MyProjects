@@ -30,8 +30,11 @@ namespace Mr.Robot
 
 		public CodePosition(CodePosition nfp)
 		{
-			this.RowNum = nfp.RowNum;
-			this.ColNum = nfp.ColNum;
+			if (null != nfp)
+			{
+				this.RowNum = nfp.RowNum;
+				this.ColNum = nfp.ColNum;
+			}
 		}
 	}
 
@@ -93,9 +96,9 @@ namespace Mr.Robot
 			}
 			foreach (UsrDefTypeInfo udti in this.UsrDefTypeList)
 			{
-				foreach (string name in udti.NameList)
+				foreach (CodeIdentifier nameIdtf in udti.NameList)
 				{
-					if (name.Equals(typeName))
+					if (nameIdtf.Text.Equals(typeName))
 					{
 						if (string.Empty != category_name)
 						{
@@ -148,7 +151,7 @@ namespace Mr.Robot
 	public class FuncParseInfo
 	{
 		public string Name = string.Empty;												// 函数名称
-		public List<string> Qualifiers = new List<string>();					        // 修饰符列表
+		public List<CodeIdentifier> Qualifiers = new List<CodeIdentifier>();	        // 修饰符列表
 		public List<string> ParaList = new List<string>();						        // 参数列表
 
 		public CodeScope Scope = new CodeScope();										// 函数起止范围
@@ -160,7 +163,7 @@ namespace Mr.Robot
 	public class UsrDefTypeInfo
 	{
 		public string Category = string.Empty;											// "struct, enum, union"
-		public List<string> NameList = new List<string>();						        // 可能有多个名(逗号分割)
+		public List<CodeIdentifier> NameList = new List<CodeIdentifier>();		        // 可能有多个名(逗号分割)
 		public List<string> MemberList = new List<string>();
 
 		public CodeScope Scope = new CodeScope();

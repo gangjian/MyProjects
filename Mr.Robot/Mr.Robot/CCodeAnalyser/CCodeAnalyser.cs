@@ -459,7 +459,7 @@ namespace Mr.Robot
 			}
 			// 从文件开头开始解析
 			CodePosition search_pos = new CodePosition(0, 0);
-			List<string> qualifierList = new List<string>();     // 修饰符暂存列表
+			List<CodeIdentifier> qualifierList = new List<CodeIdentifier>();			// 修饰符暂存列表
 			CodeIdentifier nextIdtf = null;
 			CodePosition foundPos = null;
 			while (null != (nextIdtf = CommonProcess.GetNextIdentifier(code_list, ref search_pos, out foundPos)))
@@ -475,7 +475,7 @@ namespace Mr.Robot
 						search_pos = new CodePosition(foundPos);
 						continue;
 					}
-					qualifierList.Add(nextIdtf.Text);
+					qualifierList.Add(nextIdtf);
 					if (CommonProcess.IsUsrDefTypeKWD(nextIdtf.Text))
 					{
 						// 用户定义类型处理
@@ -524,8 +524,9 @@ namespace Mr.Robot
                         CodePosition fp = CommonProcess.FindNextSymbol(code_list, search_pos, ']');
 						if (null != fp)
 						{
-                            string arraySize = CommonProcess.LineStringCat(code_list, foundPos, fp);
-							qualifierList.Add(arraySize);
+                            string arraySizeStr = CommonProcess.LineStringCat(code_list, foundPos, fp);
+							CodeIdentifier arraySizeIdtf = new CodeIdentifier(arraySizeStr, foundPos);
+							qualifierList.Add(arraySizeIdtf);
 							fp.ColNum += 1;
 							search_pos = fp;
 							continue;
@@ -534,13 +535,14 @@ namespace Mr.Robot
 					else if ("=" == nextIdtf.Text)
 					{
 						// 直到下一个分号出现的位置, 都是初始化语句
-						qualifierList.Add(nextIdtf.Text);
+						qualifierList.Add(nextIdtf);
                         CodePosition fp = CommonProcess.FindNextSymbol(code_list, search_pos, ';');
 						if (null != fp)
 						{
 							foundPos.ColNum += 1;
                             string initialStr = CommonProcess.LineStringCat(code_list, foundPos, fp);
-							qualifierList.Add(initialStr.Trim());
+							CodeIdentifier initIdtf = new CodeIdentifier(initialStr, foundPos);
+							qualifierList.Add(initIdtf);
 							search_pos = fp;
 							continue;
 						}
@@ -549,7 +551,7 @@ namespace Mr.Robot
 					{
 						// typedef类型定义
 						if ((0 != qualifierList.Count)
-							&& ("typedef" == qualifierList[0]))
+							&& ("typedef" == qualifierList[0].Text))
 						{
 							TypeDefProcess(code_list, qualifierList, ref fi);
 						}
@@ -579,7 +581,10 @@ namespace Mr.Robot
 		/// <param varName="codeList"></param>
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
-		static FuncParseInfo FunctionDetectProcess(List<string> codeList, List<string> qualifierList, ref CodePosition searchPos, CodePosition bracketLeft)
+		static FuncParseInfo FunctionDetectProcess(List<string> codeList,
+													List<CodeIdentifier> qualifierList,
+													ref CodePosition searchPos,
+													CodePosition bracketLeft)
 		{
 			FuncParseInfo cfi = new FuncParseInfo();
 
@@ -624,11 +629,11 @@ namespace Mr.Robot
 				// 函数名
 				if ("" == cfi.Name)
 				{
-					cfi.Name = qualifierList.Last();
+					cfi.Name = qualifierList.Last().Text;
 					// 函数修饰符
 					qualifierList.RemoveAt(qualifierList.Count - 1);
 				}
-				cfi.Qualifiers = new List<string>(qualifierList);
+				cfi.Qualifiers = new List<CodeIdentifier>(qualifierList);
 				// 参数列表
 				cfi.ParaList = paraList;
 			}
@@ -644,7 +649,7 @@ namespace Mr.Robot
 				}
 				searchPos = new CodePosition(fp.RowNum, fp.ColNum + 1);
 				// 函数名
-				cfi.Name = qualifierList.Last();
+				cfi.Name = qualifierList.Last().Text;
 				// 函数修饰符
 				qualifierList.RemoveAt(qualifierList.Count - 1);
 				cfi.Qualifiers = qualifierList;
@@ -736,7 +741,7 @@ namespace Mr.Robot
 		/// <param varName="qualifierList"></param>
 		/// <returns></returns>
 		static UsrDefTypeInfo UsrDefTypeProc(List<string> code_list,
-											 List<string> qualifier_list,
+											 List<CodeIdentifier> qualifier_list,
 											 ref CodePosition start_pos,
 											 FileParseInfo source_info,
 											 List<FileParseInfo> header_info_list)
@@ -746,7 +751,7 @@ namespace Mr.Robot
                 CommonProcess.ErrReport();
 				return null;
 			}
-			string keyStr = qualifier_list.Last();
+			string keyStr = qualifier_list.Last().Text;
 
 			UsrDefTypeInfo retUsrTypeInfo = new UsrDefTypeInfo();
 			CodePosition searchPos = new CodePosition(start_pos);
@@ -756,13 +761,13 @@ namespace Mr.Robot
 			{
 				if (CommonProcess.IsStandardIdentifier(nextIdtf.Text))
 				{
-					retUsrTypeInfo.NameList.Add(nextIdtf.Text);
+					retUsrTypeInfo.NameList.Add(nextIdtf);
 					nextIdtf = CommonProcess.GetNextIdentifier(code_list, ref searchPos, out foundPos);
 					if ("{" != nextIdtf.Text)
 					{
 						// 没找到最大括号, 说明这不是一个新的用户定义类型
 						if ((0 != qualifier_list.Count)
-							&& ("typedef" == qualifier_list[0]))
+							&& ("typedef" == qualifier_list[0].Text))
 						{
 							// 说明这是一个typedef类型定义, 这里返回不做处理, 等后面解析到分号";"的时候再进行typedef类型定义处理
 						}
@@ -816,7 +821,8 @@ namespace Mr.Robot
 			if (0 == retUsrTypeInfo.NameList.Count)
 			{
 				// 取得匿名类型的名字
-				retUsrTypeInfo.NameList.Add(GetAnonymousTypeName(source_info));
+				CodeIdentifier idtf = new CodeIdentifier(GetAnonymousTypeName(source_info), null);
+				retUsrTypeInfo.NameList.Add(idtf);
 			}
 			qualifier_list.Add(retUsrTypeInfo.NameList[0]);
 			// 检查后面是否跟着分号(判断类型定义结束)
@@ -877,7 +883,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 全局变量处理
 		/// </summary>
-		static void GlobalVarProcess(List<string> qualifierList,
+		static void GlobalVarProcess(List<CodeIdentifier> qualifierList,
 									 ref FileParseInfo cfi,
 									 List<FileParseInfo> parsedFileInfoList)
 		{
@@ -885,7 +891,16 @@ namespace Mr.Robot
 
 			// 判断是否有初始化语句
 			int idx = -1;
-			if (-1 != (idx = qualifierList.IndexOf("=")))
+			for (int i = 0; i < qualifierList.Count; i++)
+			{
+				if (qualifierList[i].Text.Equals("="))
+				{
+					idx = i;
+					break;
+				}
+			}
+
+			if (-1 != idx)
 			{
 				gvi.InitialString += qualifierList[idx + 1];
 				for (int i = qualifierList.Count - 1; i >= idx; i--)
@@ -896,7 +911,7 @@ namespace Mr.Robot
 
 			// 判断是否是数组
 			idx = qualifierList.Count - 1;
-			string qlfStr = qualifierList[idx].Trim();
+			string qlfStr = qualifierList[idx].Text.Trim();
 			if (qlfStr.StartsWith("[") && qlfStr.EndsWith("]"))
 			{
 				qlfStr = qlfStr.Substring(1, qlfStr.Length - 2).Trim();
@@ -905,7 +920,7 @@ namespace Mr.Robot
 			}
 
 			// 变量名
-			qlfStr = qualifierList.Last().Trim();
+			qlfStr = qualifierList.Last().Text.Trim();
             if (CommonProcess.IsStandardIdentifier(qlfStr))
 			{
 				gvi.VarName = qlfStr;
@@ -941,26 +956,26 @@ namespace Mr.Robot
 			}
 		}
 
-		static string ExtractGlobalVarTypeName(ref List<string> qualifierList, out List<string> prefixList)
+		static string ExtractGlobalVarTypeName(ref List<CodeIdentifier> qualifierList, out List<string> prefixList)
 		{
 			int idx = qualifierList.Count - 1;
-			string qlfStr = qualifierList[idx].Trim();
+			string qlfStr = qualifierList[idx].Text.Trim();
 			string type_name = string.Empty;
 			while (false == CommonProcess.IsStandardIdentifier(qlfStr))
 			{
 				type_name = qlfStr + type_name;
 				idx--;
-				qlfStr = qualifierList[idx].Trim();
+				qlfStr = qualifierList[idx].Text.Trim();
 			}
 			type_name = qlfStr + type_name;
 			// 如果前面还有"struct", "enum", "union", "signed", "unsigned"等前缀, 那也要加到类型名中去
 			if (0 != idx)
 			{
-				if ("struct" == qualifierList[idx - 1]
-					|| "enum" == qualifierList[idx - 1]
-					|| "union" == qualifierList[idx - 1]
-					|| "signed" == qualifierList[idx - 1]
-					|| "unsigned" == qualifierList[idx - 1])
+				if ("struct" == qualifierList[idx - 1].Text
+					|| "enum" == qualifierList[idx - 1].Text
+					|| "union" == qualifierList[idx - 1].Text
+					|| "signed" == qualifierList[idx - 1].Text
+					|| "unsigned" == qualifierList[idx - 1].Text)
 				{
 					type_name = qualifierList[idx - 1] + " " + type_name;
 					idx -= 1;
@@ -970,7 +985,7 @@ namespace Mr.Robot
 			prefixList = new List<string>();
 			for (int i = 0; i < idx; i++)
 			{
-				prefixList.Add(qualifierList[i].Trim());
+				prefixList.Add(qualifierList[i].Text.Trim());
 			}
 			return type_name;
 		}
@@ -1142,7 +1157,7 @@ namespace Mr.Robot
 		/// <param varName="codeList"></param>
 		/// <param varName="qualifierList"></param>
 		/// <param varName="cfi"></param>
-		static void TypeDefProcess(List<string> codeList, List<string> qualifierList, ref FileParseInfo cfi)
+		static void TypeDefProcess(List<string> codeList, List<CodeIdentifier> qualifierList, ref FileParseInfo cfi)
 		{
 			TypeDefineInfo tdi = new TypeDefineInfo();
 			string old_type = "";
@@ -1150,12 +1165,12 @@ namespace Mr.Robot
 			{
 				if (qualifierList.Count - 1 == i)
 				{
-					tdi.NewName = qualifierList[i];
+					tdi.NewName = qualifierList[i].Text;
 					tdi.OldName = old_type.Trim();
 				}
 				else
 				{
-					old_type += (" " + qualifierList[i]);
+					old_type += (" " + qualifierList[i].Text);
 				}
 			}
 			cfi.TypeDefineList.Add(tdi);
