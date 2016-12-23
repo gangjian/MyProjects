@@ -16,7 +16,7 @@ namespace Mr.Robot
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
 		/// <returns></returns>
-        public static string GetNextIdentifier(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
+        public static CodeIdentifier GetNextIdentifier(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
 		{
 			int lineIdx = searchPos.RowNum;
 			int startIdx = searchPos.ColNum;
@@ -137,7 +137,8 @@ namespace Mr.Robot
 				startIdx = curIdx;
 				searchPos.RowNum = lineIdx;
 				searchPos.ColNum = startIdx;
-				return curLine.Substring(s_pos, e_pos - s_pos + 1);
+				CodeIdentifier retId = new CodeIdentifier(curLine.Substring(s_pos, e_pos - s_pos + 1), foundPos);
+				return retId;
 			}
 			else
 			{
@@ -348,34 +349,34 @@ namespace Mr.Robot
             string quoteStr = string.Empty;
             while (true)
 			{
-				string idStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-				if (null == idStr)
+				CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				if (null == nextIdtf)
 				{
 					break;
 				}
-                else if (  "\'" == idStr
-                        || "\"" == idStr)
+				else if ("\'" == nextIdtf.Text
+						|| "\"" == nextIdtf.Text)
                 {
                     // 要注意不要算上双引号, 单引号括起来的符号
                     if (true == quoteStart
-                        && quoteStr == idStr)
+						&& quoteStr == nextIdtf.Text)
                     {
                         quoteStart = false;
                     }
                     else if (!quoteStart)
                     {
                         quoteStart = true;
-                        quoteStr = idStr;
+						quoteStr = nextIdtf.Text;
                     }
                     else
                     {
                     }
                 }
-                else if (!quoteStart && leftSymbol.ToString() == idStr)
+				else if (!quoteStart && leftSymbol.ToString() == nextIdtf.Text)
 				{
 					matchCount += 1;
 				}
-                else if (!quoteStart && rightSymbol.ToString() == idStr)
+				else if (!quoteStart && rightSymbol.ToString() == nextIdtf.Text)
 				{
 					matchCount -= 1;
 					if (0 == matchCount)
@@ -508,17 +509,16 @@ namespace Mr.Robot
         public static CodePosition FindNextSpecIdentifier(string idStr, List<string> codeList, CodePosition searchPos)
 		{
 			CodePosition foundPos = null;
-			string retStr = null;
 			while (true)
 			{
-				retStr = GetNextIdentifier(codeList, ref searchPos, out foundPos);
-				if (idStr == retStr)
-				{
-					return foundPos;
-				}
-				else if (null == retStr)
+				CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				if (null == nextIdtf)
 				{
 					break;
+				}
+				else if (idStr == nextIdtf.Text)
+				{
+					return foundPos;
 				}
 			}
 			return null;
@@ -837,5 +837,17 @@ namespace Mr.Robot
 			}
 		}
 
+	}
+
+	public class CodeIdentifier
+	{
+		public string Text = string.Empty;
+		public CodePosition Position = null;
+
+		public CodeIdentifier(string text, CodePosition pos)
+		{
+			this.Text = text;
+			this.Position = new CodePosition(pos);
+		}
 	}
 }

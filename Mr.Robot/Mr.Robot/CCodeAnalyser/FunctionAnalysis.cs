@@ -98,9 +98,8 @@ namespace Mr.Robot
 												CodePosition endPos)
 		{
             StatementNode retNode = new StatementNode();
-			string nextIdStr = null;
 			CodePosition foundPos = null;
-            nextIdStr = CommonProcess.GetNextIdentifier(codeList, ref startPos, out foundPos);
+            CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref startPos, out foundPos);
 			CodePosition searchPos = new CodePosition(startPos);
 			startPos = new CodePosition(foundPos);
 
@@ -111,10 +110,10 @@ namespace Mr.Robot
 				return null;
 			}
 			// 复合语句
-			if (StatementNodeType.Invalid != GetNodeType(nextIdStr))
+			if (StatementNodeType.Invalid != GetNodeType(nextIdtf.Text))
 			{
 				// 取得复合语句节点
-				retNode = GetCompondStatementNode(nextIdStr, codeList, ref searchPos);
+				retNode = GetCompondStatementNode(nextIdtf.Text, codeList, ref searchPos);
 				startPos = searchPos;
 				return retNode;
 			}
@@ -238,13 +237,13 @@ namespace Mr.Robot
                 retNode.Scope = scope;
                 searchPos = CommonProcess.PositionMoveNext(codeList, scope.End);
                 CodePosition foundPos;
-                string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-                if ("while" == idStr)
+                CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				if ("while" == nextIdtf.Text)
                 {
                     string expression = GetCompoundStatementExpression(codeList, ref searchPos);
-                    idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+					nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
                     if (string.Empty != expression
-                        && ";" == idStr)
+						&& ";" == nextIdtf.Text)
                     {
                         retNode.expression = expression;
                         // 递归解析语句块
@@ -363,12 +362,12 @@ namespace Mr.Robot
 			StatementNode retNode = new StatementNode();
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
-            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-			if ("else" == idStr)
+            CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if ("else" == nextIdtf.Text)
 			{
 				CodePosition oldPos = new CodePosition(searchPos);
-                idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-				if ("if" == idStr)
+				nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				if ("if" == nextIdtf.Text)
 				{
 					// 表示这是一个"else if"分支
 					// 取得分支表达式
@@ -415,7 +414,7 @@ namespace Mr.Robot
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
             CodePosition oldPos = null;
-            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 
             // 定位"case"或"default"关键字的位置
             // 定位分号":"的位置
@@ -425,7 +424,7 @@ namespace Mr.Robot
             {
                 string caseStr = CommonProcess.LineStringCat(codeList, oldPos, foundPos);
                 retNode.expression = caseStr;
-                retNode.Type = GetNodeType(idStr);
+				retNode.Type = GetNodeType(nextIdtf.Text);
                 if (StatementNodeType.Invalid == retNode.Type)
                 {
                     return null;
@@ -442,12 +441,12 @@ namespace Mr.Robot
                         //retNode.childList.Add(sn);
                         retNode.Scope.End = sn.Scope.End;
                         oldPos = new CodePosition(searchPos);
-                        idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+						nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
                         searchPos = oldPos;
                         // 分支结束的判断
-                        if ("case" == idStr
-                            || "default" == idStr
-                            || "}" == idStr)
+						if ("case" == nextIdtf.Text
+							|| "default" == nextIdtf.Text
+							|| "}" == nextIdtf.Text)
                         {
                             // 移到前一位
                             searchPos = CommonProcess.PositionMovePrevious(codeList, foundPos);
@@ -474,8 +473,8 @@ namespace Mr.Robot
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
 
-            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-			if ("(" == idStr)
+            CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if ("(" == nextIdtf.Text)
 			{
 				CodePosition leftBracePos = new CodePosition(foundPos);
                 searchPos = CommonProcess.PositionMoveNext(codeList, leftBracePos);
@@ -515,8 +514,8 @@ namespace Mr.Robot
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
 
-            string idStr = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-			if ("{" == idStr)
+            CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+			if ("{" == nextIdtf.Text)
 			{
 				// 通常语句块会以花括号括起来
 				CodePosition leftBrace = new CodePosition(foundPos);
