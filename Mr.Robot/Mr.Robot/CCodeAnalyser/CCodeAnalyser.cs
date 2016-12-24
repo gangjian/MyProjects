@@ -867,7 +867,7 @@ namespace Mr.Robot
 					break;
 				}
 				else if (CommonProcess.IsStandardIdentifier(idStr)
-						 && MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, parseInfo))
+						 && StatementAnalysis.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, parseInfo))
 				{
 					offset = old_offset;
 					continue;

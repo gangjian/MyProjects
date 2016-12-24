@@ -27,7 +27,7 @@ namespace Mr.Robot
             GetFuncBlockStruct(c_file_result.SourceParseInfo.parsedCodeList, root);
 
 			// 函数语句分析: 分析入出力
-            FunctionStatementsAnalysis(root, c_file_result);
+			StatementAnalysis.FunctionStatementsAnalysis(root, c_file_result);
         }
 
         public static FuncParseInfo GetFuncInfoFromParseResult(string fileName, string funcName,

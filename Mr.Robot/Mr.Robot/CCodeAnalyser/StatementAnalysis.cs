@@ -6,32 +6,35 @@ using System.Threading.Tasks;
 
 namespace Mr.Robot
 {
-	public static partial class CCodeAnalyser
+	public static partial class StatementAnalysis
 	{
 		/// <summary>
 		/// 语句分析
 		/// </summary>
         public static AnalysisContext FunctionStatementsAnalysis(StatementNode root,
-													             CodeParseInfo parseResult)
+													             CodeParseInfo p_result)
 		{
-            AnalysisContext analysisContext = new AnalysisContext();					// (变量)解析上下文
-			analysisContext.ParseResult = parseResult;
+            AnalysisContext fCtx = new AnalysisContext();					// (变量)解析上下文
+			fCtx.ParseResult = p_result;
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
-                StatementAnalysis(childNode, analysisContext);
+				StatementAnalyze(childNode, fCtx);
 			}
 
-            return analysisContext;
+            return fCtx;
 		}
 
-		public static void StatementAnalysis(StatementNode node,
-                                             AnalysisContext analysisContext)
+		public static void StatementAnalyze(StatementNode s_node,
+                                             AnalysisContext ctx)
 		{
-			switch (node.Type)
+			switch (s_node.Type)
 			{
 				case StatementNodeType.Simple:
-					SimpleStatementAnalyze(node, analysisContext);
+					// 取得完整的语句内容
+					List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
+					string statementStr = GetStatementStr(codeList, s_node.Scope);
+					SimpleStatementAnalyze(statementStr, ctx);
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -42,17 +45,13 @@ namespace Mr.Robot
 		/// <summary>
 		/// 简单语句分析(函数内)
 		/// </summary>
-		static void SimpleStatementAnalyze(StatementNode statementNode,
-                                            AnalysisContext analysisContext)
+		static void SimpleStatementAnalyze(string statement_str,
+                                           AnalysisContext ctx)
 		{
-			// 取得完整的语句内容
-			List<string> codeList = analysisContext.ParseResult.SourceParseInfo.parsedCodeList;
-			string statementStr = GetStatementStr(codeList, statementNode.Scope);
-
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
-			List<StatementComponent> componentList = GetComponents(statementStr, analysisContext.ParseResult);
+			List<StatementComponent> componentList = GetComponents(statement_str, ctx.ParseResult);
 
-            ExpressionAnalysis(componentList, analysisContext);
+            ExpressionAnalysis(componentList, ctx);
 		}
 
 		/// <summary>
@@ -330,7 +329,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数内的宏展开 TODO:以后考虑重构跟MacroDetectAndExpand_File合并
 		/// </summary>
-		static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, CodeParseInfo parseResult)
+		public static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, CodeParseInfo parseResult)
         {
 			// 作成一个所有包含头文件的宏定义的列表
 			List<MacroDefineInfo> macroDefineList = new List<MacroDefineInfo>();

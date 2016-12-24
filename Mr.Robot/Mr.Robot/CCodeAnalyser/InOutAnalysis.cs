@@ -80,7 +80,7 @@ namespace Mr.Robot
 				}
 				else if (MeaningGroupType.Expression == rightVal.Type)					// 表达式
 				{
-					CCodeAnalyser.ExpressionAnalysis(rightVal.ComponentList, ctx);
+					StatementAnalysis.ExpressionAnalysis(rightVal.ComponentList, ctx);
 				}
 
 				if (   MeaningGroupType.GlobalVariable == rightVal.Type

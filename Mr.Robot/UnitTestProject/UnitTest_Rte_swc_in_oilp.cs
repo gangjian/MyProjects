@@ -31,7 +31,7 @@ namespace UnitTestProject
 			Assert.AreEqual(StatementNodeType.Simple, root.childList[1].Type);
 			Assert.AreEqual(StatementNodeType.Simple, root.childList[2].Type);
 
-			AnalysisContext ctx = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
+			AnalysisContext ctx = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(3, ctx.CalledFunctionList.Count);
 			Assert.AreEqual("makeEngOnOff3s()", ctx.CalledFunctionList[0].MeaningGroup.Text);
 			Assert.AreEqual("makeIgv()", ctx.CalledFunctionList[1].MeaningGroup.Text);
@@ -43,7 +43,7 @@ namespace UnitTestProject
 		{
 			CodeParseInfo c_source_file_parse_result = Common.UnitTest_GetFuncParseResult(source_name, "sym_rbl_in_oilp_initReset", parseResultList, ref root);
 
-			AnalysisContext ctx = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
+			AnalysisContext ctx = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", ctx.InputGlobalList[0].Name);
 			Assert.AreEqual(1, ctx.CalledFunctionList.Count);
@@ -58,7 +58,7 @@ namespace UnitTestProject
 		{
 			CodeParseInfo c_source_file_parse_result = Common.UnitTest_GetFuncParseResult(source_name, "sym_rbl_in_oilp_initWakeup", parseResultList, ref root);
 
-			AnalysisContext ctx = CCodeAnalyser.FunctionStatementsAnalysis(root, c_source_file_parse_result);
+			AnalysisContext ctx = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_file_parse_result);
 			Assert.AreEqual(1, ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", ctx.InputGlobalList[0].Name);
 			Assert.AreEqual(1, ctx.CalledFunctionList.Count);
