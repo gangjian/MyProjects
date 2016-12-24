@@ -44,12 +44,12 @@ namespace Mr.Robot
 		/// 根据变量名,从当前解析上下文中找出变量的上下文
 		/// </summary>
 		/// <param name="var_name"></param>
-		/// <param name="ctx"></param>
+		/// <param name="func_ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtxByName(string var_name, CodeParseInfo parse_result, AnalysisContext ctx, string type_name = null)
+		static public VAR_CTX GetVarCtxByName(string var_name, CodeParseInfo parse_result, FuncAnalysisContext func_ctx, string type_name = null)
 		{
 			VAR_CTX var_ctx = null;
-			if (null != (var_ctx = SearchVarCtxList(var_name, ctx)))
+			if (null != (var_ctx = SearchVarCtxList(var_name, func_ctx)))
 			{
 				// 如果在当前的各个变量上下文列表中找到, 说明变量上下文已经创建, 直接返回
 				return var_ctx;
@@ -76,14 +76,14 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CTX SearchVarCtxList(string var_name, AnalysisContext ctx)
+		static VAR_CTX SearchVarCtxList(string var_name, FuncAnalysisContext func_ctx)
 		{
 			VAR_CTX var_ctx = null;
-			if ((null != (var_ctx = FindVarInVarCtxList(var_name, ctx.ParameterList)))		// (1)参数?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.LocalVarList)))		// (2)临时变量?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.InputGlobalList)))	// (3)全局变量?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.OutputGlobalList)))
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, ctx.OtherGlobalList)))
+			if ((null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.ParameterList)))		// (1)参数?
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.LocalVarList)))		// (2)临时变量?
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.InputGlobalList)))	// (3)全局变量?
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.OutputGlobalList)))
+				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.OtherGlobalList)))
 				)
 			{
 				return var_ctx;
