@@ -31,7 +31,7 @@ namespace Mr.Robot
 			switch (node.Type)
 			{
 				case StatementNodeType.Simple:
-					SimpleStatementAnalysis(node, analysisContext);
+					SimpleStatementAnalyze(node, analysisContext);
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -40,15 +40,32 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
-		/// 简单语句分析
+		/// 简单语句分析(函数内)
 		/// </summary>
-		static void SimpleStatementAnalysis(StatementNode statementNode,
+		static void SimpleStatementAnalyze(StatementNode statementNode,
                                             AnalysisContext analysisContext)
 		{
+			// 取得完整的语句内容
+			List<string> codeList = analysisContext.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = GetStatementStr(codeList, statementNode.Scope);
+
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
-			List<StatementComponent> componentList = GetComponents(statementNode, analysisContext.ParseResult);
+			List<StatementComponent> componentList = GetComponents(statementStr, analysisContext.ParseResult);
 
             ExpressionAnalysis(componentList, analysisContext);
+		}
+
+		/// <summary>
+		/// 简单语句分析(全局(函数外))
+		/// </summary>
+		static void SimpleStatementAnalyze2()
+		{
+
+		}
+
+		public static string GetStatementStr(List<string> code_list, CodeScope code_scope)
+		{
+			return CommonProcess.LineStringCat(code_list, code_scope.Start, code_scope.End).Trim();
 		}
 
         public static void ExpressionAnalysis(List<StatementComponent> componentList,
@@ -64,13 +81,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得语句内各基本成分(运算数或者是运算符)
 		/// </summary>
-        public static List<StatementComponent> GetComponents(StatementNode statementNode,
+		public static List<StatementComponent> GetComponents(string statementStr,
                                                              CodeParseInfo parseResult)
         {
-            // 取得完整的语句内容
-            string statementStr = CommonProcess.LineStringCat(parseResult.SourceParseInfo.parsedCodeList,
-                                                statementNode.Scope.Start,
-                                                statementNode.Scope.End).Trim();
 			// 去掉结尾的分号
 			if (statementStr.EndsWith(";"))
 			{

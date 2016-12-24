@@ -39,7 +39,9 @@ namespace UnitTestProject
 			analysisContext.ParseResult = c_source_file_parse_result;
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, ctx);
 
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[0], analysisContext.ParseResult);
+			List<string> codeList = analysisContext.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[0].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
             Assert.AreEqual(2, meaningGroupList.Count);
@@ -66,7 +68,9 @@ namespace UnitTestProject
 			analysisContext.ParseResult = c_source_file_parse_result;
 			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
 
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[1], analysisContext.ParseResult);
+			List<string> codeList = analysisContext.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[1].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
@@ -85,7 +89,9 @@ namespace UnitTestProject
 			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
 			CCodeAnalyser.StatementAnalysis(root.childList[1], analysisContext);
 
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[2], analysisContext.ParseResult);
+			List<string> codeList = analysisContext.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[2].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, analysisContext.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
@@ -145,8 +151,10 @@ namespace UnitTestProject
 			ctx.ParseResult = c_source_file_parse_result;
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, localVarList);
 
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
 			// 第一条语句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[0], ctx.ParseResult);
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[0].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
 			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -154,7 +162,8 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第二条语句
-			componentList = CCodeAnalyser.GetComponents(root.childList[1], ctx.ParseResult);
+			statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[1].Scope);
+			componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
 			meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -162,7 +171,8 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第三条语句
-			componentList = CCodeAnalyser.GetComponents(root.childList[2], ctx.ParseResult);
+			statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[2].Scope);
+			componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
 			meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -173,14 +183,16 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_4()
 		{
-			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.ParseResult = c_source_file_parse_result;
-			CCodeAnalyser.StatementAnalysis(root.childList[0], analysisContext);
-			CCodeAnalyser.StatementAnalysis(root.childList[1], analysisContext);
-			CCodeAnalyser.StatementAnalysis(root.childList[2], analysisContext);
+			AnalysisContext ctx = new AnalysisContext();
+			ctx.ParseResult = c_source_file_parse_result;
+			CCodeAnalyser.StatementAnalysis(root.childList[0], ctx);
+			CCodeAnalyser.StatementAnalysis(root.childList[1], ctx);
+			CCodeAnalyser.StatementAnalysis(root.childList[2], ctx);
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
 			// 第4句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[3], analysisContext.ParseResult);
-			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[3].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
+			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -193,15 +205,17 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_5()
 		{
-			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.ParseResult = c_source_file_parse_result;
+			AnalysisContext ctx = new AnalysisContext();
+			ctx.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 4; i++)
 			{
-				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
+				CCodeAnalyser.StatementAnalysis(root.childList[i], ctx);
 			}
 			// 第5句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[4], analysisContext.ParseResult);
-			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[4].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
+			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -214,15 +228,17 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_6()
 		{
-			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.ParseResult = c_source_file_parse_result;
+			AnalysisContext ctx = new AnalysisContext();
+			ctx.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 5; i++)
 			{
-				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
+				CCodeAnalyser.StatementAnalysis(root.childList[i], ctx);
 			}
 			// 第6句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[5], analysisContext.ParseResult);
-			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[5].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
+			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -235,15 +251,17 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_7()
 		{
-			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.ParseResult = c_source_file_parse_result;
+			AnalysisContext ctx = new AnalysisContext();
+			ctx.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 6; i++)
 			{
-				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
+				CCodeAnalyser.StatementAnalysis(root.childList[i], ctx);
 			}
 			// 第7句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[6], analysisContext.ParseResult);
-			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[6].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
+			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -256,15 +274,17 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_8()
 		{
-			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.ParseResult = c_source_file_parse_result;
+			AnalysisContext ctx = new AnalysisContext();
+			ctx.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 7; i++)
 			{
-				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
+				CCodeAnalyser.StatementAnalysis(root.childList[i], ctx);
 			}
 			// 第8句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[7], analysisContext.ParseResult);
-			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[7].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
+			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(1, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.FunctionCalling, meaningGroupList[0].Type);
@@ -274,15 +294,17 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_9()
 		{
-			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.ParseResult = c_source_file_parse_result;
+			AnalysisContext ctx = new AnalysisContext();
+			ctx.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 8; i++)
 			{
-				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
+				CCodeAnalyser.StatementAnalysis(root.childList[i], ctx);
 			}
 			// 第9句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[8], analysisContext.ParseResult);
-			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[8].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
+			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -295,15 +317,17 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_10()
 		{
-			AnalysisContext analysisContext = new AnalysisContext();
-			analysisContext.ParseResult = c_source_file_parse_result;
+			AnalysisContext ctx = new AnalysisContext();
+			ctx.ParseResult = c_source_file_parse_result;
 			for (int i = 0; i < 9; i++)
 			{
-				CCodeAnalyser.StatementAnalysis(root.childList[i], analysisContext);
+				CCodeAnalyser.StatementAnalysis(root.childList[i], ctx);
 			}
 			// 第9句
-			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(root.childList[9], analysisContext.ParseResult);
-			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, analysisContext);
+			List<string> codeList = ctx.ParseResult.SourceParseInfo.parsedCodeList;
+			string statementStr = CCodeAnalyser.GetStatementStr(codeList, root.childList[9].Scope);
+			List<StatementComponent> componentList = CCodeAnalyser.GetComponents(statementStr, ctx.ParseResult);
+			List<MeaningGroup> meaningGroupList = CCodeAnalyser.GetMeaningGroups(componentList, ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.GlobalVariable, meaningGroupList[0].Type);

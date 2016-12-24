@@ -563,7 +563,7 @@ namespace Mr.Robot
 					}
 					//else if ("," == nextId)
 					//{
-					//	//GlobalVarProcess(qualifierList, ref fi, header_info_list);
+					//	GlobalVarProcess(qualifierList, ref fi, header_info_list);
 					//	continue;
 					//}
 					else
