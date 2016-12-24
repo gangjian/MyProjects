@@ -11,7 +11,8 @@ namespace Mr.Robot
 	public partial class InOutAnalysis
 	{
 		public static bool LeftRightValueAnalysis(List<MeaningGroup> mgList,
-												  AnalysisContext ctx)
+													CodeParseInfo parse_result,
+													AnalysisContext ctx)
 		{
 			List<MeaningGroup> rightValue = new List<MeaningGroup>();
 			int eqIdx = -1;
@@ -26,7 +27,7 @@ namespace Mr.Robot
 				if (1 == leftGroupList.Count
 					&& MeaningGroupType.GlobalVariable == leftGroupList[0].Type)
 				{
-					VAR_CTX varCtx = GetVarCtxByName(leftGroupList[0].Text, ctx);
+					VAR_CTX varCtx = GetVarCtxByName(leftGroupList[0].Text, parse_result, ctx);
 					if (null == varCtx.MeanningGroup)
 					{
 						varCtx.MeanningGroup = leftGroupList[0];
@@ -39,7 +40,7 @@ namespace Mr.Robot
 				{
 					rightGroupList.Add(mgList[i]);
 				}
-				RightValProcess(rightGroupList, ctx);
+				RightValProcess(rightGroupList, parse_result, ctx);
 			}
 			else
 			{
@@ -47,7 +48,7 @@ namespace Mr.Robot
 				// 可能是没有初始化赋值的临时变量定义
 				// 可能是函数调用
 				// 可能是自增,自减等一元运算符
-				RightValProcess(mgList, ctx);
+				RightValProcess(mgList, parse_result, ctx);
 			}
 			return false;
 		}
@@ -64,23 +65,23 @@ namespace Mr.Robot
 			return -1;
 		}
 
-		static void RightValProcess(List<MeaningGroup> rightList, AnalysisContext ctx)
+		static void RightValProcess(List<MeaningGroup> rightList, CodeParseInfo parse_result, AnalysisContext ctx)
 		{
 			foreach (MeaningGroup rightVal in rightList)
 			{
 				if (MeaningGroupType.GlobalVariable == rightVal.Type)					// 全局变量
 				{
-					VAR_CTX varCtx = GetVarCtxByName(rightVal.Text, ctx);
+					VAR_CTX varCtx = GetVarCtxByName(rightVal.Text, parse_result, ctx);
 					varCtx.MeanningGroup = rightVal;
 					ctx.InputGlobalList.Add(varCtx);
 				}
 				else if (MeaningGroupType.FunctionCalling == rightVal.Type)				// 函数调用
 				{
-					CalledFunctionProcess(rightVal, ctx);
+					CalledFunctionProcess(rightVal, parse_result, ctx);
 				}
 				else if (MeaningGroupType.Expression == rightVal.Type)					// 表达式
 				{
-					StatementAnalysis.ExpressionAnalysis(rightVal.ComponentList, ctx);
+					StatementAnalysis.ExpressionAnalysis(rightVal.ComponentList, parse_result, ctx);
 				}
 
 				if (   MeaningGroupType.GlobalVariable == rightVal.Type
@@ -88,12 +89,12 @@ namespace Mr.Robot
 				{
 					// 如果是变量, 确认其是否被标记为曾做过函数调用的实参并传引用,
 					// 如果是, 找到该函数调用并标记该调用对应实参位置是读出值
-					CheckRightVarReadOut(rightVal, ctx);
+					CheckRightVarReadOut(rightVal, parse_result, ctx);
 				}
 			}
 		}
 
-		static void CalledFunctionProcess(MeaningGroup mg, AnalysisContext ctx)
+		static void CalledFunctionProcess(MeaningGroup mg, CodeParseInfo parse_result, AnalysisContext ctx)
 		{
 			CalledFunction cf = new CalledFunction();
 			cf.MeaningGroup = mg;
@@ -106,7 +107,7 @@ namespace Mr.Robot
 			foreach (MeaningGroup ap in act_para_list)
 			{
 				// 分别判断各实参是传值还是传引用
-				cf.ActualParaInfoList.Add(GetActualParaInfo(ap, ctx));
+				cf.ActualParaInfoList.Add(GetActualParaInfo(ap, parse_result, ctx));
 			}
 			foreach (ActualParaInfo api in cf.ActualParaInfoList)
 			{
@@ -116,7 +117,7 @@ namespace Mr.Robot
 					// 在上下文中标记该变量曾作为函数实参传引用(可能是读出值)
 					// 在上下文中登录该函数调用可能是读出值
 					// 以后若该标记的变量作为右值, 那就证实该函数调用的实参是读出值;
-					RegisterVarPossibleReadOut(api, cf, ctx);
+					RegisterVarPossibleReadOut(api, cf, parse_result, ctx);
 				}
 			}
 
@@ -127,11 +128,12 @@ namespace Mr.Robot
 		/// 在上下文中登录该变量可能被函数调用读出值赋值
 		/// </summary>
 		static void RegisterVarPossibleReadOut(ActualParaInfo api,
-											   CalledFunction cf,
-											   AnalysisContext ctx)
+												CalledFunction cf,
+												CodeParseInfo parse_result,
+												AnalysisContext ctx)
 		{
 			// 在上下文中找出该变量
-			VAR_CTX var_ctx = GetVarCtxByName(api.varName, ctx);
+			VAR_CTX var_ctx = GetVarCtxByName(api.varName, parse_result, ctx);
 			if (null != var_ctx)
 			{
 				var_ctx.CalledFunctionReadOut = cf.FunctionName;
@@ -171,12 +173,12 @@ namespace Mr.Robot
 		}
 
 		// 判断实参的种别(传值或者传引用)
-		static ActualParaInfo GetActualParaInfo(MeaningGroup act_para, AnalysisContext ctx)
+		static ActualParaInfo GetActualParaInfo(MeaningGroup act_para, CodeParseInfo parse_result, AnalysisContext ctx)
 		{
 			ActualParaInfo actParaInfo = new ActualParaInfo();
 			// 前缀 + 变量名
 			actParaInfo.varName = act_para.ComponentList.Last().Text;
-			actParaInfo.typeName = GetVarTypeName(actParaInfo.varName, ctx);
+			actParaInfo.typeName = GetVarTypeName(actParaInfo.varName, parse_result, ctx);
 			for (int i = 0; i < act_para.ComponentList.Count - 1; i++)
 			{
 				actParaInfo.prefixList.Add(act_para.ComponentList[i].Text);
@@ -184,7 +186,7 @@ namespace Mr.Robot
 			// 根据变量类型和前缀,判定实参的传递方式(传值或者传引用)
 
 			// 确定变量的类型, 是值类型还是引用类型(指针类型)
-			ActParaPassType var_type = JudgeVarParaType(actParaInfo.varName, ctx);
+			ActParaPassType var_type = JudgeVarParaType(actParaInfo.varName, parse_result, ctx);
 			// 在确定前缀(取地址&, 或者取指针指向的变量*)
 			if (2 == act_para.ComponentList.Count)
 			{
@@ -211,10 +213,10 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断变量的类型是值类型亦或是指针类型
 		/// </summary>
-		static ActParaPassType JudgeVarParaType(string var_name, AnalysisContext ctx)
+		static ActParaPassType JudgeVarParaType(string var_name, CodeParseInfo parse_result, AnalysisContext ctx)
 		{
 			// 在当前的上下文中查找该名称的变量, 取得其类型名
-			string var_type = GetVarTypeName(var_name, ctx);
+			string var_type = GetVarTypeName(var_name, parse_result, ctx);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(var_type));
 			if (var_type.Trim().EndsWith("*"))
 			{
@@ -226,7 +228,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static string GetVarTypeName(string var_name, AnalysisContext ctx)
+		static string GetVarTypeName(string var_name, CodeParseInfo parse_result, AnalysisContext ctx)
 		{
 			// TODO: 引数?
 
@@ -239,7 +241,7 @@ namespace Mr.Robot
 				}
 			}
 			// 全局变量?
-			VariableInfo vi = ctx.ParseResult.FindGlobalVarInfoByName(var_name);
+			VariableInfo vi = parse_result.FindGlobalVarInfoByName(var_name);
 			if (null != vi)
 			{
 				if (string.Empty != vi.RealTypeName)
@@ -257,14 +259,14 @@ namespace Mr.Robot
 		/// <summary>
 		/// 确定一个作右值的变量是否被标记过做过函数调用的实参并传引用
 		/// </summary>
-		static void CheckRightVarReadOut(MeaningGroup rightVal, AnalysisContext ctx)
+		static void CheckRightVarReadOut(MeaningGroup rightVal, CodeParseInfo parse_result, AnalysisContext ctx)
 		{
 			string rVarName = GetPrimaryVarName(rightVal);
 			if (string.Empty == rVarName)
 			{
 				return;
 			}
-			VAR_CTX varCtx = GetVarCtxByName(rVarName, ctx);
+			VAR_CTX varCtx = GetVarCtxByName(rVarName, parse_result, ctx);
 			if (null != varCtx)
 			{
 				// 如果该变量曾被标记过作为函数调用的实参并传引用

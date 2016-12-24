@@ -46,7 +46,7 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtxByName(string var_name, AnalysisContext ctx, string type_name = null)
+		static public VAR_CTX GetVarCtxByName(string var_name, CodeParseInfo parse_result, AnalysisContext ctx, string type_name = null)
 		{
 			VAR_CTX var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, ctx)))
@@ -56,7 +56,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				VariableInfo vi = ctx.ParseResult.FindGlobalVarInfoByName(var_name);
+				VariableInfo vi = parse_result.FindGlobalVarInfoByName(var_name);
 				if (null != vi)
 				{
 					var_ctx = new VAR_CTX(vi.TypeName, vi.VarName);
