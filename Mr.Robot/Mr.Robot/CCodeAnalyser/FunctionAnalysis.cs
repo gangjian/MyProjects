@@ -185,8 +185,7 @@ namespace Mr.Robot
 			if (null != foundPos)
 			{
                 string statementStr = CommonProcess.LineStringCat(codeList, oldPos, foundPos);
-				retNode.Scope.Start = new CodePosition(oldPos);
-				retNode.Scope.End = new CodePosition(foundPos);
+				retNode.Scope = new CodeScope(oldPos, foundPos);
 				retNode.Type = StatementNodeType.Simple;
 
 				startPos = searchPos;
@@ -510,7 +509,6 @@ namespace Mr.Robot
 		/// <returns></returns>
 		static CodeScope GetBranchScope(List<string> codeList, ref CodePosition startPos)
 		{
-			CodeScope scope = new CodeScope();
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
 
@@ -524,6 +522,7 @@ namespace Mr.Robot
 				if (null != rightBrace)
 				{
 					startPos = searchPos;
+					CodeScope scope = new CodeScope(leftBrace, rightBrace);
 					scope.Start = leftBrace;
 					scope.End = rightBrace;
 					return scope;
@@ -536,7 +535,7 @@ namespace Mr.Robot
                 StatementNode sn = GetNextStatement(codeList, ref startPos, null);
                 if (null != sn)
                 {
-                    scope = sn.Scope;
+					CodeScope scope = sn.Scope;
                     return scope;
                 }
 			}

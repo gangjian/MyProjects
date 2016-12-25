@@ -45,7 +45,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 简单语句分析(函数内)
 		/// </summary>
-		static void SimpleStatementAnalyze(string statement_str,
+		public static void SimpleStatementAnalyze(string statement_str,
 											CodeParseInfo parse_result,
 											FuncAnalysisContext func_ctx)
 		{

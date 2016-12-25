@@ -42,6 +42,12 @@ namespace Mr.Robot
 	{
 		public CodePosition Start = new CodePosition(-1, -1);
 		public CodePosition End = new CodePosition(-1, -1);
+
+		public CodeScope(CodePosition start_pos, CodePosition end_pos)
+		{
+			this.Start = new CodePosition(start_pos);
+			this.End = new CodePosition(end_pos);
+		}
 	}
 
 	public enum E_CHAR_TYPE
@@ -154,7 +160,7 @@ namespace Mr.Robot
 		public List<CodeIdentifier> Qualifiers = new List<CodeIdentifier>();	        // 修饰符列表
 		public List<string> ParaList = new List<string>();						        // 参数列表
 
-		public CodeScope Scope = new CodeScope();										// 函数起止范围
+		public CodeScope Scope = null;													// 函数起止范围
 	}
 
 	/// <summary>
@@ -166,7 +172,7 @@ namespace Mr.Robot
 		public List<CodeIdentifier> NameList = new List<CodeIdentifier>();		        // 可能有多个名(逗号分割)
 		public List<string> MemberList = new List<string>();
 
-		public CodeScope Scope = new CodeScope();
+		public CodeScope Scope = null;
 	}
 
 	/// <summary>

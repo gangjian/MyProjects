@@ -495,10 +495,7 @@ namespace Mr.Robot
 						FuncParseInfo cfi = FunctionDetectProcess(code_list, qualifierList, ref search_pos, foundPos);
 						if (null != cfi)
 						{
-							if (   -1 != cfi.Scope.Start.RowNum
-								&& -1 != cfi.Scope.Start.ColNum
-								&& -1 != cfi.Scope.End.RowNum
-								&& -1 != cfi.Scope.End.ColNum)
+							if (null != cfi.Scope)
 							{
 								fi.FunDefineList.Add(cfi);
 							}
@@ -556,9 +553,13 @@ namespace Mr.Robot
 							TypeDefProcess(code_list, qualifierList, ref fi);
 						}
 						// 注意用户定义类型后面的分号不是全局量
-						else if (2 <= qualifierList.Count)
+						else if (qualifierList.Count >= 2)
 						{
 							GlobalVarProcess(qualifierList, ref fi, header_info_list);
+
+							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
+							//StatementAnalysis.GetStatementStr(code_list, new CodeScope())
+							//StatementAnalysis.SimpleStatementAnalyze();
 						}
 					}
 					//else if ("," == nextId)
@@ -656,8 +657,7 @@ namespace Mr.Robot
 				// 参数列表
 				cfi.ParaList = paraList;
 				// 函数体起始位置
-				cfi.Scope.Start = bodyStartPos;
-				cfi.Scope.End = fp;
+				cfi.Scope = new CodeScope(bodyStartPos, fp);
 			}
 			else
 			{
@@ -780,14 +780,15 @@ namespace Mr.Robot
 					return null;
 				}
 			}
-			retUsrTypeInfo.Scope.Start = foundPos;
+			CodePosition startPos = foundPos;
             foundPos = CommonProcess.FindNextMatchSymbol(code_list, searchPos, '}');
 			if (null == foundPos)
 			{
                 CommonProcess.ErrReport();
 				return null;
 			}
-			retUsrTypeInfo.Scope.End = foundPos;
+			CodePosition endPos = foundPos;
+			retUsrTypeInfo.Scope = new CodeScope(startPos, endPos);
             string catStr = CommonProcess.LineStringCat(code_list, retUsrTypeInfo.Scope.Start, retUsrTypeInfo.Scope.End);
 			if (catStr.StartsWith("{"))
 			{
@@ -902,7 +903,7 @@ namespace Mr.Robot
 
 			if (-1 != idx)
 			{
-				gvi.InitialString += qualifierList[idx + 1];
+				gvi.InitialString += qualifierList[idx + 1].Text;
 				for (int i = qualifierList.Count - 1; i >= idx; i--)
 				{
 					qualifierList.RemoveAt(i);
