@@ -563,7 +563,7 @@ namespace Mr.Robot
 							CodeParseInfo parseResult = new CodeParseInfo();
 							parseResult.SourceParseInfo = fi;
 							parseResult.HeaderParseInfoList = header_info_list;
-							//StatementAnalysis.SimpleStatementAnalyze(statementStr, parseResult, null);
+							StatementAnalysis.SimpleStatementAnalyze(statementStr, parseResult, null);
 						}
 					}
 					//else if ("," == nextId)

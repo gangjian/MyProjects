@@ -192,6 +192,11 @@ namespace Mr.Robot
 			{
 				return retGroup;
 			}
+			// "{和}括起的代码块"
+			else if (null != (retGroup = GetCodeBlockGroup(componentList, ref idx, parse_result)))
+			{
+				return retGroup;
+			}
 			// 是运算符
 			else if (null != (retGroup = GetOperatorGroup(componentList, ref idx)))
 			{
@@ -240,6 +245,10 @@ namespace Mr.Robot
 			else if ("[" == cpnt.Text)
 			{
 				matchOp = "]";
+			}
+			else if ("{" == cpnt.Text)
+			{
+				matchOp = "}";
 			}
 			if (string.Empty == matchOp)
 			{
@@ -316,7 +325,8 @@ namespace Mr.Robot
 				}
 				else
 				{
-					System.Diagnostics.Trace.Assert(false);
+					retSC = new StatementComponent(idStr);
+					break;
 				}
 			}
 
@@ -917,6 +927,27 @@ namespace Mr.Robot
 			return null;
 		}
 
+		static MeaningGroup GetCodeBlockGroup(List<StatementComponent> cpnt_list, ref int idx, CodeParseInfo parse_result)
+		{
+			if ("{" == cpnt_list[idx].Text)
+			{
+				List<StatementComponent> braceList = GetBraceComponents(cpnt_list, ref idx);
+				if (null != braceList)
+				{
+					MeaningGroup retGroup = new MeaningGroup();
+					retGroup.Type = MeaningGroupType.CodeBlock;
+					retGroup.ComponentList.AddRange(braceList);
+					foreach (StatementComponent item in braceList)
+					{
+						retGroup.Text += item.Text;
+					}
+					idx += 1;
+					return retGroup;
+				}
+			}
+			return null;
+		}
+
 		static MeaningGroup GetOperatorGroup(List<StatementComponent> componentList, ref int idx)
 		{
             MeaningGroup retGroup = null;
@@ -1058,6 +1089,7 @@ namespace Mr.Robot
 		TypeCasting,				// 强制类型转换
 		OtherOperator,				// 其它运算符
 		Constant,					// 常量
+		CodeBlock,					// "{"和"}"括起的代码段
 	}
 
 	/// <summary>
