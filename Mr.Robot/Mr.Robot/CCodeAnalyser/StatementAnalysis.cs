@@ -633,27 +633,40 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是构造类型/用户定义类型
         /// </summary>
-		static bool IsUsrDefVarType(List<string> idStrList, CodeParseInfo parseResult)
+		static bool IsUsrDefVarType(List<string> idStrList, CodeParseInfo parseResult, ref int count)
         {
+			string categoryStr = string.Empty;
 			string idStr = idStrList[0];
-			List<FileParseInfo> headerList = parseResult.HeaderParseInfoList;
-            // 遍历头文件列表
-            foreach (FileParseInfo hfi in headerList)
-            {
-                // 首先查用户定义类型列表
-				if (null != parseResult.FindUsrDefTypeInfo(idStr))
+			count = 1;
+			if (CommonProcess.IsUsrDefTypeKWD(idStr))
+			{
+				categoryStr = idStr;
+				if (idStrList.Count > 1)
 				{
-					return true;
+					idStr = idStrList[1];
+					count = 2;
 				}
-				else if (null != parseResult.FindTypeDefInfo(idStr))
+				else
+				{
+					return false;
+				}
+				if (null != parseResult.FindUsrDefTypeInfo(idStr, categoryStr))
 				{
 					return true;
 				}
 				else
 				{
+					return false;
 				}
-            }
-            return false;
+			}
+			else if (null != parseResult.FindTypeDefInfo(idStr))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
         }
 
         /// <summary>
@@ -718,8 +731,6 @@ namespace Mr.Robot
 		/// </summary>
 		static bool IsVarType(List<StatementComponent> cpntList, ref int index, CodeParseInfo parseResult)
 		{
-			// 判断有无类型前缀
-
 			// 判断是否是类型名
 			List<string> idStrList = new List<string>();
 			for (int i = index; i < cpntList.Count; i++)
@@ -732,31 +743,95 @@ namespace Mr.Robot
 				index += count;
 				return true;
 			}
-			else if (IsUsrDefVarType(idStrList, parseResult))
+			else if (IsUsrDefVarType(idStrList, parseResult, ref count))
 			{
-				index += 1;
+				index += count;
 				return true;
 			}
 
 			return false;
 		}
 
+		/// <summary>
+		/// 是否是类型前缀
+		/// </summary>
+		/// <returns></returns>
+		static bool IsTypePrefix(string identifier)
+		{
+			switch (identifier)
+			{
+				case "extern":
+				case "const":
+				case "static":
+				case "register":
+				case "volatile":
+					return true;
+				default:
+					break;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// 是否是类型后缀
+		/// </summary>
+		/// <returns></returns>
+		static bool IsTypeSuffix(string identifier)
+		{
+			switch (identifier)
+			{
+				case "*":
+				case "const":
+					return true;
+				default:
+					break;
+			}
+			return false;
+		}
+
 		static MeaningGroup GetVarTypeGroup(List<StatementComponent> componentList, ref int idx, CodeParseInfo parseResult)
 		{
-			int old_idx = idx;
-			if (IsVarType(componentList, ref idx, parseResult))
+			MeaningGroup retGroup = null;
+			List<StatementComponent> prefixList = new List<StatementComponent>();
+			for (int i = idx; i < componentList.Count; i++)
 			{
-                MeaningGroup retGroup = new MeaningGroup();
-                retGroup.Type = MeaningGroupType.VariableType;
-				for (int i = old_idx; i < idx; i++)
+				int old_idx = idx;
+				// 判断有无类型前缀
+				if (null == retGroup && IsTypePrefix(componentList[i].Text))
+				{
+					prefixList.Add(componentList[i]);
+					idx++;
+				}
+				else if (null == retGroup && IsVarType(componentList, ref idx, parseResult))
+				{
+					retGroup = new MeaningGroup();
+					retGroup.Type = MeaningGroupType.VariableType;
+					for (int j = 0; j < prefixList.Count; j++)
+					{
+						retGroup.ComponentList.Add(prefixList[j]);
+						retGroup.Text += prefixList[j].Text + " ";
+					}
+					for (int j = old_idx; j < idx; j++)
+					{
+						retGroup.ComponentList.Add(componentList[j]);
+						retGroup.Text += componentList[j].Text + " ";
+					}
+					i = idx - 1;
+					retGroup.Text = retGroup.Text.Trim();
+				}
+				else if (null != retGroup
+						 && IsTypeSuffix(componentList[i].Text))
 				{
 					retGroup.ComponentList.Add(componentList[i]);
-					retGroup.Text += componentList[i].Text + " ";
+					retGroup.Text += " " + componentList[i].Text;
+					idx++;
 				}
-				retGroup.Text = retGroup.Text.Trim();
-				return retGroup;
+				else
+				{
+					break;
+				}
 			}
-			return null;
+			return retGroup;
 		}
 
 		static MeaningGroup GetVarNameGroup(List<StatementComponent> componentList,
@@ -978,7 +1053,10 @@ namespace Mr.Robot
 			if (null != (varCtx = IsNewDefineVarible(mgList, parse_result, func_ctx)))
 			{
 				// 如果是,为此新定义局部变量创建上下文记录项
-				func_ctx.LocalVarList.Add(varCtx);
+				if (null != func_ctx)
+				{
+					func_ctx.LocalVarList.Add(varCtx);
+				}
 			}
 			// 分析左值/右值
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_result, func_ctx);
@@ -1097,27 +1175,11 @@ namespace Mr.Robot
 	/// </summary>
 	public class MeaningGroup
 	{
-		MeaningGroupType _type = MeaningGroupType.Unknown;
+		public MeaningGroupType Type = MeaningGroupType.Unknown;
 
-		public MeaningGroupType Type
-		{
-			get { return _type; }
-			set { _type = value; }
-		}
+		public string Text = string.Empty;
 
-		private string _text = string.Empty;
-		public string Text
-		{
-			get { return _text; }
-			set { _text = value; }
-		}
-
-		private List<StatementComponent> _componentList = new List<StatementComponent>();
-		public List<StatementComponent> ComponentList
-		{
-			get { return _componentList; }
-			set { _componentList = value; }
-		}
+		public List<StatementComponent> ComponentList = new List<StatementComponent>();
 	}
 
     /// <summary>

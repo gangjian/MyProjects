@@ -83,28 +83,13 @@ namespace Mr.Robot
 			this.FullName = fileName;
 		}
 
-		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name)
+		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name, string category_name)
 		{
-			List<string> type_name_split = GetTypeNameSplit(type_name);
-			string category_name = string.Empty;
-			string typeName = type_name;
-			if (1 == type_name_split.Count)
-			{
-			}
-			else if (2 == type_name_split.Count)
-			{
-				category_name = type_name_split[0];
-				typeName = type_name_split[1];
-			}
-			else
-			{
-				return null;
-			}
 			foreach (UsrDefTypeInfo udti in this.UsrDefTypeList)
 			{
 				foreach (CodeIdentifier nameIdtf in udti.NameList)
 				{
-					if (nameIdtf.Text.Equals(typeName))
+					if (nameIdtf.Text.Equals(type_name))
 					{
 						if (string.Empty != category_name)
 						{
@@ -133,21 +118,6 @@ namespace Mr.Robot
 				}
 			}
 			return null;
-		}
-
-		List<string> GetTypeNameSplit(string type_name)
-		{
-			char[] spliters = new char[] {' ', '\t'};
-			string[] typeNameArr = type_name.Split(spliters);
-			List<string> retList = new List<string>();
-			foreach (string item in typeNameArr)
-			{
-				if (!string.IsNullOrEmpty(item))
-				{
-					retList.Add(item);
-				}
-			}
-			return retList;
 		}
 	}
 
@@ -315,7 +285,7 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name)
+		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name, string category_name)
 		{
 			TypeDefineInfo tdi = null;
 			string new_type_name = string.Empty;
@@ -333,16 +303,15 @@ namespace Mr.Robot
 			}
 
 			UsrDefTypeInfo udti = null;
-			foreach (FileParseInfo headerInfo in this.HeaderParseInfoList)
+			List<FileParseInfo> fileList = new List<FileParseInfo>();
+			fileList.AddRange(this.HeaderParseInfoList);
+			fileList.Add(this.SourceParseInfo);
+			foreach (FileParseInfo fpi in fileList)
 			{
-				if (null != (udti = headerInfo.FindUsrDefTypeInfo(type_name)))
+				if (null != (udti = fpi.FindUsrDefTypeInfo(type_name, category_name)))
 				{
 					return udti;
 				}
-			}
-			if (null != (udti = this.SourceParseInfo.FindUsrDefTypeInfo(type_name)))
-			{
-				return udti;
 			}
 			return null;
 		}
