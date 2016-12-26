@@ -125,7 +125,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				UsrDefTypeInfo udti = code_info.FindUsrDefTypeInfo(type_name);
+				UsrDefTypeInfo udti = code_info.FindUsrDefTypeInfo(type_name, "");
 				if (null != udti)
 				{
 					VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
