@@ -558,8 +558,12 @@ namespace Mr.Robot
 							GlobalVarProcess(qualifierList, ref fi, header_info_list);
 
 							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
-							//StatementAnalysis.GetStatementStr(code_list, new CodeScope())
-							//StatementAnalysis.SimpleStatementAnalyze();
+							string statementStr = StatementAnalysis.GetStatementStr(code_list,
+								new CodeScope(qualifierList.First().Position, nextIdtf.Position));
+							CodeParseInfo parseResult = new CodeParseInfo();
+							parseResult.SourceParseInfo = fi;
+							parseResult.HeaderParseInfoList = header_info_list;
+							//StatementAnalysis.SimpleStatementAnalyze(statementStr, parseResult, null);
 						}
 					}
 					//else if ("," == nextId)

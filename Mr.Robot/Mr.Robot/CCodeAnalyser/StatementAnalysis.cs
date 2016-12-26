@@ -759,7 +759,8 @@ namespace Mr.Robot
             {
                 // 是否是函数参数
                 // 是否为局部变量
-				if (IsLocalVariable(componentList[idx].Text, func_ctx.LocalVarList))
+				if (null != func_ctx
+					&& IsLocalVariable(componentList[idx].Text, func_ctx.LocalVarList))
                 {
                     MeaningGroup retGroup = new MeaningGroup();
                     retGroup.Type = MeaningGroupType.LocalVariable;

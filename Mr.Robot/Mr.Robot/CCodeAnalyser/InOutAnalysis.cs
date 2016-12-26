@@ -73,7 +73,10 @@ namespace Mr.Robot
 				{
 					VAR_CTX varCtx = GetVarCtxByName(rightVal.Text, parse_result, func_ctx);
 					varCtx.MeanningGroup = rightVal;
-					func_ctx.InputGlobalList.Add(varCtx);
+					if (null != func_ctx)
+					{
+						func_ctx.InputGlobalList.Add(varCtx);
+					}
 				}
 				else if (MeaningGroupType.FunctionCalling == rightVal.Type)				// 函数调用
 				{

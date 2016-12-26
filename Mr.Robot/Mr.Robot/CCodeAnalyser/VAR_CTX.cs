@@ -78,6 +78,10 @@ namespace Mr.Robot
 
 		static VAR_CTX SearchVarCtxList(string var_name, FuncAnalysisContext func_ctx)
 		{
+			if (null == func_ctx)
+			{
+				return null;
+			}
 			VAR_CTX var_ctx = null;
 			if ((null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.ParameterList)))		// (1)参数?
 				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.LocalVarList)))		// (2)临时变量?
