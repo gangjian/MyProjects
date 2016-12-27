@@ -872,7 +872,7 @@ namespace Mr.Robot
                     retGroup.Type = MeaningGroupType.LocalVariable;
                     retGroup.ComponentList.Add(componentList[idx]);
                     retGroup.Text = componentList[idx].Text;
-                    idx++;
+					GetVarMemberGroup(componentList, ref idx, ref retGroup);
                     return retGroup;
                 }
             }
@@ -935,6 +935,17 @@ namespace Mr.Robot
                     retGroup.ComponentList.Add(componentList[i]);
                     retGroup.Text += componentList[i].Text;
                 }
+				else if ("[" == componentList[i].Text)
+				{
+					idx = i;
+					List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
+					retGroup.ComponentList.AddRange(braceList);
+					foreach (var item in braceList)
+					{
+						retGroup.Text += item.Text;
+					}
+					i = idx;
+				}
                 else
                 {
                     break;
