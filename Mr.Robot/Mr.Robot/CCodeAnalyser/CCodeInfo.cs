@@ -179,8 +179,6 @@ namespace Mr.Robot
 	{
 		public FileParseInfo SourceParseInfo;											// 源文件解析信息
 
-		public List<FileParseInfo> HeaderParseInfoList = new List<FileParseInfo>();		// 源文件包含的头文件解析信息列表
-
 		#region 以下方法,是针对代码解析结果的各种操作(查找,判断...)
 		/// <summary>
 		/// 根据函数名查找函数的解析结果
@@ -188,23 +186,10 @@ namespace Mr.Robot
 		public FuncParseInfo FindFuncParseInfo(string fun_name)
 		{
 			FuncParseInfo retFuncInfo = null;
-			foreach (FileParseInfo pi in this.HeaderParseInfoList)						// 先遍历包含头文件
-			{
-				if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, pi.FuncDeclareList)))
-				{
-					return retFuncInfo;
-				}
-				if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, pi.FunDefineList)))
-				{
-					return retFuncInfo;
-				}
-			}
-			// 然后是本文件内的函数声明
 			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, SourceParseInfo.FuncDeclareList)))
 			{
 				return retFuncInfo;
 			}
-			// 再然后是本文件内的函数定义
 			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, SourceParseInfo.FunDefineList)))
 			{
 				return retFuncInfo;
@@ -231,17 +216,6 @@ namespace Mr.Robot
 		public VariableInfo FindGlobalVarInfoByName(string var_name)
 		{
 			VariableInfo retVarInfo = null;
-			foreach (FileParseInfo hfi in this.HeaderParseInfoList)
-			{
-				if (null != (retVarInfo = SearchVariableList(var_name, hfi.GlobalDeclareList)))
-				{
-					return retVarInfo;
-				}
-				else if (null != (retVarInfo = SearchVariableList(var_name, hfi.GlobalDefineList)))
-				{
-					return retVarInfo;
-				}
-			}
 			if (null != (retVarInfo = SearchVariableList(var_name, this.SourceParseInfo.GlobalDeclareList)))
 			{
 				return retVarInfo;
@@ -271,13 +245,6 @@ namespace Mr.Robot
 		public TypeDefineInfo FindTypeDefInfo(string type_name)
 		{
 			TypeDefineInfo tdi = null;
-			foreach (FileParseInfo headerInfo in this.HeaderParseInfoList)
-			{
-				if (null != (tdi = headerInfo.FindTypeDefInfo(type_name)))
-				{
-					return tdi;
-				}
-			}
 			if (null != (tdi = this.SourceParseInfo.FindTypeDefInfo(type_name)))
 			{
 				return tdi;
@@ -301,21 +268,8 @@ namespace Mr.Robot
 					break;
 				}
 			}
-
-			UsrDefTypeInfo udti = null;
-			List<FileParseInfo> fileList = new List<FileParseInfo>();
-			fileList.AddRange(this.HeaderParseInfoList);
-			fileList.Add(this.SourceParseInfo);
-			foreach (FileParseInfo fpi in fileList)
-			{
-				if (null != (udti = fpi.FindUsrDefTypeInfo(type_name, category_name)))
-				{
-					return udti;
-				}
-			}
-			return null;
+			return this.SourceParseInfo.FindUsrDefTypeInfo(type_name, category_name);
 		}
-
 		#endregion
 	}
 

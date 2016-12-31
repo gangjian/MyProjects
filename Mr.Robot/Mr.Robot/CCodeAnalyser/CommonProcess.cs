@@ -447,23 +447,13 @@ namespace Mr.Robot
 		/// <param varName="headerFileNameList">头文件列表</param>
 		/// <param varName="defineList">宏定义列表</param>
 		/// <returns></returns>
-        public static MacroDefineInfo JudgeExpressionDefined(string exp, List<FileParseInfo> headerList, List<MacroDefineInfo> defineList)
+        public static MacroDefineInfo JudgeExpressionDefined(string exp, List<MacroDefineInfo> defineList)
 		{
 			foreach (var di in defineList)
 			{
 				if (exp == di.Name)
 				{
 					return di;
-				}
-			}
-			foreach (var fi in headerList)
-			{
-				foreach (var di in fi.MacroDefineList)
-				{
-					if (exp == di.Name)
-					{
-						return di;
-					}
 				}
 			}
 			return null;
@@ -476,7 +466,7 @@ namespace Mr.Robot
 		/// <param varName="headerFileNameList">头文件列表</param>
 		/// <param varName="defineList">宏定义列表</param>
 		/// <returns></returns>
-        public static int JudgeExpressionValue(string exp, List<FileParseInfo> headerList, List<MacroDefineInfo> defineList)
+        public static int JudgeExpressionValue(string exp, List<MacroDefineInfo> defineList)
 		{
 			// TODO: 暂不考虑复合表达式的情况
 			// 对于复合表达式, 拆分成单独表达式分别求值
@@ -487,7 +477,7 @@ namespace Mr.Robot
 			}
 			else if (IsStandardIdentifier(exp))
 			{
-				MacroDefineInfo mdi = JudgeExpressionDefined(exp, headerList, defineList);
+				MacroDefineInfo mdi = JudgeExpressionDefined(exp, defineList);
 				if (null != mdi)
 				{
 					if (int.TryParse(mdi.Value, out retVal))
@@ -643,19 +633,15 @@ namespace Mr.Robot
             System.Diagnostics.Trace.Assert(false);
         }
 
-		public static string FindTypeDefName(string type_name, List<FileParseInfo> fpiList)
+		public static string FindTypeDefName(string type_name, FileParseInfo fpi)
 		{
-			foreach (FileParseInfo fpi in fpiList)
+			foreach (TypeDefineInfo tdi in fpi.TypeDefineList)
 			{
-				foreach (TypeDefineInfo tdi in fpi.TypeDefineList)
+				if (tdi.NewName.Equals(type_name))
 				{
-					if (tdi.NewName.Equals(type_name))
-					{
-						return tdi.OldName;
-					}
+					return tdi.OldName;
 				}
 			}
-			fpiList.Clear();
 			return string.Empty;
 		}
 

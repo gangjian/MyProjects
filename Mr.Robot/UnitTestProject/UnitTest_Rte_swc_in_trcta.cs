@@ -55,7 +55,7 @@ namespace UnitTestProject
 			StatementAnalysis.StatementAnalyze(root.childList[0], c_source_file_parse_result, analysisContext);
 
 			Assert.AreEqual(1, analysisContext.LocalVarList.Count);
-			Assert.AreEqual("struct RTE_TYPE_H_USR_DEF_TYPE_0", analysisContext.LocalVarList[0].Type.Name);
+			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_1", analysisContext.LocalVarList[0].Type.Name);
 			Assert.AreEqual("pvOut", analysisContext.LocalVarList[0].Name);
         }
 
@@ -333,13 +333,13 @@ namespace UnitTestProject
 			Assert.AreEqual(3, func_ctx.LocalVarList.Count);
 
 			Assert.AreEqual("varInStep", func_ctx.LocalVarList[0].Name);
-			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_0", func_ctx.LocalVarList[0].Type.Name);
+			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_18", func_ctx.LocalVarList[0].Type.Name);
 
 			Assert.AreEqual("varOutStep", func_ctx.LocalVarList[1].Name);
-			Assert.AreEqual("struct SHARE_LIB_CAN_IN_STEP_H_USR_DEF_TYPE_4", func_ctx.LocalVarList[1].Type.Name);
+			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_22", func_ctx.LocalVarList[1].Type.Name);
 
 			Assert.AreEqual("pvOut", func_ctx.LocalVarList[2].Name);
-			Assert.AreEqual("struct RTE_TYPE_H_USR_DEF_TYPE_0", func_ctx.LocalVarList[2].Type.Name);
+			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_1", func_ctx.LocalVarList[2].Type.Name);
 
 			Assert.AreEqual(2, func_ctx.InputGlobalList.Count);
 			Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value", func_ctx.InputGlobalList[0].MeanningGroup.Text);

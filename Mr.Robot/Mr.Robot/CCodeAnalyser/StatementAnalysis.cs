@@ -338,19 +338,8 @@ namespace Mr.Robot
 		/// </summary>
 		public static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, CodeParseInfo parseResult)
         {
-			// 作成一个所有包含头文件的宏定义的列表
-			List<MacroDefineInfo> macroDefineList = new List<MacroDefineInfo>();
-			List<TypeDefineInfo> typeDefineList = new List<TypeDefineInfo>();
-			foreach (FileParseInfo hdInfo in parseResult.HeaderParseInfoList)
-			{
-				macroDefineList.AddRange(hdInfo.MacroDefineList);
-				typeDefineList.AddRange(hdInfo.TypeDefineList);
-			}
-			// 添加上本文件所定义的宏
-			macroDefineList.AddRange(parseResult.SourceParseInfo.MacroDefineList);
-			typeDefineList.AddRange(parseResult.SourceParseInfo.TypeDefineList);
 			// 遍历查找宏名
-			foreach (MacroDefineInfo di in macroDefineList)
+			foreach (MacroDefineInfo di in parseResult.SourceParseInfo.MacroDefineList)
 			{
 				// 判断宏名是否一致
 				if (idStr == di.Name)
@@ -1103,10 +1092,7 @@ namespace Mr.Robot
 				if (CommonProcess.IsStandardIdentifier(cpnt.Text))
 				{
 					string real_type;
-					List<FileParseInfo> fpiList = new List<FileParseInfo>();
-					fpiList.AddRange(parse_result.HeaderParseInfoList);
-					fpiList.Add(parse_result.SourceParseInfo);
-					if (string.Empty != (real_type = CommonProcess.FindTypeDefName(cpnt.Text, fpiList)))
+					if (string.Empty != (real_type = CommonProcess.FindTypeDefName(cpnt.Text, parse_result.SourceParseInfo)))
 					{
 						return real_type;
 					}

@@ -52,10 +52,7 @@ namespace Mr.Robot
 			foreach (string srcName in SourceNameList)
 			{
 				CodeParseInfo parseResult = new CodeParseInfo();
-				List<FileParseInfo> hdList = new List<FileParseInfo>();
-				parseResult.SourceParseInfo = CFileProcess(srcName, ref hdList);
-				parseResult.HeaderParseInfoList = hdList;
-
+				CFileProcess(srcName, ref parseResult.SourceParseInfo);
 				resultList.Add(parseResult);
 			}
 
@@ -71,21 +68,23 @@ namespace Mr.Robot
 		/// <param varName="srcName"></param>
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
-		static FileParseInfo CFileProcess(string srcName, ref List<FileParseInfo> header_list)
+		static void CFileProcess(string srcName, ref FileParseInfo fileInfo)
 		{
+			if (null == fileInfo)
+			{
+				fileInfo = new FileParseInfo(srcName);
+			}
 			// 去掉注释
 			List<string> codeList = RemoveComments(srcName);
-			FileParseInfo fileInfo = new FileParseInfo(srcName);
 			// 预编译处理
-			codeList = PrecompileProcess(codeList, ref fileInfo, ref header_list);
+			codeList = PrecompileProcess(codeList, ref fileInfo);
 			fileInfo.parsedCodeList = codeList;
 //          Save2File(codeList, srcName + ".bak");
 
 			// 文件解析
-			CCodeFileAnalysis(codeList, ref fileInfo, header_list);
+			CCodeFileAnalysis(codeList, ref fileInfo);
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
-			return fileInfo;
 		}
 
 		/// <summary>
@@ -176,8 +175,7 @@ namespace Mr.Robot
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		public static List<string> PrecompileProcess(List<string> codeList,
-													 ref FileParseInfo fi,
-													 ref List<FileParseInfo> includeInfoList)
+													 ref FileParseInfo fi)
 		{
 			List<string> retList = new List<string>();
 			Stack<ConditionalCompilationInfo> ccStack = new Stack<ConditionalCompilationInfo>(); // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
@@ -208,7 +206,7 @@ namespace Mr.Robot
 								// 去掉引号
 								incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
 								// 取得头文件的解析情报
-								ParseIncludeHeaderFile(incFileName, ref includeInfoList);
+								ParseIncludeHeaderFile(incFileName, ref fi);
 							}
 						}
 					}
@@ -236,7 +234,7 @@ namespace Mr.Robot
 							{
                                 exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-                                if (0 != CommonProcess.JudgeExpressionValue(exprStr, includeInfoList, fi.MacroDefineList))
+                                if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -262,7 +260,7 @@ namespace Mr.Robot
 							{
                                 exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-                                if (null != CommonProcess.JudgeExpressionDefined(exprStr, includeInfoList, fi.MacroDefineList))
+                                if (null != CommonProcess.JudgeExpressionDefined(exprStr, fi.MacroDefineList))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -288,7 +286,7 @@ namespace Mr.Robot
 							{
                                 exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-                                if (null != CommonProcess.JudgeExpressionDefined(exprStr, includeInfoList, fi.MacroDefineList))
+                                if (null != CommonProcess.JudgeExpressionDefined(exprStr, fi.MacroDefineList))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = false;
@@ -343,7 +341,7 @@ namespace Mr.Robot
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
                                 exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-                                if (0 != CommonProcess.JudgeExpressionValue(exprStr, includeInfoList, fi.MacroDefineList))
+                                if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -412,14 +410,12 @@ namespace Mr.Robot
 		/// <param varName="includeInfoList"></param>
 		/// <returns></returns>
 		static void ParseIncludeHeaderFile(string incFileName,
-										   ref List<FileParseInfo> includeInfoList)
+										   ref FileParseInfo fi)
 		{
 			// 先在已解析过的文件list里找
-			foreach (var pi in includeInfoList)
+			foreach (string fname in fi.IncFileList)
 			{
-				string path;
-				string fName = IOProcess.GetFileName(pi.FullName, out path);
-				if (fName.ToLower() == incFileName.ToLower())
+				if (fname.ToLower() == incFileName.ToLower())
 				{
 					// 如果找到了, 直接返回
 					return;
@@ -434,9 +430,7 @@ namespace Mr.Robot
 				if (fName.ToLower() == incFileName.ToLower())
 				{
 					// 如果找到了, 则要先解析这个头文件
-					FileParseInfo fi = CFileProcess(hd_name, ref includeInfoList);
-					// 解析完后, 加到头文件解析列表中去
-					includeInfoList.Add(fi);
+					CFileProcess(hd_name, ref fi);
 					// TODO: 注意当有多个同名文件符合条件时的情况应对
 				}
 			}
@@ -448,8 +442,7 @@ namespace Mr.Robot
 		/// 文件代码解析
 		/// </summary>
 		public static void CCodeFileAnalysis(List<string> code_list,
-											 ref FileParseInfo fi,
-											 List<FileParseInfo> header_info_list)
+											 ref FileParseInfo fi)
 		{
 			System.Diagnostics.Trace.Assert((null != code_list));
 			if (0 == code_list.Count)
@@ -468,7 +461,7 @@ namespace Mr.Robot
 				if (CommonProcess.IsStandardIdentifier(nextIdtf.Text)
 					|| ("*" == nextIdtf.Text))
 				{
-					if (MacroDetectAndExpand_File(nextIdtf.Text, code_list, foundPos, fi, header_info_list))
+					if (MacroDetectAndExpand_File(nextIdtf.Text, code_list, foundPos, fi))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
@@ -479,7 +472,7 @@ namespace Mr.Robot
 					if (CommonProcess.IsUsrDefTypeKWD(nextIdtf.Text))
 					{
 						// 用户定义类型处理
-						UsrDefTypeInfo udti = UsrDefTypeProc(code_list, qualifierList, ref search_pos, fi, header_info_list);
+						UsrDefTypeInfo udti = UsrDefTypeProc(code_list, qualifierList, ref search_pos, fi);
 						if (null != udti)
 						{
 							fi.UsrDefTypeList.Add(udti);
@@ -555,14 +548,13 @@ namespace Mr.Robot
 						// 注意用户定义类型后面的分号不是全局量
 						else if (qualifierList.Count >= 2)
 						{
-							GlobalVarProcess(qualifierList, ref fi, header_info_list);
+							GlobalVarProcess(qualifierList, ref fi);
 
 							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
 							string statementStr = StatementAnalysis.GetStatementStr(code_list,
 								new CodeScope(qualifierList.First().Position, nextIdtf.Position));
 							CodeParseInfo parseResult = new CodeParseInfo();
 							parseResult.SourceParseInfo = fi;
-							parseResult.HeaderParseInfoList = header_info_list;
 							StatementAnalysis.SimpleStatementAnalyze(statementStr, parseResult, null);
 						}
 					}
@@ -747,8 +739,7 @@ namespace Mr.Robot
 		static UsrDefTypeInfo UsrDefTypeProc(List<string> code_list,
 											 List<CodeIdentifier> qualifier_list,
 											 ref CodePosition start_pos,
-											 FileParseInfo source_info,
-											 List<FileParseInfo> header_info_list)
+											 FileParseInfo source_info)
 		{
 			if (0 == qualifier_list.Count)
 			{
@@ -816,7 +807,7 @@ namespace Mr.Robot
 			}
 			foreach (string m in members)
 			{
-				string memStr = GetUsrDefTypeMemberStr(m.Trim(), source_info, header_info_list);
+				string memStr = GetUsrDefTypeMemberStr(m.Trim(), source_info);
 				if (string.Empty != memStr)
 				{
 					retUsrTypeInfo.MemberList.Add(memStr);
@@ -853,12 +844,10 @@ namespace Mr.Robot
 		/// </summary>
 		/// <returns></returns>
 		static string GetUsrDefTypeMemberStr(string in_mem_str,
-											 FileParseInfo source_info,
-											 List<FileParseInfo> header_info_list)
+											 FileParseInfo source_info)
 		{
 			CodeParseInfo parseInfo = new CodeParseInfo();
 			parseInfo.SourceParseInfo = source_info;
-			parseInfo.HeaderParseInfoList = header_info_list;
 			string memberStr = in_mem_str;
 			string idStr;
 			int offset = 0, old_offset;
@@ -889,8 +878,7 @@ namespace Mr.Robot
 		/// 全局变量处理
 		/// </summary>
 		static void GlobalVarProcess(List<CodeIdentifier> qualifierList,
-									 ref FileParseInfo cfi,
-									 List<FileParseInfo> parsedFileInfoList)
+									 ref FileParseInfo cfi)
 		{
 			VariableInfo gvi = new VariableInfo();
 
@@ -942,10 +930,7 @@ namespace Mr.Robot
 			gvi.Qualifiers.AddRange(prefixList);
 			// 类型名可能是typedef定义的别名, 要找出原类型名
 			string real_type;
-			List<FileParseInfo> fpiList = new List<FileParseInfo>();
-			fpiList.AddRange(parsedFileInfoList);
-			fpiList.Add(cfi);
-			if (string.Empty != (real_type = CommonProcess.FindTypeDefName(gvi.TypeName, fpiList)))
+			if (string.Empty != (real_type = CommonProcess.FindTypeDefName(gvi.TypeName, cfi)))
 			{
 				gvi.RealTypeName = real_type;
 			}
@@ -1047,27 +1032,15 @@ namespace Mr.Robot
 		/// </summary>
 		static bool MacroDetectAndExpand_File(string idStr, List<string> codeList,
 										      CodePosition foundPos,
-										      FileParseInfo curFileInfo,
-										      List<FileParseInfo> includeHeaderInfoList)
+										      FileParseInfo curFileInfo)
 		{
             if (!CommonProcess.IsStandardIdentifier(idStr))
 			{
 				return false;
 			}
-			// 作成一个所有包含头文件的宏定义的列表
-			List<MacroDefineInfo> defineList = new List<MacroDefineInfo>();
-			List<TypeDefineInfo> typeDefineList = new List<TypeDefineInfo>();
-			foreach (FileParseInfo hdInfo in includeHeaderInfoList)
-			{
-				defineList.AddRange(hdInfo.MacroDefineList);
-				typeDefineList.AddRange(hdInfo.TypeDefineList);
-			}
-			// 添加上本文件所定义的宏
-			defineList.AddRange(curFileInfo.MacroDefineList);
-			typeDefineList.AddRange(curFileInfo.TypeDefineList);
 
 			// 遍历查找宏名
-			foreach (MacroDefineInfo di in defineList)
+			foreach (MacroDefineInfo di in curFileInfo.MacroDefineList)
 			{
 				// 判断宏名是否一致
 				if (idStr == di.Name)
@@ -1140,7 +1113,7 @@ namespace Mr.Robot
 				}
 			}
 			// typedef 用户自定义类型
-			foreach (TypeDefineInfo tdi in typeDefineList)
+			foreach (TypeDefineInfo tdi in curFileInfo.TypeDefineList)
 			{
 				if (idStr == tdi.NewName)
 				{
