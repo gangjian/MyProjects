@@ -40,23 +40,23 @@ namespace Mr.Robot
 		/// ".c"源文件处理
 		/// </summary>
 		/// <param varName="srcName"></param>
-		public static List<CodeParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
+		public static List<FileParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
 		{
 			// 初始化
 			SourceNameList = srcFileList;
 			HeaderNameList = hdFileList;
 
-			List<CodeParseInfo> resultList = new List<CodeParseInfo>();
+			List<FileParseInfo> parseInfoList = new List<FileParseInfo>();
 
 			// 逐个解析源文件
 			foreach (string srcName in SourceNameList)
 			{
-				CodeParseInfo parseResult = new CodeParseInfo();
-				CFileProcess(srcName, ref parseResult.SourceParseInfo);
-				resultList.Add(parseResult);
+				FileParseInfo parseInfo = new FileParseInfo(srcName);
+				CFileProcess(srcName, ref parseInfo);
+				parseInfoList.Add(parseInfo);
 			}
 
-			return resultList;
+			return parseInfoList;
 		}
 		#endregion
 
@@ -442,7 +442,7 @@ namespace Mr.Robot
 		/// 文件代码解析
 		/// </summary>
 		public static void CCodeFileAnalysis(List<string> code_list,
-											 ref FileParseInfo fi)
+											 ref FileParseInfo parse_info)
 		{
 			System.Diagnostics.Trace.Assert((null != code_list));
 			if (0 == code_list.Count)
@@ -461,7 +461,7 @@ namespace Mr.Robot
 				if (CommonProcess.IsStandardIdentifier(nextIdtf.Text)
 					|| ("*" == nextIdtf.Text))
 				{
-					if (MacroDetectAndExpand_File(nextIdtf.Text, code_list, foundPos, fi))
+					if (MacroDetectAndExpand_File(nextIdtf.Text, code_list, foundPos, parse_info))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
@@ -472,10 +472,10 @@ namespace Mr.Robot
 					if (CommonProcess.IsUsrDefTypeKWD(nextIdtf.Text))
 					{
 						// 用户定义类型处理
-						UsrDefTypeInfo udti = UsrDefTypeProc(code_list, qualifierList, ref search_pos, fi);
+						UsrDefTypeInfo udti = UsrDefTypeProc(code_list, qualifierList, ref search_pos, parse_info);
 						if (null != udti)
 						{
-							fi.UsrDefTypeList.Add(udti);
+							parse_info.UsrDefTypeList.Add(udti);
 						}
 					}
 				}
@@ -490,11 +490,11 @@ namespace Mr.Robot
 						{
 							if (null != cfi.Scope)
 							{
-								fi.FunDefineList.Add(cfi);
+								parse_info.FunDefineList.Add(cfi);
 							}
 							else
 							{
-								fi.FuncDeclareList.Add(cfi);
+								parse_info.FuncDeclareList.Add(cfi);
 							}
 						}
 					}
@@ -543,19 +543,17 @@ namespace Mr.Robot
 						if ((0 != qualifierList.Count)
 							&& ("typedef" == qualifierList[0].Text))
 						{
-							TypeDefProcess(code_list, qualifierList, ref fi);
+							TypeDefProcess(code_list, qualifierList, ref parse_info);
 						}
 						// 注意用户定义类型后面的分号不是全局量
 						else if (qualifierList.Count >= 2)
 						{
-							GlobalVarProcess(qualifierList, ref fi);
+							GlobalVarProcess(qualifierList, ref parse_info);
 
 							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
 							string statementStr = StatementAnalysis.GetStatementStr(code_list,
 								new CodeScope(qualifierList.First().Position, nextIdtf.Position));
-							CodeParseInfo parseResult = new CodeParseInfo();
-							parseResult.SourceParseInfo = fi;
-							StatementAnalysis.SimpleStatementAnalyze(statementStr, parseResult, null);
+							StatementAnalysis.SimpleStatementAnalyze(statementStr, parse_info, null);
 						}
 					}
 					//else if ("," == nextId)
@@ -846,8 +844,6 @@ namespace Mr.Robot
 		static string GetUsrDefTypeMemberStr(string in_mem_str,
 											 FileParseInfo source_info)
 		{
-			CodeParseInfo parseInfo = new CodeParseInfo();
-			parseInfo.SourceParseInfo = source_info;
 			string memberStr = in_mem_str;
 			string idStr;
 			int offset = 0, old_offset;
@@ -861,7 +857,7 @@ namespace Mr.Robot
 					break;
 				}
 				else if (CommonProcess.IsStandardIdentifier(idStr)
-						 && StatementAnalysis.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, parseInfo))
+						 && StatementAnalysis.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info))
 				{
 					offset = old_offset;
 					continue;
@@ -1152,6 +1148,11 @@ namespace Mr.Robot
 				}
 			}
 			cfi.TypeDefineList.Add(tdi);
+		}
+
+		public static void TypeDefProc2(List<StatementComponent> component_list)
+		{
+
 		}
 
         static string GetAnonymousTypeName(FileParseInfo fi)

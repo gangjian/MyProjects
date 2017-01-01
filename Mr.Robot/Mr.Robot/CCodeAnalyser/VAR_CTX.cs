@@ -46,7 +46,7 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="func_ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtxByName(string var_name, CodeParseInfo parse_result, FuncAnalysisContext func_ctx, string type_name = null)
+		static public VAR_CTX GetVarCtxByName(string var_name, FileParseInfo parse_info, FuncAnalysisContext func_ctx, string type_name = null)
 		{
 			VAR_CTX var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, func_ctx)))
@@ -56,7 +56,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				VariableInfo vi = parse_result.FindGlobalVarInfoByName(var_name);
+				VariableInfo vi = parse_info.FindGlobalVarInfoByName(var_name);
 				if (null != vi)
 				{
 					var_ctx = new VAR_CTX(vi.TypeName, vi.VarName);
@@ -110,7 +110,7 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static VAR_CTX CreateVarCtx(string type_name, string var_name, CodeParseInfo code_info)
+		public static VAR_CTX CreateVarCtx(string type_name, string var_name, FileParseInfo file_info)
 		{
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(type_name) && !string.IsNullOrEmpty(var_name));
 
@@ -125,7 +125,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				UsrDefTypeInfo udti = code_info.FindUsrDefTypeInfo(type_name, "");
+				UsrDefTypeInfo udti = file_info.FindUsrDefTypeInfo(type_name, "");
 				if (null != udti)
 				{
 					VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);

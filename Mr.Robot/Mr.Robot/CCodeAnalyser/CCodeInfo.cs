@@ -119,6 +119,71 @@ namespace Mr.Robot
 			}
 			return null;
 		}
+
+		#region 以下方法,是针对代码解析结果的各种操作(查找,判断...)
+		/// <summary>
+		/// 根据函数名查找函数的解析结果
+		/// </summary>
+		public FuncParseInfo FindFuncParseInfo(string fun_name)
+		{
+			FuncParseInfo retFuncInfo = null;
+			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, this.FuncDeclareList)))
+			{
+				return retFuncInfo;
+			}
+			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, this.FunDefineList)))
+			{
+				return retFuncInfo;
+			}
+			return null;																// 没找到
+		}
+
+		static FuncParseInfo SearchFuncStructInfoList(string fun_name, List<FuncParseInfo> funInfoList)
+		{
+			foreach (FuncParseInfo fsi in funInfoList)
+			{
+				if (fsi.Name.Equals(fun_name))
+				{
+					return fsi;
+				}
+			}
+			return null;
+		}
+
+
+		/// <summary>
+		/// 根据变量名查找全局变量
+		/// </summary>
+		public VariableInfo FindGlobalVarInfoByName(string var_name)
+		{
+			VariableInfo retVarInfo = null;
+			if (null != (retVarInfo = SearchVariableList(var_name, this.GlobalDeclareList)))
+			{
+				return retVarInfo;
+			}
+			else if (null != (retVarInfo = SearchVariableList(var_name, this.GlobalDefineList)))
+			{
+				return retVarInfo;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		static VariableInfo SearchVariableList(string var_name, List<VariableInfo> var_list)
+		{
+			foreach (VariableInfo vi in var_list)
+			{
+				if (vi.VarName.Equals(var_name))
+				{
+					return vi;
+				}
+			}
+			return null;
+		}
+		#endregion
+
 	}
 
 	/// <summary>
@@ -171,106 +236,4 @@ namespace Mr.Robot
 		public string OldName = string.Empty;
 		public string NewName = string.Empty;
 	}
-
-	/// <summary>
-	/// C代码解析结果类: 包含一个源文件解析信息和其包含的头文件解析信息列表
-	/// </summary>
-	public class CodeParseInfo
-	{
-		public FileParseInfo SourceParseInfo;											// 源文件解析信息
-
-		#region 以下方法,是针对代码解析结果的各种操作(查找,判断...)
-		/// <summary>
-		/// 根据函数名查找函数的解析结果
-		/// </summary>
-		public FuncParseInfo FindFuncParseInfo(string fun_name)
-		{
-			FuncParseInfo retFuncInfo = null;
-			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, SourceParseInfo.FuncDeclareList)))
-			{
-				return retFuncInfo;
-			}
-			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, SourceParseInfo.FunDefineList)))
-			{
-				return retFuncInfo;
-			}
-			return null;																// 没找到
-		}
-
-		static FuncParseInfo SearchFuncStructInfoList(string fun_name, List<FuncParseInfo> funInfoList)
-		{
-			foreach (FuncParseInfo fsi in funInfoList)
-			{
-				if (fsi.Name.Equals(fun_name))
-				{
-					return fsi;
-				}
-			}
-			return null;
-		}
-
-
-		/// <summary>
-		/// 根据变量名查找全局变量
-		/// </summary>
-		public VariableInfo FindGlobalVarInfoByName(string var_name)
-		{
-			VariableInfo retVarInfo = null;
-			if (null != (retVarInfo = SearchVariableList(var_name, this.SourceParseInfo.GlobalDeclareList)))
-			{
-				return retVarInfo;
-			}
-			else if (null != (retVarInfo = SearchVariableList(var_name, this.SourceParseInfo.GlobalDefineList)))
-			{
-				return retVarInfo;
-			}
-			else
-			{
-				return null;
-			}
-		}
-
-		static VariableInfo SearchVariableList(string var_name, List<VariableInfo> var_list)
-		{
-			foreach (VariableInfo vi in var_list)
-			{
-				if (vi.VarName.Equals(var_name))
-				{
-					return vi;
-				}
-			}
-			return null;
-		}
-
-		public TypeDefineInfo FindTypeDefInfo(string type_name)
-		{
-			TypeDefineInfo tdi = null;
-			if (null != (tdi = this.SourceParseInfo.FindTypeDefInfo(type_name)))
-			{
-				return tdi;
-			}
-			return null;
-		}
-
-		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name, string category_name)
-		{
-			TypeDefineInfo tdi = null;
-			string new_type_name = string.Empty;
-			while (true)
-			{
-				tdi = FindTypeDefInfo(type_name);
-				if (null != tdi)
-				{
-					type_name = tdi.OldName;
-				}
-				else
-				{
-					break;
-				}
-			}
-			return this.SourceParseInfo.FindUsrDefTypeInfo(type_name, category_name);
-		}
-		#endregion
-	}
-
 }

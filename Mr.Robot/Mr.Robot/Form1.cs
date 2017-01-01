@@ -106,13 +106,7 @@ namespace Mr.Robot
             lvBranchList.Enabled = false;
         }
 
-		List<CodeParseInfo> _ccodeParseResultList = new List<CodeParseInfo>();
-
-		public List<CodeParseInfo> CCodeParseResultList
-		{
-			get { return _ccodeParseResultList; }
-			set { _ccodeParseResultList = value; }
-		}
+		public List<FileParseInfo> CSourceParseInfoList = new List<FileParseInfo>();
 
 		/// <summary>
 		/// 源文件列表控件选中状态改变
@@ -150,12 +144,12 @@ namespace Mr.Robot
 		void UpdateFunctionListViewCtrl(string sourceFileName)
 		{
 			lvFunctionList.Items.Clear();
-			foreach (CodeParseInfo srcResult in CCodeParseResultList)
+			foreach (FileParseInfo srcInfo in CSourceParseInfoList)
 			{
 				string path;
-				if (sourceFileName == IOProcess.GetFileName(srcResult.SourceParseInfo.FullName, out path))
+				if (sourceFileName == IOProcess.GetFileName(srcInfo.FullName, out path))
 				{
-					foreach (FuncParseInfo functionInfo in srcResult.SourceParseInfo.FunDefineList)
+					foreach (FuncParseInfo functionInfo in srcInfo.FunDefineList)
 					{
 						ListViewItem item = new ListViewItem(functionInfo.Name
                             //+ ": "
@@ -206,7 +200,7 @@ namespace Mr.Robot
         /// <param varName="e"></param>
         private void btnStartFile_Click(object sender, EventArgs e)
         {
-            CCodeParseResultList.Clear();
+            CSourceParseInfoList.Clear();
             List<string> csfList = new List<string>();
             foreach (ListViewItem item in lvFileList.Items)
             {
@@ -219,7 +213,7 @@ namespace Mr.Robot
                     }
                 }
             }
-            CCodeParseResultList
+            CSourceParseInfoList
                 = CCodeAnalyser.CFileListProcess(csfList, _CHeaderFilesList);
 
             lvFunctionList.Enabled = true;
@@ -240,7 +234,7 @@ namespace Mr.Robot
         /// <param varName="e"></param>
         private void btnStartFunction_Click(object sender, EventArgs e)
         {
-            if (   0 == CCodeParseResultList.Count
+            if (   0 == CSourceParseInfoList.Count
                 || 0 == lvFileList.SelectedItems.Count
                 || 0 == lvFileList.SelectedItems[0].SubItems.Count)
             {
@@ -255,7 +249,7 @@ namespace Mr.Robot
                 if (item.Checked)
                 {
                     functionName = item.Text;
-                    CCodeAnalyser.FunctionAnalysis(fullName, functionName, CCodeParseResultList);
+                    CCodeAnalyser.FunctionAnalysis(fullName, functionName, CSourceParseInfoList);
                 }
             }
         }
