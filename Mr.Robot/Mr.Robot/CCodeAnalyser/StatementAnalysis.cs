@@ -45,15 +45,15 @@ namespace Mr.Robot
 		/// <summary>
 		/// 简单语句分析(函数内)
 		/// </summary>
-		public static void SimpleStatementAnalyze(string statement_str,
-											FileParseInfo parse_info,
-											FuncAnalysisContext func_ctx)
+		public static void SimpleStatementAnalyze(	string statement_str,
+													FileParseInfo parse_info,
+													FuncAnalysisContext func_ctx)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
 			List<StatementComponent> componentList = GetComponents(statement_str, parse_info);
 			if (statement_str.StartsWith("typedef"))
 			{
-				CCodeAnalyser.TypeDefProc2(componentList);
+				TypeDefProc2(componentList, parse_info, func_ctx);
 			}
 			else
 			{
@@ -66,7 +66,7 @@ namespace Mr.Robot
 			return CommonProcess.LineStringCat(code_list, code_scope.Start, code_scope.End).Trim();
 		}
 
-        public static void ExpressionAnalysis(List<StatementComponent> componentList,
+        public static void ExpressionAnalysis(	List<StatementComponent> componentList,
 												FileParseInfo parse_info,
 												FuncAnalysisContext func_ctx)
         {
@@ -108,7 +108,7 @@ namespace Mr.Robot
             return componentList;
         }
 
-        public static List<MeaningGroup> GetMeaningGroups(List<StatementComponent> componentList,
+        public static List<MeaningGroup> GetMeaningGroups(	List<StatementComponent> componentList,
 															FileParseInfo parse_info,
 															FuncAnalysisContext func_ctx)
 		{
@@ -183,6 +183,11 @@ namespace Mr.Robot
 			{
 				return retGroup;
 			}
+			// 基本类型名以外的关键字?
+			else if (null != (retGroup = GetSingleKeywordGroup(componentList, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
 			// 是变量名?
 			else if (null != (retGroup = GetVarNameGroup(componentList, ref idx, groupList, parse_info, func_ctx)))
 			{
@@ -211,7 +216,14 @@ namespace Mr.Robot
             else if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
 			{
 				retGroup = new MeaningGroup();
-				retGroup.Type = MeaningGroupType.Unknown;
+				if (componentList[idx].Type == StatementComponentType.Identifier)
+				{
+					retGroup.Type = MeaningGroupType.Identifier;
+				}
+				else
+				{
+					retGroup.Type = MeaningGroupType.Unknown;
+				}
 				retGroup.ComponentList.Add(componentList[idx]);
 				retGroup.Text = componentList[idx].Text;
 				idx += 1;
@@ -322,6 +334,7 @@ namespace Mr.Robot
 					else
 					{
 						retSC = new StatementComponent(idStr);
+						retSC.Type = StatementComponentType.Identifier;
 						break;
 					}
 				}
@@ -829,6 +842,28 @@ namespace Mr.Robot
 			return retGroup;
 		}
 
+		static MeaningGroup GetSingleKeywordGroup(List<StatementComponent> componentList, ref int idx, FileParseInfo parse_info)
+		{
+			if ("typedef" == componentList[idx].Text
+				|| "auto" == componentList[idx].Text
+				|| "break" == componentList[idx].Text
+				|| "case" == componentList[idx].Text
+				|| "continue" == componentList[idx].Text
+				|| "default" == componentList[idx].Text
+				|| "goto" == componentList[idx].Text
+				|| "return" == componentList[idx].Text
+				|| "sizeof" == componentList[idx].Text)
+			{
+				MeaningGroup retGroup = new MeaningGroup();
+				retGroup.Type = MeaningGroupType.SingleKeyword;
+				retGroup.ComponentList.Add(componentList[idx]);
+				retGroup.Text = componentList[idx].Text;
+				idx += 1;
+				return retGroup;
+			}
+			return null;
+		}
+
 		static MeaningGroup GetVarNameGroup(List<StatementComponent> componentList,
                                             ref int idx,
                                             List<MeaningGroup> groupList,
@@ -1106,21 +1141,38 @@ namespace Mr.Robot
 			}
 			return null;
 		}
+
+		public static void TypeDefProc2(List<StatementComponent> component_list,
+										FileParseInfo parse_info,
+										FuncAnalysisContext func_ctx)
+		{
+			// 提取含义分组
+			List<MeaningGroup> meaningGroupList = GetMeaningGroups(component_list, parse_info, func_ctx);
+			if (3 == meaningGroupList.Count
+				&& "typedef" == meaningGroupList[0].Text
+				&& meaningGroupList[1].Type == MeaningGroupType.VariableType
+				&& meaningGroupList[2].Type == MeaningGroupType.Identifier)
+			{
+				TypeDefineInfo tdi = new TypeDefineInfo();
+				tdi.OldName = meaningGroupList[1].Text;
+				tdi.NewName = meaningGroupList[2].Text;
+				if (tdi.OldName != tdi.NewName)
+				{
+					parse_info.TypeDefineList.Add(tdi);
+				}
+			}
+		}
 	}
 
 	public enum StatementComponentType
 	{
 		Invalid,				// 无效
-		Unknown,				// 未知
-
+		Identifier,				// 其它标识符
         ConstantNumber,         // 数值常量
         String,                 // 字符串
         Char,                   // 字符
-
 		FunctionName,		    // 函数名
         Operator,               // 运算符
-
-		Expression,				// 表达式
 	}
 
 	public class StatementComponent
@@ -1171,6 +1223,8 @@ namespace Mr.Robot
 		OtherOperator,				// 其它运算符
 		Constant,					// 常量
 		CodeBlock,					// "{"和"}"括起的代码段
+		SingleKeyword,				// 基本类型名以外的单个的关键字(保留字)
+		Identifier,					// 其它标识符
 	}
 
 	/// <summary>

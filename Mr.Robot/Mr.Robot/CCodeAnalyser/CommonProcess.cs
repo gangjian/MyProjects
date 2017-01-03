@@ -96,6 +96,7 @@ namespace Mr.Robot
 							break;
 						case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:
 						case E_CHAR_TYPE.E_CTYPE_SYMBOL:
+						default:
 							if (false == startFlag)
 							{
 								// 标识符结束, 返回该符号
@@ -109,9 +110,8 @@ namespace Mr.Robot
 								// 标识符结束
 								goto RET_IDF;
 							}
-						default:
-							ErrReport();
-							return null;
+							//ErrReport();
+							//return null;
 					}
 				}
 

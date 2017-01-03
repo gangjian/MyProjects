@@ -48,12 +48,16 @@ namespace Mr.Robot
 
 			List<FileParseInfo> parseInfoList = new List<FileParseInfo>();
 
+			int count = 0;
+			int total = SourceNameList.Count;
 			// 逐个解析源文件
 			foreach (string srcName in SourceNameList)
 			{
 				FileParseInfo parseInfo = new FileParseInfo(srcName);
 				CFileProcess(srcName, ref parseInfo);
 				parseInfoList.Add(parseInfo);
+				count++;
+				System.Diagnostics.Trace.WriteLine(srcName + " : " + count.ToString() + "/" + total.ToString());
 			}
 
 			return parseInfoList;
@@ -82,7 +86,7 @@ namespace Mr.Robot
 //          Save2File(codeList, srcName + ".bak");
 
 			// 文件解析
-			CCodeFileAnalysis(codeList, ref fileInfo);
+			CCodeFileAnalysis(srcName, codeList, ref fileInfo);
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
 		}
@@ -123,7 +127,7 @@ namespace Mr.Robot
 				{
 					// 只包含块注释
 					int idx_s = idx2;
-					int idx_e = rdLine.IndexOf("*/");
+					int idx_e = rdLine.IndexOf("*/", idx_s + 2);
 					while (-1 == idx_e)
 					{
 						if (rdLine.Length > idx_s)
@@ -406,9 +410,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得include头文件的解析情报
 		/// </summary>
-		/// <param varName="incFileName"></param>
-		/// <param varName="includeInfoList"></param>
-		/// <returns></returns>
 		static void ParseIncludeHeaderFile(string incFileName,
 										   ref FileParseInfo fi)
 		{
@@ -441,7 +442,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 文件代码解析
 		/// </summary>
-		public static void CCodeFileAnalysis(List<string> code_list,
+		public static void CCodeFileAnalysis(string src_name,
+											 List<string> code_list,
 											 ref FileParseInfo parse_info)
 		{
 			System.Diagnostics.Trace.Assert((null != code_list));
@@ -497,6 +499,13 @@ namespace Mr.Robot
 								parse_info.FuncDeclareList.Add(cfi);
 							}
 						}
+						else
+						{
+							// TODO(20170103): 这里有个全局函数指针不能处理, 暂时跳过了, 回头要对应
+							// \MTbot\TestData\Honda18HMI_soft\software\src\can\drv\FCanDrv
+							// fcan_drv_api.c 行号: 133
+							foundPos = CommonProcess.FindNextSpecIdentifier(";", code_list, search_pos);
+						}
 					}
 					else if ("#" == nextIdtf.Text)
 					{
@@ -537,33 +546,28 @@ namespace Mr.Robot
 							continue;
 						}
 					}
-					else if (";" == nextIdtf.Text)
+					else if (";" == nextIdtf.Text && 0 != qualifierList.Count)
 					{
-						// typedef类型定义
-						if ((0 != qualifierList.Count)
-							&& ("typedef" == qualifierList[0].Text))
+						string statementStr = string.Empty;
+						if ("typedef" == qualifierList[0].Text)
 						{
-							TypeDefProcess(code_list, qualifierList, ref parse_info);
+							for (int i = 0; i < qualifierList.Count; i++)
+							{
+								statementStr += qualifierList[i].Text + " ";
+							}
 						}
-						// 注意用户定义类型后面的分号不是全局量
-						else if (qualifierList.Count >= 2)
+						else
 						{
+							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
 							GlobalVarProcess(qualifierList, ref parse_info);
 
-							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
-							string statementStr = StatementAnalysis.GetStatementStr(code_list,
+							statementStr = StatementAnalysis.GetStatementStr(code_list,
 								new CodeScope(qualifierList.First().Position, nextIdtf.Position));
-							StatementAnalysis.SimpleStatementAnalyze(statementStr, parse_info, null);
 						}
+						StatementAnalysis.SimpleStatementAnalyze(statementStr.Trim(), parse_info, null);
 					}
-					//else if ("," == nextId)
-					//{
-					//	GlobalVarProcess(qualifierList, ref fi, header_info_list);
-					//	continue;
-					//}
 					else
 					{
-						// Do Nothing
 					}
 					qualifierList.Clear();
 				}
@@ -573,9 +577,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数检测(声明, 定义)
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="lineIdx"></param>
-		/// <param varName="startIdx"></param>
 		static FuncParseInfo FunctionDetectProcess(List<string> codeList,
 													List<CodeIdentifier> qualifierList,
 													ref CodePosition searchPos,
@@ -656,7 +657,7 @@ namespace Mr.Robot
 			else
 			{
 				// 估计是出错了
-                CommonProcess.ErrReport();
+				//CommonProcess.ErrReport();	// TODO(20170103)
 				return null;
 			}
 			// 更新index
@@ -993,34 +994,41 @@ namespace Mr.Robot
 			}
 			MacroDefineInfo mdi = new MacroDefineInfo();
 			mdi.Name = nextIdtf.Text;
-
-			string leftStr = codeList[sPos.RowNum].Substring(sPos.ColNum);
-			if (leftStr.StartsWith("("))
+			if (sPos.RowNum > nextIdtf.Position.RowNum)
 			{
-                CodePosition ePos = CommonProcess.FindNextSymbol(codeList, sPos, ')');
-				if (null == ePos)
-				{
-					return;
-				}
-				mdi.ParaList = GetParaList(codeList, sPos, ePos);
-				sPos = ePos;
-				sPos.ColNum += 1;
+				// 换行了, 说明到行末结尾了, 宏定义已经结束
+				cfi.MacroDefineList.Add(mdi);
 			}
-
-			string defineValStr = codeList[sPos.RowNum].Substring(sPos.ColNum);
-			while (defineValStr.EndsWith(@"\"))
+			else
 			{
-				defineValStr = defineValStr.Remove(defineValStr.Length - 1);
+				string leftStr = codeList[sPos.RowNum].Substring(sPos.ColNum);
+				if (leftStr.StartsWith("("))
+				{
+					CodePosition ePos = CommonProcess.FindNextSymbol(codeList, sPos, ')');
+					if (null == ePos)
+					{
+						return;
+					}
+					mdi.ParaList = GetParaList(codeList, sPos, ePos);
+					sPos = ePos;
+					sPos.ColNum += 1;
+				}
+
+				string defineValStr = codeList[sPos.RowNum].Substring(sPos.ColNum);
+				while (defineValStr.EndsWith(@"\"))
+				{
+					defineValStr = defineValStr.Remove(defineValStr.Length - 1);
+					sPos.RowNum += 1;
+					sPos.ColNum = 0;
+					defineValStr += codeList[sPos.RowNum].Substring(sPos.ColNum);
+				}
+				mdi.Value = defineValStr.Trim();
+				cfi.MacroDefineList.Add(mdi);
+
 				sPos.RowNum += 1;
 				sPos.ColNum = 0;
-				defineValStr += codeList[sPos.RowNum].Substring(sPos.ColNum);
+				searchPos = new CodePosition(sPos);
 			}
-			mdi.Value = defineValStr.Trim();
-			cfi.MacroDefineList.Add(mdi);
-
-			sPos.RowNum += 1;
-			sPos.ColNum = 0;
-			searchPos = new CodePosition(sPos);
 		}
 
 		/// <summary>
@@ -1123,36 +1131,6 @@ namespace Mr.Robot
 				}
 			}
 			return false;
-		}
-
-		/// <summary>
-		/// 类型定义处理
-		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="qualifierList"></param>
-		/// <param varName="cfi"></param>
-		static void TypeDefProcess(List<string> codeList, List<CodeIdentifier> qualifierList, ref FileParseInfo cfi)
-		{
-			TypeDefineInfo tdi = new TypeDefineInfo();
-			string old_type = "";
-			for (int i = 1; i < qualifierList.Count; i++)
-			{
-				if (qualifierList.Count - 1 == i)
-				{
-					tdi.NewName = qualifierList[i].Text;
-					tdi.OldName = old_type.Trim();
-				}
-				else
-				{
-					old_type += (" " + qualifierList[i].Text);
-				}
-			}
-			cfi.TypeDefineList.Add(tdi);
-		}
-
-		public static void TypeDefProc2(List<StatementComponent> component_list)
-		{
-
 		}
 
         static string GetAnonymousTypeName(FileParseInfo fi)
