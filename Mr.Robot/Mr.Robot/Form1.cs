@@ -15,8 +15,8 @@ namespace Mr.Robot
 	public partial class Form1 : Form
 	{
 	#region 全局字段
-		List<string> _CSourceFilesList = new List<string>();
-		List<string> _CHeaderFilesList = new List<string>();
+		List<string> CSourceFileList = new List<string>();
+		List<string> CHeaderFileList = new List<string>();
 	#endregion
 
 		public Form1()
@@ -75,19 +75,19 @@ namespace Mr.Robot
 				return;
 			}
 
-			_CSourceFilesList = new List<string>();
-			_CHeaderFilesList = new List<string>();
+			this.CSourceFileList = new List<string>();
+			this.CHeaderFileList = new List<string>();
             // 遍历文件夹, 取得所有.c源文件和.h头文件
-            IOProcess.GetAllCCodeFiles(path_name, ref _CSourceFilesList, ref _CHeaderFilesList);
+            IOProcess.GetAllCCodeFiles(path_name, ref this.CSourceFileList, ref CHeaderFileList);
 
-            UpdateFileListViewCtrl(_CSourceFilesList);
+            UpdateFileListViewCtrl(this.CSourceFileList);
 		}
 
-        void UpdateFileListViewCtrl(List<string> CSourceFileList)
+        void UpdateFileListViewCtrl(List<string> src_list)
         {
             lvFileList.Items.Clear();
             // 将得到的.c源文件加入UI文件列表
-            foreach (string cfile in CSourceFileList)
+            foreach (string cfile in src_list)
             {
                 // 分别取得文件名和路径名
                 string path;
@@ -144,7 +144,7 @@ namespace Mr.Robot
 		void UpdateFunctionListViewCtrl(string sourceFileName)
 		{
 			lvFunctionList.Items.Clear();
-			foreach (FileParseInfo srcInfo in CSourceParseInfoList)
+			foreach (FileParseInfo srcInfo in this.CSourceParseInfoList)
 			{
 				string path;
 				if (sourceFileName == IOProcess.GetFileName(srcInfo.FullName, out path))
@@ -168,8 +168,6 @@ namespace Mr.Robot
         /// <summary>
         /// 文件列表check all
         /// </summary>
-        /// <param varName="sender"></param>
-        /// <param varName="e"></param>
         private void cbxFile_CheckedChanged(object sender, EventArgs e)
         {
             CheckAllListViewItems(lvFileList, cbxFile.Checked);
@@ -178,8 +176,6 @@ namespace Mr.Robot
         /// <summary>
         /// 函数列表check all
         /// </summary>
-        /// <param varName="sender"></param>
-        /// <param varName="e"></param>
         private void cbxFunction_CheckedChanged(object sender, EventArgs e)
         {
             CheckAllListViewItems(lvFunctionList, cbxFunction.Checked);
@@ -196,11 +192,9 @@ namespace Mr.Robot
         /// <summary>
         /// 文件列表解析开始按钮Click
         /// </summary>
-        /// <param varName="sender"></param>
-        /// <param varName="e"></param>
         private void btnStartFile_Click(object sender, EventArgs e)
         {
-            CSourceParseInfoList.Clear();
+            this.CSourceParseInfoList.Clear();
             List<string> csfList = new List<string>();
             foreach (ListViewItem item in lvFileList.Items)
             {
@@ -214,8 +208,8 @@ namespace Mr.Robot
                 }
             }
 			CCodeAnalyser CAnalyser = new CCodeAnalyser();
-            CSourceParseInfoList
-				= CAnalyser.CFileListProcess(csfList, _CHeaderFilesList);
+            this.CSourceParseInfoList
+								= CAnalyser.CFileListProcess(csfList, CHeaderFileList);
 
             lvFunctionList.Enabled = true;
             lvVariableList.Enabled = true;
@@ -231,8 +225,6 @@ namespace Mr.Robot
         /// <summary>
         /// 函数解析开始按钮Click
         /// </summary>
-        /// <param varName="sender"></param>
-        /// <param varName="e"></param>
         private void btnStartFunction_Click(object sender, EventArgs e)
         {
             if (   0 == CSourceParseInfoList.Count
