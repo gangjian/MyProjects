@@ -4,26 +4,43 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Threading;
 
 namespace Mr.Robot
 {
 	public partial class CCodeAnalyser
 	{
 		#region 全局字段
-		public List<string> HeaderNameList = new List<string>();					// 头文件名列表
-		public List<string> SourceNameList = new List<string>();					// 源文件名列表
+		List<string> HeaderNameList = new List<string>();					// 头文件名列表
+		List<string> SourceNameList = new List<string>();					// 源文件名列表
 		#endregion
 
 		#region 向外提供的接口方法
-		/// <summary>
-		/// ".c"源文件处理
-		/// </summary>
-		/// <param varName="srcName"></param>
-		public List<FileParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
+
+		public EventHandler UpdateProgress = null;
+
+		public void ProcessStart(List<string> src_list, List<string> header_list)
 		{
 			// 初始化
-			this.SourceNameList = srcFileList;
-			this.HeaderNameList = hdFileList;
+			this.SourceNameList = src_list;
+			this.HeaderNameList = header_list;
+			Thread workerThread = new Thread(new ThreadStart(ProcessMain));
+			workerThread.Start();
+		}
+
+		void ProcessMain()
+		{
+
+		}
+
+		/// <summary>
+		/// ".c"源文件列表处理
+		/// </summary>
+		public List<FileParseInfo> CFileListProcess(List<string> src_list, List<string> header_list)
+		{
+			// 初始化
+			this.SourceNameList = src_list;
+			this.HeaderNameList = header_list;
 
 			List<FileParseInfo> parseInfoList = new List<FileParseInfo>();
 
@@ -36,7 +53,9 @@ namespace Mr.Robot
 				CFileProcess(srcName, ref parseInfo);
 				parseInfoList.Add(parseInfo);
 				count++;
-				System.Diagnostics.Trace.WriteLine(srcName + " : " + count.ToString() + "/" + total.ToString());
+				string progressStr = srcName + " : " + count.ToString() + "/" + total.ToString();
+				System.Diagnostics.Trace.WriteLine(progressStr);
+				ReportProgress(progressStr);
 			}
 
 			return parseInfoList;
@@ -44,6 +63,14 @@ namespace Mr.Robot
 		#endregion
 
 		// 以下都是内部调用方法
+
+		void ReportProgress(string progress_str)
+		{
+			if (null != this.UpdateProgress)
+			{
+				this.UpdateProgress(progress_str, null);
+			}
+		}
 
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理

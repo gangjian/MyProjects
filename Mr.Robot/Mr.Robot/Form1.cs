@@ -208,6 +208,8 @@ namespace Mr.Robot
                 }
             }
 			CCodeAnalyser CAnalyser = new CCodeAnalyser();
+
+			CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
             this.CSourceParseInfoList
 								= CAnalyser.CFileListProcess(csfList, CHeaderFileList);
 
@@ -221,6 +223,31 @@ namespace Mr.Robot
                 UpdateFunctionListViewCtrl(lvFileList.SelectedItems[0].Text);
             }
         }
+
+		void UpdateAnalyserProgress(object sender, EventArgs args)
+		{
+			if (null == sender)
+			{
+				return;
+			}
+			string progressStr = sender as string;
+			UpdateProgress(progressStr);
+		}
+
+		delegate void UpdateProgressDel(string text);
+
+		void UpdateProgress(string progress_str)
+		{
+			if (this.InvokeRequired)
+			{
+				UpdateProgressDel del = new UpdateProgressDel(UpdateProgress);
+				this.BeginInvoke(del, new object[] { progress_str });
+			}
+			else
+			{
+				this.labelStatus.Text = progress_str;
+			}
+		}
 
         /// <summary>
         /// 函数解析开始按钮Click
