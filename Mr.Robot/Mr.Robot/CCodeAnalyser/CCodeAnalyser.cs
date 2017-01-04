@@ -7,32 +7,11 @@ using System.IO;
 
 namespace Mr.Robot
 {
-	public static partial class CCodeAnalyser
+	public partial class CCodeAnalyser
 	{
 		#region 全局字段
-		static List<string> _headerNameList = new List<string>();
-
-		public static List<string> HeaderNameList								// 所有头文件名列表
-		{
-			get { return CCodeAnalyser._headerNameList; }
-			set { CCodeAnalyser._headerNameList = value; }
-		}
-
-		static List<string> _sourceNameList = new List<string>();
-
-		public static List<string> SourceNameList								// 源文件名列表, 现状通常一次解析只有一个源文件
-		{
-			get { return CCodeAnalyser._sourceNameList; }
-			set { CCodeAnalyser._sourceNameList = value; }
-		}
-
-		static List<FileParseInfo> _totalParsedInfoList = new List<FileParseInfo>();
-
-		public static List<FileParseInfo> TotalParsedInfoList					// 所有已经解析过的文件的解析情报列表(暂未使用)
-		{
-			get { return CCodeAnalyser._totalParsedInfoList; }
-			set { CCodeAnalyser._totalParsedInfoList = value; }
-		}
+		public List<string> HeaderNameList = new List<string>();					// 头文件名列表
+		public List<string> SourceNameList = new List<string>();					// 源文件名列表
 		#endregion
 
 		#region 向外提供的接口方法
@@ -40,11 +19,11 @@ namespace Mr.Robot
 		/// ".c"源文件处理
 		/// </summary>
 		/// <param varName="srcName"></param>
-		public static List<FileParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
+		public List<FileParseInfo> CFileListProcess(List<string> srcFileList, List<string> hdFileList)
 		{
 			// 初始化
-			SourceNameList = srcFileList;
-			HeaderNameList = hdFileList;
+			this.SourceNameList = srcFileList;
+			this.HeaderNameList = hdFileList;
 
 			List<FileParseInfo> parseInfoList = new List<FileParseInfo>();
 
@@ -69,10 +48,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		/// <param varName="srcName"></param>
-		/// <param varName="includeInfoList"></param>
-		/// <returns></returns>
-		static void CFileProcess(string srcName, ref FileParseInfo fileInfo)
+		void CFileProcess(string srcName, ref FileParseInfo fileInfo)
 		{
 			if (null == fileInfo)
 			{
@@ -174,12 +150,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 预编译处理
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="fi"></param>
-		/// <param varName="includeInfoList"></param>
-		/// <returns></returns>
-		public static List<string> PrecompileProcess(List<string> codeList,
-													 ref FileParseInfo fi)
+		public List<string> PrecompileProcess(	List<string> codeList,
+												ref FileParseInfo fi)
 		{
 			List<string> retList = new List<string>();
 			Stack<ConditionalCompilationInfo> ccStack = new Stack<ConditionalCompilationInfo>(); // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
@@ -410,8 +382,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得include头文件的解析情报
 		/// </summary>
-		static void ParseIncludeHeaderFile(string incFileName,
-										   ref FileParseInfo fi)
+		void ParseIncludeHeaderFile(string incFileName,
+									ref FileParseInfo fi)
 		{
 			// 先在已解析过的文件list里找
 			foreach (string fname in fi.IncFileList)
@@ -424,7 +396,7 @@ namespace Mr.Robot
 			}
 
 			// 如果上一步没找到, 证明还没被解析, 则在全部头文件list里找
-			foreach (var hd_name in HeaderNameList)
+			foreach (var hd_name in this.HeaderNameList)
 			{
 				string path;
 				string fName = IOProcess.GetFileName(hd_name, out path);

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Mr.Robot
 {
-	public static partial class CCodeAnalyser
+	public partial class CCodeAnalyser
 	{
         /// <summary>
         /// 函数解析

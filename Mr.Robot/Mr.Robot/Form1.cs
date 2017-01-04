@@ -213,8 +213,9 @@ namespace Mr.Robot
                     }
                 }
             }
+			CCodeAnalyser CAnalyser = new CCodeAnalyser();
             CSourceParseInfoList
-                = CCodeAnalyser.CFileListProcess(csfList, _CHeaderFilesList);
+				= CAnalyser.CFileListProcess(csfList, _CHeaderFilesList);
 
             lvFunctionList.Enabled = true;
             lvVariableList.Enabled = true;
