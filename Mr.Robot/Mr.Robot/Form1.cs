@@ -17,6 +17,8 @@ namespace Mr.Robot
 	#region 全局字段
 		List<string> CSourceFileList = new List<string>();
 		List<string> CHeaderFileList = new List<string>();
+
+		CCodeAnalyser CAnalyser = null;
 	#endregion
 
 		public Form1()
@@ -195,7 +197,7 @@ namespace Mr.Robot
         private void btnStartFile_Click(object sender, EventArgs e)
         {
             this.CSourceParseInfoList.Clear();
-            List<string> csfList = new List<string>();
+            List<string> srcList = new List<string>();
             foreach (ListViewItem item in lvFileList.Items)
             {
                 if (item.Checked)
@@ -203,25 +205,26 @@ namespace Mr.Robot
                     if (item.SubItems.Count >= 2)
                     {
                         string fpath = item.SubItems[1].Text;
-                        csfList.Add(fpath);
+                        srcList.Add(fpath);
                     }
                 }
             }
-			CCodeAnalyser CAnalyser = new CCodeAnalyser();
+			this.CAnalyser = new CCodeAnalyser();
+			this.CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
+			this.CAnalyser.ProcessStart(srcList, this.CHeaderFileList);
 
-			CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
-            this.CSourceParseInfoList
-								= CAnalyser.CFileListProcess(csfList, CHeaderFileList);
+			//this.CSourceParseInfoList
+			//					= CAnalyser.CFileListProcess(srcList, CHeaderFileList);
 
-            lvFunctionList.Enabled = true;
-            lvVariableList.Enabled = true;
-            lvBranchList.Enabled = true;
-            if (0 != lvFileList.SelectedItems.Count
-                && lvFileList.SelectedItems[0].Checked)
-            {
-                labelStatus.Text = lvFileList.SelectedItems[0].Text;
-                UpdateFunctionListViewCtrl(lvFileList.SelectedItems[0].Text);
-            }
+			//lvFunctionList.Enabled = true;
+			//lvVariableList.Enabled = true;
+			//lvBranchList.Enabled = true;
+			//if (0 != lvFileList.SelectedItems.Count
+			//	&& lvFileList.SelectedItems[0].Checked)
+			//{
+			//	labelStatus.Text = lvFileList.SelectedItems[0].Text;
+			//	UpdateFunctionListViewCtrl(lvFileList.SelectedItems[0].Text);
+			//}
         }
 
 		void UpdateAnalyserProgress(object sender, EventArgs args)

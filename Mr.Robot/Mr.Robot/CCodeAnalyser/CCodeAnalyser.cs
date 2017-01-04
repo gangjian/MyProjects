@@ -18,6 +18,7 @@ namespace Mr.Robot
 		#region 向外提供的接口方法
 
 		public EventHandler UpdateProgress = null;
+		List<FileParseInfo> ParseInfoList = null;
 
 		public void ProcessStart(List<string> src_list, List<string> header_list)
 		{
@@ -30,7 +31,7 @@ namespace Mr.Robot
 
 		void ProcessMain()
 		{
-
+			this.ParseInfoList = CFileListProcess();
 		}
 
 		/// <summary>
@@ -41,9 +42,12 @@ namespace Mr.Robot
 			// 初始化
 			this.SourceNameList = src_list;
 			this.HeaderNameList = header_list;
+			return CFileListProcess();
+		}
 
+		public List<FileParseInfo> CFileListProcess()
+		{
 			List<FileParseInfo> parseInfoList = new List<FileParseInfo>();
-
 			int count = 0;
 			int total = SourceNameList.Count;
 			// 逐个解析源文件
@@ -57,7 +61,6 @@ namespace Mr.Robot
 				System.Diagnostics.Trace.WriteLine(progressStr);
 				ReportProgress(progressStr);
 			}
-
 			return parseInfoList;
 		}
 		#endregion
