@@ -38,7 +38,7 @@ namespace UnitTestProject
 			FuncAnalysisContext analysisContext = new FuncAnalysisContext();
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, ctx);
 
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[0].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
@@ -65,7 +65,7 @@ namespace UnitTestProject
 			FuncAnalysisContext analysisContext = new FuncAnalysisContext();
 			StatementAnalysis.StatementAnalyze(root.childList[0], c_source_parse_info, analysisContext);
 
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[1].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
@@ -85,7 +85,7 @@ namespace UnitTestProject
 			StatementAnalysis.StatementAnalyze(root.childList[0], c_source_parse_info, analysisContext);
 			StatementAnalysis.StatementAnalyze(root.childList[1], c_source_parse_info, analysisContext);
 
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[2].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
@@ -146,7 +146,7 @@ namespace UnitTestProject
 			FuncAnalysisContext func_ctx = new FuncAnalysisContext();
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, localVarList);
 
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			// 第一条语句
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[0].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
@@ -182,7 +182,7 @@ namespace UnitTestProject
 			StatementAnalysis.StatementAnalyze(root.childList[0], c_source_parse_info, func_ctx);
 			StatementAnalysis.StatementAnalyze(root.childList[1], c_source_parse_info, func_ctx);
 			StatementAnalysis.StatementAnalyze(root.childList[2], c_source_parse_info, func_ctx);
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			// 第4句
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[3].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
@@ -205,7 +205,7 @@ namespace UnitTestProject
 				StatementAnalysis.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
 			}
 			// 第5句
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[4].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
@@ -227,7 +227,7 @@ namespace UnitTestProject
 				StatementAnalysis.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
 			}
 			// 第6句
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[5].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
@@ -249,7 +249,7 @@ namespace UnitTestProject
 				StatementAnalysis.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
 			}
 			// 第7句
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[6].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
@@ -271,7 +271,7 @@ namespace UnitTestProject
 				StatementAnalysis.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
 			}
 			// 第8句
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[7].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
@@ -290,7 +290,7 @@ namespace UnitTestProject
 				StatementAnalysis.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
 			}
 			// 第9句
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[8].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
@@ -312,7 +312,7 @@ namespace UnitTestProject
 				StatementAnalysis.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
 			}
 			// 第9句
-			List<string> codeList = c_source_parse_info.parsedCodeList;
+			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[9].Scope);
 			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
 			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);

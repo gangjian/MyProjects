@@ -38,7 +38,7 @@ namespace UnitTestProject
 			root_node = new StatementNode();
 			root_node.Type = StatementNodeType.Root;
 			root_node.Scope = funInfo.Scope;
-			CCodeAnalyser.GetFuncBlockStruct(code_parse_info.parsedCodeList, root_node);
+			CCodeAnalyser.GetFuncBlockStruct(code_parse_info.CodeList, root_node);
 			return code_parse_info;
 		}
 
@@ -79,7 +79,7 @@ namespace UnitTestProject
 			root_node = new StatementNode();
 			root_node.Type = StatementNodeType.Root;
 			root_node.Scope = funInfo.Scope;
-			CCodeAnalyser.GetFuncBlockStruct(code_parse_info.parsedCodeList, root_node);
+			CCodeAnalyser.GetFuncBlockStruct(code_parse_info.CodeList, root_node);
 			return code_parse_info;
 		}
 	}

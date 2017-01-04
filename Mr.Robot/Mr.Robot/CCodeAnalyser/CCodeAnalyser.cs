@@ -88,7 +88,7 @@ namespace Mr.Robot
 			List<string> codeList = RemoveComments(srcName);
 			// 预编译处理
 			codeList = PrecompileProcess(codeList, ref fileInfo);
-			fileInfo.parsedCodeList = codeList;
+			fileInfo.CodeList = codeList;
 //          Save2File(codeList, srcName + ".bak");
 
 			// 文件解析

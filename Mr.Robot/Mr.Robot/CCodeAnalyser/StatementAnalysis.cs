@@ -32,7 +32,7 @@ namespace Mr.Robot
 			{
 				case StatementNodeType.Simple:
 					// 取得完整的语句内容
-					List<string> codeList = parse_info.parsedCodeList;
+					List<string> codeList = parse_info.CodeList;
 					string statementStr = GetStatementStr(codeList, s_node.Scope);
 					SimpleStatementAnalyze(statementStr, parse_info, func_ctx);
 					break;

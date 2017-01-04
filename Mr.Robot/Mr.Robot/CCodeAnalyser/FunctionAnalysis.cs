@@ -24,7 +24,7 @@ namespace Mr.Robot
             StatementNode root = new StatementNode();
             root.Type = StatementNodeType.Root;
             root.Scope = funInfo.Scope;
-            GetFuncBlockStruct(CSourceParseInfo.parsedCodeList, root);
+            GetFuncBlockStruct(CSourceParseInfo.CodeList, root);
 
 			// 函数语句分析: 分析入出力
 			StatementAnalysis.FunctionStatementsAnalysis(root, CSourceParseInfo);
