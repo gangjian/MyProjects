@@ -1046,77 +1046,74 @@ namespace Mr.Robot
 			}
 
 			// 遍历查找宏名
-			foreach (MacroDefineInfo di in curFileInfo.MacroDefineList)
+			MacroDefineInfo mdi = curFileInfo.FindMacroDefInfo(idStr);
+			if (null != mdi)
 			{
-				// 判断宏名是否一致
-				if (idStr == di.Name)
+				string macroName = mdi.Name;
+				CodePosition macroPos = new CodePosition(foundPos);
+				int lineIdx = foundPos.RowNum;
+				string replaceStr = mdi.Value;
+				// 判断有无带参数
+				if (0 != mdi.ParaList.Count)
 				{
-					string macroName = di.Name;
-					CodePosition macroPos = new CodePosition(foundPos);
-					int lineIdx = foundPos.RowNum;
-					string replaceStr = di.Value;
-					// 判断有无带参数
-					if (0 != di.ParaList.Count)
+					// 取得实参
+					CodePosition sPos = new CodePosition(foundPos.RowNum, foundPos.ColNum + idStr.Length);
+					CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref sPos, out foundPos);
+					if ("(" != nextIdtf.Text)
 					{
-						// 取得实参
-						CodePosition sPos = new CodePosition(foundPos.RowNum, foundPos.ColNum + idStr.Length);
-                        CodeIdentifier nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref sPos, out foundPos);
-						if ("(" != nextIdtf.Text)
-						{
-                            CommonProcess.ErrReport();
-							break;
-						}
-						CodePosition leftBracket = foundPos;
-                        foundPos = CommonProcess.FindNextSymbol(codeList, sPos, ')');
-						if (null == foundPos)
-						{
-                            CommonProcess.ErrReport();
-							break;
-						}
-						nextIdtf.Text = CommonProcess.LineStringCat(codeList, macroPos, foundPos);
-						macroName = nextIdtf.Text;
-						List<string> realParas = GetParaList(codeList, leftBracket, foundPos);
-						if (realParas.Count != di.ParaList.Count)
-						{
-                            CommonProcess.ErrReport();
-							break;
-						}
-						// 替换宏值里的形参
-						int idx = 0;
-						foreach (string rp in realParas)
-						{
-							if (string.Empty == rp)
-							{
-								// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
-								continue;
-							}
-							replaceStr = replaceStr.Replace(di.ParaList[idx], rp);
-							idx++;
-						}
-					}
-					// 应对宏里面出现的"##"
-					string[] seps = { "##" };
-					string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
-					if (arr.Length > 1)
-					{
-						string newStr = "";
-						foreach (string sepStr in arr)
-						{
-							newStr += sepStr.Trim();
-						}
-						replaceStr = newStr;
-					}
-					// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
-					if (replaceStr.Contains('#'))
-					{
-                        CommonProcess.ErrReport();
+						CommonProcess.ErrReport();
 						return false;
 					}
-
-					// 用宏值去替换原来的宏名(宏展开)
-					codeList[lineIdx] = codeList[lineIdx].Replace(macroName, replaceStr);
-					return true;
+					CodePosition leftBracket = foundPos;
+					foundPos = CommonProcess.FindNextSymbol(codeList, sPos, ')');
+					if (null == foundPos)
+					{
+						CommonProcess.ErrReport();
+						return false;
+					}
+					nextIdtf.Text = CommonProcess.LineStringCat(codeList, macroPos, foundPos);
+					macroName = nextIdtf.Text;
+					List<string> realParas = GetParaList(codeList, leftBracket, foundPos);
+					if (realParas.Count != mdi.ParaList.Count)
+					{
+						CommonProcess.ErrReport();
+						return false;
+					}
+					// 替换宏值里的形参
+					int idx = 0;
+					foreach (string rp in realParas)
+					{
+						if (string.Empty == rp)
+						{
+							// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
+							continue;
+						}
+						replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
+						idx++;
+					}
 				}
+				// 应对宏里面出现的"##"
+				string[] seps = { "##" };
+				string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
+				if (arr.Length > 1)
+				{
+					string newStr = "";
+					foreach (string sepStr in arr)
+					{
+						newStr += sepStr.Trim();
+					}
+					replaceStr = newStr;
+				}
+				// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
+				if (replaceStr.Contains('#'))
+				{
+					CommonProcess.ErrReport();
+					return false;
+				}
+
+				// 用宏值去替换原来的宏名(宏展开)
+				codeList[lineIdx] = codeList[lineIdx].Replace(macroName, replaceStr);
+				return true;
 			}
 			// typedef 用户自定义类型
 			foreach (TypeDefineInfo tdi in curFileInfo.TypeDefineList)

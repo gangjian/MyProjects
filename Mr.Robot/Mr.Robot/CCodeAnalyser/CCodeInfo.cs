@@ -76,7 +76,7 @@ namespace Mr.Robot
 		public List<MacroDefineInfo> MacroDefineList = new List<MacroDefineInfo>();		// 宏定义列表
 		public List<TypeDefineInfo> TypeDefineList = new List<TypeDefineInfo>();		// typedef类型定义列表
 
-		public List<string> CodeList = new List<string>();						// 解析后(去除注释, 宏展开等)的代码行内容列表
+		public List<string> CodeList = new List<string>();								// 解析后(去除注释, 宏展开等)的代码行内容列表
 
 		public FileParseInfo(string fileName)
 		{
@@ -178,6 +178,18 @@ namespace Mr.Robot
 				if (vi.VarName.Equals(var_name))
 				{
 					return vi;
+				}
+			}
+			return null;
+		}
+
+		public MacroDefineInfo FindMacroDefInfo(string macro_name)
+		{
+			foreach (MacroDefineInfo mdi in this.MacroDefineList)
+			{
+				if (mdi.Name == macro_name)
+				{
+					return mdi;
 				}
 			}
 			return null;

@@ -6,7 +6,7 @@ using Mr.Robot;
 
 namespace Mr.Robot.MacroSwitchAnalyser
 {
-	class MacroSwitchAnalyser
+	public class MacroSwitchAnalyser
 	{
 		FileParseInfo SourceParseInfo = null;
 		public MacroSwitchAnalyser(FileParseInfo source_parse_info)

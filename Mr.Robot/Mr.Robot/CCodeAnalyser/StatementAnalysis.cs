@@ -358,70 +358,66 @@ namespace Mr.Robot
 		public static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, FileParseInfo parse_info)
         {
 			// 遍历查找宏名
-			foreach (MacroDefineInfo di in parse_info.MacroDefineList)
+			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
+			if (null != mdi)
 			{
-				// 判断宏名是否一致
-				if (idStr == di.Name)
+				string macroName = mdi.Name;
+				string replaceStr = mdi.Value;
+				// 判断有无带参数
+				if (0 != mdi.ParaList.Count)
 				{
-					string macroName = di.Name;
-					string replaceStr = di.Value;
-					// 判断有无带参数
-					if (0 != di.ParaList.Count)
+					// 取得宏参数
+					string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
+					if ("(" != paraStr)
 					{
-						// 取得宏参数
-						string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
-						if ("(" != paraStr)
-						{
-                            CommonProcess.ErrReport();
-							break;
-						}
-						int leftBracket = offset;
-						int rightBracket = statementStr.Substring(offset).IndexOf(')');
-						if (-1 == rightBracket)
-						{
-                            CommonProcess.ErrReport();
-							break;
-						}
-						paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
-                        macroName += statementStr.Substring(leftBracket, rightBracket + 1);
-						string[] realParas = paraStr.Split(',');
-						// 然后用实参去替换宏值里的形参
-						int idx = 0;
-						foreach (string rp in realParas)
-						{
-							if (string.Empty == rp)
-							{
-								// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
-								continue;
-							}
-							replaceStr = replaceStr.Replace(di.ParaList[idx], rp);
-							idx++;
-						}
-					}
-					// 应对宏里面出现的"##"
-					string[] seps = { "##" };
-					string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
-					if (arr.Length > 1)
-					{
-						string newStr = "";
-						foreach (string sepStr in arr)
-						{
-							newStr += sepStr.Trim();
-						}
-						replaceStr = newStr;
-					}
-					// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
-					if (replaceStr.Contains('#'))
-					{
-                        CommonProcess.ErrReport();
+						CommonProcess.ErrReport();
 						return false;
 					}
-					// 用宏值去替换原来的宏名(宏展开)
-					statementStr = statementStr.Replace(macroName, replaceStr);
-					return true;
+					int leftBracket = offset;
+					int rightBracket = statementStr.Substring(offset).IndexOf(')');
+					if (-1 == rightBracket)
+					{
+						CommonProcess.ErrReport();
+						return false;
+					}
+					paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
+					macroName += statementStr.Substring(leftBracket, rightBracket + 1);
+					string[] realParas = paraStr.Split(',');
+					// 然后用实参去替换宏值里的形参
+					int idx = 0;
+					foreach (string rp in realParas)
+					{
+						if (string.Empty == rp)
+						{
+							// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
+							continue;
+						}
+						replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
+						idx++;
+					}
 				}
+				// 应对宏里面出现的"##"
+				string[] seps = { "##" };
+				string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
+				if (arr.Length > 1)
+				{
+					string newStr = "";
+					foreach (string sepStr in arr)
+					{
+						newStr += sepStr.Trim();
+					}
+					replaceStr = newStr;
+				}
+				// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
+				if (replaceStr.Contains('#'))
+				{
+					CommonProcess.ErrReport();
+					return false;
+				}
+				// 用宏值去替换原来的宏名(宏展开)
+				statementStr = statementStr.Replace(macroName, replaceStr);
+				return true;
 			}
-
 			return false;
         }
 
