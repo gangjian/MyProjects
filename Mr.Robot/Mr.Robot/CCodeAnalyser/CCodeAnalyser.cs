@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
+using Mr.Robot.MacroSwitchAnalyser;
 
 namespace Mr.Robot
 {
@@ -18,7 +19,7 @@ namespace Mr.Robot
 		#region 向外提供的接口方法
 
 		public EventHandler UpdateProgress = null;
-		List<FileParseInfo> ParseInfoList = null;
+		public List<FileParseInfo> ParseInfoList = null;
 
 		public void ProcessStart(List<string> src_list, List<string> header_list)
 		{
@@ -42,7 +43,8 @@ namespace Mr.Robot
 			// 初始化
 			this.SourceNameList = src_list;
 			this.HeaderNameList = header_list;
-			return CFileListProcess();
+			this.ParseInfoList = CFileListProcess();
+			return this.ParseInfoList;
 		}
 
 		public List<FileParseInfo> CFileListProcess()
@@ -55,6 +57,13 @@ namespace Mr.Robot
 			{
 				FileParseInfo parseInfo = new FileParseInfo(srcName);
 				CFileProcess(srcName, ref parseInfo);
+
+				// MT预编译宏开关宏值提取追加 S
+				MacroSwitchAnalyser.MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser.MacroSwitchAnalyser(parseInfo);
+				macroAnalyser.ProcessStart();
+				parseInfo.MacroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
+				// MT预编译宏开关宏值提取追加 E
+
 				parseInfoList.Add(parseInfo);
 				count++;
 				string progressStr = srcName + " : " + count.ToString() + "/" + total.ToString();

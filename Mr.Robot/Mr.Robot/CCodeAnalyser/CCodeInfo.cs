@@ -78,6 +78,9 @@ namespace Mr.Robot
 
 		public List<string> CodeList = new List<string>();								// 解析后(去除注释, 宏展开等)的代码行内容列表
 
+		// MT预编译宏开关值提取追加
+		public List<string> MacroSwitchList = new List<string>();
+
 		public FileParseInfo(string fileName)
 		{
 			this.FullName = fileName;

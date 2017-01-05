@@ -34,7 +34,7 @@ namespace UnitTestProject
 			MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser(SourceParseInfo);
 			macroAnalyser.ProcessStart();
 
-			Assert.AreNotEqual(0, macroAnalyser.AnalyzeResultList.Count);
+			Assert.AreNotEqual(0, SourceParseInfo.MacroSwitchList.Count);
 		}
 	}
 }

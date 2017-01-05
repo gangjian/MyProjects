@@ -47,6 +47,8 @@
 			this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.tbxLog = new System.Windows.Forms.TextBox();
+			this.label5 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -208,11 +210,30 @@
 			// 
 			this.columnHeader7.Text = "值";
 			// 
+			// tbxLog
+			// 
+			this.tbxLog.Location = new System.Drawing.Point(588, 153);
+			this.tbxLog.Multiline = true;
+			this.tbxLog.Name = "tbxLog";
+			this.tbxLog.Size = new System.Drawing.Size(366, 179);
+			this.tbxLog.TabIndex = 6;
+			// 
+			// label5
+			// 
+			this.label5.AutoSize = true;
+			this.label5.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label5.Location = new System.Drawing.Point(584, 129);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(38, 21);
+			this.label5.TabIndex = 0;
+			this.label5.Text = "Log";
+			// 
 			// FormMTBot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(966, 730);
+			this.Controls.Add(this.tbxLog);
 			this.Controls.Add(this.progressBar1);
 			this.Controls.Add(this.lvMacroList);
 			this.Controls.Add(this.lvSourceList);
@@ -221,6 +242,7 @@
 			this.Controls.Add(this.btnOpenRoot);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this.tbxSourcePath);
+			this.Controls.Add(this.label5);
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.tbxRootPath);
@@ -256,5 +278,7 @@
 		private System.Windows.Forms.ColumnHeader columnHeader5;
 		private System.Windows.Forms.ColumnHeader columnHeader6;
 		private System.Windows.Forms.ColumnHeader columnHeader7;
+		private System.Windows.Forms.TextBox tbxLog;
+		private System.Windows.Forms.Label label5;
 	}
 }

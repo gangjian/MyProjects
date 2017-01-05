@@ -57,7 +57,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			{
 				if (cpnt.Type == StatementComponentType.Identifier)
 				{
-					string macroSwitchStr = this.SourceName + "," + line_num.ToString() + "," + cpnt.Text + ",";
+					string macroSwitchStr = this.SourceName + "," + line_num.ToString() + "," + code_line.Trim() + "," + cpnt.Text + ",";
 					string valStr = GetMacroValueString(cpnt.Text);
 					if (null != valStr)
 					{
