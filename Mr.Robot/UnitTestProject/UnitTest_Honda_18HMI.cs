@@ -32,9 +32,9 @@ namespace UnitTestProject
 		public void Test_USE_DIAG()
 		{
 			MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser(SourceParseInfo);
-			MacroDefineInfo mdi = SourceParseInfo.FindMacroDefInfo("USE_DIAG");
+			macroAnalyser.ProcessStart();
 
-			Assert.AreNotEqual(null, mdi);
+			Assert.AreNotEqual(0, macroAnalyser.MacroSwitchList.Count);
 		}
 	}
 }

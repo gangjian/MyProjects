@@ -8,7 +8,10 @@ namespace Mr.Robot.MacroSwitchAnalyser
 {
 	public class MacroSwitchAnalyser
 	{
+		public List<string> MacroSwitchList = new List<string>();
+
 		FileParseInfo SourceParseInfo = null;
+
 		public MacroSwitchAnalyser(FileParseInfo source_parse_info)
 		{
 			System.Diagnostics.Trace.Assert(null != source_parse_info);
@@ -19,7 +22,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			this.SourceParseInfo.CodeList = CCodeAnalyser.RemoveComments(this.SourceParseInfo.FullName);
 		}
 
-		void ProcessStart()
+		public void ProcessStart()
 		{
 			if (null == this.SourceParseInfo)
 			{
@@ -42,6 +45,22 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			if (null == expStr)
 			{
 				return;
+			}
+			List<StatementComponent> cpntList = StatementAnalysis.GetComponents(expStr, null);
+			foreach (StatementComponent cpnt in cpntList)
+			{
+				if (cpnt.Type == StatementComponentType.Identifier)
+				{
+					MacroDefineInfo mdi = this.SourceParseInfo.FindMacroDefInfo(cpnt.Text);
+					if (null != mdi)
+					{
+						string macroSwitchStr = mdi.Name + "," + mdi.Value;
+						if (!this.MacroSwitchList.Contains(macroSwitchStr))
+						{
+							this.MacroSwitchList.Add(macroSwitchStr);
+						}
+					}
+				}
 			}
 		}
 

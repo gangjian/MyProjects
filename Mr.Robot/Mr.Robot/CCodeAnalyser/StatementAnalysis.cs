@@ -326,7 +326,8 @@ namespace Mr.Robot
                 else if (CommonProcess.IsStandardIdentifier(idStr))						// 标准标识符
 				{
 					// 如果包含宏, 首先要进行宏展开
-					if (MacroDetectAndExpand_Statement(idStr, ref statementStr, offset, parse_info))
+					if (null != parse_info
+						&& MacroDetectAndExpand_Statement(idStr, ref statementStr, offset, parse_info))
 					{
 						offset = offset_old;
 						continue;
