@@ -60,6 +60,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormMTBot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormMTBot.Designer.cs">
+      <DependentUpon>FormMTBot.cs</DependentUpon>
+    </Compile>
     <Compile Include="IOProcess\IniFileProcess.cs" />
     <Compile Include="IOProcess\IOProcess.cs" />
     <Compile Include="MacroSwitchAnalyser\MacroSwitchAnalyser.cs" />
@@ -67,6 +73,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormMTBot.resx">
+      <DependentUpon>FormMTBot.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
