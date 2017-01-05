@@ -252,6 +252,10 @@ namespace Mr.Robot
 		/// <returns></returns>
         public static bool IsStandardIdentifier(string idStr)
 		{
+			if (string.IsNullOrEmpty(idStr))
+			{
+				return false;
+			}
 			int cnt = 0;
 			foreach (Char ch in idStr)
 			{

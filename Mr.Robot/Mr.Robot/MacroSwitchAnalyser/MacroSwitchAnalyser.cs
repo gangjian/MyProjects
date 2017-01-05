@@ -2,24 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using Mr.Robot;
 
 namespace Mr.Robot.MacroSwitchAnalyser
 {
 	public class MacroSwitchAnalyser
 	{
-		public List<string> MacroSwitchList = new List<string>();
+		public List<string> AnalyzeResultList = new List<string>();
 
 		FileParseInfo SourceParseInfo = null;
+		string SourceName = null;
 
 		public MacroSwitchAnalyser(FileParseInfo source_parse_info)
 		{
 			System.Diagnostics.Trace.Assert(null != source_parse_info);
 			this.SourceParseInfo = source_parse_info;
-
+			System.Diagnostics.Trace.Assert(File.Exists(this.SourceParseInfo.FullName));
 			// 只删注释不做预编译处理(保留预编译宏开关)
 			this.SourceParseInfo.CodeList.Clear();
 			this.SourceParseInfo.CodeList = CCodeAnalyser.RemoveComments(this.SourceParseInfo.FullName);
+			FileInfo fi = new FileInfo(this.SourceParseInfo.FullName);
+			this.SourceName = fi.Name;
 		}
 
 		public void ProcessStart()
@@ -28,13 +32,15 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			{
 				return;
 			}
-			for (int i = 0; i < this.SourceParseInfo.CodeList.Count; i++)
+			this.AnalyzeResultList.Clear();
+			int lineNum = 1;
+			foreach (string code_line in this.SourceParseInfo.CodeList)
 			{
-				ProcessCodeLine(this.SourceParseInfo.CodeList[i]);
+				ProcessCodeLine(lineNum++, code_line, this.AnalyzeResultList);
 			}
 		}
 
-		void ProcessCodeLine(string code_line)
+		void ProcessCodeLine(int line_num, string code_line, List<string> result_list)
 		{
 			int idx = code_line.IndexOf("#if");
 			if (-1 == idx)
@@ -51,15 +57,17 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			{
 				if (cpnt.Type == StatementComponentType.Identifier)
 				{
-					MacroDefineInfo mdi = this.SourceParseInfo.FindMacroDefInfo(cpnt.Text);
-					if (null != mdi)
+					string macroSwitchStr = this.SourceName + "," + line_num.ToString() + "," + cpnt.Text + ",";
+					string valStr = GetMacroValueString(cpnt.Text);
+					if (null != valStr)
 					{
-						string macroSwitchStr = mdi.Name + "," + mdi.Value;
-						if (!this.MacroSwitchList.Contains(macroSwitchStr))
-						{
-							this.MacroSwitchList.Add(macroSwitchStr);
-						}
+						macroSwitchStr += valStr;
 					}
+					else
+					{
+						macroSwitchStr += "What the Hell is This?";
+					}
+					result_list.Add(macroSwitchStr);
 				}
 			}
 		}
@@ -74,6 +82,27 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				}
 			}
 			return null;
+		}
+
+		string GetMacroValueString(string macro_name)
+		{
+			MacroDefineInfo mdi = this.SourceParseInfo.FindMacroDefInfo(macro_name);
+			if (null != mdi)
+			{
+				string valStr = mdi.Value;
+				if (CommonProcess.IsStandardIdentifier(valStr))
+				{
+					return GetMacroValueString(valStr);
+				}
+				else
+				{
+					return valStr;
+				}
+			}
+			else
+			{
+				return null;
+			}
 		}
 	}
 }
