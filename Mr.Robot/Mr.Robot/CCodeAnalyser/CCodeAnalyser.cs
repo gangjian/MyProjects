@@ -32,7 +32,7 @@ namespace Mr.Robot
 
 		void ProcessMain()
 		{
-			this.ParseInfoList = CFileListProcess();
+			CFileListProcess();
 		}
 
 		/// <summary>
@@ -43,13 +43,13 @@ namespace Mr.Robot
 			// 初始化
 			this.SourceNameList = src_list;
 			this.HeaderNameList = header_list;
-			this.ParseInfoList = CFileListProcess();
+			CFileListProcess();
 			return this.ParseInfoList;
 		}
 
-		public List<FileParseInfo> CFileListProcess()
+		public void CFileListProcess()
 		{
-			List<FileParseInfo> parseInfoList = new List<FileParseInfo>();
+			this.ParseInfoList = new List<FileParseInfo>();
 			int count = 0;
 			int total = SourceNameList.Count;
 			// 逐个解析源文件
@@ -64,13 +64,12 @@ namespace Mr.Robot
 				parseInfo.MacroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
 				// MT预编译宏开关宏值提取追加 E
 
-				parseInfoList.Add(parseInfo);
+				this.ParseInfoList.Add(parseInfo);
 				count++;
 				string progressStr = srcName + " : " + count.ToString() + "/" + total.ToString();
 				System.Diagnostics.Trace.WriteLine(progressStr);
 				ReportProgress(progressStr);
 			}
-			return parseInfoList;
 		}
 		#endregion
 

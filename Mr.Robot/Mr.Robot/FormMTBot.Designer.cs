@@ -49,6 +49,7 @@
 			this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.tbxLog = new System.Windows.Forms.TextBox();
 			this.label5 = new System.Windows.Forms.Label();
+			this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.SuspendLayout();
 			// 
 			// label1
@@ -127,6 +128,7 @@
 			this.lvSourceList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
             this.columnHeader2});
+			this.lvSourceList.GridLines = true;
 			this.lvSourceList.Location = new System.Drawing.Point(16, 153);
 			this.lvSourceList.Name = "lvSourceList";
 			this.lvSourceList.Size = new System.Drawing.Size(548, 179);
@@ -160,8 +162,10 @@
             this.columnHeader3,
             this.columnHeader4,
             this.columnHeader5,
+            this.columnHeader8,
             this.columnHeader6,
             this.columnHeader7});
+			this.lvMacroList.GridLines = true;
 			this.lvMacroList.Location = new System.Drawing.Point(16, 374);
 			this.lvMacroList.Name = "lvMacroList";
 			this.lvMacroList.Size = new System.Drawing.Size(938, 310);
@@ -189,13 +193,12 @@
 			// columnHeader3
 			// 
 			this.columnHeader3.Text = "序号";
-			this.columnHeader3.Width = 45;
+			this.columnHeader3.Width = 40;
 			// 
 			// columnHeader4
 			// 
 			this.columnHeader4.Text = "文件名";
-			this.columnHeader4.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-			this.columnHeader4.Width = 500;
+			this.columnHeader4.Width = 220;
 			// 
 			// columnHeader5
 			// 
@@ -204,17 +207,20 @@
 			// columnHeader6
 			// 
 			this.columnHeader6.Text = "宏名";
-			this.columnHeader6.Width = 260;
+			this.columnHeader6.Width = 230;
 			// 
 			// columnHeader7
 			// 
 			this.columnHeader7.Text = "值";
+			this.columnHeader7.Width = 120;
 			// 
 			// tbxLog
 			// 
 			this.tbxLog.Location = new System.Drawing.Point(588, 153);
 			this.tbxLog.Multiline = true;
 			this.tbxLog.Name = "tbxLog";
+			this.tbxLog.ReadOnly = true;
+			this.tbxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
 			this.tbxLog.Size = new System.Drawing.Size(366, 179);
 			this.tbxLog.TabIndex = 6;
 			// 
@@ -227,6 +233,11 @@
 			this.label5.Size = new System.Drawing.Size(38, 21);
 			this.label5.TabIndex = 0;
 			this.label5.Text = "Log";
+			// 
+			// columnHeader8
+			// 
+			this.columnHeader8.Text = "表达式";
+			this.columnHeader8.Width = 260;
 			// 
 			// FormMTBot
 			// 
@@ -280,5 +291,6 @@
 		private System.Windows.Forms.ColumnHeader columnHeader7;
 		private System.Windows.Forms.TextBox tbxLog;
 		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.ColumnHeader columnHeader8;
 	}
 }

@@ -36,11 +36,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			int lineNum = 1;
 			foreach (string code_line in this.SourceParseInfo.CodeList)
 			{
-				ProcessCodeLine(lineNum++, code_line, this.AnalyzeResultList);
+				ProcessCodeLine(lineNum++, code_line, ref this.AnalyzeResultList);
 			}
 		}
 
-		void ProcessCodeLine(int line_num, string code_line, List<string> result_list)
+		void ProcessCodeLine(int line_num, string code_line, ref List<string> result_list)
 		{
 			int idx = code_line.IndexOf("#if");
 			if (-1 == idx)
@@ -57,17 +57,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			{
 				if (cpnt.Type == StatementComponentType.Identifier)
 				{
-					string macroSwitchStr = this.SourceName + "," + line_num.ToString() + "," + code_line.Trim() + "," + cpnt.Text + ",";
-					string valStr = GetMacroValueString(cpnt.Text);
-					if (null != valStr)
-					{
-						macroSwitchStr += valStr;
-					}
-					else
-					{
-						macroSwitchStr += "What the Hell is This?";
-					}
-					result_list.Add(macroSwitchStr);
+					MacroPrintInfo printInfo = new MacroPrintInfo(this.SourceName, line_num.ToString(), code_line);
+					MacroAnalyzeProc(cpnt.Text, printInfo, ref result_list);
 				}
 			}
 		}
@@ -84,7 +75,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			return null;
 		}
 
-		string GetMacroValueString(string macro_name)
+		void MacroAnalyzeProc(string macro_name, MacroPrintInfo print_info, ref List<string> result_list)
 		{
 			MacroDefineInfo mdi = this.SourceParseInfo.FindMacroDefInfo(macro_name);
 			if (null != mdi)
@@ -92,16 +83,34 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				string valStr = mdi.Value;
 				if (CommonProcess.IsStandardIdentifier(valStr))
 				{
-					return GetMacroValueString(valStr);
+					MacroAnalyzeProc(valStr, print_info, ref result_list);
 				}
 				else
 				{
-					return valStr;
+					string resultStr = print_info.SourceName + "," + print_info.LineNumStr
+							+ "," + print_info.CodeText + "," + macro_name + "," + valStr;
+					result_list.Add(resultStr);
 				}
 			}
 			else
 			{
-				return null;
+				string resultStr = print_info.SourceName + "," + print_info.LineNumStr
+							+ "," + print_info.CodeText + "," + macro_name + "," + @"未定义";
+				result_list.Add(resultStr);
+			}
+		}
+
+		class MacroPrintInfo
+		{
+			public string SourceName = string.Empty;
+			public string LineNumStr = string.Empty;
+			public string CodeText = string.Empty;
+
+			public MacroPrintInfo(string src_name, string line_num, string code_text)
+			{
+				this.SourceName = src_name;
+				this.LineNumStr = line_num;
+				this.CodeText = code_text.Trim().Replace('\t', ' ');
 			}
 		}
 	}
