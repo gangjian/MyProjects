@@ -150,14 +150,13 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从指定位置开始取得(同一行内)的下一个标识符
 		/// </summary>
-		/// <returns></returns>
 		public static string GetNextIdentifier2(string statementStr, ref int offset)
 		{
 			int s_pos = -1, e_pos = -1;     // 标识符的起止位置
 			for (; offset < statementStr.Length; offset++)
 			{
 				char curChar = statementStr[offset];
-				E_CHAR_TYPE cType = CommonProcess.GetCharType(curChar);
+				E_CHAR_TYPE cType = GetCharType(curChar);
 				switch (cType)
 				{
 					case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:                       // 空格
@@ -196,7 +195,7 @@ namespace Mr.Robot
 						}
 						break;
 					default:
-						CommonProcess.ErrReport();
+						ErrReport();
 						return null;
 				}
 				if (-1 != s_pos && -1 != e_pos)
@@ -248,8 +247,6 @@ namespace Mr.Robot
 		/// 判断是否是"标准"标识符
 		/// 字母数字下划线组成且开头不是数字
 		/// </summary>
-		/// <param varName="id"></param>
-		/// <returns></returns>
         public static bool IsStandardIdentifier(string idStr)
 		{
 			if (string.IsNullOrEmpty(idStr))
@@ -279,10 +276,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从当前位置开始, 找到下一个指定符号出现的位置
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="lineIdx"></param>
-		/// <param varName="startIdx"></param>
-		/// <param varName="symbol"></param>
         public static CodePosition FindNextSymbol(List<string> codeList, CodePosition searchPos, Char symbol)
 		{
 			string curLine = "";
