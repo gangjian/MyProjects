@@ -80,9 +80,9 @@ namespace Mr.Robot
 			this.progressBar1.Value = 0;
 
 			SetUICtrlEnabled(false);
-			this.CodeAnalyser = new CCodeAnalyser();
+			this.CodeAnalyser = new CCodeAnalyser(this.SourceList, this.HeaderList);
 			this.CodeAnalyser.UpdateProgress += new EventHandler(UpdateProgressHandler);
-			this.CodeAnalyser.ProcessStart(this.SourceList, this.HeaderList);
+			this.CodeAnalyser.ProcessStart();
 			this.StopWatch.Restart();
 		}
 

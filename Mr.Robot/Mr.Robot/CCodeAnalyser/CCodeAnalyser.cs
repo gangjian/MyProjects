@@ -12,48 +12,41 @@ namespace Mr.Robot
 	public partial class CCodeAnalyser
 	{
 		#region 全局字段
-		List<string> HeaderNameList = new List<string>();					// 头文件名列表
-		List<string> SourceNameList = new List<string>();					// 源文件名列表
-		#endregion
-
-		#region 向外提供的接口方法
+		List<string> HeaderList = new List<string>();									// 头文件名列表
+		List<string> SourceList = new List<string>();									// 源文件名列表
 
 		public EventHandler UpdateProgress = null;
 		public List<FileParseInfo> ParseInfoList = null;
+		#endregion
 
-		public void ProcessStart(List<string> src_list, List<string> header_list)
+		public CCodeAnalyser(List<string> source_list, List<string> header_list)
 		{
-			// 初始化
-			this.SourceNameList = src_list;
-			this.HeaderNameList = header_list;
+			this.SourceList = source_list;
+			this.HeaderList = header_list;
+		}
+
+		#region 向外提供的接口方法
+		public void ProcessStart()
+		{
 			Thread workerThread = new Thread(new ThreadStart(ProcessMain));
 			workerThread.Start();
+			//Task t1 = new Task(CFileListProcess);
+			//t1.Start();
+			//t1.Wait();
 		}
 
 		void ProcessMain()
 		{
-			CFileListProcess();
+			CFileListProc();
 		}
 
-		/// <summary>
-		/// ".c"源文件列表处理
-		/// </summary>
-		public List<FileParseInfo> CFileListProcess(List<string> src_list, List<string> header_list)
-		{
-			// 初始化
-			this.SourceNameList = src_list;
-			this.HeaderNameList = header_list;
-			CFileListProcess();
-			return this.ParseInfoList;
-		}
-
-		public void CFileListProcess()
+		public List<FileParseInfo> CFileListProc()
 		{
 			this.ParseInfoList = new List<FileParseInfo>();
 			int count = 0;
-			int total = SourceNameList.Count;
+			int total = this.SourceList.Count;
 			// 逐个解析源文件
-			foreach (string srcName in SourceNameList)
+			foreach (string srcName in this.SourceList)
 			{
 				FileParseInfo parseInfo = new FileParseInfo(srcName);
 				CFileProcess(srcName, ref parseInfo);
@@ -70,6 +63,7 @@ namespace Mr.Robot
 				System.Diagnostics.Trace.WriteLine(progressStr);
 				ReportProgress(progressStr);
 			}
+			return this.ParseInfoList;
 		}
 		#endregion
 
@@ -434,7 +428,7 @@ namespace Mr.Robot
 			}
 
 			// 如果上一步没找到, 证明还没被解析, 则在全部头文件list里找
-			foreach (var hd_name in this.HeaderNameList)
+			foreach (var hd_name in this.HeaderList)
 			{
 				string path;
 				string fName = IOProcess.GetFileName(hd_name, out path);

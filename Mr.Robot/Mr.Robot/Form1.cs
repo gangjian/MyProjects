@@ -209,9 +209,9 @@ namespace Mr.Robot
                     }
                 }
             }
-			this.CAnalyser = new CCodeAnalyser();
+			this.CAnalyser = new CCodeAnalyser(srcList, this.CHeaderFileList);
 			this.CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
-			this.CAnalyser.ProcessStart(srcList, this.CHeaderFileList);
+			this.CAnalyser.ProcessStart();
 
 			//this.CSourceParseInfoList
 			//					= CAnalyser.CFileListProcess(srcList, CHeaderFileList);

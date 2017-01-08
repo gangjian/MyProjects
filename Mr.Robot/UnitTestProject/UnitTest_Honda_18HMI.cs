@@ -23,8 +23,8 @@ namespace UnitTestProject
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add("C:\\TestData\\Honda18HMI_soft\\software\\src\\AnlysSprtTask\\AnlysSprtTASK.c");
-			CCodeAnalyser CAnalyser = new CCodeAnalyser();
-			List<FileParseInfo> parseInfoList = CAnalyser.CFileListProcess(csfList, header_list);
+			CCodeAnalyser CAnalyser = new CCodeAnalyser(csfList, header_list);
+			List<FileParseInfo> parseInfoList = CAnalyser.CFileListProc();
 			SourceParseInfo = parseInfoList[0];
 		}
 
