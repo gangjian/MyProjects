@@ -1,0 +1,83 @@
+To 刘叔
+ 
+以下是dummy函数作成工具的需求，请了解。
+ 
+入力：
+在入力.txt文件里写出要作成dummy函数的函数名（包括函数类型和参数），每行一个函数，多行多个函数。
+ 
+出力：
+在出力.txt文件里自动生成对应的dummy函数
+ 
+ 
+示例及格式如下：
+①
+入力：
+void ConvergenceLong( unsigned long target, unsigned long *current, unsigned long step )
+ 
+出力：
+/*------------------------------------------------------------------------------*/
+/*   ダミー関数                                */
+/*------------------------------------------------------------------------------*/
+static uint8 dmy_ConvergenceLong_Cnt;
+static unsigned long dmy_ConvergenceLong_target;
+static unsigned long dmy_ConvergenceLong_current;
+static unsigned long dmy_ConvergenceLong_step;
+void ConvergenceLong( unsigned long target, unsigned long *current, unsigned long step )
+{
+              dmy_ConvergenceLong_Cnt++;
+              dmy_ConvergenceLong_target = target;
+              dmy_ConvergenceLong_current = *current;
+              dmy_ConvergenceLong_step = step;
+ 
+              return;
+}
+ 
+②
+入力：
+FUNC(Std_ReturnType, RTE_CODE) Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op(uint8 ondevice, uint8 frqcy, uint8 press, uint8 attn, uint8 patten)
+ 
+出力：
+/*------------------------------------------------------------------------------*/
+/*            ダミー関数                                              */
+/*------------------------------------------------------------------------------*/
+static uint8 dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_Cnt;
+static uint8 dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_ondevice;
+static uint8 dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_frqcy;
+static uint8 dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_press;
+static uint8 dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_attn;
+static uint8 dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_patten;
+static Std_ReturnType dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_Ret;
+FUNC(Std_ReturnType, RTE_CODE) Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op(uint8 ondevice, uint8 frqcy, uint8 press, uint8 attn, uint8 patten){
+              dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_Cnt++;
+              dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_ondevice = ondevice;
+              dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_frqcy = frqcy;
+              dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_press = press;
+              dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_attn  = attn;
+              dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_patten = patten;
+ 
+              return dmy_Rte_Call_swc_out_bz_rp_csIf_out_bzOn_op_Ret;
+}
+ 
+③
+入力：
+FUNC(Std_ReturnType, RTE_CODE) Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op(uint16 id, P2VAR(uint16, AUTOMATIC, RTE_APPL_DATA) cnt)
+ 
+出力：
+/*------------------------------------------------------------------------------*/
+/*            ダミー関数                                              */
+/*------------------------------------------------------------------------------*/
+static uint8 dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_Cnt;
+static uint16 dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_id;
+static uint16 dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_cnt;
+static Std_ReturnType dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_Ret;
+FUNC(Std_ReturnType, RTE_CODE) Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op(uint16 id, P2VAR(uint16, AUTOMATIC, RTE_APPL_DATA) cnt){
+              dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_Cnt++;
+              dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_id = id;
+              dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_cnt = *cnt;
+ 
+              return dmy_Rte_Call_swc_out_bz_rp_csIf_timer_cnt_op_Ret;
+}
+ 
+以上
+刘洋
+ 

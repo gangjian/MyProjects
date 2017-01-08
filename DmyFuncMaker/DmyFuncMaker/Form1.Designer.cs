@@ -54,8 +54,8 @@
 			this.textBox1.Multiline = true;
 			this.textBox1.Name = "textBox1";
 			this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.textBox1.Size = new System.Drawing.Size(569, 169);
-			this.textBox1.TabIndex = 1;
+			this.textBox1.Size = new System.Drawing.Size(603, 169);
+			this.textBox1.TabIndex = 0;
 			this.textBox1.WordWrap = false;
 			// 
 			// label2
@@ -66,7 +66,7 @@
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(98, 14);
 			this.label2.TabIndex = 0;
-			this.label2.Text = "做成dummy函数";
+			this.label2.Text = "作成dummy函数";
 			// 
 			// textBox2
 			// 
@@ -74,15 +74,16 @@
 			this.textBox2.Location = new System.Drawing.Point(15, 235);
 			this.textBox2.Multiline = true;
 			this.textBox2.Name = "textBox2";
+			this.textBox2.ReadOnly = true;
 			this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.textBox2.Size = new System.Drawing.Size(569, 258);
+			this.textBox2.Size = new System.Drawing.Size(603, 315);
 			this.textBox2.TabIndex = 1;
 			this.textBox2.WordWrap = false;
 			// 
 			// btnClear
 			// 
 			this.btnClear.Font = new System.Drawing.Font("新宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.btnClear.Location = new System.Drawing.Point(592, 30);
+			this.btnClear.Location = new System.Drawing.Point(627, 29);
 			this.btnClear.Name = "btnClear";
 			this.btnClear.Size = new System.Drawing.Size(68, 29);
 			this.btnClear.TabIndex = 2;
@@ -93,7 +94,7 @@
 			// btnGenerate
 			// 
 			this.btnGenerate.Font = new System.Drawing.Font("新宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.btnGenerate.Location = new System.Drawing.Point(592, 159);
+			this.btnGenerate.Location = new System.Drawing.Point(627, 159);
 			this.btnGenerate.Name = "btnGenerate";
 			this.btnGenerate.Size = new System.Drawing.Size(68, 39);
 			this.btnGenerate.TabIndex = 2;
@@ -104,7 +105,7 @@
 			// btnSave
 			// 
 			this.btnSave.Font = new System.Drawing.Font("新宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.btnSave.Location = new System.Drawing.Point(592, 454);
+			this.btnSave.Location = new System.Drawing.Point(627, 235);
 			this.btnSave.Name = "btnSave";
 			this.btnSave.Size = new System.Drawing.Size(68, 39);
 			this.btnSave.TabIndex = 2;
@@ -116,7 +117,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(668, 505);
+			this.ClientSize = new System.Drawing.Size(704, 562);
 			this.Controls.Add(this.btnSave);
 			this.Controls.Add(this.btnGenerate);
 			this.Controls.Add(this.btnClear);
@@ -124,11 +125,11 @@
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.textBox1);
 			this.Controls.Add(this.label1);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
 			this.MaximizeBox = false;
 			this.Name = "Form1";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "DmyFuncMaker";
+			this.Text = "DmyFuncMaker_v0.1";
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
