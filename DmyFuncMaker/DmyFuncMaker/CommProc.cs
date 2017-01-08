@@ -2,13 +2,36 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DmyFuncMaker
 {
-	class CommProc
+	public class CodeIdentifier
 	{
-		public static string GetNextIdentifier2(string statementStr, ref int offset)
+		public int Offset = -1;
+		public string Text = string.Empty;
+
+		public CodeIdentifier(int offset, string text)
+		{
+			this.Offset = offset;
+			this.Text = text;
+		}
+	}
+
+	public class VarInfo
+	{
+		public string TypeStr = string.Empty;
+		public string Name = string.Empty;
+
+		public VarInfo(string type, string name)
+		{
+			this.TypeStr = type;
+			this.Name = name;
+		}
+	}
+
+	public class CommProc
+	{
+		public static CodeIdentifier GetNextIdentifier(string statementStr, ref int offset)
 		{
 			int s_pos = -1, e_pos = -1;     // 标识符的起止位置
 			for (; offset < statementStr.Length; offset++)
@@ -17,7 +40,7 @@ namespace DmyFuncMaker
 				E_CHAR_TYPE cType = GetCharType(curChar);
 				switch (cType)
 				{
-					case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:                       // 空格
+					case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:								// 空格
 						if (-1 == s_pos)
 						{
 							// do nothing
@@ -28,9 +51,9 @@ namespace DmyFuncMaker
 							e_pos = offset - 1;
 						}
 						break;
-					case E_CHAR_TYPE.E_CTYPE_LETTER:                            // 字母
-					case E_CHAR_TYPE.E_CTYPE_UNDERLINE:                         // 下划线
-					case E_CHAR_TYPE.E_CTYPE_DIGIT:                             // 数字
+					case E_CHAR_TYPE.E_CTYPE_LETTER:									// 字母
+					case E_CHAR_TYPE.E_CTYPE_UNDERLINE:									// 下划线
+					case E_CHAR_TYPE.E_CTYPE_DIGIT:										// 数字
 						if (-1 == s_pos)
 						{
 							s_pos = offset;
@@ -40,8 +63,8 @@ namespace DmyFuncMaker
 							// do nothing
 						}
 						break;
-					case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:                       // 标点
-					case E_CHAR_TYPE.E_CTYPE_SYMBOL:                            // 运算符
+					case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:								// 标点
+					case E_CHAR_TYPE.E_CTYPE_SYMBOL:									// 运算符
 						if (-1 == s_pos)
 						{
 							s_pos = offset;
@@ -58,13 +81,17 @@ namespace DmyFuncMaker
 				}
 				if (-1 != s_pos && -1 != e_pos)
 				{
-					return statementStr.Substring(s_pos, e_pos - s_pos + 1);
+					break;
 				}
 			}
-			if (-1 != s_pos && -1 == e_pos)
+			if (-1 != s_pos)
 			{
-				e_pos = offset - 1;
-				return statementStr.Substring(s_pos, e_pos - s_pos + 1);
+				if (-1 == e_pos)
+				{
+					e_pos = offset - 1;
+				}
+				string text = statementStr.Substring(s_pos, e_pos - s_pos + 1);
+				return new CodeIdentifier(s_pos, text);
 			}
 			return null;
 		}

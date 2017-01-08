@@ -5,7 +5,6 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 
@@ -29,7 +28,15 @@ namespace DmyFuncMaker
 			this.textBox2.Clear();
 			foreach (string line in this.textBox1.Lines)
 			{
-				DmyFuncMaker.DmyFuncPrototypeProc(line);
+				List<string> dmyFuncList = DmyFuncMaker.DmyFuncPrototypeProc(line);
+				if (null != dmyFuncList)
+				{
+					foreach (var item in dmyFuncList)
+					{
+						this.textBox2.AppendText(item + System.Environment.NewLine);
+					}
+					this.textBox2.AppendText(System.Environment.NewLine);
+				}
 			}
 		}
 
