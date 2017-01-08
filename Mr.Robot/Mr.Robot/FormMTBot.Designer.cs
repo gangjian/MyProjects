@@ -36,20 +36,21 @@
 			this.btnOpenSource = new System.Windows.Forms.Button();
 			this.btnStart = new System.Windows.Forms.Button();
 			this.lvSourceList = new System.Windows.Forms.ListView();
+			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label3 = new System.Windows.Forms.Label();
 			this.label4 = new System.Windows.Forms.Label();
 			this.lvMacroList = new System.Windows.Forms.ListView();
-			this.progressBar1 = new System.Windows.Forms.ProgressBar();
-			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.progressBar1 = new System.Windows.Forms.ProgressBar();
 			this.tbxLog = new System.Windows.Forms.TextBox();
 			this.label5 = new System.Windows.Forms.Label();
-			this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.btnSave2CSV = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -136,6 +137,16 @@
 			this.lvSourceList.UseCompatibleStateImageBehavior = false;
 			this.lvSourceList.View = System.Windows.Forms.View.Details;
 			// 
+			// columnHeader1
+			// 
+			this.columnHeader1.Text = "No.";
+			this.columnHeader1.Width = 45;
+			// 
+			// columnHeader2
+			// 
+			this.columnHeader2.Text = "Path";
+			this.columnHeader2.Width = 495;
+			// 
 			// label3
 			// 
 			this.label3.AutoSize = true;
@@ -173,23 +184,6 @@
 			this.lvMacroList.UseCompatibleStateImageBehavior = false;
 			this.lvMacroList.View = System.Windows.Forms.View.Details;
 			// 
-			// progressBar1
-			// 
-			this.progressBar1.Location = new System.Drawing.Point(16, 695);
-			this.progressBar1.Name = "progressBar1";
-			this.progressBar1.Size = new System.Drawing.Size(938, 23);
-			this.progressBar1.TabIndex = 5;
-			// 
-			// columnHeader1
-			// 
-			this.columnHeader1.Text = "No.";
-			this.columnHeader1.Width = 45;
-			// 
-			// columnHeader2
-			// 
-			this.columnHeader2.Text = "Path";
-			this.columnHeader2.Width = 495;
-			// 
 			// columnHeader3
 			// 
 			this.columnHeader3.Text = "序号";
@@ -204,6 +198,11 @@
 			// 
 			this.columnHeader5.Text = "行号";
 			// 
+			// columnHeader8
+			// 
+			this.columnHeader8.Text = "表达式";
+			this.columnHeader8.Width = 260;
+			// 
 			// columnHeader6
 			// 
 			this.columnHeader6.Text = "宏名";
@@ -213,6 +212,13 @@
 			// 
 			this.columnHeader7.Text = "值";
 			this.columnHeader7.Width = 120;
+			// 
+			// progressBar1
+			// 
+			this.progressBar1.Location = new System.Drawing.Point(16, 691);
+			this.progressBar1.Name = "progressBar1";
+			this.progressBar1.Size = new System.Drawing.Size(938, 23);
+			this.progressBar1.TabIndex = 5;
 			// 
 			// tbxLog
 			// 
@@ -234,16 +240,23 @@
 			this.label5.TabIndex = 0;
 			this.label5.Text = "Log";
 			// 
-			// columnHeader8
+			// btnSave2CSV
 			// 
-			this.columnHeader8.Text = "表达式";
-			this.columnHeader8.Width = 260;
+			this.btnSave2CSV.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnSave2CSV.Location = new System.Drawing.Point(851, 338);
+			this.btnSave2CSV.Name = "btnSave2CSV";
+			this.btnSave2CSV.Size = new System.Drawing.Size(103, 33);
+			this.btnSave2CSV.TabIndex = 7;
+			this.btnSave2CSV.Text = "保存到CSV";
+			this.btnSave2CSV.UseVisualStyleBackColor = true;
+			this.btnSave2CSV.Click += new System.EventHandler(this.btnSave2CSV_Click);
 			// 
 			// FormMTBot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(966, 730);
+			this.ClientSize = new System.Drawing.Size(966, 722);
+			this.Controls.Add(this.btnSave2CSV);
 			this.Controls.Add(this.tbxLog);
 			this.Controls.Add(this.progressBar1);
 			this.Controls.Add(this.lvMacroList);
@@ -292,5 +305,6 @@
 		private System.Windows.Forms.TextBox tbxLog;
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.ColumnHeader columnHeader8;
+		private System.Windows.Forms.Button btnSave2CSV;
 	}
 }

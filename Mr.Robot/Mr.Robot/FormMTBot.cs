@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Mr.Robot.MacroSwitchAnalyser;
+using System.IO;
 
 namespace Mr.Robot
 {
@@ -136,6 +137,7 @@ namespace Mr.Robot
 						{
 							this.StopWatch.Stop();
 							SetUICtrlEnabled(true);
+							MessageBox.Show("Complete!");
 						}
 					}
 				}
@@ -147,6 +149,7 @@ namespace Mr.Robot
 			this.btnOpenRoot.Enabled = enabled;
 			this.btnOpenSource.Enabled = enabled;
 			this.btnStart.Enabled = enabled;
+			this.btnSave2CSV.Enabled = enabled;
 		}
 
 		List<string> GetMacroSwitchList(List<FileParseInfo> parse_info_list)
@@ -173,6 +176,46 @@ namespace Mr.Robot
 				this.lvMacroList.Items.Add(lvItem);
 			}
 			this.UpdateMacroSwitchList.Clear();
+		}
+
+		private void btnSave2CSV_Click(object sender, EventArgs e)
+		{
+			if (0 == this.lvMacroList.Items.Count)
+			{
+				return;
+			}
+			SaveFileDialog dlg = new SaveFileDialog();
+			dlg.FileName = DateTime.Now.ToString().Replace('/', '_').Replace(':', '_') + ".csv";
+			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+			{
+				StreamWriter sw = new StreamWriter(dlg.FileName, false);
+				try
+				{
+					string wtStr = string.Empty;
+					foreach (ColumnHeader col in this.lvMacroList.Columns)
+					{
+						wtStr += col.Text + ",";
+					}
+					sw.WriteLine(wtStr);
+					foreach (ListViewItem item in this.lvMacroList.Items)
+					{
+						wtStr = string.Empty;
+						foreach (ListViewItem.ListViewSubItem subItem in item.SubItems)
+						{
+							wtStr += subItem.Text + ",";
+						}
+						sw.WriteLine(wtStr);
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show(ex.ToString());
+				}
+				finally
+				{
+					sw.Close();
+				}
+			}
 		}
 	}
 }
