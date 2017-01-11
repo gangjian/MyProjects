@@ -41,7 +41,7 @@ namespace Mr.Robot
 
 			// load根目录路径
 			string root_path = IniFileProcess.IniReadValue("PATH_INFO", "root_path");
-			if (string.Empty != root_path)
+			if (!string.IsNullOrEmpty(root_path))
 			{
 				DirectoryInfo di = new DirectoryInfo(root_path);
 				if (di.Exists)

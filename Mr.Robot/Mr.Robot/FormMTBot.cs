@@ -19,6 +19,10 @@ namespace Mr.Robot
 		public FormMTBot()
 		{
 			InitializeComponent();
+			string root_path = IniFileProcess.IniReadValue("MTbot", "root_path");
+			UpdateRootPath(root_path);
+			string source_path = IniFileProcess.IniReadValue("MTbot", "source_path");
+			UpdateSourcePath(source_path);
 		}
 
 		private void btnOpenRoot_Click(object sender, EventArgs e)
@@ -26,15 +30,9 @@ namespace Mr.Robot
 			FolderBrowserDialog dlg = new FolderBrowserDialog();
 			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 			{
-				this.tbxRootPath.Text = dlg.SelectedPath;
-				this.tbxSourcePath.Text = dlg.SelectedPath;
-
-				this.SourceList.Clear();
-				this.HeaderList.Clear();
-				// 取得所有源文件和头文件列表
-				IOProcess.GetAllCCodeFiles(dlg.SelectedPath, ref this.SourceList, ref this.HeaderList);
-
-				UpdateSourceListView();
+				UpdateRootPath(dlg.SelectedPath);
+				IniFileProcess.IniWriteValue("MTbot", "root_path", dlg.SelectedPath);
+				IniFileProcess.IniWriteValue("MTbot", "source_path", dlg.SelectedPath);
 			}
 		}
 
@@ -43,14 +41,45 @@ namespace Mr.Robot
 			FolderBrowserDialog dlg = new FolderBrowserDialog();
 			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 			{
-				tbxSourcePath.Text = dlg.SelectedPath;
+				UpdateSourcePath(dlg.SelectedPath);
+				IniFileProcess.IniWriteValue("MTbot", "source_path", dlg.SelectedPath);
+			}
+		}
 
-				List<string> tmpHdList = new List<string>();
-				// 取得所有源文件
-				this.SourceList.Clear();
-				IOProcess.GetAllCCodeFiles(dlg.SelectedPath, ref this.SourceList, ref tmpHdList);
+		void UpdateRootPath(string root_path)
+		{
+			if (!string.IsNullOrEmpty(root_path))
+			{
+				DirectoryInfo di = new DirectoryInfo(root_path);
+				if (di.Exists)
+				{
+					this.tbxRootPath.Text = root_path;
+					this.tbxSourcePath.Text = root_path;
 
-				UpdateSourceListView();
+					this.SourceList.Clear();
+					this.HeaderList.Clear();
+					// 取得所有源文件和头文件列表
+					IOProcess.GetAllCCodeFiles(root_path, ref this.SourceList, ref this.HeaderList);
+					UpdateSourceListView();
+				}
+			}
+		}
+
+		void UpdateSourcePath(string source_path)
+		{
+			if (!string.IsNullOrEmpty(source_path))
+			{
+				DirectoryInfo di = new DirectoryInfo(source_path);
+				if (di.Exists)
+				{
+					tbxSourcePath.Text = source_path;
+
+					List<string> tmpHdList = new List<string>();
+					// 取得所有源文件
+					this.SourceList.Clear();
+					IOProcess.GetAllCCodeFiles(source_path, ref this.SourceList, ref tmpHdList);
+					UpdateSourceListView();
+				}
 			}
 		}
 
