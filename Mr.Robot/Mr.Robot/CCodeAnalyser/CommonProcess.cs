@@ -323,7 +323,7 @@ namespace Mr.Robot
 		/// <param varName="searchPos"></param>
 		/// <param varName="rightSymbol"></param>
 		/// <returns></returns>
-        public static CodePosition FindNextMatchSymbol(List<string> codeList, CodePosition searchPos, Char rightSymbol)
+		public static CodePosition FindNextMatchSymbol(FileParseInfo parse_info, ref CodePosition searchPos, Char rightSymbol)
 		{
 			Char leftSymbol;
 			if ('}' == rightSymbol)
@@ -346,10 +346,20 @@ namespace Mr.Robot
             string quoteStr = string.Empty;
             while (true)
 			{
-				CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				CodeIdentifier nextIdtf = GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 				if (null == nextIdtf)
 				{
 					break;
+				}
+				else if (IsStandardIdentifier(nextIdtf.Text))
+				{
+					if (MacroDetectAndExpand_File(nextIdtf.Text, parse_info.CodeList, foundPos, parse_info))
+					{
+						// 判断是否是已定义的宏, 是的话进行宏展开
+						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
+						searchPos = new CodePosition(foundPos);
+						continue;
+					}
 				}
 				else if ("\'" == nextIdtf.Text
 						|| "\"" == nextIdtf.Text)
@@ -388,6 +398,122 @@ namespace Mr.Robot
 			}
 			ErrReport();
 			return null;
+		}
+
+		/// <summary>
+		/// 宏检测与宏展开
+		/// </summary>
+		public static bool MacroDetectAndExpand_File(string idStr,
+													 List<string> codeList,
+													 CodePosition foundPos,
+													 FileParseInfo curFileInfo)
+		{
+			// 遍历查找宏名
+			MacroDefineInfo mdi = curFileInfo.FindMacroDefInfo(idStr);
+			if (null != mdi)
+			{
+				string macroName = mdi.Name;
+				CodePosition macroPos = new CodePosition(foundPos);
+				int lineIdx = foundPos.RowNum;
+				string replaceStr = mdi.Value;
+				// 判断有无带参数
+				if (0 != mdi.ParaList.Count)
+				{
+					// 取得实参
+					CodePosition sPos = new CodePosition(foundPos.RowNum, foundPos.ColNum + idStr.Length);
+					CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref sPos, out foundPos);
+					if ("(" != nextIdtf.Text)
+					{
+						ErrReport();
+						return false;
+					}
+					CodePosition leftBracket = foundPos;
+					foundPos = FindNextSymbol(codeList, sPos, ')');
+					if (null == foundPos)
+					{
+						ErrReport();
+						return false;
+					}
+					nextIdtf.Text = LineStringCat(codeList, macroPos, foundPos);
+					macroName = nextIdtf.Text;
+					List<string> realParas = GetParaList(codeList, leftBracket, foundPos);
+					if (realParas.Count != mdi.ParaList.Count)
+					{
+						// TODO: 20170111
+						// #define NSCAN_uprintf(fmt, ...)
+						// 对于可变参数(如上, 实参可以比形参个数少)
+						//ErrReport();
+						return false;
+					}
+					// 替换宏值里的形参
+					int idx = 0;
+					foreach (string rp in realParas)
+					{
+						if (string.Empty == rp)
+						{
+							// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
+							continue;
+						}
+						replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
+						idx++;
+					}
+				}
+				// 应对宏里面出现的"##"
+				string[] seps = { "##" };
+				string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
+				if (arr.Length > 1)
+				{
+					string newStr = "";
+					foreach (string sepStr in arr)
+					{
+						newStr += sepStr.Trim();
+					}
+					replaceStr = newStr;
+				}
+				// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
+				if (replaceStr.Contains('#'))
+				{
+					ErrReport();
+					return false;
+				}
+
+				// 用宏值去替换原来的宏名(宏展开)
+				codeList[lineIdx] = codeList[lineIdx].Replace(macroName, replaceStr);
+				return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// 取得参数列表
+		/// </summary>
+		/// <returns></returns>
+		public static List<string> GetParaList(List<string> codeList, CodePosition bracketLeft, CodePosition bracketRight)
+		{
+			List<string> retParaList = new List<string>();
+			string catStr = LineStringCat(codeList, bracketLeft, bracketRight);
+			// 去掉小括号
+			if (catStr.StartsWith("("))
+			{
+				catStr = catStr.Remove(0, 1);
+			}
+			if (catStr.EndsWith(")"))
+			{
+				catStr = catStr.Remove(catStr.LastIndexOf(')'));
+			}
+			catStr = catStr.Trim();
+			if ("" == catStr)
+			{
+				// 如果没有参数, 只有一对空的小括号, 那么要加入一个空字串""参数
+				retParaList.Add("");
+				return retParaList;
+			}
+			string[] paras = catStr.Split(',');
+			foreach (string p in paras)
+			{
+				retParaList.Add(p.Trim());
+			}
+			return retParaList;
 		}
 
         /// <summary>
