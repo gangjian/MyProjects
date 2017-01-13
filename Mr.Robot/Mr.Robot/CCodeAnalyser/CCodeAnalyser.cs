@@ -463,7 +463,7 @@ namespace Mr.Robot
 			CodePosition foundPos = null;
 			while (null != (nextIdtf = CommonProcess.GetNextIdentifier(parse_info.CodeList, ref search_pos, out foundPos)))
 			{
-				//if (src_name.EndsWith("Rte_swc_in_trcta.c") && nextIdtf.Position.RowNum > 127)
+				//if (src_name.EndsWith("gtextbox.c") && nextIdtf.Position.RowNum > 3590)
 				//{
 				//	System.Diagnostics.Trace.WriteLine("");
 				//}

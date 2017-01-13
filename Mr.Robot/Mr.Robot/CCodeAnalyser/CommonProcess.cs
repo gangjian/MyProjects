@@ -364,6 +364,12 @@ namespace Mr.Robot
 				else if ("\'" == nextIdtf.Text
 						|| "\"" == nextIdtf.Text)
                 {
+					if (nextIdtf.Position.ColNum > 0
+						&& '\\' == parse_info.CodeList[nextIdtf.Position.RowNum][nextIdtf.Position.ColNum - 1])
+					{
+						// 转义字符, 即字符串中的引号 "\""
+						continue;
+					}
                     // 要注意不要算上双引号, 单引号括起来的符号
                     if (true == quoteStart
 						&& quoteStr == nextIdtf.Text)
@@ -414,7 +420,7 @@ namespace Mr.Robot
 			{
 				string macroName = mdi.Name;
 				CodePosition macroPos = new CodePosition(foundPos);
-				CodePosition removeEndPos = new CodePosition(macroPos.RowNum, macroPos.ColNum + macroName.Length);
+				CodePosition removeEndPos = new CodePosition(macroPos.RowNum, macroPos.ColNum + macroName.Length - 1);
 				int lineIdx = foundPos.RowNum;
 				string replaceStr = mdi.Value;
 				// 判断有无带参数
