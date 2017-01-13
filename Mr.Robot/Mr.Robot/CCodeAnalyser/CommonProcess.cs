@@ -414,6 +414,7 @@ namespace Mr.Robot
 			{
 				string macroName = mdi.Name;
 				CodePosition macroPos = new CodePosition(foundPos);
+				CodePosition removeEndPos = new CodePosition(macroPos.RowNum, macroPos.ColNum + macroName.Length);
 				int lineIdx = foundPos.RowNum;
 				string replaceStr = mdi.Value;
 				// 判断有无带参数
@@ -434,6 +435,7 @@ namespace Mr.Robot
 						ErrReport();
 						return false;
 					}
+					removeEndPos = new CodePosition(foundPos);
 					nextIdtf.Text = LineStringCat(codeList, macroPos, foundPos);
 					macroName = nextIdtf.Text;
 					List<string> realParas = GetParaList(codeList, leftBracket, foundPos);
@@ -477,11 +479,43 @@ namespace Mr.Robot
 					return false;
 				}
 
+				RemoveCodeContents(codeList, macroPos, removeEndPos);
+				codeList[lineIdx] = codeList[lineIdx].Insert(macroPos.ColNum, replaceStr);
 				// 用宏值去替换原来的宏名(宏展开)
-				codeList[lineIdx] = codeList[lineIdx].Replace(macroName, replaceStr);
+				//codeList[lineIdx] = codeList[lineIdx].Replace(macroName, replaceStr);
 				return true;
 			}
 			return false;
+		}
+
+		static void RemoveCodeContents(List<string> code_list, CodePosition start_pos, CodePosition end_pos)
+		{
+			for (int i = start_pos.RowNum; i <= end_pos.RowNum; i++)
+			{
+				int startIdx = -1;
+				int endIdx = -1;
+				if (start_pos.RowNum == i)
+				{
+					startIdx = start_pos.ColNum;
+				}
+				if (end_pos.RowNum == i)
+				{
+					endIdx = end_pos.ColNum;
+				}
+
+				if (-1 != startIdx && -1 == endIdx)
+				{
+					code_list[i] = code_list[i].Remove(startIdx);
+				}
+				else if (-1 == startIdx && -1 != endIdx)
+				{
+					code_list[i] = code_list[i].Remove(0, endIdx + 1);
+				}
+				else if (-1 != startIdx && -1 != endIdx)
+				{
+					code_list[i] = code_list[i].Remove(startIdx, endIdx - startIdx + 1);
+				}
+			}
 		}
 
 		/// <summary>
