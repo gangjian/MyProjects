@@ -312,7 +312,7 @@ namespace Mr.Robot
 				lineIdx++;
 				curIdx = 0;
 			}
-			ErrReport();
+			//ErrReport();
 			return null;
 		}
 

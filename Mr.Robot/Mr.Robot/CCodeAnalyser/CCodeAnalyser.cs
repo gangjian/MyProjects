@@ -49,17 +49,20 @@ namespace Mr.Robot
 			foreach (string srcName in this.SourceList)
 			{
 				FileParseInfo parseInfo = new FileParseInfo(srcName);
-				CFileProcess(srcName, ref parseInfo);
-
-				// MT预编译宏开关宏值提取追加 S
-				MacroSwitchAnalyser.MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser.MacroSwitchAnalyser(parseInfo);
-				macroAnalyser.ProcessStart();
-				parseInfo.MacroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
-				// MT预编译宏开关宏值提取追加 E
-
-				this.ParseInfoList.Add(parseInfo);
 				count++;
-				string progressStr = srcName + " : " + count.ToString() + "/" + total.ToString();
+				string progressStr;
+				if (CFileProcess(srcName, ref parseInfo))
+				{
+					MacroSwitchAnalyser.MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser.MacroSwitchAnalyser(parseInfo);
+					macroAnalyser.ProcessStart();
+					parseInfo.MacroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
+					this.ParseInfoList.Add(parseInfo);
+					progressStr = srcName + "OK!" + " : " + count.ToString() + "/" + total.ToString();
+				}
+				else
+				{
+					progressStr = srcName + "NG!" + " : " + count.ToString() + "/" + total.ToString();
+				}
 				System.Diagnostics.Trace.WriteLine(progressStr);
 				ReportProgress(progressStr);
 			}
@@ -80,9 +83,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		void CFileProcess(string srcName, ref FileParseInfo fileInfo)
+		bool CFileProcess(string srcName, ref FileParseInfo fileInfo)
 		{
-			System.Diagnostics.Trace.WriteLine(srcName);
+			System.Diagnostics.Trace.WriteLine(srcName + ": ");
 			if (null == fileInfo)
 			{
 				fileInfo = new FileParseInfo(srcName);
@@ -95,7 +98,14 @@ namespace Mr.Robot
 //          Save2File(codeList, srcName + ".bak");
 
 			// 文件解析
-			CCodeFileAnalysis(srcName, ref fileInfo);
+			if(!CCodeFileAnalysis(srcName, ref fileInfo))
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
 //			includeInfoList.Add(fi);
 //          XmlProcess.SaveCFileInfo2XML(fi);
 		}
@@ -447,14 +457,14 @@ namespace Mr.Robot
 		/// <summary>
 		/// 文件代码解析
 		/// </summary>
-		public static void CCodeFileAnalysis(string src_name,
+		public static bool CCodeFileAnalysis(string src_name,
 											 ref FileParseInfo parse_info)
 		{
 			System.Diagnostics.Trace.Assert((null != parse_info.CodeList));
 			if (0 == parse_info.CodeList.Count)
 			{
                 CommonProcess.ErrReport();
-				return;
+				return false;
 			}
 			// 从文件开头开始解析
 			CodePosition search_pos = new CodePosition(0, 0);
@@ -543,6 +553,10 @@ namespace Mr.Robot
 							search_pos = fp;
 							continue;
 						}
+						else
+						{
+							return false;
+						}
 					}
 					else if ("=" == nextIdtf.Text)
 					{
@@ -557,6 +571,10 @@ namespace Mr.Robot
 							qualifierList.Add(initIdtf);
 							search_pos = fp;
 							continue;
+						}
+						else
+						{
+							return false;
 						}
 					}
 					else if (";" == nextIdtf.Text && 0 != qualifierList.Count)
@@ -592,6 +610,7 @@ namespace Mr.Robot
 					qualifierList.Clear();
 				}
 			}
+			return true;
 		}
 
 		/// <summary>
