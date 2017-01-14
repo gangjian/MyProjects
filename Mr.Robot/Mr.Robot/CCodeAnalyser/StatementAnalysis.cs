@@ -208,6 +208,16 @@ namespace Mr.Robot
 			{
 				return retGroup;
 			}
+			// 双引号""括起的字符串
+			else if (null != (retGroup = GetStringBlockGroup(componentList, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// 单引号''括起的单个字符
+			else if (null != (retGroup = GetCharBlockGroup(componentList, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
 			// 是运算符
 			else if (null != (retGroup = GetOperatorGroup(componentList, ref idx)))
 			{
@@ -371,7 +381,7 @@ namespace Mr.Robot
 					string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
 					if ("(" != paraStr)
 					{
-						CommonProcess.ErrReport();
+						//CommonProcess.ErrReport();
 						return false;
 					}
 					int leftBracket = offset;
@@ -1061,6 +1071,49 @@ namespace Mr.Robot
 			return null;
 		}
 
+		static MeaningGroup GetStringBlockGroup(List<StatementComponent> cpnt_list, ref int idx, FileParseInfo parse_result)
+		{
+			if ("\"" == cpnt_list[idx].Text)
+			{
+				MeaningGroup retGroup = new MeaningGroup();
+				retGroup.Type = MeaningGroupType.StringBlock;
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				retGroup.Text += cpnt_list[idx].Text;
+				for (int i = idx + 1; i < cpnt_list.Count; i++)
+				{
+					retGroup.ComponentList.Add(cpnt_list[i]);
+					retGroup.Text += cpnt_list[i].Text;
+					if ("\"" == cpnt_list[i].Text && "\\" != cpnt_list[i - 1].Text)
+					{
+						idx = i + 1;
+						break;
+					}
+				}
+				return retGroup;
+			}
+			return null;
+		}
+
+		static MeaningGroup GetCharBlockGroup(List<StatementComponent> cpnt_list, ref int idx, FileParseInfo parse_result)
+		{
+			if ("\'" == cpnt_list[idx].Text
+				&& idx < cpnt_list.Count - 3
+				&& "\'" == cpnt_list[idx + 2].Text)
+			{
+				MeaningGroup retGroup = new MeaningGroup();
+				retGroup.Type = MeaningGroupType.CharBlock;
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				retGroup.Text += cpnt_list[idx].Text;
+				retGroup.ComponentList.Add(cpnt_list[idx + 1]);
+				retGroup.Text += cpnt_list[idx + 1].Text;
+				retGroup.ComponentList.Add(cpnt_list[idx + 2]);
+				retGroup.Text += cpnt_list[idx + 2].Text;
+				idx += 3;
+				return retGroup;
+			}
+			return null;
+		}
+
 		static MeaningGroup GetOperatorGroup(List<StatementComponent> componentList, ref int idx)
 		{
             MeaningGroup retGroup = null;
@@ -1220,6 +1273,8 @@ namespace Mr.Robot
 		OtherOperator,				// 其它运算符
 		Constant,					// 常量
 		CodeBlock,					// "{"和"}"括起的代码段
+		StringBlock,				// 双引号""括起的字符串
+		CharBlock,					// 单引号''括起的单字符
 		SingleKeyword,				// 基本类型名以外的单个的关键字(保留字)
 		Identifier,					// 其它标识符
 	}

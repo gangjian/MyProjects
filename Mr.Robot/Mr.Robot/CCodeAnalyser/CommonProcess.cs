@@ -431,7 +431,10 @@ namespace Mr.Robot
 					CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref sPos, out foundPos);
 					if ("(" != nextIdtf.Text)
 					{
-						ErrReport();
+						//ErrReport();
+						// 发现过有一个带参数的宏min(x, y), 另有某一个结构体成员名也叫min
+						// 解析至此认为该结构体成员是宏, 取得参数时发现没有参数...
+						// ?: 宏与结构体成员重名, 如何处理...
 						return false;
 					}
 					CodePosition leftBracket = foundPos;
