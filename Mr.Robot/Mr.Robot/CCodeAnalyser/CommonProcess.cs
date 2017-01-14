@@ -562,37 +562,26 @@ namespace Mr.Robot
         /// <summary>
         /// 将起止位置之间的内容连接成一个字符串(去掉换行)
         /// </summary>
-        /// <param varName="codeList"></param>
-        /// <param varName="startPos"></param>
-        /// <param varName="endPos"></param>
-        /// <returns></returns>
 		public static string LineStringCat(List<string> codeList, CodePosition startPos, CodePosition endPos)
 		{
 			int startRow = startPos.RowNum;
 			int startCol = startPos.ColNum;
 			int endRow = endPos.RowNum;
 			int endCol = endPos.ColNum;
-			string retStr = "";
-			string lineStr = "";
+			StringBuilder retStr = new StringBuilder();
 			while (startRow < endRow)
 			{
-				lineStr = codeList[startRow];
-				retStr += lineStr.Substring(startCol);
+				retStr.Append(codeList[startRow].Substring(startCol));
 				startRow += 1;
 				startCol = 0;
 			}
-			lineStr = codeList[startRow];
-			retStr += lineStr.Substring(startCol, endCol - startCol + 1);
-			return retStr;
+			retStr.Append(codeList[startRow].Substring(startCol, endCol - startCol + 1));
+			return retStr.ToString();
 		}
 
 		/// <summary>
 		/// 取得一个表达式
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="searchPos"></param>
-		/// <param varName="foundPos"></param>
-		/// <returns></returns>
 		public static string GetExpressionStr(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
 		{
 			foundPos = new CodePosition(searchPos);
@@ -609,10 +598,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断表达式是否已定义(#if defined)
 		/// </summary>
-		/// <param varName="exp">表达式</param>
-		/// <param varName="headerFileNameList">头文件列表</param>
-		/// <param varName="defineList">宏定义列表</param>
-		/// <returns></returns>
         public static MacroDefineInfo JudgeExpressionDefined(string exp, List<MacroDefineInfo> defineList)
 		{
 			foreach (var di in defineList)
@@ -628,10 +613,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断表达式的值
 		/// </summary>
-		/// <param varName="exp">表达式</param>
-		/// <param varName="headerFileNameList">头文件列表</param>
-		/// <param varName="defineList">宏定义列表</param>
-		/// <returns></returns>
         public static int JudgeExpressionValue(string exp, List<MacroDefineInfo> defineList)
 		{
 			// TODO: 暂不考虑复合表达式的情况
@@ -658,10 +639,6 @@ namespace Mr.Robot
         /// <summary>
         /// 查找下一个指定的标识符
         /// </summary>
-        /// <param varName="idStr"></param>
-        /// <param varName="codeList"></param>
-        /// <param varName="searchPos"></param>
-        /// <returns></returns>
         public static CodePosition FindNextSpecIdentifier(string idStr, List<string> codeList, CodePosition searchPos)
 		{
 			CodePosition foundPos = null;
@@ -683,9 +660,6 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的下一位置
         /// </summary>
-        /// <param varName="codeList"></param>
-        /// <param varName="thisPos"></param>
-        /// <returns></returns>
         public static CodePosition PositionMoveNext(List<string> codeList, CodePosition thisPos)
 		{
 			CodePosition nextPos = new CodePosition(thisPos);
@@ -709,9 +683,6 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的前一位置
         /// </summary>
-        /// <param varName="codeList"></param>
-        /// <param varName="thisPos"></param>
-        /// <returns></returns>
         public static CodePosition PositionMovePrevious(List<string> codeList, CodePosition thisPos)
         {
             CodePosition prevPos = new CodePosition(thisPos);

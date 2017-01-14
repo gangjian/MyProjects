@@ -463,7 +463,7 @@ namespace Mr.Robot
 			CodePosition foundPos = null;
 			while (null != (nextIdtf = CommonProcess.GetNextIdentifier(parse_info.CodeList, ref search_pos, out foundPos)))
 			{
-				//if (src_name.EndsWith("gtextbox.c") && nextIdtf.Position.RowNum > 3590)
+				//if (src_name.EndsWith("AxisStd-Regular.c"))
 				//{
 				//	System.Diagnostics.Trace.WriteLine("");
 				//}
@@ -564,10 +564,12 @@ namespace Mr.Robot
 						string statementStr = string.Empty;
 						if ("typedef" == qualifierList[0].Text)
 						{
+							StringBuilder sb = new StringBuilder();
 							for (int i = 0; i < qualifierList.Count; i++)
 							{
-								statementStr += qualifierList[i].Text + " ";
+								sb.Append(qualifierList[i].Text + " ");
 							}
+							statementStr = sb.ToString();
 						}
 						else
 						{

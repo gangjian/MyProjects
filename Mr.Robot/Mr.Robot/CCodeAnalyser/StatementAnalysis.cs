@@ -1038,10 +1038,12 @@ namespace Mr.Robot
 					{
 						retGroup.Type = MeaningGroupType.Expression;
 					}
+					StringBuilder sb = new StringBuilder();
 					foreach (StatementComponent item in braceList)
 					{
-						retGroup.Text += item.Text;
+						sb.Append(item.Text);
 					}
+					retGroup.Text = sb.ToString();
 					retGroup.ComponentList.AddRange(braceList);
 					idx += 1;
 					return retGroup;
@@ -1060,10 +1062,12 @@ namespace Mr.Robot
 					MeaningGroup retGroup = new MeaningGroup();
 					retGroup.Type = MeaningGroupType.CodeBlock;
 					retGroup.ComponentList.AddRange(braceList);
-					foreach (StatementComponent item in braceList)
+					StringBuilder groupTextBuilder = new StringBuilder();
+					for (int i = 0; i < braceList.Count; i++)
 					{
-						retGroup.Text += item.Text;
+						groupTextBuilder.Append(braceList[i].Text);
 					}
+					retGroup.Text = groupTextBuilder.ToString();
 					idx += 1;
 					return retGroup;
 				}
@@ -1078,17 +1082,19 @@ namespace Mr.Robot
 				MeaningGroup retGroup = new MeaningGroup();
 				retGroup.Type = MeaningGroupType.StringBlock;
 				retGroup.ComponentList.Add(cpnt_list[idx]);
-				retGroup.Text += cpnt_list[idx].Text;
+				StringBuilder sb = new StringBuilder();
+				sb.Append(cpnt_list[idx].Text);
 				for (int i = idx + 1; i < cpnt_list.Count; i++)
 				{
 					retGroup.ComponentList.Add(cpnt_list[i]);
-					retGroup.Text += cpnt_list[i].Text;
+					sb.Append(cpnt_list[idx].Text);
 					if ("\"" == cpnt_list[i].Text && "\\" != cpnt_list[i - 1].Text)
 					{
 						idx = i + 1;
 						break;
 					}
 				}
+				retGroup.Text = sb.ToString();
 				return retGroup;
 			}
 			return null;
