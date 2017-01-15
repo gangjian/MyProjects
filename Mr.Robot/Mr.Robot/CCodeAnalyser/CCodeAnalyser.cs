@@ -120,7 +120,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		bool CFileProcess(string srcName, ref FileParseInfo fileInfo)
+		public bool CFileProcess(string srcName, ref FileParseInfo fileInfo)
 		{
 			System.Diagnostics.Trace.WriteLine(srcName + ": ");
 			if (null == fileInfo)
