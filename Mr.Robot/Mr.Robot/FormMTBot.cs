@@ -246,5 +246,10 @@ namespace Mr.Robot
 				}
 			}
 		}
+
+		private void FormMTBot_FormClosing(object sender, FormClosingEventArgs e)
+		{
+
+		}
 	}
 }

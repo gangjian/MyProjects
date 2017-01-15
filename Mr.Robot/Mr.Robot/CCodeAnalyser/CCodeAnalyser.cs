@@ -57,11 +57,11 @@ namespace Mr.Robot
 					macroAnalyser.ProcessStart();
 					parseInfo.MacroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
 					this.ParseInfoList.Add(parseInfo);
-					progressStr = srcName + "OK!" + " : " + count.ToString() + "/" + total.ToString();
+					progressStr = srcName + "	OK!" + " : " + count.ToString() + "/" + total.ToString();
 				}
 				else
 				{
-					progressStr = srcName + "NG!" + " : " + count.ToString() + "/" + total.ToString();
+					progressStr = srcName + "	NG!" + " : " + count.ToString() + "/" + total.ToString();
 				}
 				System.Diagnostics.Trace.WriteLine(progressStr);
 				ReportProgress(progressStr);
@@ -80,6 +80,43 @@ namespace Mr.Robot
 			}
 		}
 
+		class CodeBuffer
+		{
+			public string FileName = string.Empty;
+			public List<string> CodeList = null;
+
+			public CodeBuffer(string file_name, List<string> code_list)
+			{
+				this.FileName = file_name;
+				this.CodeList = code_list;
+			}
+		}
+
+		const int MAX_CODE_BUF_LIST_CNT = 1000;
+		List<CodeBuffer> CodeBufferList = new List<CodeBuffer>();
+
+		List<string> SearchCodeBufferList(string src_name)
+		{
+			for (int i = this.CodeBufferList.Count - 1; i >= 0; i--)
+			{
+				if (this.CodeBufferList[i].FileName.Equals(src_name))
+				{
+					return this.CodeBufferList[i].CodeList;
+				}
+			}
+			return null;
+		}
+
+		void AddCodeBufferList(string src_name, List<string> code_list)
+		{
+			CodeBuffer cb = new CodeBuffer(src_name, code_list);
+			this.CodeBufferList.Add(cb);
+			if (this.CodeBufferList.Count > MAX_CODE_BUF_LIST_CNT)
+			{
+				this.CodeBufferList.RemoveRange(0, this.CodeBufferList.Count - MAX_CODE_BUF_LIST_CNT);
+			}
+		}
+
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
@@ -90,8 +127,13 @@ namespace Mr.Robot
 			{
 				fileInfo = new FileParseInfo(srcName);
 			}
-			// 去掉注释
-			List<string> codeList = RemoveComments(srcName);
+			List<string> codeList = SearchCodeBufferList(srcName);
+			if (null == codeList)
+			{
+				// 去掉注释
+				codeList = RemoveComments(srcName);
+				AddCodeBufferList(srcName, codeList);
+			}
 			// 预编译处理
 			codeList = PrecompileProcess(codeList, ref fileInfo);
 			fileInfo.CodeList = codeList;
