@@ -100,6 +100,7 @@ namespace Mr.Robot
 		}
 
 		CCodeAnalyser CodeAnalyser = null;
+		MacroSwitchAnalyzer2 MacroSwitchAnalyzer2 = null;
 		System.Diagnostics.Stopwatch StopWatch = new System.Diagnostics.Stopwatch();
 
 		private void btnStart_Click(object sender, EventArgs e)
@@ -109,9 +110,12 @@ namespace Mr.Robot
 			this.progressBar1.Value = 0;
 
 			SetUICtrlEnabled(false);
-			this.CodeAnalyser = new CCodeAnalyser(this.SourceList, this.HeaderList);
-			this.CodeAnalyser.UpdateProgress += new EventHandler(UpdateProgressHandler);
-			this.CodeAnalyser.ProcessStart();
+			//this.CodeAnalyser = new CCodeAnalyser(this.SourceList, this.HeaderList);
+			//this.CodeAnalyser.UpdateProgress += new EventHandler(UpdateProgressHandler);
+			//this.CodeAnalyser.ProcessStart();
+			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyzer2(this.SourceList, this.HeaderList);
+			this.MacroSwitchAnalyzer2.ReportProgress += UpdateProgressHandler2;
+			this.MacroSwitchAnalyzer2.ProcStart();
 			this.StopWatch.Restart();
 		}
 
@@ -122,6 +126,22 @@ namespace Mr.Robot
 			this.UpdateMacroSwitchList = GetMacroSwitchList(this.CodeAnalyser.ParseInfoList);
 			this.CodeAnalyser.ParseInfoList.Clear();
 			UpdateProgress(sender as string);
+		}
+
+		void UpdateProgressHandler2(string progress_str, List<string> result_list)
+		{
+			if (null != result_list)
+			{
+				lock (result_list)
+				{
+					this.UpdateMacroSwitchList = result_list;
+					UpdateProgress(progress_str);
+				}
+			}
+			else
+			{
+				UpdateProgress(progress_str);
+			}
 		}
 
 		delegate void UpdateProgressDel(string text);
@@ -141,8 +161,8 @@ namespace Mr.Robot
 
 		void UpdateProgressCtrlView(string progress_str)
 		{
-			this.tbxLog.AppendText(progress_str + " : " + this.StopWatch.Elapsed.ToString() + System.Environment.NewLine);
 			UpdateMacroListView();
+			this.tbxLog.AppendText(progress_str + " : " + this.StopWatch.Elapsed.ToString() + System.Environment.NewLine);
 			int idx = progress_str.LastIndexOf(':');
 			if (-1 != idx)
 			{
@@ -193,11 +213,17 @@ namespace Mr.Robot
 
 		void UpdateMacroListView()
 		{
+			if (null == this.UpdateMacroSwitchList
+				|| 0 == this.UpdateMacroSwitchList.Count)
+			{
+				return;
+			}
+			ListViewItem lvItem = null;
 			foreach (string msStr in this.UpdateMacroSwitchList)
 			{
 				string[] arr = msStr.Split(',');
 				int num = this.lvMacroList.Items.Count + 1;
-				ListViewItem lvItem = new ListViewItem(num.ToString());
+				lvItem = new ListViewItem(num.ToString());
 				for (int i = 0; i < this.lvMacroList.Columns.Count - 1; i++)
 				{
 					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[i].Trim()));
@@ -205,6 +231,10 @@ namespace Mr.Robot
 				this.lvMacroList.Items.Add(lvItem);
 			}
 			this.UpdateMacroSwitchList.Clear();
+			if (null != lvItem)
+			{
+				this.lvMacroList.TopItem = lvItem;
+			}
 		}
 
 		private void btnSave2CSV_Click(object sender, EventArgs e)
@@ -249,7 +279,10 @@ namespace Mr.Robot
 
 		private void FormMTBot_FormClosing(object sender, FormClosingEventArgs e)
 		{
-
+			if (null != this.MacroSwitchAnalyzer2)
+			{
+				this.MacroSwitchAnalyzer2.ProcAbort();
+			}
 		}
 	}
 }

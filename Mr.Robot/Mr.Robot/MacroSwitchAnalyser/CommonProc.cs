@@ -9,31 +9,31 @@ namespace Mr.Robot.MacroSwitchAnalyser
 {
     public class CommonProc
     {
-        public static string RemoveStringSegment(string code_line)
-        {
-            while (true)
-            {
-                int idx_s = code_line.IndexOf('\"');
-                if ((-1 != idx_s)
-                    && (code_line.Length - 1 != idx_s))
-                {
-                    int idx_e = code_line.IndexOf('\"', idx_s + 1);
-                    if (-1 != idx_e)
-                    {
-                        code_line = code_line.Remove(idx_s, idx_e - idx_s + 1);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-            }
-            return code_line;
-        }
+		public static string RemoveStringSegment(string code_line)
+		{
+			while (true)
+			{
+				int idx_s = code_line.IndexOf('\"');
+				if ((-1 != idx_s)
+					&& (code_line.Length - 1 != idx_s))
+				{
+					int idx_e = code_line.IndexOf('\"', idx_s + 1);
+					if (-1 != idx_e)
+					{
+						code_line = code_line.Remove(idx_s, idx_e - idx_s + 1);
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			return code_line;
+		}
 
         public static string GetMacroExpression(string code_line, int ifIdx)
         {

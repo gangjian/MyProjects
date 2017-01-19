@@ -50,21 +50,25 @@ namespace Mr.Robot
 			{
 				FileParseInfo parseInfo = new FileParseInfo(srcName);
 				count++;
-				string progressStr;
+				//string progressStr;
+				//List<string> macroSwitchList = new List<string>();
 				if (CFileProcess(srcName, ref parseInfo))
 				{
-					MacroSwitchAnalyser.MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser.MacroSwitchAnalyser(parseInfo);
-					macroAnalyser.ProcessStart();
-					parseInfo.MacroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
+					//MacroSwitchAnalyser.MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser.MacroSwitchAnalyser(parseInfo);
+					//macroAnalyser.ProcessStart();
+					//macroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
 					this.ParseInfoList.Add(parseInfo);
-					progressStr = srcName + "	OK!" + " : " + count.ToString() + "/" + total.ToString();
+					//progressStr = srcName + "	OK!" + " : " + count.ToString() + "/" + total.ToString();
 				}
 				else
 				{
-					progressStr = srcName + "	NG!" + " : " + count.ToString() + "/" + total.ToString();
+					//progressStr = srcName + "	NG!" + " : " + count.ToString() + "/" + total.ToString();
 				}
-				System.Diagnostics.Trace.WriteLine(progressStr);
-				ReportProgress(progressStr);
+				//List<string> reportList = new List<string>();
+				//reportList.Add(progressStr);
+				//reportList.AddRange(macroSwitchList);
+				//System.Diagnostics.Trace.WriteLine(progressStr);
+				//ReportProgress(progressStr);
 			}
 			return this.ParseInfoList;
 		}
@@ -120,7 +124,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		public bool CFileProcess(string srcName, ref FileParseInfo fileInfo)
+		bool CFileProcess(string srcName, ref FileParseInfo fileInfo)
 		{
 			System.Diagnostics.Trace.WriteLine(srcName + ": ");
 			if (null == fileInfo)
@@ -132,7 +136,7 @@ namespace Mr.Robot
 			{
 				// 去掉注释
 				codeList = RemoveComments(srcName);
-				AddCodeBufferList(srcName, codeList);
+				//AddCodeBufferList(srcName, codeList);
 			}
 			// 预编译处理
 			codeList = PrecompileProcess(codeList, ref fileInfo);
@@ -552,7 +556,7 @@ namespace Mr.Robot
 					// 遇到小括号了, 可能是碰上函数声明或定义了
 					if (("(" == nextIdtf.Text) && (0 != qualifierList.Count))
 					{
-						FuncParseInfo cfi = FunctionDetectProcess(parse_info, qualifierList, ref search_pos, foundPos);
+						FuncParseInfo cfi = FunctionDetectProcess(src_name, parse_info, qualifierList, ref search_pos, foundPos);
 						if (null != cfi)
 						{
 							if (null != cfi.Scope)
@@ -658,7 +662,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数检测(声明, 定义)
 		/// </summary>
-		static FuncParseInfo FunctionDetectProcess(	FileParseInfo parse_info,
+		static FuncParseInfo FunctionDetectProcess(	string src_name,
+													FileParseInfo parse_info,
 													List<CodeIdentifier> qualifierList,
 													ref CodePosition searchPos,
 													CodePosition bracketLeft)

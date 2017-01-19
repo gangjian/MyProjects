@@ -282,6 +282,8 @@ namespace Mr.Robot
 			int lineIdx = searchPos.RowNum;
 			int startIdx = searchPos.ColNum;
 			int curIdx = startIdx;
+			bool quoteStart = false;
+			Char quoteChar = Char.MinValue;
 			while (true)
 			{
 				// 到list末尾结束跳出
@@ -299,8 +301,32 @@ namespace Mr.Robot
 				for (; curIdx < curLine.Length; curIdx++)
 				{
 					Char curChar = curLine[curIdx];
+					if ('\'' == curChar
+						|| '\"' == curChar)
+					{
+						if (curIdx > 0
+							&& '\\' == curLine[curIdx - 1])
+						{
+							// 转义字符, 即字符串中的引号 "\""
+							continue;
+						}
+						// 要注意不要算上双引号, 单引号括起来的符号
+						if (true == quoteStart
+							&& quoteChar == curChar)
+						{
+							quoteStart = false;
+						}
+						else if (!quoteStart)
+						{
+							quoteStart = true;
+							quoteChar = curChar;
+						}
+						else
+						{
+						}
+					}
 					// 注意这里暂时没有考虑中间会遇到条件编译分支的情况
-					if (symbol == curChar)
+					if (symbol == curChar && !quoteStart)
 					{
 						// 找到了
 						CodePosition fpos = new CodePosition(lineIdx, curIdx);
