@@ -613,12 +613,20 @@ namespace Mr.Robot
 			foundPos = new CodePosition(searchPos);
 
 			string lineStr = codeList[searchPos.RowNum];
-			string exprStr = lineStr.Substring(searchPos.ColNum).Trim();
+			string exprStr = lineStr.Substring(searchPos.ColNum);
 			foundPos.ColNum = lineStr.IndexOf(exprStr);
+			while (exprStr.EndsWith("\\"))
+			{
+				exprStr = exprStr.Remove(exprStr.Length - 1);
+				searchPos.RowNum += 1;
+				searchPos.ColNum = 0;
+				lineStr = codeList[searchPos.RowNum];
+				exprStr += lineStr.Substring(searchPos.ColNum);
+			}
 			searchPos.RowNum += 1;
 			searchPos.ColNum = 0;
 
-			return exprStr;
+			return exprStr.Trim();
 		}
 
 		/// <summary>

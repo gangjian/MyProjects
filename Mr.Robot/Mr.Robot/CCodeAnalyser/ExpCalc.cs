@@ -384,7 +384,8 @@ namespace Mr.Robot
 				operand = operand.Remove(operand.Length - 1);
 				operand = operand.Remove(0, 1).Trim();
 			}
-			if (null != parse_info.FindMacroDefInfo(operand))
+			if (!string.IsNullOrEmpty(operand)
+				&& null != parse_info.FindMacroDefInfo(operand))
 			{
 				return 1;
 			}
