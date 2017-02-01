@@ -442,7 +442,8 @@ namespace Mr.Robot
 		{
 			// 遍历查找宏名
 			MacroDefineInfo mdi = curFileInfo.FindMacroDefInfo(idStr);
-			if (null != mdi)
+			if (null != mdi
+				&& !string.IsNullOrEmpty(mdi.Value))
 			{
 				string macroName = mdi.Name;
 				CodePosition macroPos = new CodePosition(foundPos);
