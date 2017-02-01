@@ -290,6 +290,7 @@ namespace Mr.Robot
 							{
                                 exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
+								ExpCalc.GetExpressionValue(exprStr, fi);
                                 if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								{
 									cc_info.WriteFlag = false;
@@ -397,6 +398,7 @@ namespace Mr.Robot
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
                                 exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
+								ExpCalc.GetExpressionValue(exprStr, fi);
                                 if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								{
 									cc_info.WriteFlag = false;

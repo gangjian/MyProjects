@@ -465,6 +465,7 @@ namespace Mr.Robot
 						// "==" : 等于
 						component.Text = idStr + nextIdStr;
 						component.Priority = 6;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else
@@ -472,6 +473,7 @@ namespace Mr.Robot
 						// "=" : 赋值
 						component.Text = idStr;
 						component.Priority = 10;
+						component.OperandCount = 2;
 					}
 					break;
 				case "+":
@@ -481,6 +483,7 @@ namespace Mr.Robot
 						// "++", "--" : 自增, 自减
 						component.Text = idStr + nextIdStr;
 						component.Priority = 2;
+						component.OperandCount = 1;
 						offset += 1;
 					}
 					else if ("=" == nextIdStr)
@@ -488,6 +491,7 @@ namespace Mr.Robot
 						// "+=", "-=" : 加减运算赋值
 						component.Text = idStr + nextIdStr;
 						component.Priority = 10;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else if ( "-" == idStr && ">" == nextIdStr)
@@ -502,6 +506,7 @@ namespace Mr.Robot
 						// "+", "-" : 加, 减
 						component.Text = idStr;
 						component.Priority = 4;									        // 不确定, 也可能是单目运算符的正负号(优先级为2)
+						component.OperandCount = 2;
 					}
 					break;
 				case "*":														        // 不确定, 可能是乘号, 也可能是指针运算符
@@ -511,6 +516,7 @@ namespace Mr.Robot
 						// "*=", "/=" : 乘除运算赋值
 						component.Text = idStr + nextIdStr;
 						component.Priority = 10;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else
@@ -518,6 +524,7 @@ namespace Mr.Robot
 						// "*", "/" : 乘, 除
 						component.Text = idStr;
 						component.Priority = 3;
+						component.OperandCount = 2;
 					}
 					break;
 				case ">":
@@ -530,6 +537,7 @@ namespace Mr.Robot
 							// ">>=", "<<=" : 位移赋值
 							component.Text = idStr + nextIdStr + thirdChar;
 							component.Priority = 10;
+							component.OperandCount = 2;
 							offset += 2;
 						}
 						else
@@ -537,6 +545,7 @@ namespace Mr.Robot
 							// ">>", "<<" : 左移, 右移
 							component.Text = idStr + nextIdStr;
 							component.Priority = 5;
+							component.OperandCount = 2;
 							offset += 1;
 						}
 					}
@@ -545,6 +554,7 @@ namespace Mr.Robot
 						// ">=", "<=" : 大于等于, 小于等于
 						component.Text = idStr + nextIdStr;
 						component.Priority = 6;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else
@@ -552,6 +562,7 @@ namespace Mr.Robot
 						// ">", "<" : 大于, 小于
 						component.Text = idStr;
 						component.Priority = 6;
+						component.OperandCount = 2;
 					}
 					break;
 				case "&":
@@ -561,6 +572,7 @@ namespace Mr.Robot
 						// "&&", "||" : 逻辑与, 逻辑或
 						component.Text = idStr + nextIdStr;
 						component.Priority = 8;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else if ("=" == nextIdStr)
@@ -568,6 +580,7 @@ namespace Mr.Robot
 						// "&=", "|=" : 位运算赋值
 						component.Text = idStr + nextIdStr;
 						component.Priority = 10;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else
@@ -575,6 +588,7 @@ namespace Mr.Robot
 						// "&", "|" : 位与, 位或
 						component.Text = idStr;
 						component.Priority = 7;									        // 不确定, 可能是双目位与&,也可能是取地址符&(优先级2)
+						component.OperandCount = 2;
 					}
 
 					break;
@@ -584,6 +598,7 @@ namespace Mr.Robot
 						// "!=" : 不等于
 						component.Text = idStr + nextIdStr;
 						component.Priority = 6;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else
@@ -591,12 +606,14 @@ namespace Mr.Robot
 						// "!" : 逻辑非
 						component.Text = idStr;
 						component.Priority = 2;
+						component.OperandCount = 1;
 					}
 					break;
 				case "~":
 					// "~" : 按位取反
 					component.Text = idStr;
 					component.Priority = 2;
+					component.OperandCount = 1;
 					break;
 				case "%":
 					if ("=" == nextIdStr)
@@ -604,6 +621,7 @@ namespace Mr.Robot
 						// "%=" : 取余赋值
 						component.Text = idStr + nextIdStr;
 						component.Priority = 10;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else
@@ -611,6 +629,7 @@ namespace Mr.Robot
 						// "%" : 取余
 						component.Text = idStr;
 						component.Priority = 3;
+						component.OperandCount = 2;
 					}
 					break;
 				case "^":
@@ -619,6 +638,7 @@ namespace Mr.Robot
 						// "^=" : 位异或赋值
 						component.Text = idStr + nextIdStr;
 						component.Priority = 10;
+						component.OperandCount = 2;
 						offset += 1;
 					}
 					else
@@ -626,18 +646,21 @@ namespace Mr.Robot
 						// "^" : 位异或
 						component.Text = idStr;
 						component.Priority = 7;
+						component.OperandCount = 2;
 					}
 					break;
 				case ",":
 					// "," : 逗号
 					component.Text = idStr;
 					component.Priority = 11;
+					component.OperandCount = 2;
 					break;
 				case "?":
 				case ":":
 					// "?:" : 条件(三目)
 					component.Text = idStr;
 					component.Priority = 9;
+					component.OperandCount = 3;
 					break;
 				default:
 					return false;
@@ -1249,6 +1272,7 @@ namespace Mr.Robot
 		}
 
 		public int Priority = -1;	// (如果是运算符的话)运算符的优先级
+		public int OperandCount = 0;// (如果是运算符的话)操作数的个数
 
 		public StatementComponent()
 		{
