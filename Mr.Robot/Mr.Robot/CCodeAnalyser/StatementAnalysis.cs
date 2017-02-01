@@ -1248,17 +1248,12 @@ namespace Mr.Robot
 			set { text = value; }
 		}
 
-		private int priority = -1;	// (如果是运算符的话)运算符的优先级
-
-		public int Priority
-		{
-			get { return priority; }
-			set { priority = value; }
-		}
+		public int Priority = -1;	// (如果是运算符的话)运算符的优先级
 
 		public StatementComponent()
 		{
 		}
+
 		public StatementComponent(string str)
 		{
 			Text = str;

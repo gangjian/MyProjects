@@ -100,7 +100,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
                     else
                     {
                         // 未定义
-                        string resultStr = MakeResultStr(cpnt.Text, @"未定义", print_info);
+                        string resultStr = MakeResultStr(cpnt.Text, @"X", print_info);
                         result_list.Add(resultStr);
                     }
                 }
@@ -140,6 +140,10 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
         static string MakeResultStr(string macro_name, string value_str, MacroPrintInfo print_info)
         {
+			if (string.IsNullOrEmpty(value_str))
+			{
+				value_str = @"○";
+			}
             string resultStr = print_info.SourceName + "," + print_info.LineNumStr
                             + "," + print_info.CodeText + "," + macro_name + "," + value_str;
             return resultStr;

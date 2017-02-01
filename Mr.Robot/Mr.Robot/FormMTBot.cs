@@ -247,7 +247,7 @@ namespace Mr.Robot
 			dlg.FileName = DateTime.Now.ToString().Replace('/', '_').Replace(':', '_') + ".csv";
 			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 			{
-				StreamWriter sw = new StreamWriter(dlg.FileName, false);
+				StreamWriter sw = new StreamWriter(dlg.FileName, false, Encoding.Default);
 				try
 				{
 					string wtStr = string.Empty;

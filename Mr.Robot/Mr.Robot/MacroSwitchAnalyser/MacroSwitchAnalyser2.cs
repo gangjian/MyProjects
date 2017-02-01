@@ -69,7 +69,10 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				{
 					string progressStr = src_name + " ==> " + commentStr + " : " + count.ToString() + "/" + this.TotalCount.ToString();
 					this.ReportProgress(progressStr, resultList);
-					Thread.Sleep(30);
+					if (null != resultList && 0 != resultList.Count)
+					{
+						Thread.Sleep(30);
+					}
 				}
 			}
 			System.Diagnostics.Trace.WriteLine("Complete! Total:" + this.TotalCount.ToString() + ", Failed:"

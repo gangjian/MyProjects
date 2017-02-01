@@ -75,15 +75,6 @@ namespace Mr.Robot
 		#endregion
 
 		// 以下都是内部调用方法
-
-		void ReportProgress(string progress_str)
-		{
-			if (null != this.UpdateProgress)
-			{
-				this.UpdateProgress(progress_str, null);
-			}
-		}
-
 		class CodeBuffer
 		{
 			public string FileName = string.Empty;

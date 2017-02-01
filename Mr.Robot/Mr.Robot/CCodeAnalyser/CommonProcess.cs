@@ -662,6 +662,91 @@ namespace Mr.Robot
 			return 0;
 		}
 
+		public static int CaculateExpressionValue(string exp_str, FileParseInfo parse_info)
+		{
+			List<StatementComponent> componentList = StatementAnalysis.GetComponents(exp_str, parse_info);
+			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+			if (1 == meaningGroupList.Count)
+			{
+				return GetSingleGroupExpVal(meaningGroupList.First(), parse_info);
+			}
+			else
+			{
+				return CaculateCompondExpVal(meaningGroupList, parse_info);
+			}
+		}
+
+		static int GetSingleGroupExpVal(MeaningGroup meaning_group, FileParseInfo parse_info)
+		{
+			int retVal = 0;
+			MacroDefineInfo mdi = null;
+			// 立即数
+			if (meaning_group.Type == MeaningGroupType.Constant
+				&& int.TryParse(meaning_group.Text, out retVal))
+			{
+				return retVal;
+			}
+			// 宏定义
+			else if ( meaning_group.Type == MeaningGroupType.Identifier
+					 && null != (mdi = parse_info.FindMacroDefInfo(meaning_group.Text)) )
+			{
+				return CaculateExpressionValue(mdi.Value, parse_info);
+			}
+			// 表达式
+			else if (meaning_group.Type == MeaningGroupType.Expression
+					 && meaning_group.Text.Trim().StartsWith("(")
+					 && meaning_group.Text.Trim().EndsWith(")"))
+			{
+				string newExp = meaning_group.Text.Trim();
+				newExp = newExp.Remove(newExp.Length - 1);
+				newExp = newExp.Remove(0, 1);
+				return CaculateExpressionValue(newExp, parse_info);
+			}
+			else
+			{
+				System.Diagnostics.Trace.Assert(false);
+			}
+			return 0;
+		}
+
+		static int CaculateCompondExpVal(List<MeaningGroup> meaningGroupList, FileParseInfo parse_info)
+		{
+			int idx;
+			MeaningGroup opt = GetHighestPriorityOperator(meaningGroupList, out idx);
+			if (null == opt)
+			{
+				System.Diagnostics.Trace.Assert(false);
+			}
+			return 0;
+		}
+
+		static MeaningGroup GetHighestPriorityOperator(List<MeaningGroup> meaningGroupList, out int idx)
+		{
+			MeaningGroup retGroup = null;
+			idx = -1;
+			for (int i = 0; i < meaningGroupList.Count; i++)
+			{
+				if (	meaningGroupList[i].Type == MeaningGroupType.OtherOperator
+					||	meaningGroupList[i].Type == MeaningGroupType.EqualMark	)
+				{
+					if (null == retGroup)
+					{
+						retGroup = meaningGroupList[i];
+						idx = i;
+					}
+					else
+					{
+						if (meaningGroupList[i].ComponentList[0].Priority > retGroup.ComponentList[0].Priority)
+						{
+							retGroup = meaningGroupList[i];
+							idx = i;
+						}
+					}
+				}
+			}
+			return retGroup;
+		}
+
         /// <summary>
         /// 查找下一个指定的标识符
         /// </summary>
