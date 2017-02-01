@@ -28,6 +28,10 @@ namespace Mr.Robot
 		private void btnOpenRoot_Click(object sender, EventArgs e)
 		{
 			FolderBrowserDialog dlg = new FolderBrowserDialog();
+			if (!string.IsNullOrEmpty(tbxRootPath.Text))
+			{
+				dlg.SelectedPath = tbxRootPath.Text;
+			}
 			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 			{
 				UpdateRootPath(dlg.SelectedPath);
@@ -39,6 +43,10 @@ namespace Mr.Robot
 		private void btnOpenSource_Click(object sender, EventArgs e)
 		{
 			FolderBrowserDialog dlg = new FolderBrowserDialog();
+			if (!string.IsNullOrEmpty(tbxSourcePath.Text))
+			{
+				dlg.SelectedPath = tbxSourcePath.Text;
+			}
 			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 			{
 				UpdateSourcePath(dlg.SelectedPath);
