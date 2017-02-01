@@ -370,7 +370,7 @@ namespace Mr.Robot
         {
 			// 遍历查找宏名
 			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
-			if (null != mdi)
+			if (null != mdi && !string.IsNullOrEmpty(mdi.Value))
 			{
 				string macroName = mdi.Name;
 				string replaceStr = mdi.Value;

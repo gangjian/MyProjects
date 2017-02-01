@@ -188,6 +188,7 @@ namespace Mr.Robot
 
 		public MacroDefineInfo FindMacroDefInfo(string macro_name)
 		{
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(macro_name));
 			foreach (MacroDefineInfo mdi in this.MacroDefineList)
 			{
 				if (mdi.Name == macro_name)
