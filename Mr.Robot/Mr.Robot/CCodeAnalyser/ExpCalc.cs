@@ -192,7 +192,7 @@ namespace Mr.Robot
 					|| meaningGroupList[i].Type == MeaningGroupType.EqualMark)
 				{
 					if (null == operatorGroup
-						|| meaningGroupList[i].ComponentList[0].Priority > operatorGroup.ComponentList[0].Priority)
+						|| meaningGroupList[i].ComponentList[0].Priority < operatorGroup.ComponentList[0].Priority)
 					{
 						operatorGroup = meaningGroupList[i];
 						operatorIdx = i;
