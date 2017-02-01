@@ -274,26 +274,38 @@ namespace Mr.Robot
 			int retVal = 0;
 			switch (oper_group._Operator.Text)
 			{
-				case "==":
+				case "==":																// 逻辑等
 					retVal = CalcLogical_Equal(oper_group, parse_info);
 					break;
-				case "!=":
+				case "!=":																// 逻辑不等
 					retVal = CalcLogical_Unequal(oper_group, parse_info);
 					break;
-				case "||":
+				case "||":																// 逻辑或
 					retVal = CalcLogical_Or(oper_group, parse_info);
 					break;
-				case "&&":
+				case "&&":																// 逻辑与
 					retVal = CalcLogical_And(oper_group, parse_info);
 					break;
-				case "defined":
+				case "defined":															// 宏是否定义
 					retVal = CalcLogical_Defined(oper_group, parse_info);
 					break;
-				case "%":
+				case "%":																// 取余
 					retVal = CalcLogical_Remainder(oper_group, parse_info);
 					break;
-				case "!":
+				case "!":																// 逻辑非
 					retVal = CalcLogical_Not(oper_group, parse_info);
+					break;
+				case ">=":																// 大于等于
+					retVal = CalcLogical_GreaterOrEqual(oper_group, parse_info);
+					break;
+				case "<=":																// 小于等于
+					retVal = CalcLogical_LessOrEqual(oper_group, parse_info);
+					break;
+				case ">":																// 大于
+					retVal = CalcLogical_Greater(oper_group, parse_info);
+					break;
+				case "<":																// 小于
+					retVal = CalcLogical_Less(oper_group, parse_info);
 					break;
 				default:
 					throw new System.NotImplementedException();
@@ -410,6 +422,74 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
 			if (0 == operand1Value)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		static int CalcLogical_GreaterOrEqual(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			if (operand1Value >= operand2Value)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		static int CalcLogical_LessOrEqual(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			if (operand1Value <= operand2Value)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		static int CalcLogical_Greater(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			if (operand1Value > operand2Value)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		static int CalcLogical_Less(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			if (operand1Value < operand2Value)
 			{
 				return 1;
 			}
