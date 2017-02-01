@@ -289,6 +289,9 @@ namespace Mr.Robot
 				case "defined":
 					retVal = CalcLogical_Defined(oper_group, parse_info);
 					break;
+				case "%":
+					retVal = CalcLogical_Remainder(oper_group, parse_info);
+					break;
 				default:
 					throw new System.NotImplementedException();
 			}
@@ -387,5 +390,16 @@ namespace Mr.Robot
 				return 0;
 			}
 		}
+
+		static int CalcLogical_Remainder(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			return (operand1Value % operand2Value);
+		}
+
 	}
 }
