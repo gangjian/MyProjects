@@ -288,10 +288,10 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-								ExpCalc.GetExpressionValue(exprStr, fi);
-                                if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
+                                //if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
+								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -315,9 +315,9 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-                                if (null != CommonProcess.JudgeExpressionDefined(exprStr, fi.MacroDefineList))
+                                if (CommonProcess.JudgeExpressionDefined(exprStr, fi))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -341,9 +341,9 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式是否已定义
-                                if (null != CommonProcess.JudgeExpressionDefined(exprStr, fi.MacroDefineList))
+                                if (CommonProcess.JudgeExpressionDefined(exprStr, fi))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = false;
@@ -396,10 +396,10 @@ namespace Mr.Robot
 							else
 							{
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
-                                exprStr = CommonProcess.GetExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
 								// 判断表达式的值
-								ExpCalc.GetExpressionValue(exprStr, fi);
-                                if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
+                                //if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
+								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;

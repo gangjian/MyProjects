@@ -608,7 +608,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个表达式
 		/// </summary>
-		public static string GetExpressionStr(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
+		public static string GetPrecompileExpressionStr(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
 		{
 			foundPos = new CodePosition(searchPos);
 
@@ -624,42 +624,17 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断表达式是否已定义(#if defined)
 		/// </summary>
-        public static MacroDefineInfo JudgeExpressionDefined(string exp, List<MacroDefineInfo> defineList)
+        public static bool JudgeExpressionDefined(string exp, FileParseInfo parse_info)
 		{
-			foreach (var di in defineList)
+			System.Diagnostics.Trace.Assert(CommonProcess.IsStandardIdentifier(exp));
+			if (null != parse_info.FindMacroDefInfo(exp))
 			{
-				if (exp == di.Name)
-				{
-					return di;
-				}
+				return true;
 			}
-			return null;
-		}
-
-		/// <summary>
-		/// 判断表达式的值
-		/// </summary>
-        public static int JudgeExpressionValue(string exp, List<MacroDefineInfo> defineList)
-		{
-			// TODO: 暂不考虑复合表达式的情况
-			// 对于复合表达式, 拆分成单独表达式分别求值
-			int retVal = 0;
-			if (int.TryParse(exp, out retVal))
+			else
 			{
-				return retVal;
+				return false;
 			}
-			else if (IsStandardIdentifier(exp))
-			{
-				MacroDefineInfo mdi = JudgeExpressionDefined(exp, defineList);
-				if (null != mdi)
-				{
-					if (int.TryParse(mdi.Value, out retVal))
-					{
-						return retVal;
-					}
-				}
-			}
-			return 0;
 		}
 
         /// <summary>
