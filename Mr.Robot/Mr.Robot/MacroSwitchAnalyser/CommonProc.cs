@@ -62,12 +62,14 @@ namespace Mr.Robot.MacroSwitchAnalyser
         public static void MacroSwitchExpressionAnalysis(   string macro_exp,
                                                             MacroPrintInfo print_info,
                                                             FileParseInfo src_parse_info,
-                                                            ref List<string> result_list)
+                                                            ref List<string> result_list,
+															string original_macro_name = null)
         {
             if (string.IsNullOrEmpty(macro_exp))
             {
                 return;
             }
+			string macro_name = original_macro_name;
             List<StatementComponent> cpntList = StatementAnalysis.GetComponents(macro_exp, null);
             foreach (StatementComponent cpnt in cpntList)
             {
@@ -76,15 +78,29 @@ namespace Mr.Robot.MacroSwitchAnalyser
                     MacroDefineInfo mdi = src_parse_info.FindMacroDefInfo(cpnt.Text);
                     if (null != mdi)
                     {
+						if (null == macro_name)
+						{
+							macro_name = mdi.Name;
+						}
                         string valStr = mdi.Value;
                         // 宏值分析
                         MacroValueType mType = MacroValueStrAnalysis(ref valStr);
                         // 立即数
                         if (mType == MacroValueType.ConstNumber)
                         {
-                            string resultStr = MakeResultStr(mdi.Name, valStr, print_info);
+							string resultStr = MakeResultStr(macro_name, valStr, print_info);
                             result_list.Add(resultStr);
                         }
+						// 别名
+						else if (mType == MacroValueType.Alias)
+						{
+							string orginalName = original_macro_name;
+							if (null == orginalName)
+							{
+								orginalName = mdi.Name;
+							}
+							MacroSwitchExpressionAnalysis(valStr, print_info, src_parse_info, ref result_list, orginalName);
+						}
                         // 表达式
                         else if (mType == MacroValueType.Expression)
                         {
@@ -93,14 +109,18 @@ namespace Mr.Robot.MacroSwitchAnalyser
                         // 空
                         else if (mType == MacroValueType.Empty)
                         {
-                            string resultStr = MakeResultStr(mdi.Name, string.Empty, print_info);
+							string resultStr = MakeResultStr(macro_name, string.Empty, print_info);
                             result_list.Add(resultStr);
                         }
                     }
                     else
                     {
                         // 未定义
-                        string resultStr = MakeResultStr(cpnt.Text, @"X", print_info);
+						if (null == macro_name)
+						{
+							macro_name = cpnt.Text;
+						}
+						string resultStr = MakeResultStr(macro_name, @"X", print_info);
                         result_list.Add(resultStr);
                     }
                 }
@@ -132,6 +152,10 @@ namespace Mr.Robot.MacroSwitchAnalyser
             {
                 return MacroValueType.ConstNumber;
             }
+			else if (0 == numberCount && 1 == identifierCount)
+			{
+				return MacroValueType.Alias;
+			}
             else
             {
                 return MacroValueType.Expression;
@@ -166,9 +190,10 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
     public enum MacroValueType
     {
-        ConstNumber,
-        Expression,
-        Empty,
+        ConstNumber,			// 常数
+		Alias,					// 别名(把一个宏名定义到另一个宏名)
+        Expression,				// 表达式
+        Empty,					// 空
     }
 
 }
