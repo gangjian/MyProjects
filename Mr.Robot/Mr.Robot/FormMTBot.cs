@@ -113,6 +113,7 @@ namespace Mr.Robot
 		private void btnStart_Click(object sender, EventArgs e)
 		{
 			this.lvDetailList.Items.Clear();
+			this.lvSummaryList.Items.Clear();
 			this.tbxLog.Clear();
 			this.progressBar1.Value = 0;
 			this.DetailResultList.Clear();
