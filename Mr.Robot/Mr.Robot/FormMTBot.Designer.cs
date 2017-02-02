@@ -40,7 +40,7 @@
 			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label3 = new System.Windows.Forms.Label();
 			this.label4 = new System.Windows.Forms.Label();
-			this.lvMacroList = new System.Windows.Forms.ListView();
+			this.lvDetailList = new System.Windows.Forms.ListView();
 			this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -51,6 +51,12 @@
 			this.tbxLog = new System.Windows.Forms.TextBox();
 			this.label5 = new System.Windows.Forms.Label();
 			this.btnSave2CSV = new System.Windows.Forms.Button();
+			this.lvSummaryList = new System.Windows.Forms.ListView();
+			this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeader14 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.label6 = new System.Windows.Forms.Label();
+			this.button1 = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -59,9 +65,9 @@
 			this.label1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label1.Location = new System.Drawing.Point(12, 9);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(373, 21);
+			this.label1.Size = new System.Drawing.Size(86, 21);
 			this.label1.TabIndex = 0;
-			this.label1.Text = "在这里指定所有代码的根目录(包含所有*.c, *.h文件)";
+			this.label1.Text = "Root Path";
 			// 
 			// tbxRootPath
 			// 
@@ -89,9 +95,9 @@
 			this.label2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label2.Location = new System.Drawing.Point(12, 66);
 			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(221, 21);
+			this.label2.Size = new System.Drawing.Size(99, 21);
 			this.label2.TabIndex = 0;
-			this.label2.Text = "在这里指定目标*.c文件的目录";
+			this.label2.Text = "Target Path";
 			// 
 			// tbxSourcePath
 			// 
@@ -115,12 +121,12 @@
 			// 
 			// btnStart
 			// 
-			this.btnStart.Font = new System.Drawing.Font("微软雅黑", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnStart.Font = new System.Drawing.Font("Consolas", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.btnStart.Location = new System.Drawing.Point(851, 33);
 			this.btnStart.Name = "btnStart";
 			this.btnStart.Size = new System.Drawing.Size(103, 54);
 			this.btnStart.TabIndex = 3;
-			this.btnStart.Text = "开始";
+			this.btnStart.Text = "Start";
 			this.btnStart.UseVisualStyleBackColor = true;
 			this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
 			// 
@@ -153,38 +159,38 @@
 			this.label3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label3.Location = new System.Drawing.Point(12, 129);
 			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(93, 21);
+			this.label3.Size = new System.Drawing.Size(123, 21);
 			this.label3.TabIndex = 0;
-			this.label3.Text = "*.c文件列表";
+			this.label3.Text = "Source File List";
 			// 
 			// label4
 			// 
 			this.label4.AutoSize = true;
-			this.label4.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.label4.Location = new System.Drawing.Point(12, 350);
+			this.label4.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.label4.Location = new System.Drawing.Point(391, 352);
 			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(138, 21);
+			this.label4.Size = new System.Drawing.Size(108, 19);
 			this.label4.TabIndex = 0;
-			this.label4.Text = "预编译宏开关列表";
+			this.label4.Text = "Detail List";
 			// 
-			// lvMacroList
+			// lvDetailList
 			// 
-			this.lvMacroList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+			this.lvDetailList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader3,
             this.columnHeader4,
             this.columnHeader5,
             this.columnHeader8,
             this.columnHeader6,
             this.columnHeader7});
-			this.lvMacroList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.lvMacroList.FullRowSelect = true;
-			this.lvMacroList.GridLines = true;
-			this.lvMacroList.Location = new System.Drawing.Point(16, 374);
-			this.lvMacroList.Name = "lvMacroList";
-			this.lvMacroList.Size = new System.Drawing.Size(938, 310);
-			this.lvMacroList.TabIndex = 4;
-			this.lvMacroList.UseCompatibleStateImageBehavior = false;
-			this.lvMacroList.View = System.Windows.Forms.View.Details;
+			this.lvDetailList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvDetailList.FullRowSelect = true;
+			this.lvDetailList.GridLines = true;
+			this.lvDetailList.Location = new System.Drawing.Point(395, 374);
+			this.lvDetailList.Name = "lvDetailList";
+			this.lvDetailList.Size = new System.Drawing.Size(559, 310);
+			this.lvDetailList.TabIndex = 4;
+			this.lvDetailList.UseCompatibleStateImageBehavior = false;
+			this.lvDetailList.View = System.Windows.Forms.View.Details;
 			// 
 			// columnHeader3
 			// 
@@ -244,28 +250,83 @@
 			// 
 			// btnSave2CSV
 			// 
-			this.btnSave2CSV.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.btnSave2CSV.Location = new System.Drawing.Point(851, 338);
+			this.btnSave2CSV.Font = new System.Drawing.Font("Consolas", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnSave2CSV.Location = new System.Drawing.Point(858, 343);
 			this.btnSave2CSV.Name = "btnSave2CSV";
-			this.btnSave2CSV.Size = new System.Drawing.Size(103, 33);
+			this.btnSave2CSV.Size = new System.Drawing.Size(96, 28);
 			this.btnSave2CSV.TabIndex = 7;
-			this.btnSave2CSV.Text = "保存到CSV";
+			this.btnSave2CSV.Text = "Save CSV";
 			this.btnSave2CSV.UseVisualStyleBackColor = true;
 			this.btnSave2CSV.Click += new System.EventHandler(this.btnSave2CSV_Click);
+			// 
+			// lvSummaryList
+			// 
+			this.lvSummaryList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader9,
+            this.columnHeader13,
+            this.columnHeader14});
+			this.lvSummaryList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvSummaryList.FullRowSelect = true;
+			this.lvSummaryList.GridLines = true;
+			this.lvSummaryList.Location = new System.Drawing.Point(16, 374);
+			this.lvSummaryList.Name = "lvSummaryList";
+			this.lvSummaryList.Size = new System.Drawing.Size(364, 310);
+			this.lvSummaryList.TabIndex = 4;
+			this.lvSummaryList.UseCompatibleStateImageBehavior = false;
+			this.lvSummaryList.View = System.Windows.Forms.View.Details;
+			// 
+			// columnHeader9
+			// 
+			this.columnHeader9.Text = "序号";
+			this.columnHeader9.Width = 40;
+			// 
+			// columnHeader13
+			// 
+			this.columnHeader13.Text = "宏名";
+			this.columnHeader13.Width = 230;
+			// 
+			// columnHeader14
+			// 
+			this.columnHeader14.Text = "值";
+			this.columnHeader14.Width = 100;
+			// 
+			// label6
+			// 
+			this.label6.AutoSize = true;
+			this.label6.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.label6.Location = new System.Drawing.Point(12, 352);
+			this.label6.Name = "label6";
+			this.label6.Size = new System.Drawing.Size(117, 19);
+			this.label6.TabIndex = 0;
+			this.label6.Text = "Summary List";
+			// 
+			// button1
+			// 
+			this.button1.Font = new System.Drawing.Font("Consolas", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.button1.Location = new System.Drawing.Point(284, 343);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(96, 28);
+			this.button1.TabIndex = 7;
+			this.button1.Text = "Save CSV";
+			this.button1.UseVisualStyleBackColor = true;
+			this.button1.Click += new System.EventHandler(this.btnSave2CSV_Click);
 			// 
 			// FormMTBot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(966, 722);
+			this.Controls.Add(this.button1);
 			this.Controls.Add(this.btnSave2CSV);
 			this.Controls.Add(this.tbxLog);
 			this.Controls.Add(this.progressBar1);
-			this.Controls.Add(this.lvMacroList);
+			this.Controls.Add(this.lvSummaryList);
+			this.Controls.Add(this.lvDetailList);
 			this.Controls.Add(this.lvSourceList);
 			this.Controls.Add(this.btnStart);
 			this.Controls.Add(this.btnOpenSource);
 			this.Controls.Add(this.btnOpenRoot);
+			this.Controls.Add(this.label6);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this.tbxSourcePath);
 			this.Controls.Add(this.label5);
@@ -296,7 +357,7 @@
 		private System.Windows.Forms.ListView lvSourceList;
 		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.Label label4;
-		private System.Windows.Forms.ListView lvMacroList;
+		private System.Windows.Forms.ListView lvDetailList;
 		private System.Windows.Forms.ProgressBar progressBar1;
 		private System.Windows.Forms.ColumnHeader columnHeader1;
 		private System.Windows.Forms.ColumnHeader columnHeader2;
@@ -309,5 +370,11 @@
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.ColumnHeader columnHeader8;
 		private System.Windows.Forms.Button btnSave2CSV;
+		private System.Windows.Forms.ListView lvSummaryList;
+		private System.Windows.Forms.ColumnHeader columnHeader9;
+		private System.Windows.Forms.ColumnHeader columnHeader13;
+		private System.Windows.Forms.ColumnHeader columnHeader14;
+		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.Button button1;
 	}
 }

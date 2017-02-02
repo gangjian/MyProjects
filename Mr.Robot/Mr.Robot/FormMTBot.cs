@@ -113,36 +113,36 @@ namespace Mr.Robot
 
 		private void btnStart_Click(object sender, EventArgs e)
 		{
-			this.lvMacroList.Items.Clear();
+			this.lvDetailList.Items.Clear();
 			this.tbxLog.Clear();
 			this.progressBar1.Value = 0;
+			this.DetailResultList.Clear();
+			this.SummaryResultList.Clear();
 
 			SetUICtrlEnabled(false);
-			//this.CodeAnalyser = new CCodeAnalyser(this.SourceList, this.HeaderList);
-			//this.CodeAnalyser.UpdateProgress += new EventHandler(UpdateProgressHandler);
-			//this.CodeAnalyser.ProcessStart();
 			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyzer2(this.SourceList, this.HeaderList);
-			this.MacroSwitchAnalyzer2.ReportProgress += UpdateProgressHandler2;
+			this.MacroSwitchAnalyzer2.ReportProgress += UpdateProgressHandler;
 			this.MacroSwitchAnalyzer2.ProcStart();
 			this.StopWatch.Restart();
 		}
 
 		List<string> UpdateMacroSwitchList = new List<string>();
 
-		void UpdateProgressHandler(object sender, EventArgs args)
-		{
-			this.UpdateMacroSwitchList = GetMacroSwitchList(this.CodeAnalyser.ParseInfoList);
-			this.CodeAnalyser.ParseInfoList.Clear();
-			UpdateProgress(sender as string);
-		}
+		List<string> DetailResultList = new List<string>();								// 详细结果
+		List<string> SummaryResultList = new List<string>();							// 汇总结果
 
-		void UpdateProgressHandler2(string progress_str, List<string> result_list)
+		void UpdateProgressHandler(string progress_str, List<string> result_list)
 		{
 			if (null != result_list)
 			{
 				lock (result_list)
 				{
-					this.UpdateMacroSwitchList = result_list;
+					this.UpdateMacroSwitchList.Clear();
+					foreach (string resultStr in result_list)
+					{
+						this.UpdateMacroSwitchList.Add(resultStr);
+					}
+					AddDetailAndSummaryResultList();
 					UpdateProgress(progress_str);
 				}
 			}
@@ -209,16 +209,6 @@ namespace Mr.Robot
 			this.btnSave2CSV.Enabled = enabled;
 		}
 
-		List<string> GetMacroSwitchList(List<FileParseInfo> parse_info_list)
-		{
-			List<string> retList = new List<string>();
-			foreach (FileParseInfo fpi in parse_info_list)
-			{
-				retList.AddRange(fpi.MacroSwitchList);
-			}
-			return retList;
-		}
-
 		void UpdateMacroListView()
 		{
 			if (null == this.UpdateMacroSwitchList
@@ -230,24 +220,24 @@ namespace Mr.Robot
 			foreach (string msStr in this.UpdateMacroSwitchList)
 			{
 				string[] arr = msStr.Split(',');
-				int num = this.lvMacroList.Items.Count + 1;
+				int num = this.lvDetailList.Items.Count + 1;
 				lvItem = new ListViewItem(num.ToString());
-				for (int i = 0; i < this.lvMacroList.Columns.Count - 1; i++)
+				for (int i = 0; i < this.lvDetailList.Columns.Count - 1; i++)
 				{
 					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[i].Trim()));
 				}
-				this.lvMacroList.Items.Add(lvItem);
+				this.lvDetailList.Items.Add(lvItem);
 			}
 			this.UpdateMacroSwitchList.Clear();
 			if (null != lvItem)
 			{
-				this.lvMacroList.TopItem = lvItem;
+				this.lvDetailList.TopItem = lvItem;
 			}
 		}
 
 		private void btnSave2CSV_Click(object sender, EventArgs e)
 		{
-			if (0 == this.lvMacroList.Items.Count)
+			if (0 == this.lvDetailList.Items.Count)
 			{
 				return;
 			}
@@ -259,12 +249,12 @@ namespace Mr.Robot
 				try
 				{
 					string wtStr = string.Empty;
-					foreach (ColumnHeader col in this.lvMacroList.Columns)
+					foreach (ColumnHeader col in this.lvDetailList.Columns)
 					{
 						wtStr += col.Text + ",";
 					}
 					sw.WriteLine(wtStr);
-					foreach (ListViewItem item in this.lvMacroList.Items)
+					foreach (ListViewItem item in this.lvDetailList.Items)
 					{
 						wtStr = string.Empty;
 						foreach (ListViewItem.ListViewSubItem subItem in item.SubItems)
@@ -291,6 +281,53 @@ namespace Mr.Robot
 			{
 				this.MacroSwitchAnalyzer2.ProcAbort();
 			}
+		}
+
+		void AddDetailAndSummaryResultList()
+		{
+			// 详细结果列表
+			this.DetailResultList.AddRange(this.UpdateMacroSwitchList);
+
+			// 汇总结果列表
+			// 取得宏名, 解析结果
+			foreach (string rslt in this.UpdateMacroSwitchList)
+			{
+				string[] arr = rslt.Split(',');
+				if (arr.Length >= 5)
+				{
+					string macro_name = arr[arr.Length - 2].Trim();
+					string analysis_conclusion = arr[arr.Length - 1].Trim();
+					UpdateSummaryResult(macro_name, analysis_conclusion);
+				}
+			}
+		}
+
+		void UpdateSummaryResult(string macro_name, string conclusion_str)
+		{
+			for (int i = 0; i < this.SummaryResultList.Count; i++)
+			{
+				string[] arr = this.SummaryResultList[i].Split(',');
+				if (2 != arr.Length)
+				{
+					 continue;
+				}
+				string curMacroName = arr[0].Trim();
+				string curConclusionStr = arr[1].Trim();
+				if (curMacroName == macro_name)
+				{
+					if ("Discordant" != curConclusionStr
+						&& conclusion_str != curConclusionStr)
+					{
+						curConclusionStr = "Discordant";
+						this.SummaryResultList[i] = curMacroName + "," + curConclusionStr;
+					}
+					else
+					{
+					}
+					return;
+				}
+			}
+			this.SummaryResultList.Add(macro_name + "," + conclusion_str);
 		}
 	}
 }
