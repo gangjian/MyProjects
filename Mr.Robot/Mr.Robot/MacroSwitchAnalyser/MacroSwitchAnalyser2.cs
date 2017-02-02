@@ -12,6 +12,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
     {
 		List<string> SrcList = null;
 		List<string> HdList = null;
+		List<string> PrjList = null;
 
 		int TotalCount = 0;
 		int SuccessCount = 0;
@@ -24,10 +25,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		public ReportProgressDel ReportProgress = null;
 
-        public MacroSwitchAnalyzer2(List<string> source_list, List<string> header_list)
+        public MacroSwitchAnalyzer2(List<string> source_list, List<string> header_list, List<string> project_file_list)
         {
 			this.SrcList = source_list;
 			this.HdList = header_list;
+			this.PrjList = project_file_list;
         }
 
 		Thread workerThread = null;
@@ -56,11 +58,20 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			this.FailedCount = 0;
 			this.NotFoundCount = 0;
 			int count = 0;
+
+			// 处理工程文件
+			List<string> prjDefList = new List<string>();
+			foreach (string prj_name in this.PrjList)
+			{
+				PrjFileProc(prj_name, ref prjDefList);
+			}
+
+			// 处理源文件
 			foreach (string src_name in this.SrcList)
 			{
 				count++;
 				string commentStr;
-				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr);
+				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, prjDefList);
 				if (null != resultList)
 				{
 					//this.ResultList.AddRange(resultList);
@@ -79,7 +90,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 					+ this.FailedCount.ToString() + ", NotFound:" + this.NotFoundCount.ToString() + ", Success:" + this.SuccessCount.ToString());
 		}
 
-		List<string> SrcProc(string src_name, List<string> header_list, out string comment_str)
+		List<string> SrcProc(string src_name, List<string> header_list, out string comment_str, List<string> prj_def_list)
         {
 			comment_str = string.Empty;
             List<string> codeList = CCodeAnalyser.RemoveComments(src_name);
@@ -106,7 +117,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			foreach (MacroSwitchExpInfo expInfo in expInfoList)
 			{
 				MacroPrintInfo printInfo = new MacroPrintInfo(fi.Name, expInfo.LineNum.ToString(), expInfo.CodeLine);
-				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList);
+				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, prj_def_list);
 			}
 			comment_str = "Success!";
 			this.SuccessCount += 1;
@@ -150,5 +161,33 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
             return CommonProc.GetMacroExpression(code_line, idx);
         }
+
+		void PrjFileProc(string prj_file_name, ref List<string> prj_def_list)
+		{
+			StreamReader sr = new StreamReader(prj_file_name);
+			while (true)
+			{
+				string rdLine = sr.ReadLine();
+				if (null == rdLine)
+				{
+					break;
+				}
+				rdLine = rdLine.Trim();
+				if (string.Empty == rdLine
+					|| (!Char.IsLetter(rdLine[0]) && ('_' != rdLine[0]))
+					)
+				{
+					continue;
+				}
+				else if (CommonProcess.IsStandardIdentifier(rdLine))
+				{
+					if (!prj_def_list.Contains(rdLine))
+					{
+						prj_def_list.Add(rdLine);
+					}
+				}
+			}
+			sr.Close();
+		}
     }
 }

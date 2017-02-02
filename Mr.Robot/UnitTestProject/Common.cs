@@ -24,8 +24,9 @@ namespace UnitTestProject
 
 			List<string> source_list = new List<string>();
 			List<string> header_list = new List<string>();
+			List<string> prj_file_list = new List<string>();
 			// 取得所有源文件和头文件列表
-			IOProcess.GetAllCCodeFiles(folder_path, ref source_list, ref header_list);
+			IOProcess.GetAllCCodeFiles(folder_path, ref source_list, ref header_list, ref prj_file_list);
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
@@ -57,8 +58,9 @@ namespace UnitTestProject
 
 			List<string> source_list = new List<string>();
 			List<string> header_list = new List<string>();
+			List<string> prj_file_list = new List<string>();
 			// 取得所有源文件和头文件列表
-			IOProcess.GetAllCCodeFiles(folder_path, ref source_list, ref header_list);
+			IOProcess.GetAllCCodeFiles(folder_path, ref source_list, ref header_list, ref prj_file_list);
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);

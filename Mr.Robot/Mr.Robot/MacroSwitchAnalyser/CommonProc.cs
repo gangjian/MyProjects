@@ -62,7 +62,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
         public static void MacroSwitchExpressionAnalysis(   string macro_exp,
                                                             MacroPrintInfo print_info,
                                                             FileParseInfo parse_info,
-                                                            ref List<string> result_list)
+                                                            ref List<string> result_list,
+															List<string> prj_def_list)
         {
             if (string.IsNullOrEmpty(macro_exp))
             {
@@ -88,20 +89,29 @@ namespace Mr.Robot.MacroSwitchAnalyser
                         // 表达式
                         else if (mType == MacroValueType.Expression)
                         {
-							MacroSwitchExpressionAnalysis(valStr, print_info, parse_info, ref result_list);
+							MacroSwitchExpressionAnalysis(valStr, print_info, parse_info, ref result_list, prj_def_list);
                         }
                         // 空
                         else if (mType == MacroValueType.Empty)
                         {
-							string resultStr = MakeResultStr(mdi.Name, string.Empty, print_info);
+							string resultStr = MakeResultStr(mdi.Name, @"○", print_info);
                             result_list.Add(resultStr);
                         }
                     }
                     else
                     {
                         // 未定义
-						string resultStr = MakeResultStr(cpnt.Text, @"X", print_info);
-                        result_list.Add(resultStr);
+						if (null != prj_def_list
+							&& prj_def_list.Contains(cpnt.Text))
+						{
+							string resultStr = MakeResultStr(cpnt.Text, @".mtpj def", print_info);
+							result_list.Add(resultStr);
+						}
+						else
+						{
+							string resultStr = MakeResultStr(cpnt.Text, @"X", print_info);
+							result_list.Add(resultStr);
+						}
                     }
                 }
             }
@@ -149,10 +159,6 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		static string MakeResultStr(string macro_name, string value_str, MacroPrintInfo print_info)
         {
-			if (string.IsNullOrEmpty(value_str))
-			{
-				value_str = @"○";
-			}
             string resultStr = print_info.SourceName + "," + print_info.LineNumStr
                             + "," + print_info.CodeText + "," + macro_name + "," + value_str;
             return resultStr;

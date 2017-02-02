@@ -13,24 +13,31 @@ namespace Mr.Robot
 		/// <summary>
 		/// 遍历文件夹
 		/// </summary>
-		public static void GetAllCCodeFiles(string rootPath, ref List<string> cSourceFilesList, ref List<string> cHeaderFilesList)
+		public static void GetAllCCodeFiles(string root_path,
+											ref List<string> source_file_list,
+											ref List<string> header_file_list,
+											ref List<string> project_file_list)
 		{
-			DirectoryInfo di = new DirectoryInfo(rootPath);
+			DirectoryInfo di = new DirectoryInfo(root_path);
 			try
 			{
 				foreach (DirectoryInfo subDir in di.GetDirectories())
 				{
-					GetAllCCodeFiles(subDir.FullName, ref cSourceFilesList, ref cHeaderFilesList);
+					GetAllCCodeFiles(subDir.FullName, ref source_file_list, ref header_file_list, ref project_file_list);
 				}
 				foreach (FileInfo fi in di.GetFiles())
 				{
 					if (".c" == fi.Extension.ToLower())
 					{
-						cSourceFilesList.Add(fi.FullName);
+						source_file_list.Add(fi.FullName);
 					}
 					else if (".h" == fi.Extension.ToLower())
 					{
-						cHeaderFilesList.Add(fi.FullName);
+						header_file_list.Add(fi.FullName);
+					}
+					else if (".mtpj" == fi.Extension.ToLower())
+					{
+						project_file_list.Add(fi.FullName);
 					}
 					else
 					{

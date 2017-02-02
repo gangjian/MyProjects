@@ -17,6 +17,7 @@ namespace Mr.Robot
 	#region 全局字段
 		List<string> CSourceFileList = new List<string>();
 		List<string> CHeaderFileList = new List<string>();
+		List<string> ProjectFileList = new List<string>();
 
 		CCodeAnalyser CAnalyser = null;
 	#endregion
@@ -80,7 +81,7 @@ namespace Mr.Robot
 			this.CSourceFileList = new List<string>();
 			this.CHeaderFileList = new List<string>();
             // 遍历文件夹, 取得所有.c源文件和.h头文件
-            IOProcess.GetAllCCodeFiles(path_name, ref this.CSourceFileList, ref CHeaderFileList);
+			IOProcess.GetAllCCodeFiles(path_name, ref this.CSourceFileList, ref CHeaderFileList, ref this.ProjectFileList);
 
             UpdateFileListViewCtrl(this.CSourceFileList);
 		}

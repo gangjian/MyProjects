@@ -18,8 +18,9 @@ namespace UnitTestProject
 		{
 			List<string> source_list = new List<string>();
 			List<string> header_list = new List<string>();
+			List<string> prj_file_list = new List<string>();
 			// 取得所有源文件和头文件列表
-			IOProcess.GetAllCCodeFiles("C:\\TestData\\Honda18HMI_soft", ref source_list, ref header_list);
+			IOProcess.GetAllCCodeFiles("C:\\TestData\\Honda18HMI_soft", ref source_list, ref header_list, ref prj_file_list);
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add("C:\\TestData\\Honda18HMI_soft\\software\\src\\AnlysSprtTask\\AnlysSprtTASK.c");

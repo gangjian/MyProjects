@@ -15,6 +15,7 @@ namespace Mr.Robot
 	{
 		List<string> SourceList = new List<string>();
 		List<string> HeaderList = new List<string>();
+		List<string> PrjFileList = new List<string>();
 
 		public FormMTBot()
 		{
@@ -66,8 +67,9 @@ namespace Mr.Robot
 
 					this.SourceList.Clear();
 					this.HeaderList.Clear();
+					this.PrjFileList.Clear();
 					// 取得所有源文件和头文件列表
-					IOProcess.GetAllCCodeFiles(root_path, ref this.SourceList, ref this.HeaderList);
+					IOProcess.GetAllCCodeFiles(root_path, ref this.SourceList, ref this.HeaderList, ref this.PrjFileList);
 					UpdateSourceListView();
 				}
 			}
@@ -83,9 +85,10 @@ namespace Mr.Robot
 					tbxSourcePath.Text = source_path;
 
 					List<string> tmpHdList = new List<string>();
+					List<string> tmpPrjList = new List<string>();
 					// 取得所有源文件
 					this.SourceList.Clear();
-					IOProcess.GetAllCCodeFiles(source_path, ref this.SourceList, ref tmpHdList);
+					IOProcess.GetAllCCodeFiles(source_path, ref this.SourceList, ref tmpHdList, ref tmpPrjList);
 					UpdateSourceListView();
 				}
 			}
@@ -120,7 +123,7 @@ namespace Mr.Robot
 			this.SummaryResultList.Clear();
 
 			SetUICtrlEnabled(false);
-			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyzer2(this.SourceList, this.HeaderList);
+			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyzer2(this.SourceList, this.HeaderList, this.PrjFileList);
 			this.MacroSwitchAnalyzer2.ReportProgress += UpdateProgressHandler;
 			this.MacroSwitchAnalyzer2.ProcStart();
 			this.StopWatch.Restart();
@@ -345,40 +348,43 @@ namespace Mr.Robot
 
 		void UpdateSummaryListView()
 		{
-			if (this.SummaryResultList.Count > this.lvSummaryList.Items.Count)
+			lock (this.SummaryResultList)
 			{
-				int addCount = this.SummaryResultList.Count - this.lvSummaryList.Items.Count;
-				for (int i = 0; i < addCount; i++)
+				for (int i = 0; i < this.lvSummaryList.Items.Count; i++)
 				{
-					string curStr = this.SummaryResultList[this.SummaryResultList.Count - addCount + i];
+					string curStr = this.SummaryResultList[i];
 					string[] arr = curStr.Split(',');
 					if (2 != arr.Length)
 					{
 						continue;
 					}
-					int num = this.lvSummaryList.Items.Count + 1;
-					ListViewItem lvItem = new ListViewItem(num.ToString());
-					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[0]));
-					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[1]));
-					this.lvSummaryList.Items.Add(lvItem);
+					ListViewItem lvItem = this.lvSummaryList.Items[i];
+					if (lvItem.SubItems[1].Text != arr[0])
+					{
+						lvItem.SubItems[1].Text = arr[0];
+					}
+					if (lvItem.SubItems[2].Text != arr[1])
+					{
+						lvItem.SubItems[2].Text = arr[1];
+					}
 				}
-			}
-			for (int i = 0; i < this.lvSummaryList.Items.Count; i++)
-			{
-				string curStr = this.SummaryResultList[i];
-				string[] arr = curStr.Split(',');
-				if (2 != arr.Length)
+				if (this.SummaryResultList.Count > this.lvSummaryList.Items.Count)
 				{
-					continue;
-				}
-				ListViewItem lvItem = this.lvSummaryList.Items[i];
-				if (lvItem.SubItems[1].Text != arr[0])
-				{
-					lvItem.SubItems[1].Text = arr[0];
-				}
-				if (lvItem.SubItems[2].Text != arr[1])
-				{
-					lvItem.SubItems[2].Text = arr[1];
+					int addCount = this.SummaryResultList.Count - this.lvSummaryList.Items.Count;
+					for (int i = 0; i < addCount; i++)
+					{
+						string curStr = this.SummaryResultList[this.SummaryResultList.Count - addCount + i];
+						string[] arr = curStr.Split(',');
+						if (2 != arr.Length)
+						{
+							continue;
+						}
+						int num = this.lvSummaryList.Items.Count + 1;
+						ListViewItem lvItem = new ListViewItem(num.ToString());
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[0]));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[1]));
+						this.lvSummaryList.Items.Add(lvItem);
+					}
 				}
 			}
 		}
