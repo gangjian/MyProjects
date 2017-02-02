@@ -54,7 +54,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				return;
 			}
 			MacroPrintInfo printInfo = new MacroPrintInfo(this.SourceName, line_num.ToString(), code_line);
-            CommonProc.MacroSwitchExpressionAnalysis(expStr, printInfo, this.SourceParseInfo, ref result_list);
+			CommonProc.MacroSwitchExpressionAnalysis(expStr, printInfo, this.SourceParseInfo, ref result_list);
 		}
 
 	}
