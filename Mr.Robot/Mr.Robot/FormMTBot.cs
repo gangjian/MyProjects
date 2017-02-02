@@ -107,7 +107,6 @@ namespace Mr.Robot
 			}
 		}
 
-		CCodeAnalyser CodeAnalyser = null;
 		MacroSwitchAnalyzer2 MacroSwitchAnalyzer2 = null;
 		System.Diagnostics.Stopwatch StopWatch = new System.Diagnostics.Stopwatch();
 
@@ -169,7 +168,8 @@ namespace Mr.Robot
 
 		void UpdateProgressCtrlView(string progress_str)
 		{
-			UpdateMacroListView();
+			UpdateDetailListView();
+			UpdateSummaryListView();
 			this.tbxLog.AppendText(progress_str + " : " + this.StopWatch.Elapsed.ToString() + System.Environment.NewLine);
 			int idx = progress_str.LastIndexOf(':');
 			if (-1 != idx)
@@ -206,10 +206,11 @@ namespace Mr.Robot
 			this.btnOpenRoot.Enabled = enabled;
 			this.btnOpenSource.Enabled = enabled;
 			this.btnStart.Enabled = enabled;
-			this.btnSave2CSV.Enabled = enabled;
+			this.btnSaveDetail2CSV.Enabled = enabled;
+			this.btnSaveSummary2CSV.Enabled = enabled;
 		}
 
-		void UpdateMacroListView()
+		void UpdateDetailListView()
 		{
 			if (null == this.UpdateMacroSwitchList
 				|| 0 == this.UpdateMacroSwitchList.Count)
@@ -235,26 +236,31 @@ namespace Mr.Robot
 			}
 		}
 
-		private void btnSave2CSV_Click(object sender, EventArgs e)
+		private void btnSaveDetail2CSV_Click(object sender, EventArgs e)
 		{
-			if (0 == this.lvDetailList.Items.Count)
+			SaveListView2CsvFile(this.lvDetailList, "Detail");
+		}
+
+		void SaveListView2CsvFile(ListView list_view_ctrl, string category_str)
+		{
+			if (0 == list_view_ctrl.Items.Count)
 			{
 				return;
 			}
 			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = DateTime.Now.ToString().Replace('/', '_').Replace(':', '_') + ".csv";
+			dlg.FileName = DateTime.Now.ToString().Replace('/', '_').Replace(':', '_') + "_" + category_str + ".csv";
 			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 			{
 				StreamWriter sw = new StreamWriter(dlg.FileName, false, Encoding.Default);
 				try
 				{
 					string wtStr = string.Empty;
-					foreach (ColumnHeader col in this.lvDetailList.Columns)
+					foreach (ColumnHeader col in list_view_ctrl.Columns)
 					{
 						wtStr += col.Text + ",";
 					}
 					sw.WriteLine(wtStr);
-					foreach (ListViewItem item in this.lvDetailList.Items)
+					foreach (ListViewItem item in list_view_ctrl.Items)
 					{
 						wtStr = string.Empty;
 						foreach (ListViewItem.ListViewSubItem subItem in item.SubItems)
@@ -273,6 +279,7 @@ namespace Mr.Robot
 					sw.Close();
 				}
 			}
+
 		}
 
 		private void FormMTBot_FormClosing(object sender, FormClosingEventArgs e)
@@ -297,12 +304,12 @@ namespace Mr.Robot
 				{
 					string macro_name = arr[arr.Length - 2].Trim();
 					string analysis_conclusion = arr[arr.Length - 1].Trim();
-					UpdateSummaryResult(macro_name, analysis_conclusion);
+					UpdateSummaryList(macro_name, analysis_conclusion);
 				}
 			}
 		}
 
-		void UpdateSummaryResult(string macro_name, string conclusion_str)
+		void UpdateSummaryList(string macro_name, string conclusion_str)
 		{
 			for (int i = 0; i < this.SummaryResultList.Count; i++)
 			{
@@ -328,6 +335,51 @@ namespace Mr.Robot
 				}
 			}
 			this.SummaryResultList.Add(macro_name + "," + conclusion_str);
+		}
+
+		private void btnSaveSummary2CSV_Click(object sender, EventArgs e)
+		{
+			SaveListView2CsvFile(this.lvSummaryList, "Summary");
+		}
+
+		void UpdateSummaryListView()
+		{
+			if (this.SummaryResultList.Count > this.lvSummaryList.Items.Count)
+			{
+				int addCount = this.SummaryResultList.Count - this.lvSummaryList.Items.Count;
+				for (int i = 0; i < addCount; i++)
+				{
+					string curStr = this.SummaryResultList[this.SummaryResultList.Count - addCount + i];
+					string[] arr = curStr.Split(',');
+					if (2 != arr.Length)
+					{
+						continue;
+					}
+					int num = this.lvSummaryList.Items.Count + 1;
+					ListViewItem lvItem = new ListViewItem(num.ToString());
+					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[0]));
+					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[1]));
+					this.lvSummaryList.Items.Add(lvItem);
+				}
+			}
+			for (int i = 0; i < this.lvSummaryList.Items.Count; i++)
+			{
+				string curStr = this.SummaryResultList[i];
+				string[] arr = curStr.Split(',');
+				if (2 != arr.Length)
+				{
+					continue;
+				}
+				ListViewItem lvItem = this.lvSummaryList.Items[i];
+				if (lvItem.SubItems[1].Text != arr[0])
+				{
+					lvItem.SubItems[1].Text = arr[0];
+				}
+				if (lvItem.SubItems[2].Text != arr[1])
+				{
+					lvItem.SubItems[2].Text = arr[1];
+				}
+			}
 		}
 	}
 }

@@ -50,13 +50,13 @@
 			this.progressBar1 = new System.Windows.Forms.ProgressBar();
 			this.tbxLog = new System.Windows.Forms.TextBox();
 			this.label5 = new System.Windows.Forms.Label();
-			this.btnSave2CSV = new System.Windows.Forms.Button();
+			this.btnSaveDetail2CSV = new System.Windows.Forms.Button();
 			this.lvSummaryList = new System.Windows.Forms.ListView();
 			this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader14 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label6 = new System.Windows.Forms.Label();
-			this.button1 = new System.Windows.Forms.Button();
+			this.btnSaveSummary2CSV = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -248,16 +248,16 @@
 			this.label5.TabIndex = 0;
 			this.label5.Text = "Log";
 			// 
-			// btnSave2CSV
+			// btnSaveDetail2CSV
 			// 
-			this.btnSave2CSV.Font = new System.Drawing.Font("Consolas", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.btnSave2CSV.Location = new System.Drawing.Point(858, 343);
-			this.btnSave2CSV.Name = "btnSave2CSV";
-			this.btnSave2CSV.Size = new System.Drawing.Size(96, 28);
-			this.btnSave2CSV.TabIndex = 7;
-			this.btnSave2CSV.Text = "Save CSV";
-			this.btnSave2CSV.UseVisualStyleBackColor = true;
-			this.btnSave2CSV.Click += new System.EventHandler(this.btnSave2CSV_Click);
+			this.btnSaveDetail2CSV.Font = new System.Drawing.Font("Consolas", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnSaveDetail2CSV.Location = new System.Drawing.Point(858, 343);
+			this.btnSaveDetail2CSV.Name = "btnSaveDetail2CSV";
+			this.btnSaveDetail2CSV.Size = new System.Drawing.Size(96, 28);
+			this.btnSaveDetail2CSV.TabIndex = 7;
+			this.btnSaveDetail2CSV.Text = "Save CSV";
+			this.btnSaveDetail2CSV.UseVisualStyleBackColor = true;
+			this.btnSaveDetail2CSV.Click += new System.EventHandler(this.btnSaveDetail2CSV_Click);
 			// 
 			// lvSummaryList
 			// 
@@ -300,24 +300,24 @@
 			this.label6.TabIndex = 0;
 			this.label6.Text = "Summary List";
 			// 
-			// button1
+			// btnSaveSummary2CSV
 			// 
-			this.button1.Font = new System.Drawing.Font("Consolas", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.button1.Location = new System.Drawing.Point(284, 343);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(96, 28);
-			this.button1.TabIndex = 7;
-			this.button1.Text = "Save CSV";
-			this.button1.UseVisualStyleBackColor = true;
-			this.button1.Click += new System.EventHandler(this.btnSave2CSV_Click);
+			this.btnSaveSummary2CSV.Font = new System.Drawing.Font("Consolas", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnSaveSummary2CSV.Location = new System.Drawing.Point(284, 343);
+			this.btnSaveSummary2CSV.Name = "btnSaveSummary2CSV";
+			this.btnSaveSummary2CSV.Size = new System.Drawing.Size(96, 28);
+			this.btnSaveSummary2CSV.TabIndex = 7;
+			this.btnSaveSummary2CSV.Text = "Save CSV";
+			this.btnSaveSummary2CSV.UseVisualStyleBackColor = true;
+			this.btnSaveSummary2CSV.Click += new System.EventHandler(this.btnSaveSummary2CSV_Click);
 			// 
 			// FormMTBot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(966, 722);
-			this.Controls.Add(this.button1);
-			this.Controls.Add(this.btnSave2CSV);
+			this.Controls.Add(this.btnSaveSummary2CSV);
+			this.Controls.Add(this.btnSaveDetail2CSV);
 			this.Controls.Add(this.tbxLog);
 			this.Controls.Add(this.progressBar1);
 			this.Controls.Add(this.lvSummaryList);
@@ -369,12 +369,12 @@
 		private System.Windows.Forms.TextBox tbxLog;
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.ColumnHeader columnHeader8;
-		private System.Windows.Forms.Button btnSave2CSV;
+		private System.Windows.Forms.Button btnSaveDetail2CSV;
 		private System.Windows.Forms.ListView lvSummaryList;
 		private System.Windows.Forms.ColumnHeader columnHeader9;
 		private System.Windows.Forms.ColumnHeader columnHeader13;
 		private System.Windows.Forms.ColumnHeader columnHeader14;
 		private System.Windows.Forms.Label label6;
-		private System.Windows.Forms.Button button1;
+		private System.Windows.Forms.Button btnSaveSummary2CSV;
 	}
 }
