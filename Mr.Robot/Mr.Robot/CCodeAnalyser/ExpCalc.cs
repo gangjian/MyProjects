@@ -307,6 +307,18 @@ namespace Mr.Robot
 				case "<":																// 小于
 					retVal = CalcLogical_Less(oper_group, parse_info);
 					break;
+				case "+":
+					retVal = CalcArithmetic_Add(oper_group, parse_info);				// 加
+					break;
+				case "-":
+					retVal = CalcArithmetic_Sub(oper_group, parse_info);				// 减
+					break;
+				case "*":
+					retVal = CalcArithmetic_Multiply(oper_group, parse_info);			// 乘
+					break;
+				case "/":
+					retVal = CalcArithmetic_Divide(oper_group, parse_info);				// 除
+					break;
 				default:
 					throw new System.NotImplementedException();
 			}
@@ -497,6 +509,46 @@ namespace Mr.Robot
 			{
 				return 0;
 			}
+		}
+
+		static int CalcArithmetic_Add(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			return operand1Value + operand2Value;
+		}
+
+		static int CalcArithmetic_Sub(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			return operand1Value - operand2Value;
+		}
+
+		static int CalcArithmetic_Multiply(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			return operand1Value * operand2Value;
+		}
+
+		static int CalcArithmetic_Divide(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			return operand1Value / operand2Value;
 		}
 	}
 }

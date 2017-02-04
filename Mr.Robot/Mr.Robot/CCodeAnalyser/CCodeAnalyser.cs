@@ -130,7 +130,7 @@ namespace Mr.Robot
 				//AddCodeBufferList(srcName, codeList);
 			}
 			// 预编译处理
-			codeList = PrecompileProcess(codeList, ref fileInfo);
+			codeList = PrecompileProcess(srcName, codeList, ref fileInfo);
 			fileInfo.CodeList = codeList;
 //          Save2File(codeList, srcName + ".bak");
 
@@ -230,7 +230,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 预编译处理
 		/// </summary>
-		public List<string> PrecompileProcess(	List<string> codeList,
+		public List<string> PrecompileProcess(	string src_name,
+												List<string> codeList,
 												ref FileParseInfo fi)
 		{
 			List<string> retList = new List<string>();
@@ -289,6 +290,8 @@ namespace Mr.Robot
 							else
 							{
                                 exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+								// 表达式可能占多行(连行符)
+								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
                                 //if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
@@ -316,6 +319,8 @@ namespace Mr.Robot
 							else
 							{
                                 exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+								// 表达式可能占多行(连行符)
+								idx = searchPos.RowNum - 1;
 								// 判断表达式是否已定义
                                 if (CommonProcess.JudgeExpressionDefined(exprStr, fi))
 								{
@@ -342,6 +347,8 @@ namespace Mr.Robot
 							else
 							{
                                 exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+								// 表达式可能占多行(连行符)
+								idx = searchPos.RowNum - 1;
 								// 判断表达式是否已定义
                                 if (CommonProcess.JudgeExpressionDefined(exprStr, fi))
 								{
@@ -397,6 +404,8 @@ namespace Mr.Robot
 							{
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
                                 exprStr = CommonProcess.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+								// 表达式可能占多行(连行符)
+								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
                                 //if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
@@ -520,7 +529,7 @@ namespace Mr.Robot
 				if (CommonProcess.IsStandardIdentifier(nextIdtf.Text)
 					|| ("*" == nextIdtf.Text))
 				{
-					if (CommonProcess.MacroDetectAndExpand_File(nextIdtf.Text, parse_info.CodeList, foundPos, parse_info))
+					if (CommonProcess.MacroDetectAndExpand_File(nextIdtf.Text, foundPos, parse_info))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
@@ -661,6 +670,11 @@ namespace Mr.Robot
 													ref CodePosition searchPos,
 													CodePosition bracketLeft)
 		{
+			if (0 == qualifierList.Count
+				|| "typedef" == qualifierList.First().Text)
+			{
+				return null;
+			}
 			FuncParseInfo cfi = new FuncParseInfo();
 
 			// 先找匹配的小括号
@@ -735,9 +749,28 @@ namespace Mr.Robot
 			}
 			else
 			{
-				// 估计是出错了
-				//CommonProcess.ErrReport();	// TODO(20170103)
-				return null;
+				// 对应把参数声明列表写在小括号外, 第一个花括号前的古典写法.
+				CodePosition bodyStartPos = CommonProcess.FindNextSymbol(parse_info.CodeList, searchPos, '{');
+				searchPos = CommonProcess.PositionMoveNext(parse_info.CodeList, bodyStartPos);
+				CodePosition fp = CommonProcess.FindNextMatchSymbol(parse_info, ref searchPos, '}');
+				if (null == fp)
+				{
+					CommonProcess.ErrReport();
+					return null;
+				}
+				searchPos = new CodePosition(fp.RowNum, fp.ColNum + 1);
+				// 函数名
+				cfi.Name = qualifierList.Last().Text;
+				// 函数修饰符
+				qualifierList.RemoveAt(qualifierList.Count - 1);
+				cfi.Qualifiers = qualifierList;
+				// 参数列表
+				cfi.ParaList = CommonProcess.GetParaList(parse_info.CodeList,
+														 CommonProcess.PositionMoveNext(parse_info.CodeList, bracketRight),
+														 CommonProcess.PositionMovePrevious(parse_info.CodeList, bodyStartPos));
+				// 函数体起始位置
+				cfi.Scope = new CodeScope(bodyStartPos, fp);
+				return cfi;
 			}
 			// 更新index
 			return cfi;
@@ -1106,12 +1139,22 @@ namespace Mr.Robot
 			return false;
 		}
 
-        static string GetAnonymousTypeName(FileParseInfo fi)
+        static string GetAnonymousTypeName(FileParseInfo parse_info)
         {
             string fn, path;
-            fn = IOProcess.GetFileName(fi.SourceName, out path);
+            fn = IOProcess.GetFileName(parse_info.SourceName, out path);
 
-            string retName = fn.Replace('.', '_').ToUpper() + "_USR_DEF_TYPE_" + fi.UsrDefTypeList.Count.ToString();
+            string retName = fn.Replace('.', '_').ToUpper() + "_USR_DEF_TYPE_" + parse_info.UsrDefTypeList.Count.ToString();
+			for (int i = 0; i < retName.Length; i++)
+			{
+				// 文件名里可能有:"$", "~"之类的字符, 所以不能用作返回的类型名
+				if (!Char.IsLetterOrDigit(retName[i])
+					&& '_' != retName[i])
+				{
+					retName = retName.Remove(i, 1);
+					retName = retName.Insert(i, "_");
+				}
+			}
 
             return retName;
         }

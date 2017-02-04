@@ -379,7 +379,7 @@ namespace Mr.Robot
 				}
 				else if (IsStandardIdentifier(nextIdtf.Text))
 				{
-					if (MacroDetectAndExpand_File(nextIdtf.Text, parse_info.CodeList, foundPos, parse_info))
+					if (MacroDetectAndExpand_File(nextIdtf.Text, foundPos, parse_info))
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
@@ -436,12 +436,11 @@ namespace Mr.Robot
 		/// 宏检测与宏展开
 		/// </summary>
 		public static bool MacroDetectAndExpand_File(string idStr,
-													 List<string> codeList,
 													 CodePosition foundPos,
-													 FileParseInfo curFileInfo)
+													 FileParseInfo parse_info)
 		{
 			// 遍历查找宏名
-			MacroDefineInfo mdi = curFileInfo.FindMacroDefInfo(idStr);
+			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
 			if (null != mdi
 				&& !string.IsNullOrEmpty(mdi.Value))
 			{
@@ -455,7 +454,7 @@ namespace Mr.Robot
 				{
 					// 取得实参
 					CodePosition sPos = new CodePosition(foundPos.RowNum, foundPos.ColNum + idStr.Length);
-					CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref sPos, out foundPos);
+					CodeIdentifier nextIdtf = GetNextIdentifier(parse_info.CodeList, ref sPos, out foundPos);
 					if ("(" != nextIdtf.Text)
 					{
 						//ErrReport();
@@ -465,16 +464,16 @@ namespace Mr.Robot
 						return false;
 					}
 					CodePosition leftBracket = foundPos;
-					foundPos = FindNextSymbol(codeList, sPos, ')');
+					foundPos = FindNextMatchSymbol(parse_info, ref sPos, ')');
 					if (null == foundPos)
 					{
 						ErrReport();
 						return false;
 					}
 					removeEndPos = new CodePosition(foundPos);
-					nextIdtf.Text = LineStringCat(codeList, macroPos, foundPos);
+					nextIdtf.Text = LineStringCat(parse_info.CodeList, macroPos, foundPos);
 					macroName = nextIdtf.Text;
-					List<string> realParas = GetParaList(codeList, leftBracket, foundPos);
+					List<string> realParas = GetParaList(parse_info.CodeList, leftBracket, foundPos);
 					if (realParas.Count != mdi.ParaList.Count)
 					{
 						// TODO: 20170111
@@ -514,9 +513,12 @@ namespace Mr.Robot
 					ErrReport();
 					return false;
 				}
-
-				RemoveCodeContents(codeList, macroPos, removeEndPos);
-				codeList[lineIdx] = codeList[lineIdx].Insert(macroPos.ColNum, replaceStr);
+				if (macroName == replaceStr)
+				{
+					return false;
+				}
+				RemoveCodeContents(parse_info.CodeList, macroPos, removeEndPos);
+				parse_info.CodeList[lineIdx] = parse_info.CodeList[lineIdx].Insert(macroPos.ColNum, replaceStr);
 				// 用宏值去替换原来的宏名(宏展开)
 				//codeList[lineIdx] = codeList[lineIdx].Replace(macroName, replaceStr);
 				return true;
@@ -578,10 +580,15 @@ namespace Mr.Robot
 				retParaList.Add("");
 				return retParaList;
 			}
-			string[] paras = catStr.Split(',');
+			// 有一种古典写法, 把参数声明列表写在小括号外, 花括号(函数体开始)前
+			char[] sepArr = new char[] { ',', ';' };
+			string[] paras = catStr.Split(sepArr);
 			foreach (string p in paras)
 			{
-				retParaList.Add(p.Trim());
+				if (string.Empty != p.Trim())
+				{
+					retParaList.Add(p.Trim());
+				}
 			}
 			return retParaList;
 		}

@@ -129,6 +129,7 @@ namespace Mr.Robot
 			this.StopWatch.Restart();
 		}
 
+		Object UpdateMacroSwitchListLock = new object();
 		List<string> UpdateMacroSwitchList = new List<string>();
 
 		List<string> DetailResultList = new List<string>();								// 详细结果
@@ -140,10 +141,10 @@ namespace Mr.Robot
 			{
 				lock (result_list)
 				{
-					this.UpdateMacroSwitchList.Clear();
-					foreach (string resultStr in result_list)
+					lock (this.UpdateMacroSwitchListLock)
 					{
-						this.UpdateMacroSwitchList.Add(resultStr);
+						this.UpdateMacroSwitchList.Clear();
+						this.UpdateMacroSwitchList.AddRange(result_list);
 					}
 					AddDetailAndSummaryResultList();
 					UpdateProgress(progress_str);
@@ -216,24 +217,29 @@ namespace Mr.Robot
 
 		void UpdateDetailListView()
 		{
-			if (null == this.UpdateMacroSwitchList
-				|| 0 == this.UpdateMacroSwitchList.Count)
-			{
-				return;
-			}
 			ListViewItem lvItem = null;
-			foreach (string msStr in this.UpdateMacroSwitchList)
+			lock (this.UpdateMacroSwitchListLock)
 			{
-				string[] arr = msStr.Split(',');
-				int num = this.lvDetailList.Items.Count + 1;
-				lvItem = new ListViewItem(num.ToString());
-				for (int i = 0; i < this.lvDetailList.Columns.Count - 1; i++)
+				if (null == this.UpdateMacroSwitchList
+					|| 0 == this.UpdateMacroSwitchList.Count)
 				{
-					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[i].Trim()));
+					return;
 				}
-				this.lvDetailList.Items.Add(lvItem);
+				List<string> tmpList = new List<string>();
+				tmpList.AddRange(this.UpdateMacroSwitchList);
+				foreach (string msStr in tmpList)
+				{
+					string[] arr = msStr.Split(',');
+					int num = this.lvDetailList.Items.Count + 1;
+					lvItem = new ListViewItem(num.ToString());
+					for (int i = 0; i < this.lvDetailList.Columns.Count - 1; i++)
+					{
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[i].Trim()));
+					}
+					this.lvDetailList.Items.Add(lvItem);
+				}
+				this.UpdateMacroSwitchList.Clear();
 			}
-			this.UpdateMacroSwitchList.Clear();
 			if (null != lvItem)
 			{
 				this.lvDetailList.TopItem = lvItem;
@@ -296,19 +302,22 @@ namespace Mr.Robot
 
 		void AddDetailAndSummaryResultList()
 		{
-			// 详细结果列表
-			this.DetailResultList.AddRange(this.UpdateMacroSwitchList);
-
-			// 汇总结果列表
-			// 取得宏名, 解析结果
-			foreach (string rslt in this.UpdateMacroSwitchList)
+			lock (this.UpdateMacroSwitchListLock)
 			{
-				string[] arr = rslt.Split(',');
-				if (arr.Length >= 5)
+				// 详细结果列表
+				this.DetailResultList.AddRange(this.UpdateMacroSwitchList);
+
+				// 汇总结果列表
+				// 取得宏名, 解析结果
+				foreach (string rslt in this.UpdateMacroSwitchList)
 				{
-					string macro_name = arr[arr.Length - 2].Trim();
-					string analysis_conclusion = arr[arr.Length - 1].Trim();
-					UpdateSummaryList(macro_name, analysis_conclusion);
+					string[] arr = rslt.Split(',');
+					if (arr.Length >= 5)
+					{
+						string macro_name = arr[arr.Length - 2].Trim();
+						string analysis_conclusion = arr[arr.Length - 1].Trim();
+						UpdateSummaryList(macro_name, analysis_conclusion);
+					}
 				}
 			}
 		}
