@@ -18,11 +18,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		{
 			System.Diagnostics.Trace.Assert(null != source_parse_info);
 			this.SourceParseInfo = source_parse_info;
-			System.Diagnostics.Trace.Assert(File.Exists(this.SourceParseInfo.FullName));
+			System.Diagnostics.Trace.Assert(File.Exists(this.SourceParseInfo.SourceName));
 			// 只删注释不做预编译处理(保留预编译宏开关)
 			this.SourceParseInfo.CodeList.Clear();
-			this.SourceParseInfo.CodeList = CCodeAnalyser.RemoveComments(this.SourceParseInfo.FullName);
-			FileInfo fi = new FileInfo(this.SourceParseInfo.FullName);
+			this.SourceParseInfo.CodeList = CCodeAnalyser.RemoveComments(this.SourceParseInfo.SourceName);
+			FileInfo fi = new FileInfo(this.SourceParseInfo.SourceName);
 			this.SourceName = fi.Name;
 		}
 

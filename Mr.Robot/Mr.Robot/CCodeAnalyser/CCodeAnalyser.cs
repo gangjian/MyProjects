@@ -512,9 +512,9 @@ namespace Mr.Robot
 			CodePosition foundPos = null;
 			while (null != (nextIdtf = CommonProcess.GetNextIdentifier(parse_info.CodeList, ref search_pos, out foundPos)))
 			{
-				//if (src_name.EndsWith("AxisStd-Regular.c"))
+				//if (src_name.EndsWith("gerdaC_dd.h") && nextIdtf.Position.RowNum > 340)
 				//{
-				//	System.Diagnostics.Trace.WriteLine("");
+				//	int a = 100;
 				//}
 				// 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
 				if (CommonProcess.IsStandardIdentifier(nextIdtf.Text)
@@ -1109,7 +1109,7 @@ namespace Mr.Robot
         static string GetAnonymousTypeName(FileParseInfo fi)
         {
             string fn, path;
-            fn = IOProcess.GetFileName(fi.FullName, out path);
+            fn = IOProcess.GetFileName(fi.SourceName, out path);
 
             string retName = fn.Replace('.', '_').ToUpper() + "_USR_DEF_TYPE_" + fi.UsrDefTypeList.Count.ToString();
 

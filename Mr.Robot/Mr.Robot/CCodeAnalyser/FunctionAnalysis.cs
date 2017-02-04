@@ -40,7 +40,7 @@ namespace Mr.Robot
             // 根据文件名, 函数名取得函数情报的引用
             foreach (FileParseInfo pi in parseInfoList)
             {
-                if (pi.FullName.Equals(fileName))
+                if (pi.SourceName.Equals(fileName))
                 {                                                                       // 找到指定的文件(根据文件名)
                     foreach (FuncParseInfo fi in pi.FunDefineList)
                     {

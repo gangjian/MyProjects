@@ -150,7 +150,7 @@ namespace Mr.Robot
 			foreach (FileParseInfo srcInfo in this.CSourceParseInfoList)
 			{
 				string path;
-				if (sourceFileName == IOProcess.GetFileName(srcInfo.FullName, out path))
+				if (sourceFileName == IOProcess.GetFileName(srcInfo.SourceName, out path))
 				{
 					foreach (FuncParseInfo functionInfo in srcInfo.FunDefineList)
 					{

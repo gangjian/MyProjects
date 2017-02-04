@@ -66,7 +66,7 @@ namespace Mr.Robot
 	/// </summary>
 	public class FileParseInfo
 	{
-		public string FullName = string.Empty;
+		public string SourceName = string.Empty;
 		public List<string> IncFileList = new List<string>();							// "include"头文件列表
 		public List<FuncParseInfo> FuncDeclareList = new List<FuncParseInfo>();			// 函数声明列表
 		public List<FuncParseInfo> FunDefineList = new List<FuncParseInfo>();			// 函数定义列表
@@ -83,7 +83,7 @@ namespace Mr.Robot
 
 		public FileParseInfo(string fileName)
 		{
-			this.FullName = fileName;
+			this.SourceName = fileName;
 		}
 
 		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name, string category_name)

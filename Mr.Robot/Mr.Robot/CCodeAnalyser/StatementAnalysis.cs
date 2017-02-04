@@ -427,8 +427,9 @@ namespace Mr.Robot
 					return false;
 				}
 				// 用宏值去替换原来的宏名(宏展开)
-				int macroIdx = statementStr.IndexOf(macroName);
-				statementStr = statementStr.Remove(macroIdx, macroName.Length);
+				//int macroIdx = statementStr.IndexOf(macroName);
+				int macroIdx = offset - idStr.Length;
+				statementStr = statementStr.Remove(macroIdx, idStr.Length);
 				statementStr = statementStr.Insert(macroIdx, replaceStr);
 				//statementStr = statementStr.Replace(macroName, replaceStr);
 				return true;
