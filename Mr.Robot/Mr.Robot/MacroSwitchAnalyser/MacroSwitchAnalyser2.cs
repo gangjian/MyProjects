@@ -60,10 +60,12 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			int count = 0;
 
 			// 处理工程文件
-			List<string> prjDefList = new List<string>();
+			List<PROJ_FILE_INFO> prjInfoList = new List<PROJ_FILE_INFO>();
 			foreach (string prj_name in this.PrjList)
 			{
-				PrjFileProc(prj_name, ref prjDefList);
+				PROJ_FILE_INFO prj_info = new PROJ_FILE_INFO(prj_name);
+				PrjFileProc(prj_name, ref prj_info.DefList);
+				prjInfoList.Add(prj_info);
 			}
 
 			// 处理源文件
@@ -71,7 +73,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			{
 				count++;
 				string commentStr;
-				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, prjDefList);
+				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, prjInfoList);
 				if (null != resultList)
 				{
 					//this.ResultList.AddRange(resultList);
@@ -90,7 +92,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 					+ this.FailedCount.ToString() + ", NotFound:" + this.NotFoundCount.ToString() + ", Success:" + this.SuccessCount.ToString());
 		}
 
-		List<string> SrcProc(string src_name, List<string> header_list, out string comment_str, List<string> prj_def_list)
+		List<string> SrcProc(string src_name, List<string> header_list, out string comment_str, List<PROJ_FILE_INFO> prjInfoList)
         {
 			comment_str = string.Empty;
             List<string> codeList = CCodeAnalyser.RemoveComments(src_name);
@@ -117,7 +119,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			foreach (MacroSwitchExpInfo expInfo in expInfoList)
 			{
 				MacroPrintInfo printInfo = new MacroPrintInfo(fi.Name, expInfo.LineNum.ToString(), expInfo.CodeLine);
-				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, prj_def_list);
+				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, prjInfoList);
 			}
 			comment_str = "Success!";
 			this.SuccessCount += 1;

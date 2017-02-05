@@ -132,8 +132,15 @@ namespace Mr.Robot
 		Object UpdateMacroSwitchListLock = new object();
 		List<string> UpdateMacroSwitchList = new List<string>();
 
+		public class SUMMARY_INFO
+		{
+			public string MacroName = string.Empty;										// 宏定义名
+			public string Conclusion = string.Empty;									// 解析结论(是否定义, 定义值)
+			public string FileName = string.Empty;										// (宏定义)所在文件名)
+		}
+
 		List<string> DetailResultList = new List<string>();								// 详细结果
-		List<string> SummaryResultList = new List<string>();							// 汇总结果
+		List<SUMMARY_INFO> SummaryResultList = new List<SUMMARY_INFO>();				// 汇总结果
 
 		void UpdateProgressHandler(string progress_str, List<string> result_list)
 		{
@@ -312,34 +319,27 @@ namespace Mr.Robot
 				foreach (string rslt in this.UpdateMacroSwitchList)
 				{
 					string[] arr = rslt.Split(',');
-					if (arr.Length >= 5)
+					if (arr.Length >= 6)
 					{
-						string macro_name = arr[arr.Length - 2].Trim();
-						string analysis_conclusion = arr[arr.Length - 1].Trim();
-						UpdateSummaryList(macro_name, analysis_conclusion);
+						string macro_name = arr[arr.Length - 3];
+						string analysis_conclusion = arr[arr.Length - 2];
+						string macro_file_name = arr[arr.Length - 1];
+						UpdateSummaryList(macro_name, analysis_conclusion, macro_file_name);
 					}
 				}
 			}
 		}
 
-		void UpdateSummaryList(string macro_name, string conclusion_str)
+		void UpdateSummaryList(string macro_name, string conclusion_str, string macro_file_name)
 		{
 			for (int i = 0; i < this.SummaryResultList.Count; i++)
 			{
-				string[] arr = this.SummaryResultList[i].Split(',');
-				if (2 != arr.Length)
+				if (this.SummaryResultList[i].MacroName == macro_name)
 				{
-					 continue;
-				}
-				string curMacroName = arr[0].Trim();
-				string curConclusionStr = arr[1].Trim();
-				if (curMacroName == macro_name)
-				{
-					if ("Discordant" != curConclusionStr
-						&& conclusion_str != curConclusionStr)
+					if ("Discordant" != this.SummaryResultList[i].Conclusion
+						&& conclusion_str != this.SummaryResultList[i].Conclusion)
 					{
-						curConclusionStr = "Discordant";
-						this.SummaryResultList[i] = curMacroName + "," + curConclusionStr;
+						this.SummaryResultList[i].Conclusion = "Discordant";
 					}
 					else
 					{
@@ -347,7 +347,11 @@ namespace Mr.Robot
 					return;
 				}
 			}
-			this.SummaryResultList.Add(macro_name + "," + conclusion_str);
+			SUMMARY_INFO sm_info = new SUMMARY_INFO();
+			sm_info.MacroName = macro_name;
+			sm_info.Conclusion = conclusion_str;
+			sm_info.FileName = macro_file_name;
+			this.SummaryResultList.Add(sm_info);
 		}
 
 		private void btnSaveSummary2CSV_Click(object sender, EventArgs e)
@@ -361,20 +365,18 @@ namespace Mr.Robot
 			{
 				for (int i = 0; i < this.lvSummaryList.Items.Count; i++)
 				{
-					string curStr = this.SummaryResultList[i];
-					string[] arr = curStr.Split(',');
-					if (2 != arr.Length)
-					{
-						continue;
-					}
 					ListViewItem lvItem = this.lvSummaryList.Items[i];
-					if (lvItem.SubItems[1].Text != arr[0])
+					if (lvItem.SubItems[1].Text != this.SummaryResultList[i].MacroName)
 					{
-						lvItem.SubItems[1].Text = arr[0];
+						lvItem.SubItems[1].Text = this.SummaryResultList[i].MacroName;
 					}
-					if (lvItem.SubItems[2].Text != arr[1])
+					if (lvItem.SubItems[2].Text != this.SummaryResultList[i].Conclusion)
 					{
-						lvItem.SubItems[2].Text = arr[1];
+						lvItem.SubItems[2].Text = this.SummaryResultList[i].Conclusion;
+					}
+					if (lvItem.SubItems[3].Text != this.SummaryResultList[i].FileName)
+					{
+						lvItem.SubItems[3].Text = this.SummaryResultList[i].FileName;
 					}
 				}
 				if (this.SummaryResultList.Count > this.lvSummaryList.Items.Count)
@@ -382,16 +384,12 @@ namespace Mr.Robot
 					int addCount = this.SummaryResultList.Count - this.lvSummaryList.Items.Count;
 					for (int i = 0; i < addCount; i++)
 					{
-						string curStr = this.SummaryResultList[this.SummaryResultList.Count - addCount + i];
-						string[] arr = curStr.Split(',');
-						if (2 != arr.Length)
-						{
-							continue;
-						}
+						SUMMARY_INFO sm_info = this.SummaryResultList[this.SummaryResultList.Count - addCount + i];
 						int num = this.lvSummaryList.Items.Count + 1;
 						ListViewItem lvItem = new ListViewItem(num.ToString());
-						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[0]));
-						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[1]));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.MacroName));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.Conclusion));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.FileName));
 						this.lvSummaryList.Items.Add(lvItem);
 					}
 				}

@@ -57,6 +57,7 @@
 			this.columnHeader14 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label6 = new System.Windows.Forms.Label();
 			this.btnSaveSummary2CSV = new System.Windows.Forms.Button();
+			this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.SuspendLayout();
 			// 
 			// label1
@@ -194,31 +195,32 @@
 			// 
 			// columnHeader3
 			// 
-			this.columnHeader3.Text = "序号";
-			this.columnHeader3.Width = 40;
+			this.columnHeader3.Text = "Idx";
+			this.columnHeader3.Width = 35;
 			// 
 			// columnHeader4
 			// 
-			this.columnHeader4.Text = "文件名";
+			this.columnHeader4.Text = "FileName";
 			this.columnHeader4.Width = 220;
 			// 
 			// columnHeader5
 			// 
-			this.columnHeader5.Text = "行号";
+			this.columnHeader5.Text = "LineNum";
+			this.columnHeader5.Width = 55;
 			// 
 			// columnHeader8
 			// 
-			this.columnHeader8.Text = "表达式";
+			this.columnHeader8.Text = "Expression";
 			this.columnHeader8.Width = 260;
 			// 
 			// columnHeader6
 			// 
-			this.columnHeader6.Text = "宏名";
+			this.columnHeader6.Text = "MacroName";
 			this.columnHeader6.Width = 230;
 			// 
 			// columnHeader7
 			// 
-			this.columnHeader7.Text = "值";
+			this.columnHeader7.Text = "Value";
 			this.columnHeader7.Width = 120;
 			// 
 			// progressBar1
@@ -264,7 +266,8 @@
 			this.lvSummaryList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader9,
             this.columnHeader13,
-            this.columnHeader14});
+            this.columnHeader14,
+            this.columnHeader10});
 			this.lvSummaryList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvSummaryList.FullRowSelect = true;
 			this.lvSummaryList.GridLines = true;
@@ -277,18 +280,18 @@
 			// 
 			// columnHeader9
 			// 
-			this.columnHeader9.Text = "序号";
-			this.columnHeader9.Width = 40;
+			this.columnHeader9.Text = "Idx";
+			this.columnHeader9.Width = 30;
 			// 
 			// columnHeader13
 			// 
-			this.columnHeader13.Text = "宏名";
-			this.columnHeader13.Width = 230;
+			this.columnHeader13.Text = "MacroName";
+			this.columnHeader13.Width = 180;
 			// 
 			// columnHeader14
 			// 
-			this.columnHeader14.Text = "值";
-			this.columnHeader14.Width = 100;
+			this.columnHeader14.Text = "Value";
+			this.columnHeader14.Width = 50;
 			// 
 			// label6
 			// 
@@ -310,6 +313,11 @@
 			this.btnSaveSummary2CSV.Text = "Save CSV";
 			this.btnSaveSummary2CSV.UseVisualStyleBackColor = true;
 			this.btnSaveSummary2CSV.Click += new System.EventHandler(this.btnSaveSummary2CSV_Click);
+			// 
+			// columnHeader10
+			// 
+			this.columnHeader10.Text = "DefineFile";
+			this.columnHeader10.Width = 120;
 			// 
 			// FormMTBot
 			// 
@@ -376,5 +384,6 @@
 		private System.Windows.Forms.ColumnHeader columnHeader14;
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Button btnSaveSummary2CSV;
+		private System.Windows.Forms.ColumnHeader columnHeader10;
 	}
 }

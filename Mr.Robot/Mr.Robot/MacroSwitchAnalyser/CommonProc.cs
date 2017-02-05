@@ -63,7 +63,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
                                                             MacroPrintInfo print_info,
                                                             FileParseInfo parse_info,
                                                             ref List<string> result_list,
-															List<string> prj_def_list)
+															List<PROJ_FILE_INFO> prjInfoList)
         {
             if (string.IsNullOrEmpty(macro_exp))
             {
@@ -83,33 +83,41 @@ namespace Mr.Robot.MacroSwitchAnalyser
                         // 立即数
                         if (mType == MacroValueType.ConstNumber)
                         {
-							string resultStr = MakeResultStr(mdi.Name, valStr, print_info);
+							string resultStr = MakeResultStr(mdi.Name, valStr, print_info, mdi.FileName);
                             result_list.Add(resultStr);
                         }
                         // 表达式
                         else if (mType == MacroValueType.Expression)
                         {
-							MacroSwitchExpressionAnalysis(valStr, print_info, parse_info, ref result_list, prj_def_list);
+							MacroSwitchExpressionAnalysis(valStr, print_info, parse_info, ref result_list, prjInfoList);
                         }
                         // 空
                         else if (mType == MacroValueType.Empty)
                         {
-							string resultStr = MakeResultStr(mdi.Name, @"○", print_info);
+							string resultStr = MakeResultStr(mdi.Name, @"○", print_info, mdi.FileName);
                             result_list.Add(resultStr);
                         }
                     }
                     else
                     {
                         // 未定义
-						if (null != prj_def_list
-							&& prj_def_list.Contains(cpnt.Text))
+						bool findInPrjDef = false;
+						if (null != prjInfoList)
 						{
-							string resultStr = MakeResultStr(cpnt.Text, @".mtpj def", print_info);
-							result_list.Add(resultStr);
+							foreach (PROJ_FILE_INFO prj_info in prjInfoList)
+							{
+								if (prj_info.DefList.Contains(cpnt.Text))
+								{
+									string resultStr = MakeResultStr(cpnt.Text, @".mtpj def", print_info, prj_info.FileName);
+									result_list.Add(resultStr);
+									findInPrjDef = true;
+									break;
+								}
+							}
 						}
-						else
+						if (!findInPrjDef)
 						{
-							string resultStr = MakeResultStr(cpnt.Text, @"X", print_info);
+							string resultStr = MakeResultStr(cpnt.Text, @"X", print_info, string.Empty);
 							result_list.Add(resultStr);
 						}
                     }
@@ -157,10 +165,12 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
         }
 
-		static string MakeResultStr(string macro_name, string value_str, MacroPrintInfo print_info)
+		static string MakeResultStr(string macro_name, string value_str, MacroPrintInfo print_info, string macro_def_file_name)
         {
+			//						表达式所在的源文件名					行号
             string resultStr = print_info.SourceName + "," + print_info.LineNumStr
-                            + "," + print_info.CodeText + "," + macro_name + "," + value_str;
+			//						表达式						宏名					宏值				宏定义所在的文件名
+                            + "," + print_info.CodeText + "," + macro_name + "," + value_str + "," + macro_def_file_name;
             return resultStr;
         }
     }
@@ -186,4 +196,16 @@ namespace Mr.Robot.MacroSwitchAnalyser
         Empty,					// 空
     }
 
+	/// <summary>
+	/// 工程文件信息(有可能包含部分宏定义等信息)
+	/// </summary>
+	public class PROJ_FILE_INFO
+	{
+		public string FileName = string.Empty;
+		public List<string> DefList = new List<string>();									// 工程文件里定义的宏定义列表
+		public PROJ_FILE_INFO(string file_name)
+		{
+			this.FileName = file_name;
+		}
+	}
 }

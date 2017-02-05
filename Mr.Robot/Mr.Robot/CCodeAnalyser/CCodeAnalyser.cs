@@ -230,7 +230,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 预编译处理
 		/// </summary>
-		public List<string> PrecompileProcess(	string src_name,
+		public List<string> PrecompileProcess(	string file_name,
 												List<string> codeList,
 												ref FileParseInfo fi)
 		{
@@ -271,7 +271,7 @@ namespace Mr.Robot
 					{
 						if (false != cc_info.WriteFlag)
 						{
-							DefineProcess(codeList, ref searchPos, ref fi);
+							DefineProcess(file_name, codeList, ref searchPos, ref fi);
 						}
 					}
 					else
@@ -1062,7 +1062,7 @@ namespace Mr.Robot
 		/// <param varName="codeList"></param>
 		/// <param varName="searchPos"></param>
 		/// <param varName="cfi"></param>
-		static void DefineProcess(List<string> codeList, ref CodePosition searchPos, ref FileParseInfo cfi)
+		static void DefineProcess(string file_name, List<string> codeList, ref CodePosition searchPos, ref FileParseInfo cfi)
 		{
 			CodePosition sPos, fPos;
 			sPos = new CodePosition(searchPos);
@@ -1071,7 +1071,7 @@ namespace Mr.Robot
 			{
 				return;
 			}
-			MacroDefineInfo mdi = new MacroDefineInfo();
+			MacroDefineInfo mdi = new MacroDefineInfo(file_name, nextIdtf.Position.RowNum);
 			mdi.Name = nextIdtf.Text;
 			if (sPos.RowNum > nextIdtf.Position.RowNum)
 			{

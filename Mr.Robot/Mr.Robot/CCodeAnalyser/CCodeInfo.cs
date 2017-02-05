@@ -245,6 +245,15 @@ namespace Mr.Robot
 		public string Name = string.Empty;												// 宏名
 		public List<string> ParaList = new List<string>();							    // 参数列表
 		public string Value = string.Empty;												// 宏值
+
+		public string FileName = string.Empty;
+		public int LineNum = -1;
+
+		public MacroDefineInfo(string file_name, int line_num)
+		{
+			this.FileName = file_name;
+			this.LineNum = line_num;
+		}
 	}
 
 	public class TypeDefineInfo
