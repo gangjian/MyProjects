@@ -110,7 +110,7 @@ namespace Mr.Robot
 			}
 		}
 
-		MacroSwitchAnalyzer2 MacroSwitchAnalyzer2 = null;
+		MacroSwitchAnalyser2 MacroSwitchAnalyzer2 = null;
 		System.Diagnostics.Stopwatch StopWatch = new System.Diagnostics.Stopwatch();
 
 		private void btnStart_Click(object sender, EventArgs e)
@@ -123,7 +123,7 @@ namespace Mr.Robot
 			this.SummaryResultList.Clear();
 
 			SetUICtrlEnabled(false);
-			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyzer2(this.SourceList, this.HeaderList, this.PrjFileList);
+			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyser2(this.SourceList, this.HeaderList, this.PrjFileList);
 			this.MacroSwitchAnalyzer2.ReportProgress += UpdateProgressHandler;
 			this.MacroSwitchAnalyzer2.ProcStart();
 			this.StopWatch.Restart();

@@ -14,15 +14,17 @@ namespace Mr.Robot
 		#region 全局字段
 		List<string> HeaderList = new List<string>();									// 头文件名列表
 		List<string> SourceList = new List<string>();									// 源文件名列表
+		CodeBufferManager CodeBuffManagerRef = null;
 
 		public EventHandler UpdateProgress = null;
 		public List<FileParseInfo> ParseInfoList = null;
 		#endregion
 
-		public CCodeAnalyser(List<string> source_list, List<string> header_list)
+		public CCodeAnalyser(List<string> source_list, List<string> header_list, ref CodeBufferManager code_buf_manager)
 		{
 			this.SourceList = source_list;
 			this.HeaderList = header_list;
+			this.CodeBuffManagerRef = code_buf_manager;
 		}
 
 		#region 向外提供的接口方法
@@ -50,65 +52,57 @@ namespace Mr.Robot
 			{
 				FileParseInfo parseInfo = new FileParseInfo(srcName);
 				count++;
-				//string progressStr;
-				//List<string> macroSwitchList = new List<string>();
 				if (CFileProcess(srcName, ref parseInfo))
 				{
-					//MacroSwitchAnalyser.MacroSwitchAnalyser macroAnalyser = new MacroSwitchAnalyser.MacroSwitchAnalyser(parseInfo);
-					//macroAnalyser.ProcessStart();
-					//macroSwitchList.AddRange(macroAnalyser.AnalyzeResultList);
 					this.ParseInfoList.Add(parseInfo);
-					//progressStr = srcName + "	OK!" + " : " + count.ToString() + "/" + total.ToString();
 				}
 				else
 				{
-					//progressStr = srcName + "	NG!" + " : " + count.ToString() + "/" + total.ToString();
 				}
-				//List<string> reportList = new List<string>();
-				//reportList.Add(progressStr);
-				//reportList.AddRange(macroSwitchList);
-				//System.Diagnostics.Trace.WriteLine(progressStr);
-				//ReportProgress(progressStr);
 			}
 			return this.ParseInfoList;
 		}
 		#endregion
 
 		// 以下都是内部调用方法
-		class CodeBuffer
+
+		public class CodeBufferManager
 		{
-			public string FileName = string.Empty;
-			public List<string> CodeList = null;
-
-			public CodeBuffer(string file_name, List<string> code_list)
+			class CodeBuffer
 			{
-				this.FileName = file_name;
-				this.CodeList = code_list;
-			}
-		}
+				public string FileName = string.Empty;
+				public List<string> CodeList = null;
 
-		const int MAX_CODE_BUF_LIST_CNT = 1000;
-		List<CodeBuffer> CodeBufferList = new List<CodeBuffer>();
-
-		List<string> SearchCodeBufferList(string src_name)
-		{
-			for (int i = this.CodeBufferList.Count - 1; i >= 0; i--)
-			{
-				if (this.CodeBufferList[i].FileName.Equals(src_name))
+				public CodeBuffer(string file_name, List<string> code_list)
 				{
-					return this.CodeBufferList[i].CodeList;
+					this.FileName = file_name;
+					this.CodeList = code_list;
 				}
 			}
-			return null;
-		}
 
-		void AddCodeBufferList(string src_name, List<string> code_list)
-		{
-			CodeBuffer cb = new CodeBuffer(src_name, code_list);
-			this.CodeBufferList.Add(cb);
-			if (this.CodeBufferList.Count > MAX_CODE_BUF_LIST_CNT)
+			const int MAX_CODE_BUF_LIST_CNT = 1000;
+			List<CodeBuffer> CodeBufferList = new List<CodeBuffer>();
+
+			public List<string> SearchCodeBufferList(string file_name)
 			{
-				this.CodeBufferList.RemoveRange(0, this.CodeBufferList.Count - MAX_CODE_BUF_LIST_CNT);
+				for (int i = this.CodeBufferList.Count - 1; i >= 0; i--)
+				{
+					if (this.CodeBufferList[i].FileName.Equals(file_name))
+					{
+						return this.CodeBufferList[i].CodeList;
+					}
+				}
+				return null;
+			}
+
+			public void AddCodeBufferList(string file_name, List<string> code_list)
+			{
+				CodeBuffer cb = new CodeBuffer(file_name, code_list);
+				this.CodeBufferList.Add(cb);
+				if (this.CodeBufferList.Count > MAX_CODE_BUF_LIST_CNT)
+				{
+					this.CodeBufferList.RemoveRange(0, this.CodeBufferList.Count - MAX_CODE_BUF_LIST_CNT);
+				}
 			}
 		}
 
@@ -122,12 +116,19 @@ namespace Mr.Robot
 			{
 				fileInfo = new FileParseInfo(srcName);
 			}
-			List<string> codeList = SearchCodeBufferList(srcName);
+			List<string> codeList = null;
+			if (null != this.CodeBuffManagerRef)
+			{
+				codeList = this.CodeBuffManagerRef.SearchCodeBufferList(srcName);
+			}
 			if (null == codeList)
 			{
 				// 去掉注释
 				codeList = RemoveComments(srcName);
-				//AddCodeBufferList(srcName, codeList);
+				if (null != this.CodeBuffManagerRef && srcName.ToLower().EndsWith(".h"))
+				{
+					this.CodeBuffManagerRef.AddCodeBufferList(srcName, codeList);
+				}
 			}
 			// 预编译处理
 			codeList = PrecompileProcess(srcName, codeList, ref fileInfo);

@@ -52,7 +52,6 @@
   <ItemGroup>
     <Compile Include="Common.cs" />
     <Compile Include="UnitTest_CommonProcess.cs" />
-    <Compile Include="UnitTest_Honda_18HMI.cs" />
     <Compile Include="UnitTest_Rte_swc_in_oilp.cs" />
     <Compile Include="UnitTest_Rte_swc_in_trcta.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

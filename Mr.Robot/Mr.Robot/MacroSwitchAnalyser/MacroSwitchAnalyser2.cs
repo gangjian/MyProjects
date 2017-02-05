@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Mr.Robot.MacroSwitchAnalyser
 {
-    class MacroSwitchAnalyzer2
+    public class MacroSwitchAnalyser2
     {
 		List<string> SrcList = null;
 		List<string> HdList = null;
@@ -25,7 +25,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		public ReportProgressDel ReportProgress = null;
 
-        public MacroSwitchAnalyzer2(List<string> source_list, List<string> header_list, List<string> project_file_list)
+        public MacroSwitchAnalyser2(List<string> source_list, List<string> header_list, List<string> project_file_list)
         {
 			this.SrcList = source_list;
 			this.HdList = header_list;
@@ -68,12 +68,14 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				prjInfoList.Add(prj_info);
 			}
 
+			CCodeAnalyser.CodeBufferManager codeBufferList = new CCodeAnalyser.CodeBufferManager();
+
 			// 处理源文件
 			foreach (string src_name in this.SrcList)
 			{
 				count++;
 				string commentStr;
-				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, prjInfoList);
+				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, prjInfoList, ref codeBufferList);
 				if (null != resultList)
 				{
 					//this.ResultList.AddRange(resultList);
@@ -92,7 +94,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 					+ this.FailedCount.ToString() + ", NotFound:" + this.NotFoundCount.ToString() + ", Success:" + this.SuccessCount.ToString());
 		}
 
-		List<string> SrcProc(string src_name, List<string> header_list, out string comment_str, List<PROJ_FILE_INFO> prjInfoList)
+		List<string> SrcProc(string src_name,
+							List<string> header_list,
+							out string comment_str,
+							List<PROJ_FILE_INFO> prjInfoList,
+							ref CCodeAnalyser.CodeBufferManager code_buf_list)
         {
 			comment_str = string.Empty;
             List<string> codeList = CCodeAnalyser.RemoveComments(src_name);
@@ -105,7 +111,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
 			List<string> srcList = new List<string>();
 			srcList.Add(src_name);
-			CCodeAnalyser cAnalyser = new CCodeAnalyser(srcList, header_list);
+			CCodeAnalyser cAnalyser = new CCodeAnalyser(srcList, header_list, ref code_buf_list);
 			FileParseInfo parseInfo = new FileParseInfo(src_name);
 			List<FileParseInfo> parseInfoList = cAnalyser.CFileListProc();
 			if (null == parseInfoList && 0 == parseInfoList.Count)
