@@ -404,7 +404,8 @@ namespace Mr.Robot
 							// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
 							continue;
 						}
-						replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
+						replaceStr = CommonProcess.WholeWordSReplace(replaceStr, mdi.ParaList[idx], rp);
+						//replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
 						idx++;
 					}
 				}
@@ -428,6 +429,10 @@ namespace Mr.Robot
 				}
 				// 用宏值去替换原来的宏名(宏展开)
 				//int macroIdx = statementStr.IndexOf(macroName);
+				if (idStr == replaceStr)
+				{
+					return false;
+				}
 				int macroIdx = offset - idStr.Length;
 				statementStr = statementStr.Remove(macroIdx, idStr.Length);
 				statementStr = statementStr.Insert(macroIdx, replaceStr);

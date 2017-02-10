@@ -751,7 +751,14 @@ namespace Mr.Robot
 			else
 			{
 				// 对应把参数声明列表写在小括号外, 第一个花括号前的古典写法.
+				int row = searchPos.RowNum;
 				CodePosition bodyStartPos = CommonProcess.FindNextSymbol(parse_info.CodeList, searchPos, '{');
+				if (null == bodyStartPos
+					|| bodyStartPos.RowNum - row > 10)
+				{
+					// TODO 20170206: 这里加了一个保护, 要详查出错的具体原因, 加强对参数声明列表合法性的检查
+					return null;
+				}
 				searchPos = CommonProcess.PositionMoveNext(parse_info.CodeList, bodyStartPos);
 				CodePosition fp = CommonProcess.FindNextMatchSymbol(parse_info, ref searchPos, '}');
 				if (null == fp)

@@ -491,7 +491,8 @@ namespace Mr.Robot
 							// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
 							continue;
 						}
-						replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
+						replaceStr = WholeWordSReplace(replaceStr, mdi.ParaList[idx], rp);
+						//replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
 						idx++;
 					}
 				}
@@ -507,11 +508,17 @@ namespace Mr.Robot
 					}
 					replaceStr = newStr;
 				}
-				// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
-				if (replaceStr.Contains('#'))
+				// 单个"#"转成字串
+				while (replaceStr.Contains('#'))
 				{
-					ErrReport();
-					return false;
+					int idx = replaceStr.IndexOf("#");
+					int search_idx = idx + 1;
+					string tokenStr = GetNextIdentifier2(replaceStr, ref search_idx);
+
+					replaceStr = replaceStr.Remove(idx, 1 + tokenStr.Length);
+					replaceStr = replaceStr.Insert(idx, "\"" + tokenStr + "\"");
+					//ErrReport();
+					//return false;
 				}
 				if (macroName == replaceStr)
 				{
@@ -524,6 +531,36 @@ namespace Mr.Robot
 				return true;
 			}
 			return false;
+		}
+
+		public static string WholeWordSReplace(string input_str, string old_value, string new_value)
+		{
+			int offset = 0;
+			while (true)
+			{
+				int old_offset = offset;
+				if (offset < input_str.Length && Char.IsWhiteSpace(input_str[offset]))
+				{
+					offset++;
+					continue;
+				}
+				string idStr = GetNextIdentifier2(input_str, ref offset);
+				if (null == idStr)
+				{
+					break;
+				}
+				if (IsStandardIdentifier(idStr) && idStr == old_value)
+				{
+					input_str = input_str.Remove(old_offset, idStr.Length);
+					input_str = input_str.Insert(old_offset, new_value);
+					offset = old_offset + new_value.Length;
+				}
+				else
+				{
+					offset = old_offset + idStr.Length;
+				}
+			}
+			return input_str;
 		}
 
 		static void RemoveCodeContents(List<string> code_list, CodePosition start_pos, CodePosition end_pos)
