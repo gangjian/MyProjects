@@ -114,7 +114,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			CCodeAnalyser cAnalyser = new CCodeAnalyser(srcList, header_list, ref code_buf_list);
 			FileParseInfo parseInfo = new FileParseInfo(src_name);
 			List<FileParseInfo> parseInfoList = cAnalyser.CFileListProc();
-			if (null == parseInfoList && 0 == parseInfoList.Count)
+			if (null == parseInfoList || 0 == parseInfoList.Count)
 			{
 				comment_str = "Failed!";
 				this.FailedCount += 1;

@@ -336,10 +336,10 @@ namespace Mr.Robot
 			{
 				if (this.SummaryResultList[i].MacroName == macro_name)
 				{
-					if ("Discordant" != this.SummaryResultList[i].Conclusion
+					if (@"▼" != this.SummaryResultList[i].Conclusion
 						&& conclusion_str != this.SummaryResultList[i].Conclusion)
 					{
-						this.SummaryResultList[i].Conclusion = "Discordant";
+						this.SummaryResultList[i].Conclusion = @"▼";
 					}
 					else
 					{

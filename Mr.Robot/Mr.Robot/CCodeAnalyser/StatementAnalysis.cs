@@ -720,7 +720,7 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是立即数常量
         /// </summary>
-        static bool IsConstantNumber(string idStr)
+        public static bool IsConstantNumber(string idStr)
         {
             int i = 0;
             bool retVal = false;

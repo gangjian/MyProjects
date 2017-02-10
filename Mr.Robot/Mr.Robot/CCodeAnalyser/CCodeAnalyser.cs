@@ -130,22 +130,30 @@ namespace Mr.Robot
 					this.CodeBuffManagerRef.AddCodeBufferList(srcName, codeList);
 				}
 			}
-			// 预编译处理
-			codeList = PrecompileProcess(srcName, codeList, ref fileInfo);
-			fileInfo.CodeList = codeList;
-//          Save2File(codeList, srcName + ".bak");
-
-			// 文件解析
-			if(!CCodeFileAnalysis(srcName, ref fileInfo))
+			try
 			{
+				// 预编译处理
+				codeList = PrecompileProcess(srcName, codeList, ref fileInfo);
+				fileInfo.CodeList = codeList;
+				//          Save2File(codeList, srcName + ".bak");
+
+				// 文件解析
+				if (!CCodeFileAnalysis(srcName, ref fileInfo))
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+				//			includeInfoList.Add(fi);
+				//          XmlProcess.SaveCFileInfo2XML(fi);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Trace.WriteLine(ex.ToString());
 				return false;
 			}
-			else
-			{
-				return true;
-			}
-//			includeInfoList.Add(fi);
-//          XmlProcess.SaveCFileInfo2XML(fi);
 		}
 
 		/// <summary>
@@ -264,6 +272,12 @@ namespace Mr.Robot
 								// 去掉引号
 								incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
 								// 取得头文件的解析情报
+								ParseIncludeHeaderFile(incFileName, ref fi);
+							}
+							else if (incFileName.StartsWith("<") && incFileName.EndsWith(">"))
+							{
+								// 尖括号括起来的头文件, 暂时与引号括起来的头文件做相同的处理
+								incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
 								ParseIncludeHeaderFile(incFileName, ref fi);
 							}
 						}
@@ -734,8 +748,7 @@ namespace Mr.Robot
 				CodePosition fp = CommonProcess.FindNextMatchSymbol(parse_info, ref searchPos, '}');
 				if (null == fp)
 				{
-                    CommonProcess.ErrReport();
-					return null;
+					throw new MyException("FunctionDetectProcess(...) 没找到匹配的花括号!");
 				}
 				searchPos = new CodePosition(fp.RowNum, fp.ColNum + 1);
 				// 函数名
@@ -1032,6 +1045,10 @@ namespace Mr.Robot
 
 		static string ExtractGlobalVarTypeName(ref List<CodeIdentifier> qualifierList, out List<string> prefixList)
 		{
+			if (0 == qualifierList.Count)
+			{
+				throw new MyException("ExtractGlobalVarTypeName(...) : qualifierList.Count为0");
+			}
 			int idx = qualifierList.Count - 1;
 			string qlfStr = qualifierList[idx].Text.Trim();
 			string type_name = string.Empty;

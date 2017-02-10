@@ -412,6 +412,10 @@ namespace Mr.Robot
 			{
 				return 1;
 			}
+			else if (StatementAnalysis.IsConstantNumber(operand))
+			{
+				return 1;
+			}
 			else
 			{
 				return 0;

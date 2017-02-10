@@ -86,6 +86,7 @@
     <Compile Include="IOProcess\IOProcess.cs" />
     <Compile Include="MacroSwitchAnalyser\CommonProc.cs" />
     <Compile Include="MacroSwitchAnalyser\MacroSwitchAnalyser2.cs" />
+    <Compile Include="MyException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
