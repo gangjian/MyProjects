@@ -53,7 +53,7 @@ namespace Mr.Robot
 			List<StatementComponent> componentList = GetComponents(statement_str, parse_info);
 			if (statement_str.StartsWith("typedef"))
 			{
-				TypeDefProc2(componentList, parse_info, func_ctx);
+				TypeDefProc(componentList, parse_info, func_ctx);
 			}
 			else
 			{
@@ -1174,7 +1174,7 @@ namespace Mr.Robot
             return retGroup;
 		}
 
-        static void MeaningGroupsAnalysis(List<MeaningGroup> mgList,
+        static void MeaningGroupsAnalysis(	List<MeaningGroup> mgList,
 											FileParseInfo parse_info,
 											FuncAnalysisContext func_ctx)
         {
@@ -1231,7 +1231,7 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static void TypeDefProc2(List<StatementComponent> component_list,
+		public static void TypeDefProc(	List<StatementComponent> component_list,
 										FileParseInfo parse_info,
 										FuncAnalysisContext func_ctx)
 		{
