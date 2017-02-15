@@ -13,7 +13,9 @@ namespace Mr.Robot
 	{
 		public string Name = string.Empty;												// 变量名
 
-		public VAR_Type Type = new VAR_Type();											// 类型名
+		public VAR_TYPE Type = new VAR_TYPE();											// 类型名
+
+		public VAR_TYPE_CATEGORY Category = VAR_TYPE_CATEGORY.BASIC;
 
 		public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
 																						// TODO: 这个成员在VAR_CTX类改造完成后要删掉!
@@ -32,10 +34,18 @@ namespace Mr.Robot
 		}
 	}
 
-	public class VAR_Type
+	public class VAR_TYPE
 	{
 		public string Name = string.Empty;
-		public string Qualifier = string.Empty;
+		public List<string> PrefixList = new List<string>();
+		public List<string> SuffixList = new List<string>();
+	}
+
+	public enum VAR_TYPE_CATEGORY
+	{
+		BASIC,
+		USR_DEF,
+		POINTER,
 	}
 
 	public partial class InOutAnalysis
@@ -56,23 +66,15 @@ namespace Mr.Robot
 			}
 			else
 			{
-				VariableInfo vi = parse_info.FindGlobalVarInfoByName(var_name);
-				if (null != vi)
+				var_ctx = parse_info.FindGlobalVarInfoByName(var_name);
+				if (null != var_ctx)
 				{
-					var_ctx = new VAR_CTX(vi.TypeName, vi.VarName);
-					var_ctx.Type.Name = vi.RealTypeName;
+					return var_ctx;
 				}
 				else
 				{
-					// 临时变量
-					if (null == type_name)
-					{
-						type_name = "Unknown";
-					}
-					var_ctx = new VAR_CTX(type_name, var_name);
+					return null;
 				}
-				// 如果是构造类型, 要遍历生成各成员上下文直至基本类型
-				return var_ctx;
 			}
 		}
 
@@ -110,7 +112,7 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static VAR_CTX CreateVarCtx(string type_name, string var_name, FileParseInfo file_info)
+		public static VAR_CTX CreateVarCtx(string type_name, string var_name, FileParseInfo parse_info)
 		{
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(type_name) && !string.IsNullOrEmpty(var_name));
 
@@ -125,7 +127,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				UsrDefTypeInfo udti = file_info.FindUsrDefTypeInfo(type_name, "");
+				UsrDefTypeInfo udti = parse_info.FindUsrDefTypeInfo(type_name, "");
 				if (null != udti)
 				{
 					VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
@@ -140,6 +142,11 @@ namespace Mr.Robot
 					return null;
 				}
 			}
+		}
+
+		public static VAR_CTX CreateVarCtx(MeaningGroup type_group, string var_name, FileParseInfo parse_info)
+		{
+			return null;
 		}
 	}
 }

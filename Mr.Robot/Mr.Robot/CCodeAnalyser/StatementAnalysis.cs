@@ -1199,6 +1199,18 @@ namespace Mr.Robot
 				{
 					func_ctx.LocalVarList.Add(varCtx);
 				}
+				else
+				{
+					if (0 != varCtx.Type.PrefixList.Count
+						&& "extern" == varCtx.Type.PrefixList[0])
+					{
+						parse_info.GlobalDeclareList.Add(varCtx);						// 全局变量声明
+					}
+					else
+					{
+						parse_info.GlobalDefineList.Add(varCtx);						// 全局变量定义
+					}
+				}
 			}
 			// 分析左值/右值
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
@@ -1209,16 +1221,21 @@ namespace Mr.Robot
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
 				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx, mgList[0].Text);
-				if (string.Empty == varCtx.Type.Name)
+				if (null != varCtx)
 				{
-					varCtx.Type.Name = mgList[0].Text;
+					string orgTypeName = IsTypeDefTypeName(mgList[0], parse_info, func_ctx);
+					if (!string.IsNullOrEmpty(orgTypeName))
+					{
+						varCtx.Type.Name = orgTypeName;
+					}
+					return varCtx;
 				}
-				string orgTypeName;
-				if (string.Empty != (orgTypeName = IsTypeDefTypeName(mgList[0], parse_info, func_ctx)))
+				else
 				{
-					varCtx.Type.Name = orgTypeName;
+					// 创建变量上下文
+					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, parse_info);
+					return varCtx;
 				}
-                return varCtx;
             }
             return null;
         }

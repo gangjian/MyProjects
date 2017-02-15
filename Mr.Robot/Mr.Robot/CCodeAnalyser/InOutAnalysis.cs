@@ -10,7 +10,7 @@ namespace Mr.Robot
 	/// </summary>
 	public partial class InOutAnalysis
 	{
-		public static bool LeftRightValueAnalysis(List<MeaningGroup> mgList,
+		public static bool LeftRightValueAnalysis(	List<MeaningGroup> mgList,
 													FileParseInfo parse_info,
 													FuncAnalysisContext func_ctx)
 		{
@@ -28,11 +28,14 @@ namespace Mr.Robot
 					&& MeaningGroupType.GlobalVariable == leftGroupList[0].Type)
 				{
 					VAR_CTX varCtx = GetVarCtxByName(leftGroupList[0].Text, parse_info, func_ctx);
-					if (null == varCtx.MeanningGroup)
+					if (null != varCtx)
 					{
-						varCtx.MeanningGroup = leftGroupList[0];
+						if (null == varCtx.MeanningGroup)
+						{
+							varCtx.MeanningGroup = leftGroupList[0];
+						}
+						func_ctx.OutputGlobalList.Add(varCtx);
 					}
-					func_ctx.OutputGlobalList.Add(varCtx);
 				}
 
 				List<MeaningGroup> rightGroupList = new List<MeaningGroup>();
@@ -72,10 +75,13 @@ namespace Mr.Robot
 				if (MeaningGroupType.GlobalVariable == rightVal.Type)					// 全局变量
 				{
 					VAR_CTX varCtx = GetVarCtxByName(rightVal.Text, parse_info, func_ctx);
-					varCtx.MeanningGroup = rightVal;
-					if (null != func_ctx)
+					if (null != varCtx)
 					{
-						func_ctx.InputGlobalList.Add(varCtx);
+						varCtx.MeanningGroup = rightVal;
+						if (null != func_ctx)
+						{
+							func_ctx.InputGlobalList.Add(varCtx);
+						}
 					}
 				}
 				else if (MeaningGroupType.FunctionCalling == rightVal.Type)				// 函数调用
@@ -181,7 +187,7 @@ namespace Mr.Robot
 			ActualParaInfo actParaInfo = new ActualParaInfo();
 			// 前缀 + 变量名
 			actParaInfo.varName = act_para.ComponentList.Last().Text;
-			actParaInfo.typeName = GetVarTypeName(actParaInfo.varName, parse_info, func_ctx);
+			actParaInfo.typeName = GetVarType(actParaInfo.varName, parse_info, func_ctx);
 			for (int i = 0; i < act_para.ComponentList.Count - 1; i++)
 			{
 				actParaInfo.prefixList.Add(act_para.ComponentList[i].Text);
@@ -219,12 +225,12 @@ namespace Mr.Robot
 		static ActParaPassType JudgeVarParaType(string var_name, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
 		{
 			// 在当前的上下文中查找该名称的变量, 取得其类型名
-			string var_type = GetVarTypeName(var_name, parse_info, func_ctx);
-			if (string.IsNullOrEmpty(var_type))
+			VAR_TYPE var_type = GetVarType(var_name, parse_info, func_ctx);
+			if (null == var_type)
 			{
 				return ActParaPassType.Unknown;
 			}
-			if (var_type.Trim().EndsWith("*"))
+			if (var_type.SuffixList.Contains("*"))
 			{
 				return ActParaPassType.Reference;
 			}
@@ -234,7 +240,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static string GetVarTypeName(string var_name, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
+		static VAR_TYPE GetVarType(string var_name, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
 		{
 			// TODO: 引数?
 
@@ -243,23 +249,16 @@ namespace Mr.Robot
 			{
 				if (local_var.Name.Equals(var_name))
 				{
-					return local_var.Type.Name;
+					return local_var.Type;
 				}
 			}
 			// 全局变量?
-			VariableInfo vi = parse_info.FindGlobalVarInfoByName(var_name);
-			if (null != vi)
+			VAR_CTX varCtx = parse_info.FindGlobalVarInfoByName(var_name);
+			if (null != varCtx)
 			{
-				if (string.Empty != vi.RealTypeName)
-				{
-					return vi.RealTypeName;
-				}
-				else
-				{
-					return vi.TypeName;
-				}
+				return varCtx.Type;
 			}
-			return string.Empty;
+			return null;
 		}
 
 		/// <summary>
@@ -322,7 +321,7 @@ namespace Mr.Robot
 	public class ActualParaInfo
 	{
 		public string varName = string.Empty;
-		public string typeName = string.Empty;
+		public VAR_TYPE typeName = null;
 		public List<string> prefixList = new List<string>();
 		public ActParaPassType passType = ActParaPassType.Value;
 		public bool readOut = false;													// 是否是读出值

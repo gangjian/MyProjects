@@ -71,8 +71,8 @@ namespace Mr.Robot
 		public List<FuncParseInfo> FuncDeclareList = new List<FuncParseInfo>();			// 函数声明列表
 		public List<FuncParseInfo> FunDefineList = new List<FuncParseInfo>();			// 函数定义列表
 		public List<UsrDefTypeInfo> UsrDefTypeList = new List<UsrDefTypeInfo>();		// 用户定义类型列表
-		public List<VariableInfo> GlobalDeclareList = new List<VariableInfo>();			// 全局量声明列表
-		public List<VariableInfo> GlobalDefineList = new List<VariableInfo>();			// 全局量定义列表
+		public List<VAR_CTX> GlobalDeclareList = new List<VAR_CTX>();					// 全局量声明列表
+		public List<VAR_CTX> GlobalDefineList = new List<VAR_CTX>();					// 全局量定义列表
 		public List<MacroDefineInfo> MacroDefineList = new List<MacroDefineInfo>();		// 宏定义列表
 		public List<TypeDefineInfo> TypeDefineList = new List<TypeDefineInfo>();		// typedef类型定义列表
 
@@ -157,16 +157,16 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据变量名查找全局变量
 		/// </summary>
-		public VariableInfo FindGlobalVarInfoByName(string var_name)
+		public VAR_CTX FindGlobalVarInfoByName(string var_name)
 		{
-			VariableInfo retVarInfo = null;
-			if (null != (retVarInfo = SearchVariableList(var_name, this.GlobalDeclareList)))
+			VAR_CTX retVarCtx = null;
+			if (null != (retVarCtx = SearchVariableList(var_name, this.GlobalDeclareList)))
 			{
-				return retVarInfo;
+				return retVarCtx;
 			}
-			else if (null != (retVarInfo = SearchVariableList(var_name, this.GlobalDefineList)))
+			else if (null != (retVarCtx = SearchVariableList(var_name, this.GlobalDefineList)))
 			{
-				return retVarInfo;
+				return retVarCtx;
 			}
 			else
 			{
@@ -174,11 +174,11 @@ namespace Mr.Robot
 			}
 		}
 
-		static VariableInfo SearchVariableList(string var_name, List<VariableInfo> var_list)
+		static VAR_CTX SearchVariableList(string var_name, List<VAR_CTX> var_list)
 		{
-			foreach (VariableInfo vi in var_list)
+			foreach (VAR_CTX vi in var_list)
 			{
-				if (vi.VarName.Equals(var_name))
+				if (vi.Name.Equals(var_name))
 				{
 					return vi;
 				}
@@ -224,20 +224,6 @@ namespace Mr.Robot
 		public List<string> MemberList = new List<string>();
 
 		public CodeScope Scope = null;
-	}
-
-	/// <summary>
-	/// 变量情报
-	/// </summary>
-	public class VariableInfo
-	{
-		public string TypeName = string.Empty;											// 类型名
-		public string RealTypeName = string.Empty;										// (如果类型名是"typedef"定义的别名的话)原类型名
-		public string VarName = string.Empty;											// 变量名
-		public List<string> Qualifiers = new List<string>();					        // 修饰符列表
-		public string ArraySizeString = string.Empty;									// (如果是数组的话)数组size字符串
-		public string InitialString = string.Empty;										// 初始化赋值字符串
-        public List<MeaningGroup> InitialList = new List<MeaningGroup>();				// 初始化含义组(解析分组后)跟initial_string可能有重复
 	}
 
 	public class MacroDefineInfo
