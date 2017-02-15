@@ -81,7 +81,8 @@ namespace Mr.Robot
 		/// 取得语句内各基本成分(运算数或者是运算符)
 		/// </summary>
 		public static List<StatementComponent> GetComponents(string statementStr,
-                                                             FileParseInfo parse_info)
+                                                             FileParseInfo parse_info,
+															 bool replace_empty_macro_def = true)
         {
 			// 去掉结尾的分号
 			if (statementStr.EndsWith(";"))
@@ -93,7 +94,7 @@ namespace Mr.Robot
             do
             {
                 // 提取语句的各个组成部分(操作数或者是操作符)
-                StatementComponent cpnt = GetOneComponent(ref statementStr, ref offset, parse_info);
+                StatementComponent cpnt = GetOneComponent(ref statementStr, ref offset, parse_info, replace_empty_macro_def);
                 if (string.Empty == cpnt.Text)
                 {
                     // 语句结束
@@ -143,7 +144,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 对语句所有构成成分进行结构分组
 		/// </summary>
-		static List<MeaningGroup> GetMeaningGroupList(List<StatementComponent> componentList,
+		static List<MeaningGroup> GetMeaningGroupList(	List<StatementComponent> componentList,
 														FileParseInfo parse_info,
 														FuncAnalysisContext func_ctx)
 		{
@@ -171,7 +172,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个构成分组
 		/// </summary>
-		static MeaningGroup GetOneMeaningGroup(List<StatementComponent> componentList,
+		static MeaningGroup GetOneMeaningGroup(	List<StatementComponent> componentList,
 												ref int idx,
 												List<MeaningGroup> groupList,
 												FileParseInfo parse_info,
@@ -310,7 +311,8 @@ namespace Mr.Robot
 		/// </summary>
 		static StatementComponent GetOneComponent(ref string statementStr,
 												  ref int offset,
-												  FileParseInfo parse_info)
+												  FileParseInfo parse_info,
+												  bool replace_empty_macro_def)
 		{
 			string idStr = null;
 			int offset_old = -1;
@@ -337,7 +339,7 @@ namespace Mr.Robot
 				{
 					// 如果包含宏, 首先要进行宏展开
 					if (null != parse_info
-						&& MacroDetectAndExpand_Statement(idStr, ref statementStr, offset, parse_info))
+						&& MacroDetectAndExpand_Statement(idStr, ref statementStr, offset, parse_info, replace_empty_macro_def))
 					{
 						offset = offset_old;
 						continue;
@@ -366,78 +368,86 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数内的宏展开 TODO:以后考虑重构跟MacroDetectAndExpand_File合并
 		/// </summary>
-		public static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, FileParseInfo parse_info)
+		public static bool MacroDetectAndExpand_Statement(	string idStr,
+															ref string statementStr,
+															int offset,
+															FileParseInfo parse_info,
+															bool replace_empty_macro_def)
         {
 			// 遍历查找宏名
 			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
-			if (null != mdi
-				&& !string.IsNullOrEmpty(mdi.Value))
+			if (null != mdi)
 			{
-				string macroName = mdi.Name;
-				string replaceStr = mdi.Value;
-				// 判断有无带参数
-				if (0 != mdi.ParaList.Count)
+				if (string.IsNullOrEmpty(mdi.Value)
+					&& false == replace_empty_macro_def)
 				{
-					// 取得宏参数
-					string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
-					if ("(" != paraStr)
+				}
+				else
+				{
+					string macroName = mdi.Name;
+					string replaceStr = mdi.Value;
+					// 判断有无带参数
+					if (0 != mdi.ParaList.Count)
 					{
-						//CommonProcess.ErrReport();
-						return false;
+						// 取得宏参数
+						string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
+						if ("(" != paraStr)
+						{
+							//CommonProcess.ErrReport();
+							return false;
+						}
+						int leftBracket = offset;
+						int rightBracket = statementStr.Substring(offset).IndexOf(')');
+						if (-1 == rightBracket)
+						{
+							CommonProcess.ErrReport();
+							return false;
+						}
+						paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
+						macroName += statementStr.Substring(leftBracket, rightBracket + 1);
+						string[] realParas = paraStr.Split(',');
+						// 然后用实参去替换宏值里的形参
+						int idx = 0;
+						foreach (string rp in realParas)
+						{
+							if (string.Empty == rp)
+							{
+								// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
+								continue;
+							}
+							replaceStr = CommonProcess.WholeWordSReplace(replaceStr, mdi.ParaList[idx], rp);
+							//replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
+							idx++;
+						}
 					}
-					int leftBracket = offset;
-					int rightBracket = statementStr.Substring(offset).IndexOf(')');
-					if (-1 == rightBracket)
+					// 应对宏里面出现的"##"
+					string[] seps = { "##" };
+					string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
+					if (arr.Length > 1)
+					{
+						string newStr = "";
+						foreach (string sepStr in arr)
+						{
+							newStr += sepStr.Trim();
+						}
+						replaceStr = newStr;
+					}
+					// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
+					if (replaceStr.Contains('#'))
 					{
 						CommonProcess.ErrReport();
 						return false;
 					}
-					paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
-					macroName += statementStr.Substring(leftBracket, rightBracket + 1);
-					string[] realParas = paraStr.Split(',');
-					// 然后用实参去替换宏值里的形参
-					int idx = 0;
-					foreach (string rp in realParas)
+					// 用宏值去替换原来的宏名(宏展开)
+					if (idStr == replaceStr)
 					{
-						if (string.Empty == rp)
-						{
-							// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
-							continue;
-						}
-						replaceStr = CommonProcess.WholeWordSReplace(replaceStr, mdi.ParaList[idx], rp);
-						//replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
-						idx++;
+						return false;
 					}
+					int macroIdx = offset - idStr.Length;
+					statementStr = statementStr.Remove(macroIdx, idStr.Length);
+					statementStr = statementStr.Insert(macroIdx, replaceStr);
+					return true;
 				}
-				// 应对宏里面出现的"##"
-				string[] seps = { "##" };
-				string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
-				if (arr.Length > 1)
-				{
-					string newStr = "";
-					foreach (string sepStr in arr)
-					{
-						newStr += sepStr.Trim();
-					}
-					replaceStr = newStr;
-				}
-				// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
-				if (replaceStr.Contains('#'))
-				{
-					CommonProcess.ErrReport();
-					return false;
-				}
-				// 用宏值去替换原来的宏名(宏展开)
-				//int macroIdx = statementStr.IndexOf(macroName);
-				if (idStr == replaceStr)
-				{
-					return false;
-				}
-				int macroIdx = offset - idStr.Length;
-				statementStr = statementStr.Remove(macroIdx, idStr.Length);
-				statementStr = statementStr.Insert(macroIdx, replaceStr);
-				//statementStr = statementStr.Replace(macroName, replaceStr);
-				return true;
 			}
 			return false;
         }
@@ -859,6 +869,7 @@ namespace Mr.Robot
 						retGroup.ComponentList.Add(prefixList[j]);
 						retGroup.Text += prefixList[j].Text + " ";
 					}
+					retGroup.PrefixCount = prefixList.Count;
 					for (int j = old_idx; j < idx; j++)
 					{
 						retGroup.ComponentList.Add(componentList[j]);
@@ -872,6 +883,7 @@ namespace Mr.Robot
 				{
 					retGroup.ComponentList.Add(componentList[i]);
 					retGroup.Text += " " + componentList[i].Text;
+					retGroup.SuffixCount++;
 					idx++;
 				}
 				else
@@ -1324,6 +1336,9 @@ namespace Mr.Robot
 		public string Text = string.Empty;
 
 		public List<StatementComponent> ComponentList = new List<StatementComponent>();
+
+		public int PrefixCount = 0;														// 如果分组是类型的话, 还包括前后缀的个数
+		public int SuffixCount = 0;
 	}
 
     /// <summary>

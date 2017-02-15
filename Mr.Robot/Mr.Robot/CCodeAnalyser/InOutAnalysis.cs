@@ -220,7 +220,10 @@ namespace Mr.Robot
 		{
 			// 在当前的上下文中查找该名称的变量, 取得其类型名
 			string var_type = GetVarTypeName(var_name, parse_info, func_ctx);
-			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(var_type));
+			if (string.IsNullOrEmpty(var_type))
+			{
+				return ActParaPassType.Unknown;
+			}
 			if (var_type.Trim().EndsWith("*"))
 			{
 				return ActParaPassType.Reference;
@@ -313,6 +316,7 @@ namespace Mr.Robot
 	{
 		Reference,
 		Value,
+		Unknown,
 	}
 
 	public class ActualParaInfo

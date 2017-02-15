@@ -135,7 +135,6 @@ namespace Mr.Robot
 				// 预编译处理
 				codeList = PrecompileProcess(srcName, codeList, ref fileInfo);
 				fileInfo.CodeList = codeList;
-				//          Save2File(codeList, srcName + ".bak");
 
 				// 文件解析
 				if (!CCodeFileAnalysis(srcName, ref fileInfo))
@@ -146,8 +145,6 @@ namespace Mr.Robot
 				{
 					return true;
 				}
-				//			includeInfoList.Add(fi);
-				//          XmlProcess.SaveCFileInfo2XML(fi);
 			}
 			catch (Exception ex)
 			{
@@ -655,10 +652,14 @@ namespace Mr.Robot
 						else
 						{
 							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
-							GlobalVarProcess(qualifierList, ref parse_info);
+							//GlobalVarProcess(qualifierList, ref parse_info);
 
 							statementStr = StatementAnalysis.GetStatementStr(parse_info.CodeList,
 								new CodeScope(qualifierList.First().Position, nextIdtf.Position));
+						}
+						if (src_name.EndsWith("Rte_swc_in_trcta.h") && nextIdtf.Position.RowNum > 130)
+						{
+							int a = 100;
 						}
 						StatementAnalysis.SimpleStatementAnalyze(statementStr.Trim(), parse_info, null);
 					}
@@ -958,7 +959,7 @@ namespace Mr.Robot
 					break;
 				}
 				else if (CommonProcess.IsStandardIdentifier(idStr)
-						 && StatementAnalysis.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info))
+						 && StatementAnalysis.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info, true))
 				{
 					offset = old_offset;
 					continue;
