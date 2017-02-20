@@ -120,7 +120,7 @@ namespace Mr.Robot
 			List<string> prefixList, suffixList;
 			string coreTypeName = CommonProcess.ExtractCoreTypeName(type_name, out prefixList, out suffixList);
 			// 根据类型名检索类型定义
-			if (CommonProcess.IsBasicVarType(coreTypeName))
+			if (CommonProcess.IsBasicTypeName(coreTypeName))
 			{
 				VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
 				return var_ctx;
@@ -146,7 +146,52 @@ namespace Mr.Robot
 
 		public static VAR_CTX CreateVarCtx(MeaningGroup type_group, string var_name, FileParseInfo parse_info)
 		{
-			return null;
+			List<string> prefixList = new List<string>();
+			List<string> suffixList = new List<string>();
+			string typeName = string.Empty;
+			for (int i = 0; i < type_group.ComponentList.Count; i++)
+			{
+				string str = type_group.ComponentList[i].Text;
+				if (i < type_group.PrefixCount)
+				{
+					prefixList.Add(str);
+				}
+				else if (i < type_group.ComponentList.Count - type_group.SuffixCount)
+				{
+					typeName += " " + str;
+					typeName = typeName.Trim();
+				}
+				else
+				{
+					suffixList.Add(str);
+				}
+			}
+			VAR_CTX retVarCtx = new VAR_CTX(typeName, var_name);
+			retVarCtx.Type.PrefixList = prefixList;
+			retVarCtx.Type.SuffixList = suffixList;
+			if (suffixList.Contains("*"))
+			{
+				retVarCtx.Category = VAR_TYPE_CATEGORY.POINTER;
+			}
+			else
+			{
+				if (CommonProcess.IsBasicTypeName(typeName))
+				{
+					retVarCtx.Category = VAR_TYPE_CATEGORY.BASIC;
+				}
+				else
+				{
+					if (CommonProcess.IsUsrDefTypeName(typeName, parse_info))
+					{
+						retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF;
+					}
+					else
+					{
+						return null;
+					}
+				}
+			}
+			return retVarCtx;
 		}
 	}
 }

@@ -796,7 +796,7 @@ namespace Mr.Robot
 				idStrList.Add(cpntList[i].Text);
 			}
 			int count = 0;
-			if (CommonProcess.IsBasicVarType(idStrList, ref count))
+			if (CommonProcess.IsBasicTypeName(idStrList, ref count))
 			{
 				index += count;
 				return true;
@@ -951,7 +951,7 @@ namespace Mr.Robot
                     && groupList[0].Type == MeaningGroupType.VariableType)
                 {
                     MeaningGroup retGroup = new MeaningGroup();
-                    retGroup.Type = MeaningGroupType.LocalVariable;
+					retGroup.Type = MeaningGroupType.Identifier;
                     retGroup.ComponentList.Add(componentList[idx]);
                     retGroup.Text = componentList[idx].Text;
 					GetVarMemberGroup(componentList, ref idx, ref retGroup);

@@ -907,7 +907,7 @@ namespace Mr.Robot
 		/// 判断一组标识符是否是一个基本类型名
 		/// </summary>
 		/// <param name="idStrList"></param>
-		public static bool IsBasicVarType(List<string> idStrList, ref int count)
+		public static bool IsBasicTypeName(List<string> idStrList, ref int count)
 		{
 			List<string> initialParts = new List<string>();
 			List<string> lastParts = new List<string>();
@@ -950,9 +950,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断一个类型名是否是基本类型名
 		/// </summary>
-		/// <param name="type_name"></param>
-		/// <returns></returns>
-		public static bool IsBasicVarType(string type_name)
+		public static bool IsBasicTypeName(string type_name)
 		{
 			if (string.IsNullOrEmpty(type_name.Trim()))
 			{
@@ -1001,6 +999,34 @@ namespace Mr.Robot
 			}
 		}
 
+		public static bool IsUsrDefTypeName(string type_name, FileParseInfo parse_info)
+		{
+			char[] sep = new char[] {' ', '\t'};
+			string[] arr = type_name.Split(sep);
+			List<string> tmpList = new List<string>();
+			foreach (string item in arr)
+			{
+				if (string.IsNullOrEmpty(item.Trim()))
+				{
+					tmpList.Add(item);
+				}
+			}
+			if (2 == tmpList.Count
+				&& IsUsrDefTypeKWD(tmpList[0])
+				&& null != parse_info.FindUsrDefTypeInfo(tmpList[1], tmpList[0]))
+			{
+				return true;
+			}
+			else if (1 == tmpList.Count
+					 && null != parse_info.FindUsrDefTypeInfo(tmpList[0], string.Empty))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	}
 
 	public class CodeIdentifier
