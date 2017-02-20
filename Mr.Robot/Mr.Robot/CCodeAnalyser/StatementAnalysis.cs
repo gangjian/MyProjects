@@ -1216,18 +1216,14 @@ namespace Mr.Robot
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
         }
 
-		static VAR_CTX IsNewDefineVarible(List<MeaningGroup> mgList, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
+		public static VAR_CTX IsNewDefineVarible(List<MeaningGroup> mgList, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx, mgList[0].Text);
+				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx);
 				if (null != varCtx)
 				{
-					string orgTypeName = IsTypeDefTypeName(mgList[0], parse_info, func_ctx);
-					if (!string.IsNullOrEmpty(orgTypeName))
-					{
-						varCtx.Type.Name = orgTypeName;
-					}
+					// 在当前上下文中已存在! (作用域覆盖? 正常情况下不应该出现!)
 					return varCtx;
 				}
 				else
@@ -1239,26 +1235,6 @@ namespace Mr.Robot
             }
             return null;
         }
-
-		/// <summary>
-		/// 判断类型名是否是一个typedef定义的类型别名
-		/// </summary>
-		/// <returns>返回原类型名</returns>
-		static string IsTypeDefTypeName(MeaningGroup type_name_group, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
-		{
-			foreach (StatementComponent cpnt in type_name_group.ComponentList)
-			{
-				if (CommonProcess.IsStandardIdentifier(cpnt.Text))
-				{
-					string real_type;
-					if (string.Empty != (real_type = CommonProcess.FindTypeDefName(cpnt.Text, parse_info)))
-					{
-						return real_type;
-					}
-				}
-			}
-			return null;
-		}
 
 		public static void TypeDefProc(	List<StatementComponent> component_list,
 										FileParseInfo parse_info,

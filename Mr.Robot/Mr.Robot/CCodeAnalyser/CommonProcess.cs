@@ -999,31 +999,32 @@ namespace Mr.Robot
 			}
 		}
 
-		public static bool IsUsrDefTypeName(string type_name, FileParseInfo parse_info)
+		public static bool IsUsrDefTypeName(string type_name, FileParseInfo parse_info, out UsrDefTypeInfo usr_def_type_info)
 		{
 			char[] sep = new char[] {' ', '\t'};
 			string[] arr = type_name.Split(sep);
 			List<string> tmpList = new List<string>();
 			foreach (string item in arr)
 			{
-				if (string.IsNullOrEmpty(item.Trim()))
+				if (!string.IsNullOrEmpty(item.Trim()))
 				{
 					tmpList.Add(item);
 				}
 			}
 			if (2 == tmpList.Count
 				&& IsUsrDefTypeKWD(tmpList[0])
-				&& null != parse_info.FindUsrDefTypeInfo(tmpList[1], tmpList[0]))
+				&& null != (usr_def_type_info = parse_info.FindUsrDefTypeInfo(tmpList[1], tmpList[0])))
 			{
 				return true;
 			}
 			else if (1 == tmpList.Count
-					 && null != parse_info.FindUsrDefTypeInfo(tmpList[0], string.Empty))
+					 && null != (usr_def_type_info = parse_info.FindUsrDefTypeInfo(tmpList[0], string.Empty)))
 			{
 				return true;
 			}
 			else
 			{
+				usr_def_type_info = null;
 				return false;
 			}
 		}

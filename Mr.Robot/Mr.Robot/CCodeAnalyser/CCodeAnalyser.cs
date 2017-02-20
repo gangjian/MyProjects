@@ -657,10 +657,6 @@ namespace Mr.Robot
 							statementStr = StatementAnalysis.GetStatementStr(parse_info.CodeList,
 								new CodeScope(qualifierList.First().Position, nextIdtf.Position));
 						}
-						if (src_name.EndsWith("Rte_swc_in_trcta.h") && nextIdtf.Position.RowNum > 130)
-						{
-							int a = 100;
-						}
 						StatementAnalysis.SimpleStatementAnalyze(statementStr.Trim(), parse_info, null);
 					}
 					else if ("," == nextIdtf.Text)

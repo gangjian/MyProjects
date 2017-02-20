@@ -56,7 +56,7 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="func_ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtxByName(string var_name, FileParseInfo parse_info, FuncAnalysisContext func_ctx, string type_name = null)
+		static public VAR_CTX GetVarCtxByName(string var_name, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
 		{
 			VAR_CTX var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, func_ctx)))
@@ -166,6 +166,11 @@ namespace Mr.Robot
 					suffixList.Add(str);
 				}
 			}
+			TypeDefineInfo tdi = null;
+			while (null != (tdi = parse_info.FindTypeDefInfo(typeName)))
+			{
+				typeName = tdi.OldName;
+			}
 			VAR_CTX retVarCtx = new VAR_CTX(typeName, var_name);
 			retVarCtx.Type.PrefixList = prefixList;
 			retVarCtx.Type.SuffixList = suffixList;
@@ -181,9 +186,11 @@ namespace Mr.Robot
 				}
 				else
 				{
-					if (CommonProcess.IsUsrDefTypeName(typeName, parse_info))
+					UsrDefTypeInfo udti = null;
+					if (CommonProcess.IsUsrDefTypeName(typeName, parse_info, out udti))
 					{
 						retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF;
+						retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info);
 					}
 					else
 					{
@@ -192,6 +199,24 @@ namespace Mr.Robot
 				}
 			}
 			return retVarCtx;
+		}
+
+		static List<VAR_CTX> GetUsrDefTypeVarCtxMemberList(	UsrDefTypeInfo usr_def_type_var,
+															FileParseInfo parse_info)
+		{
+			List<VAR_CTX> retCtxList = new List<VAR_CTX>();
+			for (int i = 0; i < usr_def_type_var.MemberList.Count; i++)
+			{
+				string memberStr = usr_def_type_var.MemberList[i];
+				List<StatementComponent> componentList = StatementAnalysis.GetComponents(memberStr, parse_info);
+				List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+				VAR_CTX varCtx = null;
+				if (null != (varCtx = StatementAnalysis.IsNewDefineVarible(meaningGroupList, parse_info, null)))
+				{
+					retCtxList.Add(varCtx);
+				}
+			}
+			return retCtxList;
 		}
 	}
 }
