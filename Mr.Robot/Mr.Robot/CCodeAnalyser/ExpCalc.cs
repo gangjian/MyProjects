@@ -176,7 +176,8 @@ namespace Mr.Robot
 			int operatorIdx = -1;
 			for (int i = 0; i < meaningGroupList.Count; i++)
 			{
-				if ("defined" == meaningGroupList[i].Text)								// 把"defined"关键字当作'特殊的'运算符处理
+				if ("defined" == meaningGroupList[i].Text								// 把"defined"关键字当作'特殊的'运算符处理
+					|| meaningGroupList[i].Type == MeaningGroupType.TypeCasting)		// 强制类型转换
 				{
 					retGroup = new OPERATION_GROUP();
 					retGroup._Operator.Text = meaningGroupList[i].Text;
@@ -320,7 +321,12 @@ namespace Mr.Robot
 					retVal = CalcArithmetic_Divide(oper_group, parse_info);				// 除
 					break;
 				default:
-					throw new System.NotImplementedException();
+					//if (oper_group.t)
+					//{
+						
+					//}
+					//throw new System.NotImplementedException();
+					break;
 			}
 			return retVal;
 		}

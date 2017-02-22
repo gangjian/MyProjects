@@ -43,9 +43,10 @@ namespace Mr.Robot
 
 	public enum VAR_TYPE_CATEGORY
 	{
-		BASIC,
-		USR_DEF,
-		POINTER,
+		BASIC,				// 基本类型
+		USR_DEF_TYPE,		// 用户定义类型
+		POINTER,			// 指针类型
+		ARRAY,				// 数组类型
 	}
 
 	public partial class InOutAnalysis
@@ -171,6 +172,11 @@ namespace Mr.Robot
 			{
 				typeName = tdi.OldName;
 			}
+			int arrSize = 0;
+			if (var_name.EndsWith("]"))													// 包含下标,说明是数组
+			{
+				arrSize = GetArraySizeFromVarName(ref var_name, parse_info);
+			}
 			VAR_CTX retVarCtx = new VAR_CTX(typeName, var_name);
 			retVarCtx.Type.PrefixList = prefixList;
 			retVarCtx.Type.SuffixList = suffixList;
@@ -189,7 +195,7 @@ namespace Mr.Robot
 					UsrDefTypeInfo udti = null;
 					if (CommonProcess.IsUsrDefTypeName(typeName, parse_info, out udti))
 					{
-						retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF;
+						retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
 						retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info);
 					}
 					else
@@ -217,6 +223,18 @@ namespace Mr.Robot
 				}
 			}
 			return retCtxList;
+		}
+
+		static int GetArraySizeFromVarName(ref string var_name, FileParseInfo parse_info)
+		{
+			int startIdx = var_name.IndexOf('[');
+			if (-1 == startIdx || !var_name.EndsWith("]"))
+			{
+				return 0;
+			}
+			string sizeStr = var_name.Substring(startIdx + 1, var_name.Length - startIdx - 2);
+			int sizeVal = ExpCalc.GetLogicalExpressionValue(sizeStr, parse_info);
+			return 0;
 		}
 	}
 }

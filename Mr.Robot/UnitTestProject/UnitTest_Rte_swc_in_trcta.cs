@@ -45,7 +45,7 @@ namespace UnitTestProject
 
             Assert.AreEqual(2, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
-            Assert.AreEqual(MeaningGroupType.Identifier, meaningGroupList[1].Type);
+            Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -154,7 +154,7 @@ namespace UnitTestProject
 
 			Assert.AreEqual(2, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
-			Assert.AreEqual(MeaningGroupType.Identifier, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第二条语句
 			statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[1].Scope);
@@ -163,7 +163,7 @@ namespace UnitTestProject
 
 			Assert.AreEqual(2, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
-			Assert.AreEqual(MeaningGroupType.Identifier, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第三条语句
 			statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[2].Scope);
@@ -172,7 +172,7 @@ namespace UnitTestProject
 
 			Assert.AreEqual(2, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
-			Assert.AreEqual(MeaningGroupType.Identifier, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]

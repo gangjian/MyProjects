@@ -951,7 +951,14 @@ namespace Mr.Robot
                     && groupList[0].Type == MeaningGroupType.VariableType)
                 {
                     MeaningGroup retGroup = new MeaningGroup();
-					retGroup.Type = MeaningGroupType.Identifier;
+					if (null == func_ctx)
+					{
+						retGroup.Type = MeaningGroupType.GlobalVariable;
+					}
+					else
+					{
+						retGroup.Type = MeaningGroupType.LocalVariable;
+					}
                     retGroup.ComponentList.Add(componentList[idx]);
                     retGroup.Text = componentList[idx].Text;
 					GetVarMemberGroup(componentList, ref idx, ref retGroup);
