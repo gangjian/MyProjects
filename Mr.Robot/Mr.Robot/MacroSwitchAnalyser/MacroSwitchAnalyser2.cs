@@ -10,9 +10,10 @@ namespace Mr.Robot.MacroSwitchAnalyser
 {
     public class MacroSwitchAnalyser2
     {
-		List<string> SrcList = null;
-		List<string> HdList = null;
-		List<string> PrjList = null;
+		List<string> SrcList = null;													// 源文件列表
+		List<string> HdList = null;														// 头文件列表
+		List<string> MtpjList = null;													// .mtpj文件列表
+		List<string> MkList = null;														// .mk文件列表
 
 		int TotalCount = 0;
 		int SuccessCount = 0;
@@ -25,11 +26,12 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		public ReportProgressDel ReportProgress = null;
 
-        public MacroSwitchAnalyser2(List<string> source_list, List<string> header_list, List<string> project_file_list)
+		public MacroSwitchAnalyser2(List<string> source_list, List<string> header_list, List<string> mtpj_file_list, List<string> mk_file_list)
         {
 			this.SrcList = source_list;
 			this.HdList = header_list;
-			this.PrjList = project_file_list;
+			this.MtpjList = mtpj_file_list;
+			this.MkList = mk_file_list;
         }
 
 		Thread workerThread = null;
@@ -59,13 +61,25 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			this.NotFoundCount = 0;
 			int count = 0;
 
-			// 处理工程文件
-			List<PROJ_FILE_INFO> prjInfoList = new List<PROJ_FILE_INFO>();
-			foreach (string prj_name in this.PrjList)
+			// 处理.mtpj文件
+			List<MTPJ_FILE_INFO> mtpjInfoList = new List<MTPJ_FILE_INFO>();
+			foreach (string mtpj_name in this.MtpjList)
 			{
-				PROJ_FILE_INFO prj_info = new PROJ_FILE_INFO(prj_name);
-				PrjFileProc(prj_name, ref prj_info.DefList);
-				prjInfoList.Add(prj_info);
+				MTPJ_FILE_INFO mtpj_info = new MTPJ_FILE_INFO(mtpj_name);
+				mtpj_info.MtpjProc();
+				mtpjInfoList.Add(mtpj_info);
+			}
+
+			// 处理.mk文件
+			List<MK_FILE_INFO> mkInfoList = new List<MK_FILE_INFO>();
+			foreach (string mk_name in this.MkList)
+			{
+				MK_FILE_INFO mk_info = new MK_FILE_INFO(mk_name);
+				mk_info.MkProc();
+				if (0 != mk_info.DefList.Count)
+				{
+					mkInfoList.Add(mk_info);
+				}
 			}
 
 			CCodeAnalyser.CodeBufferManager codeBufferList = new CCodeAnalyser.CodeBufferManager();
@@ -75,7 +89,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			{
 				count++;
 				string commentStr;
-				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, prjInfoList, ref codeBufferList);
+				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, mtpjInfoList, mkInfoList, ref codeBufferList);
 				if (null != resultList)
 				{
 					//this.ResultList.AddRange(resultList);
@@ -97,7 +111,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		List<string> SrcProc(string src_name,
 							List<string> header_list,
 							out string comment_str,
-							List<PROJ_FILE_INFO> prjInfoList,
+							List<MTPJ_FILE_INFO> mtpj_info_list,
+							List<MK_FILE_INFO> mk_info_list,
 							ref CCodeAnalyser.CodeBufferManager code_buf_list)
         {
 			comment_str = string.Empty;
@@ -125,7 +140,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			foreach (MacroSwitchExpInfo expInfo in expInfoList)
 			{
 				MacroPrintInfo printInfo = new MacroPrintInfo(fi.Name, expInfo.LineNum.ToString(), expInfo.CodeLine);
-				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, prjInfoList);
+				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, mtpj_info_list, mk_info_list);
 			}
 			comment_str = "Success!";
 			this.SuccessCount += 1;
@@ -169,33 +184,5 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
             return CommonProc.GetMacroExpression(code_line, idx);
         }
-
-		void PrjFileProc(string prj_file_name, ref List<string> prj_def_list)
-		{
-			StreamReader sr = new StreamReader(prj_file_name);
-			while (true)
-			{
-				string rdLine = sr.ReadLine();
-				if (null == rdLine)
-				{
-					break;
-				}
-				rdLine = rdLine.Trim();
-				if (string.Empty == rdLine
-					|| (!Char.IsLetter(rdLine[0]) && ('_' != rdLine[0]))
-					)
-				{
-					continue;
-				}
-				else if (CommonProcess.IsStandardIdentifier(rdLine))
-				{
-					if (!prj_def_list.Contains(rdLine))
-					{
-						prj_def_list.Add(rdLine);
-					}
-				}
-			}
-			sr.Close();
-		}
     }
 }

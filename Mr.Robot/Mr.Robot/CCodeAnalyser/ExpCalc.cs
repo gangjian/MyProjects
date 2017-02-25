@@ -67,7 +67,7 @@ namespace Mr.Robot
 			OPERATION_GROUP opt = GetNextOperationGroup(meaningGroupList);
 			if (null == opt)
 			{
-				System.Diagnostics.Trace.Assert(false);
+				throw new MyException("GetNextOperationGroup return null!");
 			}
 			int retVal = GetOperationValue(opt, parse_info);
 			string firstExpStr = string.Empty;

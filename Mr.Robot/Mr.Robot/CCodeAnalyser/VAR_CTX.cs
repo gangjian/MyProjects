@@ -232,8 +232,12 @@ namespace Mr.Robot
 			{
 				return 0;
 			}
+			int sizeVal = 0;
 			string sizeStr = var_name.Substring(startIdx + 1, var_name.Length - startIdx - 2);
-			int sizeVal = ExpCalc.GetLogicalExpressionValue(sizeStr, parse_info);
+			if (!string.IsNullOrEmpty(sizeStr))
+			{
+				sizeVal = ExpCalc.GetLogicalExpressionValue(sizeStr, parse_info);
+			}
 			return 0;
 		}
 	}

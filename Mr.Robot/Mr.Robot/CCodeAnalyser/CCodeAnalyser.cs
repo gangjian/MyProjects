@@ -823,6 +823,11 @@ namespace Mr.Robot
 				retName += nextIdtf.Text;
 				nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			}
+			int idx;
+			if (-1 != (idx = retName.LastIndexOf('/')))
+			{
+				retName = retName.Remove(1, idx).Trim();
+			}
 			return retName + quotIdtf.Text;
 		}
 

@@ -55,15 +55,15 @@
 			this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader14 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label6 = new System.Windows.Forms.Label();
 			this.btnSaveSummary2CSV = new System.Windows.Forms.Button();
-			this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.SuspendLayout();
 			// 
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label1.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label1.Location = new System.Drawing.Point(12, 9);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(86, 21);
@@ -72,7 +72,7 @@
 			// 
 			// tbxRootPath
 			// 
-			this.tbxRootPath.Font = new System.Drawing.Font("宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.tbxRootPath.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.tbxRootPath.Location = new System.Drawing.Point(16, 33);
 			this.tbxRootPath.Name = "tbxRootPath";
 			this.tbxRootPath.ReadOnly = true;
@@ -81,7 +81,7 @@
 			// 
 			// btnOpenRoot
 			// 
-			this.btnOpenRoot.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenRoot.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenRoot.Location = new System.Drawing.Point(758, 33);
 			this.btnOpenRoot.Name = "btnOpenRoot";
 			this.btnOpenRoot.Size = new System.Drawing.Size(75, 23);
@@ -93,7 +93,7 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label2.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label2.Location = new System.Drawing.Point(12, 66);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(99, 21);
@@ -102,7 +102,7 @@
 			// 
 			// tbxSourcePath
 			// 
-			this.tbxSourcePath.Font = new System.Drawing.Font("宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.tbxSourcePath.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.tbxSourcePath.Location = new System.Drawing.Point(16, 90);
 			this.tbxSourcePath.Name = "tbxSourcePath";
 			this.tbxSourcePath.ReadOnly = true;
@@ -111,7 +111,7 @@
 			// 
 			// btnOpenSource
 			// 
-			this.btnOpenSource.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenSource.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenSource.Location = new System.Drawing.Point(758, 90);
 			this.btnOpenSource.Name = "btnOpenSource";
 			this.btnOpenSource.Size = new System.Drawing.Size(75, 23);
@@ -157,7 +157,7 @@
 			// label3
 			// 
 			this.label3.AutoSize = true;
-			this.label3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label3.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label3.Location = new System.Drawing.Point(12, 129);
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(123, 21);
@@ -183,7 +183,7 @@
             this.columnHeader8,
             this.columnHeader6,
             this.columnHeader7});
-			this.lvDetailList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvDetailList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvDetailList.FullRowSelect = true;
 			this.lvDetailList.GridLines = true;
 			this.lvDetailList.Location = new System.Drawing.Point(395, 374);
@@ -243,7 +243,7 @@
 			// label5
 			// 
 			this.label5.AutoSize = true;
-			this.label5.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label5.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label5.Location = new System.Drawing.Point(584, 129);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(38, 21);
@@ -268,7 +268,7 @@
             this.columnHeader13,
             this.columnHeader14,
             this.columnHeader10});
-			this.lvSummaryList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvSummaryList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvSummaryList.FullRowSelect = true;
 			this.lvSummaryList.GridLines = true;
 			this.lvSummaryList.Location = new System.Drawing.Point(16, 374);
@@ -293,6 +293,11 @@
 			this.columnHeader14.Text = "Value";
 			this.columnHeader14.Width = 50;
 			// 
+			// columnHeader10
+			// 
+			this.columnHeader10.Text = "DefineFile";
+			this.columnHeader10.Width = 120;
+			// 
 			// label6
 			// 
 			this.label6.AutoSize = true;
@@ -313,11 +318,6 @@
 			this.btnSaveSummary2CSV.Text = "Save CSV";
 			this.btnSaveSummary2CSV.UseVisualStyleBackColor = true;
 			this.btnSaveSummary2CSV.Click += new System.EventHandler(this.btnSaveSummary2CSV_Click);
-			// 
-			// columnHeader10
-			// 
-			this.columnHeader10.Text = "DefineFile";
-			this.columnHeader10.Width = 120;
 			// 
 			// FormMTBot
 			// 
@@ -346,7 +346,7 @@
 			this.MaximizeBox = false;
 			this.Name = "FormMTBot";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "MTBot v0.1";
+			this.Text = "MTBot v0.1.3";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMTBot_FormClosing);
 			this.ResumeLayout(false);
 			this.PerformLayout();

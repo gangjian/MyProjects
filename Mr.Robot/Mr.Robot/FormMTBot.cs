@@ -13,9 +13,10 @@ namespace Mr.Robot
 {
 	public partial class FormMTBot : Form
 	{
-		List<string> SourceList = new List<string>();
-		List<string> HeaderList = new List<string>();
-		List<string> PrjFileList = new List<string>();
+		List<string> SourceList = new List<string>();									// .c源文件
+		List<string> HeaderList = new List<string>();									// .h头文件
+		List<string> MtpjFileList = new List<string>();									// .mtpj文件
+		List<string> MkFileList = new List<string>();									// .mk文件
 
 		public FormMTBot()
 		{
@@ -67,9 +68,10 @@ namespace Mr.Robot
 
 					this.SourceList.Clear();
 					this.HeaderList.Clear();
-					this.PrjFileList.Clear();
+					this.MtpjFileList.Clear();
+					this.MkFileList.Clear();
 					// 取得所有源文件和头文件列表
-					IOProcess.GetAllCCodeFiles(root_path, ref this.SourceList, ref this.HeaderList, ref this.PrjFileList);
+					IOProcess.GetAllCCodeFiles(root_path, ref this.SourceList, ref this.HeaderList, ref this.MtpjFileList, ref this.MkFileList);
 					UpdateSourceListView();
 				}
 			}
@@ -85,10 +87,11 @@ namespace Mr.Robot
 					tbxSourcePath.Text = source_path;
 
 					List<string> tmpHdList = new List<string>();
-					List<string> tmpPrjList = new List<string>();
+					List<string> tmpMtptList = new List<string>();
+					List<string> tmpMkList = new List<string>();
 					// 取得所有源文件
 					this.SourceList.Clear();
-					IOProcess.GetAllCCodeFiles(source_path, ref this.SourceList, ref tmpHdList, ref tmpPrjList);
+					IOProcess.GetAllCCodeFiles(source_path, ref this.SourceList, ref tmpHdList, ref tmpMtptList, ref tmpMkList);
 					UpdateSourceListView();
 				}
 			}
@@ -123,7 +126,7 @@ namespace Mr.Robot
 			this.SummaryResultList.Clear();
 
 			SetUICtrlEnabled(false);
-			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyser2(this.SourceList, this.HeaderList, this.PrjFileList);
+			this.MacroSwitchAnalyzer2 = new MacroSwitchAnalyser2(this.SourceList, this.HeaderList, this.MtpjFileList, this.MkFileList);
 			this.MacroSwitchAnalyzer2.ReportProgress += UpdateProgressHandler;
 			this.MacroSwitchAnalyzer2.ProcStart();
 			this.StopWatch.Restart();

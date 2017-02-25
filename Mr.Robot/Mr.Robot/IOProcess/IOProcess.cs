@@ -16,14 +16,15 @@ namespace Mr.Robot
 		public static void GetAllCCodeFiles(string root_path,
 											ref List<string> source_file_list,
 											ref List<string> header_file_list,
-											ref List<string> project_file_list)
+											ref List<string> mtpj_file_list,
+											ref List<string> mk_file_list)
 		{
 			DirectoryInfo di = new DirectoryInfo(root_path);
 			try
 			{
 				foreach (DirectoryInfo subDir in di.GetDirectories())
 				{
-					GetAllCCodeFiles(subDir.FullName, ref source_file_list, ref header_file_list, ref project_file_list);
+					GetAllCCodeFiles(subDir.FullName, ref source_file_list, ref header_file_list, ref mtpj_file_list, ref mk_file_list);
 				}
 				foreach (FileInfo fi in di.GetFiles())
 				{
@@ -37,7 +38,11 @@ namespace Mr.Robot
 					}
 					else if (".mtpj" == fi.Extension.ToLower())
 					{
-						project_file_list.Add(fi.FullName);
+						mtpj_file_list.Add(fi.FullName);
+					}
+					else if (".mk" == fi.Extension.ToLower())
+					{
+						mk_file_list.Add(fi.FullName);
 					}
 					else
 					{

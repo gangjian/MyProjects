@@ -63,7 +63,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
                                                             MacroPrintInfo print_info,
                                                             FileParseInfo parse_info,
                                                             ref List<string> result_list,
-															List<PROJ_FILE_INFO> prjInfoList)
+															List<MTPJ_FILE_INFO> mtpj_info_list,
+															List<MK_FILE_INFO> mk_info_list)
         {
             if (string.IsNullOrEmpty(macro_exp))
             {
@@ -89,7 +90,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
                         // 表达式
                         else if (mType == MacroValueType.Expression)
                         {
-							MacroSwitchExpressionAnalysis(valStr, print_info, parse_info, ref result_list, prjInfoList);
+							MacroSwitchExpressionAnalysis(valStr, print_info, parse_info, ref result_list, mtpj_info_list, mk_info_list);
                         }
                         // 空
                         else if (mType == MacroValueType.Empty)
@@ -101,21 +102,21 @@ namespace Mr.Robot.MacroSwitchAnalyser
                     else
                     {
                         // 未定义
-						bool findInPrjDef = false;
-						if (null != prjInfoList)
+						bool findInMtpjDef = false;
+						if (null != mtpj_info_list)
 						{
-							foreach (PROJ_FILE_INFO prj_info in prjInfoList)
+							foreach (MTPJ_FILE_INFO prj_info in mtpj_info_list)
 							{
 								if (prj_info.DefList.Contains(cpnt.Text))
 								{
 									string resultStr = MakeResultStr(cpnt.Text, @".mtpj def", print_info, prj_info.FileName);
 									result_list.Add(resultStr);
-									findInPrjDef = true;
+									findInMtpjDef = true;
 									break;
 								}
 							}
 						}
-						if (!findInPrjDef)
+						if (!findInMtpjDef)
 						{
 							string resultStr = MakeResultStr(cpnt.Text, @"X", print_info, string.Empty);
 							result_list.Add(resultStr);
@@ -124,6 +125,33 @@ namespace Mr.Robot.MacroSwitchAnalyser
                 }
             }
         }
+
+		static string SearchUndefInOtherFiles(	string def_str,
+												List<MTPJ_FILE_INFO> mtpj_info_list,
+												List<MK_FILE_INFO> mk_info_list)
+		{
+			if (null != mk_info_list)
+			{
+				foreach (MTPJ_FILE_INFO mtpj_info in mtpj_info_list)
+				{
+					if (mtpj_info.DefList.Contains(def_str))
+					{
+						return @".mtpj def";
+					}
+				}
+			}
+			if (null != mk_info_list)
+			{
+				foreach (MK_FILE_INFO mk_info in mk_info_list)
+				{
+					if (mk_info.DefList.Contains(def_str))
+					{
+						return @".mk def";
+					}
+				}
+			}
+			return string.Empty;
+		}
 
         static MacroValueType MacroValueStrAnalysis(ref string macro_value_str, FileParseInfo parse_info)
         {
@@ -199,13 +227,117 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// <summary>
 	/// 工程文件信息(有可能包含部分宏定义等信息)
 	/// </summary>
-	public class PROJ_FILE_INFO
+	public class MTPJ_FILE_INFO
 	{
 		public string FileName = string.Empty;
-		public List<string> DefList = new List<string>();									// 工程文件里定义的宏定义列表
-		public PROJ_FILE_INFO(string file_name)
+		public List<string> DefList = new List<string>();								// .mtpj文件里定义的宏定义列表
+		public MTPJ_FILE_INFO(string file_name)
 		{
 			this.FileName = file_name;
+		}
+
+		public void MtpjProc()
+		{
+			if (!File.Exists(this.FileName))
+			{
+				return;
+			}
+			this.DefList.Clear();
+			StreamReader sr = new StreamReader(this.FileName);
+			while (true)
+			{
+				string rdLine = sr.ReadLine();
+				if (null == rdLine)
+				{
+					break;
+				}
+				rdLine = rdLine.Trim();
+				if (string.Empty == rdLine
+					|| (!Char.IsLetter(rdLine[0]) && ('_' != rdLine[0]))
+					)
+				{
+					continue;
+				}
+				else if (CommonProcess.IsStandardIdentifier(rdLine))
+				{
+					if (!this.DefList.Contains(rdLine))
+					{
+						this.DefList.Add(rdLine);
+					}
+				}
+			}
+			sr.Close();
+		}
+	}
+
+	public class MK_FILE_INFO
+	{
+		public string FileName = string.Empty;
+		public List<string> DefList = new List<string>();								// .mtpj文件里定义的宏定义列表
+		public MK_FILE_INFO(string file_name)
+		{
+			this.FileName = file_name;
+		}
+
+		public void MkProc()
+		{
+			if (!File.Exists(this.FileName))
+			{
+				return;
+			}
+			this.DefList.Clear();
+			StreamReader sr = new StreamReader(this.FileName);
+			while (true)
+			{
+				string rdLine = sr.ReadLine();
+				if (null == rdLine)
+				{
+					break;
+				}
+				rdLine = rdLine.Trim();
+				if (string.Empty == rdLine
+					|| (rdLine.StartsWith("#"))
+					)
+				{
+					continue;
+				}
+				int idx;
+				if (-1 != (idx = rdLine.IndexOf("-D")))
+				{
+					string subStr = rdLine.Substring(idx + 2).Trim();
+					string dStr = GetMacroNameStr(subStr);
+					if (!string.IsNullOrEmpty(dStr)
+						&& !this.DefList.Contains(dStr))
+					{
+						this.DefList.Add(dStr);
+					}
+				}
+			}
+			sr.Close();
+		}
+
+		string GetMacroNameStr(string line_str)
+		{
+			int idx = 0;
+			for (int i = 0; i < line_str.Length; i++)
+			{
+				char ch = line_str[i];
+				if (!Char.IsLetter(ch)
+					&& !Char.IsDigit(ch)
+					&& '_' != ch)
+				{
+					break;
+				}
+				else
+				{
+					idx++;
+				}
+			}
+			if (0 != idx)
+			{
+				return line_str.Substring(0, idx);
+			}
+			return string.Empty;
 		}
 	}
 }

@@ -57,7 +57,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				ExpressionAnalysis(componentList, parse_info, func_ctx);
+				//ExpressionAnalysis(componentList, parse_info, func_ctx);
 			}
 		}
 
