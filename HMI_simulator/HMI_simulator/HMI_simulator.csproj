@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="COMMUNICATOR.cs" />
     <Compile Include="Ctrls\HMI_BUTTON.cs" />
     <Compile Include="Ctrls\HMI_PROGRESSBAR.cs" />
     <Compile Include="Ctrls\HMI_TEXTBOX.cs" />

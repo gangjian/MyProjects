@@ -16,9 +16,12 @@ namespace HMI_simulator
 	public partial class FormMain : Form
 	{
 		Bitmap _Canvas = null;
+		COMMUNICATOR _Communicator = null;
+
 		public FormMain()
 		{
 			InitializeComponent();
+
 			this._Canvas = new System.Drawing.Bitmap(this.pictureBox1.Width, this.pictureBox1.Height);
 			Graphics g = Graphics.FromImage(this._Canvas);
 			g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -101,6 +104,23 @@ namespace HMI_simulator
 			retPbarList.Add(pbar);
 
 			return retPbarList;
+		}
+
+		private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			this._Communicator.Stop();
+		}
+
+		private void FormMain_Load(object sender, EventArgs e)
+		{
+			this._Communicator = new COMMUNICATOR();
+			this._Communicator.RecvMsgDel = new RecvSocketMsgDelegate(this.RecvSocketMsg);
+			this._Communicator.Start();
+		}
+
+		void RecvSocketMsg(string msg)
+		{
+			MessageBox.Show(msg.ToString());
 		}
 	}
 }
