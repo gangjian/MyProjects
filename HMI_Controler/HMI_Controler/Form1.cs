@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 
 namespace HMI_Controler
 {
@@ -16,10 +18,7 @@ namespace HMI_Controler
 		public Form1()
 		{
 			InitializeComponent();
-			this.ExePath = tbxExePath.Text;
 		}
-
-		string ExePath = "C:\\Users\\GangJian\\03_work\\github\\MyProjects\\HMI_Client_Demo\\Debug\\HMI_Client_Demo.exe";
 
 		private void button1_Click(object sender, EventArgs e)
 		{
@@ -32,12 +31,25 @@ namespace HMI_Controler
 			{
 				return;
 			}
-			Process clientProcess = new Process();
-			clientProcess.StartInfo = new ProcessStartInfo(this.ExePath, cmd_str);
-			clientProcess.StartInfo.UseShellExecute = false;
-			clientProcess.StartInfo.CreateNoWindow = true;
-			clientProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-			clientProcess.Start();
+			//Process clientProcess = new Process();
+			//clientProcess.StartInfo = new ProcessStartInfo(this.ExePath, cmd_str);
+			//clientProcess.StartInfo.UseShellExecute = false;
+			//clientProcess.StartInfo.CreateNoWindow = true;
+			//clientProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+			//clientProcess.Start();
+			IPEndPoint ipep = new IPEndPoint(IPAddress.Loopback, 2017);
+			Socket cSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			try
+			{
+				cSocket.Connect(ipep);
+				byte[] sndBytes = Encoding.ASCII.GetBytes(cmd_str);
+				cSocket.Send(sndBytes);
+				cSocket.Close();
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Trace.WriteLine(ex.ToString());
+			}
 		}
 
 		private void button2_Click(object sender, EventArgs e)
