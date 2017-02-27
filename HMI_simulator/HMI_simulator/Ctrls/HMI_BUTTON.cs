@@ -27,8 +27,9 @@ namespace HMI_simulator.Ctrls
 		public int Pos_X = 10;
 		public int Pos_Y = 10;
 
-		public HMI_BUTTON(bool displayed, bool selected, bool enabled, int x, int y, string fixed_text, int width = 120, int height = 25)
+		public HMI_BUTTON(int id, bool displayed, bool selected, bool enabled, int x, int y, string fixed_text, int width = 120, int height = 25)
 		{
+			this.Id = id;
 			this.Displayed = displayed;
 			this.Selected = selected;
 			this.Enabled = enabled;

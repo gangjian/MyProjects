@@ -27,7 +27,7 @@ namespace HMI_simulator
 			InitializeComponent();
 
 			_PageInfoList = ReadHmiPageCtrlSetting("PageSetting.config");
-			this._CurPageId = 3;
+			this._CurPageId = 1;
 			UpdateView();
 		}
 

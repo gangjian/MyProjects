@@ -21,8 +21,9 @@ namespace HMI_simulator.Ctrls
 		public int Pos_X = 10;
 		public int Pos_Y = 10;
 
-		public HMI_TEXTBOX(string text, int x, int y, string fixed_text = "部品上固定表示文字", int width = 240, int height = 30)
+		public HMI_TEXTBOX(int id, string text, int x, int y, string fixed_text = "部品上固定表示文字", int width = 240, int height = 30)
 		{
+			this.Id = id;
 			this.Text = text;
 			this.Pos_X = x;
 			this.Pos_Y = y;

@@ -23,8 +23,9 @@ namespace HMI_simulator.Ctrls
 		public int Value = 0;
 		public int Total = 100;
 
-		public HMI_PROGRESSBAR(int value, int total, int x, int y, int width = 300, int height = 20)
+		public HMI_PROGRESSBAR(int id, int value, int total, int x, int y, int width = 300, int height = 20)
 		{
+			this.Id = id;
 			this.Value = value;
 			this.Total = total;
 			this.Pos_X = x;

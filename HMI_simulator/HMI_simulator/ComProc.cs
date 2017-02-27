@@ -128,11 +128,11 @@ namespace HMI_simulator
 			{
 				if (null != width && null != height)
 				{
-					return new HMI_BUTTON((bool)displayed, (bool)selected, (bool)enabled, (int)posX, (int)posY, fixedTextStr, (int)width, (int)height);
+					return new HMI_BUTTON((int)id, (bool)displayed, (bool)selected, (bool)enabled, (int)posX, (int)posY, fixedTextStr, (int)width, (int)height);
 				}
 				else
 				{
-					return new HMI_BUTTON((bool)displayed, (bool)selected, (bool)enabled, (int)posX, (int)posY, fixedTextStr);
+					return new HMI_BUTTON((int)id, (bool)displayed, (bool)selected, (bool)enabled, (int)posX, (int)posY, fixedTextStr);
 				}
 			}
 
@@ -215,11 +215,11 @@ namespace HMI_simulator
 			{
 				if (null != width && null != height)
 				{
-					return new HMI_TEXTBOX(textStr, (int)posX, (int)posY, fixedTextStr, (int)width, (int)height);
+					return new HMI_TEXTBOX((int)id, textStr, (int)posX, (int)posY, fixedTextStr, (int)width, (int)height);
 				}
 				else
 				{
-					return new HMI_TEXTBOX(textStr, (int)posX, (int)posY, fixedTextStr);
+					return new HMI_TEXTBOX((int)id, textStr, (int)posX, (int)posY, fixedTextStr);
 				}
 			}
 			return null;
@@ -301,11 +301,11 @@ namespace HMI_simulator
 			{
 				if (null != width && null != height)
 				{
-					return new HMI_PROGRESSBAR((int)val, (int)total, (int)posX, (int)posY, (int)width, (int)height);
+					return new HMI_PROGRESSBAR((int)id, (int)val, (int)total, (int)posX, (int)posY, (int)width, (int)height);
 				}
 				else
 				{
-					return new HMI_PROGRESSBAR((int)val, (int)total, (int)posX, (int)posY);
+					return new HMI_PROGRESSBAR((int)id, (int)val, (int)total, (int)posX, (int)posY);
 				}
 			}
 			return null;

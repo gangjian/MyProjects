@@ -78,7 +78,7 @@ namespace HMI_simulator
 					break;
 				case HMI_CTRL_TYPE.BUTTON:
 					HMI_BUTTON btn = ComProc.GetButtonCtrlInfo(cmd_str);
-					if (null != btn)
+					if (null != btn && -1 != btn.Id)
 					{
 						for (int i = 0; i < pageInfo.ButtonList.Count; i++)
 						{
