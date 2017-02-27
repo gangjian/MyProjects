@@ -18,8 +18,13 @@ extern void SendData2HimSim(wchar_t *WStr);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	wchar_t *WStr = L"0123,456789²Ð¤ê•rég!";
-	SendData2HimSim(WStr);
+	if (argc > 1)
+	{
+		_TCHAR* p = argv[1];
+		//wchar_t *WStr = L"0123,456789²Ð¤ê•rég!";
+		wchar_t *WStr = p;
+		SendData2HimSim(WStr);
+	}
 	return 0;
 }
 
