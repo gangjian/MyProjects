@@ -18,6 +18,12 @@ namespace HMI_simulator
 		Socket sSocket = null;
 
 		public RecvSocketMsgDelegate RecvMsgDel = null;
+		string EncodingStr = "GB2312";
+
+		public COMMUNICATOR(string encoding_str)
+		{
+			this.EncodingStr = encoding_str;
+		}
 
 		public void Start()
 		{
@@ -32,7 +38,7 @@ namespace HMI_simulator
 			try
 			{
 				cSocket.Connect(ipep);
-				string sndStr = "Thread Abort";
+				string sndStr = COM_QUIT_STR;
 				byte[] sndBytes = Encoding.ASCII.GetBytes(sndStr);
 				cSocket.Send(sndBytes);
 				cSocket.Close();
@@ -42,6 +48,8 @@ namespace HMI_simulator
 				System.Diagnostics.Trace.WriteLine(ex.ToString());
 			}
 		}
+
+		const string COM_QUIT_STR = "HMI_SIM_QUIT";
 
 		void Com_Main()
 		{
@@ -68,11 +76,11 @@ namespace HMI_simulator
 						{
 							//Encoding shift_jis_encoding = Encoding.GetEncoding("Shift_JIS");
 							//recvStr += shift_jis_encoding.GetString(recvBytes, 0, bytes);
-							Encoding gb2312_encoding = Encoding.GetEncoding("GB2312");
-							recvStr += gb2312_encoding.GetString(recvBytes, 0, bytes);
-							//recvStr += Encoding.Unicode.GetString(recvBytes, 0, bytes);
+							Encoding encoding = Encoding.GetEncoding(this.EncodingStr);
+							recvStr += encoding.GetString(recvBytes, 0, bytes);
 							Console.WriteLine("Server get message:{0}", recvStr);
-							if (null != this.RecvMsgDel)
+							if (null != this.RecvMsgDel
+								&& !recvStr.Equals(COM_QUIT_STR))
 							{
 								this.RecvMsgDel(recvStr);
 							}
@@ -83,7 +91,7 @@ namespace HMI_simulator
 						}
 					}
 					cSocket.Close();
-					if (recvStr.Equals("Thread Abort"))
+					if (recvStr.Equals(COM_QUIT_STR))
 					{
 						this.sSocket.Close();
 						break;

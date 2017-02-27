@@ -44,7 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandParse.cs" />
     <Compile Include="COMMUNICATOR.cs" />
+    <Compile Include="ComProc.cs" />
     <Compile Include="Ctrls\HMI_BUTTON.cs" />
     <Compile Include="Ctrls\HMI_PROGRESSBAR.cs" />
     <Compile Include="Ctrls\HMI_TEXTBOX.cs" />
@@ -54,6 +56,7 @@
     <Compile Include="FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="HMI_PAGE.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="FormMain.resx">
