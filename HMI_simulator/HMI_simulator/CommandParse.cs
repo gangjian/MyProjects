@@ -9,7 +9,7 @@ namespace HMI_simulator
 {
 	public class CommandParse
 	{
-		public static bool DoParse(string cmd_str, ref List<HMI_PAGE> page_info_list, ref int cur_page_idx)
+		public static bool DoParse(string cmd_str, ref DataContainer data_container)
 		{
 			if (string.IsNullOrEmpty(cmd_str))
 			{
@@ -20,10 +20,10 @@ namespace HMI_simulator
 			switch (cmd_name)
 			{
 				case "change_page":
-					ret = CmdChangePageProc(cmd_str, page_info_list, ref cur_page_idx);
+					ret = CmdChangePageProc(cmd_str, ref data_container);
 					break;
 				case "set_ctrl_property":
-					ret = CmdSetCtrlProperty(cmd_str, ref page_info_list, cur_page_idx);
+					ret = CmdSetCtrlProperty(cmd_str, ref data_container);
 					break;
 				default:
 					ret = false;
@@ -38,18 +38,18 @@ namespace HMI_simulator
 			return arr[0].ToLower().Trim();
 		}
 
-		static bool CmdChangePageProc(string cmd_str, List<HMI_PAGE> page_info_list, ref int cur_page_idx)
+		static bool CmdChangePageProc(string cmd_str, ref DataContainer data_container)
 		{
 			string[] arr = cmd_str.Split(';');
 			int val;
 			if (arr.Length > 1
 				&& int.TryParse(arr[1], out val))
 			{
-				foreach (var pi in page_info_list)
+				foreach (var pi in data_container.PageInfoList)
 				{
 					if (val == pi.PageId)
 					{
-						cur_page_idx = val;
+						data_container.CurPageIndex = val;
 						return true;
 					}
 				}
@@ -57,12 +57,12 @@ namespace HMI_simulator
 			return false;
 		}
 
-		static bool CmdSetCtrlProperty(string cmd_str, ref List<HMI_PAGE> page_info_list, int cur_page_idx)
+		static bool CmdSetCtrlProperty(string cmd_str, ref DataContainer data_container)
 		{
 			HMI_PAGE pageInfo = null;
-			foreach (var pi in page_info_list)
+			foreach (var pi in data_container.PageInfoList)
 			{
-				if (pi.PageId == cur_page_idx)
+				if (pi.PageId == data_container.CurPageIndex)
 				{
 					pageInfo = pi;
 				}

@@ -71,5 +71,20 @@ namespace HMI_simulator.Ctrls
 			g.DrawRectangle(new Pen(Color.Black, 1), this.Pos_X, this.Pos_Y, this.Width, this.Height);
 		}
 
+		public bool IsPointInside(Point pt)
+		{
+			if (   pt.X >= this.Pos_X
+				&& pt.X <= this.Pos_X + this.Width - 1
+
+				&& pt.Y >= this.Pos_Y
+				&& pt.Y <= this.Pos_Y + this.Height - 1 )
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	}
 }

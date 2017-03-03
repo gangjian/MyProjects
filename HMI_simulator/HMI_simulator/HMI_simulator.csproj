@@ -50,6 +50,7 @@
     <Compile Include="Ctrls\HMI_BUTTON.cs" />
     <Compile Include="Ctrls\HMI_PROGRESSBAR.cs" />
     <Compile Include="Ctrls\HMI_TEXTBOX.cs" />
+    <Compile Include="DataContainer.cs" />
     <Compile Include="FormMain.cs">
       <SubType>Form</SubType>
     </Compile>
