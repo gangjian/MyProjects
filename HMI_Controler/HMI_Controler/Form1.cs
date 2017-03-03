@@ -31,12 +31,6 @@ namespace HMI_Controler
 			{
 				return;
 			}
-			//Process clientProcess = new Process();
-			//clientProcess.StartInfo = new ProcessStartInfo(this.ExePath, cmd_str);
-			//clientProcess.StartInfo.UseShellExecute = false;
-			//clientProcess.StartInfo.CreateNoWindow = true;
-			//clientProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-			//clientProcess.Start();
 			IPEndPoint ipep = new IPEndPoint(IPAddress.Loopback, 2017);
 			Socket cSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 			try
