@@ -286,6 +286,29 @@ namespace Mr.Robot
 							DefineProcess(file_name, codeList, ref searchPos, ref fi);
 						}
 					}
+					else if ("pragma" == nextIdtf.Text.ToLower())
+					{
+						nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+						if ("asm" == nextIdtf.Text.ToLower())
+						{
+							// C代码中嵌入了汇编命令(暂不处理)
+							while (true)
+							{
+								rdLine = codeList[idx].Trim();
+								if (-1 != rdLine.ToLower().IndexOf("#pragma endasm"))
+								{
+									retList.Add("");
+									break;
+								}
+								else
+								{
+									retList.Add("");
+									idx++;
+								}
+							}
+							continue;	// 跳出循环处理下一行
+						}
+					}
 					else
 					{
 						string exprStr = "";            // 表达式字符串
