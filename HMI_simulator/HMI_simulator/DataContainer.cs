@@ -113,21 +113,21 @@ namespace HMI_simulator
 					case HMI_CTRL_TYPE.NULL:
 						break;
 					case HMI_CTRL_TYPE.BUTTON:
-						HMI_BUTTON btn = ComProc.GetButtonCtrlInfo(rdSettingData[i]);
+						HMI_BUTTON btn = HMI_BUTTON.GetButtonCtrlInfo(rdSettingData[i]);
 						if (null != btn)
 						{
 							retPage.ButtonList.Add(btn);
 						}
 						break;
 					case HMI_CTRL_TYPE.TEXTBOX:
-						HMI_TEXTBOX tbx = ComProc.GetTextBoxCtrlInfo(rdSettingData[i]);
+						HMI_TEXTBOX tbx = HMI_TEXTBOX.GetTextBoxCtrlInfo(rdSettingData[i]);
 						if (null != tbx)
 						{
 							retPage.TextBoxList.Add(tbx);
 						}
 						break;
 					case HMI_CTRL_TYPE.PROGRESSBAR:
-						HMI_PROGRESSBAR pbar = ComProc.GetProgressBarCtrlInfo(rdSettingData[i]);
+						HMI_PROGRESSBAR pbar = HMI_PROGRESSBAR.GetProgressBarCtrlInfo(rdSettingData[i]);
 						if (null != pbar)
 						{
 							retPage.ProgressBarList.Add(pbar);

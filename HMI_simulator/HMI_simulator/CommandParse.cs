@@ -77,7 +77,7 @@ namespace HMI_simulator
 				case HMI_CTRL_TYPE.NULL:
 					break;
 				case HMI_CTRL_TYPE.BUTTON:
-					HMI_BUTTON btn = ComProc.GetButtonCtrlInfo(cmd_str);
+					HMI_BUTTON btn = HMI_BUTTON.GetButtonCtrlInfo(cmd_str);
 					if (null != btn && -1 != btn.Id)
 					{
 						for (int i = 0; i < pageInfo.ButtonList.Count; i++)
@@ -91,7 +91,7 @@ namespace HMI_simulator
 					}
 					break;
 				case HMI_CTRL_TYPE.TEXTBOX:
-					HMI_TEXTBOX tbx = ComProc.GetTextBoxCtrlInfo(cmd_str);
+					HMI_TEXTBOX tbx = HMI_TEXTBOX.GetTextBoxCtrlInfo(cmd_str);
 					if (null != tbx)
 					{
 						for (int i = 0; i < pageInfo.TextBoxList.Count; i++)
@@ -105,7 +105,7 @@ namespace HMI_simulator
 					}
 					break;
 				case HMI_CTRL_TYPE.PROGRESSBAR:
-					HMI_PROGRESSBAR pbar = ComProc.GetProgressBarCtrlInfo(cmd_str);
+					HMI_PROGRESSBAR pbar = HMI_PROGRESSBAR.GetProgressBarCtrlInfo(cmd_str);
 					if (null != pbar)
 					{
 						for (int i = 0; i < pageInfo.ProgressBarList.Count; i++)

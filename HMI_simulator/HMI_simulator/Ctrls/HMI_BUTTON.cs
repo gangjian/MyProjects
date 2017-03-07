@@ -10,11 +10,11 @@ namespace HMI_simulator.Ctrls
 	public class HMI_BUTTON
 	{
 		public int Id = -1;
-		public bool Displayed = false;
+		public bool Displayed = true;
 		public bool Selected = false;
-		public bool Enabled = false;
+		public bool Enabled = true;
 
-		public string FixedText = "部品上固定表示文字";
+		public string FixedText = string.Empty;
 		public Font TextFont = new Font("SimSun", 14);
 		public Brush TextBrush = new SolidBrush(Color.DarkBlue);
 		public Brush SelectedBrush = new SolidBrush(Color.Violet);
@@ -27,17 +27,9 @@ namespace HMI_simulator.Ctrls
 		public int Pos_X = 10;
 		public int Pos_Y = 10;
 
-		public HMI_BUTTON(int id, bool displayed, bool selected, bool enabled, int x, int y, string fixed_text, int width = 120, int height = 25)
+		public HMI_BUTTON(int id)
 		{
 			this.Id = id;
-			this.Displayed = displayed;
-			this.Selected = selected;
-			this.Enabled = enabled;
-			this.Pos_X = x;
-			this.Pos_Y = y;
-			this.Width = width;
-			this.Height = height;
-			this.FixedText = fixed_text;
 		}
 
 		public void DrawButton(Graphics g)
@@ -86,5 +78,35 @@ namespace HMI_simulator.Ctrls
 				return false;
 			}
 		}
+
+		public static HMI_BUTTON GetButtonCtrlInfo(string str)
+		{
+			List<HMI_CTRL_PROPERTY> propertyList = ComProc.GetPropertyList(str);
+			int? id = ComProc.GetIntPropertyVal(ComProc.GetPropertyValueStr(propertyList, "ID"));
+			bool? displayed = ComProc.GetBoolPropertyVal(ComProc.GetPropertyValueStr(propertyList, "DISPLAYED"));
+			bool? selected = ComProc.GetBoolPropertyVal(ComProc.GetPropertyValueStr(propertyList, "SELECTED"));
+			bool? enabled = ComProc.GetBoolPropertyVal(ComProc.GetPropertyValueStr(propertyList, "ENABLED"));
+			int? posX = ComProc.GetIntPropertyVal(ComProc.GetPropertyValueStr(propertyList, "POS_X"));
+			int? posY = ComProc.GetIntPropertyVal(ComProc.GetPropertyValueStr(propertyList, "POS_Y"));
+			int? width = ComProc.GetIntPropertyVal(ComProc.GetPropertyValueStr(propertyList, "WIDTH"));
+			int? height = ComProc.GetIntPropertyVal(ComProc.GetPropertyValueStr(propertyList, "HEIGHT"));
+			string fixedTextStr = ComProc.GetPropertyValueStr(propertyList, "FIXED_TEXT");
+
+			if (null == id)
+			{
+				return null;
+			}
+			HMI_BUTTON retBtn = new HMI_BUTTON((int)id);
+			ComProc.SetOptionalBoolPropertyVal(ref retBtn.Displayed, displayed);
+			ComProc.SetOptionalBoolPropertyVal(ref retBtn.Selected, selected);
+			ComProc.SetOptionalBoolPropertyVal(ref retBtn.Enabled, enabled);
+			ComProc.SetOptionalIntPropertyVal(ref retBtn.Pos_X, posX);
+			ComProc.SetOptionalIntPropertyVal(ref retBtn.Pos_Y, posY);
+			ComProc.SetOptionalIntPropertyVal(ref retBtn.Width, width);
+			ComProc.SetOptionalIntPropertyVal(ref retBtn.Height, height);
+			ComProc.SetOptionalStringPropertyVal(ref retBtn.FixedText, fixedTextStr);
+			return retBtn;
+		}
+
 	}
 }

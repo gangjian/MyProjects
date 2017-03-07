@@ -52,7 +52,7 @@
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
 			this.Name = "FormMain";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "HMI_simulator";
+			this.Text = "HMI_Console";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
 			this.Load += new System.EventHandler(this.FormMain_Load);
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
