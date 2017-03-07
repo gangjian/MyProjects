@@ -11,28 +11,19 @@ namespace HMI_simulator
 	{
 		public static HMI_CTRL_TYPE GetCtrlType(string str)
 		{
-			string[] arr = str.Split(';');
-			foreach (string item in arr)
+			List<HMI_CTRL_PROPERTY> propertyList = GetPropertyList(str);
+			string typeStr = GetPropertyValueStr(propertyList, "ITEM_TYPE");
+			switch (typeStr)
 			{
-				int idx = item.IndexOf('=');
-				if (item.StartsWith("ITEM_TYPE")
-					&& -1 != idx)
-				{
-					string typeStr = item.Substring(idx + 1).Trim();
-					switch (typeStr)
-					{
-						case "BUTTON":
-							return HMI_CTRL_TYPE.BUTTON;
-						case "TEXT_BOX":
-							return HMI_CTRL_TYPE.TEXTBOX;
-						case "TEXT_PROGRESSBAR":
-							return HMI_CTRL_TYPE.PROGRESSBAR;
-						default:
-							return HMI_CTRL_TYPE.NULL;
-					}
-				}
+				case "BUTTON":
+					return HMI_CTRL_TYPE.BUTTON;
+				case "TEXT_BOX":
+					return HMI_CTRL_TYPE.TEXTBOX;
+				case "TEXT_PROGRESSBAR":
+					return HMI_CTRL_TYPE.PROGRESSBAR;
+				default:
+					return HMI_CTRL_TYPE.NULL;
 			}
-			return HMI_CTRL_TYPE.NULL;
 		}
 
 		public static HMI_BUTTON GetButtonCtrlInfo(string str)
@@ -330,5 +321,50 @@ namespace HMI_simulator
 			return false;
 		}
 
+		public static List<HMI_CTRL_PROPERTY> GetPropertyList(string property_str)
+		{
+			System.Diagnostics.Trace.Assert(null != property_str);
+			List<HMI_CTRL_PROPERTY> retList = new List<HMI_CTRL_PROPERTY>();
+			string[] arr = property_str.Split(';');
+			foreach (string item in arr)
+			{
+				int idx = item.IndexOf('=');
+				if (-1 == idx)
+				{
+					continue;
+				}
+				string keyStr = item.Substring(0, idx).Trim();
+				string valStr = item.Substring(idx + 1).Trim();
+				if (!string.IsNullOrEmpty(keyStr)
+					&& !string.IsNullOrEmpty(valStr))
+				{
+					retList.Add(new HMI_CTRL_PROPERTY(keyStr, valStr));
+				}
+			}
+			return retList;
+		}
+
+		public static string GetPropertyValueStr(List<HMI_CTRL_PROPERTY> property_list, string key_str)
+		{
+			foreach (var item in property_list)
+			{
+				if (item.Key.Equals(key_str))
+				{
+					return item.Value;
+				}
+			}
+			return null;
+		}
+	}
+
+	public class HMI_CTRL_PROPERTY
+	{
+		public string Key = string.Empty;
+		public string Value = string.Empty;
+		public HMI_CTRL_PROPERTY(string key, string val)
+		{
+			this.Key = key;
+			this.Value = val;
+		}
 	}
 }
