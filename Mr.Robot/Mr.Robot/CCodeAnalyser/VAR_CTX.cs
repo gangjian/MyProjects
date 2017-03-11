@@ -113,40 +113,12 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static VAR_CTX CreateVarCtx(string type_name, string var_name, FileParseInfo parse_info)
+		public static VAR_CTX CreateVarCtx(	MeaningGroup type_group,
+											MeaningGroup var_group,
+											MeaningGroup init_group,
+											FileParseInfo parse_info)
 		{
-			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(type_name) && !string.IsNullOrEmpty(var_name));
-
-			// 提取类型名(分离前缀,后缀)
-			List<string> prefixList, suffixList;
-			string coreTypeName = CommonProcess.ExtractCoreTypeName(type_name, out prefixList, out suffixList);
-			// 根据类型名检索类型定义
-			if (CommonProcess.IsBasicTypeName(coreTypeName))
-			{
-				VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
-				return var_ctx;
-			}
-			else
-			{
-				UsrDefTypeInfo udti = parse_info.FindUsrDefTypeInfo(type_name, "");
-				if (null != udti)
-				{
-					VAR_CTX var_ctx = new VAR_CTX(type_name, var_name);
-					foreach (string memStr in udti.MemberList)
-					{
-						
-					}
-					return var_ctx;
-				}
-				else
-				{
-					return null;
-				}
-			}
-		}
-
-		public static VAR_CTX CreateVarCtx(MeaningGroup type_group, string var_name, FileParseInfo parse_info)
-		{
+			string var_name = var_group.Text;
 			List<string> prefixList = new List<string>();
 			List<string> suffixList = new List<string>();
 			string typeName = string.Empty;

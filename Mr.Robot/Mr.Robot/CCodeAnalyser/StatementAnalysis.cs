@@ -57,7 +57,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				//ExpressionAnalysis(componentList, parse_info, func_ctx);
+				ExpressionAnalysis(componentList, parse_info, func_ctx);
 			}
 		}
 
@@ -1236,7 +1236,12 @@ namespace Mr.Robot
 				else
 				{
 					// 创建变量上下文
-					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, parse_info);
+					MeaningGroup initGroup = null;
+					if (mgList.Count >= 4 && mgList[2].Text.Equals("="))
+					{
+						initGroup = mgList[3];
+					}
+					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1], initGroup, parse_info);
 					return varCtx;
 				}
             }
