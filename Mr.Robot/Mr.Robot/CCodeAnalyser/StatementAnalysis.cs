@@ -796,7 +796,7 @@ namespace Mr.Robot
 				idStrList.Add(cpntList[i].Text);
 			}
 			int count = 0;
-			if (CommonProcess.IsBasicTypeName(idStrList, ref count))
+			if (BasicTypeProc.IsBasicTypeName(idStrList, ref count))
 			{
 				index += count;
 				return true;
@@ -1241,7 +1241,7 @@ namespace Mr.Robot
 					{
 						initGroup = mgList[3];
 					}
-					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1], initGroup, parse_info);
+					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, initGroup, parse_info);
 					return varCtx;
 				}
             }

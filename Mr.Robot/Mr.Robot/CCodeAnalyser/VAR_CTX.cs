@@ -17,7 +17,7 @@ namespace Mr.Robot
 
 		public VAR_TYPE_CATEGORY Category = VAR_TYPE_CATEGORY.BASIC;
 
-		public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
+		//public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
 																						// TODO: 这个成员在VAR_CTX类改造完成后要删掉!
 																						// 即函数出入力列表与变量上下文分离, 20161206
 
@@ -114,20 +114,92 @@ namespace Mr.Robot
 		}
 
 		public static VAR_CTX CreateVarCtx(	MeaningGroup type_group,
-											MeaningGroup var_group,
+											string var_name,
 											MeaningGroup init_group,
 											FileParseInfo parse_info)
 		{
-			string var_name = var_group.Text;
 			List<string> prefixList = new List<string>();
 			List<string> suffixList = new List<string>();
+																						// 分离前后缀, 核心名
+			string typeCoreName = GetTypeNameFromGroup(type_group, out prefixList, out suffixList);
+
+			typeCoreName = parse_info.GetOriginalTypeName(typeCoreName);
+
+			VAR_CTX retVarCtx = new VAR_CTX(typeCoreName, var_name);
+			retVarCtx.Type.PrefixList = prefixList;
+			retVarCtx.Type.SuffixList = suffixList;
+			int arrSize = 0;
+			if (var_name.EndsWith("]"))													// 包含下标,说明是数组
+			{
+				arrSize = GetArraySizeFromVarName(ref var_name, parse_info);
+				if (arrSize <= 0)
+				{
+					return null;
+				}
+				List<MeaningGroup> arrayMemberInitList = null;
+				if (null != init_group)
+				{
+					arrayMemberInitList = GetArrayMemberInitGroupList(init_group, parse_info);
+					if (null == arrayMemberInitList
+						|| arrSize != arrayMemberInitList.Count)
+					{
+						return null;
+					}
+				}
+				for (int i = 0; i < arrSize; i++)
+				{																		// 分别创建数组各成员
+					string memberName = "arrayMember" + "_" + i.ToString();
+					MeaningGroup memberInitGroup = null;
+					if (null != arrayMemberInitList)
+					{
+						memberInitGroup = arrayMemberInitList[i];
+					}
+					VAR_CTX memberCtx = CreateVarCtx(type_group, memberName, init_group, parse_info);
+					retVarCtx.MemberList.Add(memberCtx);
+				}
+				retVarCtx.Category = VAR_TYPE_CATEGORY.ARRAY;
+			}
+			else
+			{
+				if (suffixList.Contains("*"))
+				{
+					retVarCtx.Category = VAR_TYPE_CATEGORY.POINTER;
+				}
+				else
+				{
+					if (BasicTypeProc.IsBasicTypeName(typeCoreName))
+					{
+						retVarCtx.Category = VAR_TYPE_CATEGORY.BASIC;
+					}
+					else
+					{
+						UsrDefTypeInfo udti = null;
+						if (CommonProcess.IsUsrDefTypeName(typeCoreName, parse_info, out udti))
+						{
+							retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
+							retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info);
+						}
+						else
+						{
+							return null;
+						}
+					}
+				}
+			}
+			return retVarCtx;
+		}
+
+		static string GetTypeNameFromGroup(MeaningGroup type_group, out List<string> prefix_list, out List<string> suffix_list)
+		{
+			prefix_list = new List<string>();
+			suffix_list = new List<string>();
 			string typeName = string.Empty;
 			for (int i = 0; i < type_group.ComponentList.Count; i++)
 			{
 				string str = type_group.ComponentList[i].Text;
 				if (i < type_group.PrefixCount)
 				{
-					prefixList.Add(str);
+					prefix_list.Add(str);
 				}
 				else if (i < type_group.ComponentList.Count - type_group.SuffixCount)
 				{
@@ -136,47 +208,10 @@ namespace Mr.Robot
 				}
 				else
 				{
-					suffixList.Add(str);
+					suffix_list.Add(str);
 				}
 			}
-			TypeDefineInfo tdi = null;
-			while (null != (tdi = parse_info.FindTypeDefInfo(typeName)))
-			{
-				typeName = tdi.OldName;
-			}
-			int arrSize = 0;
-			if (var_name.EndsWith("]"))													// 包含下标,说明是数组
-			{
-				arrSize = GetArraySizeFromVarName(ref var_name, parse_info);
-			}
-			VAR_CTX retVarCtx = new VAR_CTX(typeName, var_name);
-			retVarCtx.Type.PrefixList = prefixList;
-			retVarCtx.Type.SuffixList = suffixList;
-			if (suffixList.Contains("*"))
-			{
-				retVarCtx.Category = VAR_TYPE_CATEGORY.POINTER;
-			}
-			else
-			{
-				if (CommonProcess.IsBasicTypeName(typeName))
-				{
-					retVarCtx.Category = VAR_TYPE_CATEGORY.BASIC;
-				}
-				else
-				{
-					UsrDefTypeInfo udti = null;
-					if (CommonProcess.IsUsrDefTypeName(typeName, parse_info, out udti))
-					{
-						retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
-						retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info);
-					}
-					else
-					{
-						return null;
-					}
-				}
-			}
-			return retVarCtx;
+			return typeName;
 		}
 
 		static List<VAR_CTX> GetUsrDefTypeVarCtxMemberList(	UsrDefTypeInfo usr_def_type_var,
@@ -209,8 +244,48 @@ namespace Mr.Robot
 			if (!string.IsNullOrEmpty(sizeStr))
 			{
 				sizeVal = ExpCalc.GetLogicalExpressionValue(sizeStr, parse_info);
+				var_name = var_name.Remove(startIdx).Trim();
 			}
-			return 0;
+			return sizeVal;
+		}
+
+		static List<MeaningGroup> GetArrayMemberInitGroupList(MeaningGroup array_init_group, FileParseInfo parse_info)
+		{
+			if (array_init_group.Type != MeaningGroupType.CodeBlock
+				|| array_init_group.ComponentList.Count <= 2
+				|| "{" != array_init_group.ComponentList.First().Text
+				|| "}" != array_init_group.ComponentList.Last().Text)
+			{
+				return null;
+			}
+			List<StatementComponent> componentList = new List<StatementComponent>();
+			for (int i = 1; i < array_init_group.ComponentList.Count - 1; i++)
+			{
+				componentList.Add(array_init_group.ComponentList[i]);
+			}
+			List<MeaningGroup> retList = new List<MeaningGroup>();
+			List<MeaningGroup> tmpList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+			for (int i = 0; i < tmpList.Count; i++)
+			{
+				if (i == tmpList.Count - 1)
+				{
+					// 最后一个成员
+					retList.Add(tmpList[i]);
+				}
+				else
+				{
+					if (tmpList[i + 1].Text.Equals(","))
+					{
+						retList.Add(tmpList[i]);
+						i++;
+					}
+					else
+					{
+						return null;
+					}
+				}
+			}
+			return retList;
 		}
 	}
 }

@@ -14,19 +14,19 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("CommonProcess")]
 		public void Test_IsBasicVarType()
 		{
-			Assert.IsTrue(CommonProcess.IsBasicTypeName("unsigned int"));
+			Assert.IsTrue(BasicTypeProc.IsBasicTypeName("unsigned int"));
 
-			Assert.IsTrue(CommonProcess.IsBasicTypeName("float"));
+			Assert.IsTrue(BasicTypeProc.IsBasicTypeName("float"));
 
-			Assert.IsTrue(CommonProcess.IsBasicTypeName("double"));
+			Assert.IsTrue(BasicTypeProc.IsBasicTypeName("double"));
 
-			Assert.IsTrue(CommonProcess.IsBasicTypeName("long"));
+			Assert.IsTrue(BasicTypeProc.IsBasicTypeName("long"));
 
-			Assert.IsTrue(CommonProcess.IsBasicTypeName("signed char"));
+			Assert.IsTrue(BasicTypeProc.IsBasicTypeName("signed char"));
 
-			Assert.IsTrue(CommonProcess.IsBasicTypeName("short"));
+			Assert.IsTrue(BasicTypeProc.IsBasicTypeName("short"));
 
-			Assert.IsFalse(CommonProcess.IsBasicTypeName("unsined float"));
+			Assert.IsFalse(BasicTypeProc.IsBasicTypeName("unsined float"));
 		}
 	}
 }

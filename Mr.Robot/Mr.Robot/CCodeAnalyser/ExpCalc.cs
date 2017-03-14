@@ -126,11 +126,18 @@ namespace Mr.Robot
 			}
 		}
 
+		enum OPERATOR_TYPE
+		{
+			OTHER,
+			TYPE_CASTING,
+		}
+
 		// 运算符
 		class OPERATOR
 		{
 			public string Text = string.Empty;
 			public int GroupIdx = -1;
+			public OPERATOR_TYPE Type = OPERATOR_TYPE.OTHER;
 		}
 
 		// 运算数
@@ -180,6 +187,10 @@ namespace Mr.Robot
 					|| meaningGroupList[i].Type == MeaningGroupType.TypeCasting)		// 强制类型转换
 				{
 					retGroup = new OPERATION_GROUP();
+					if (meaningGroupList[i].Type == MeaningGroupType.TypeCasting)
+					{
+						retGroup._Operator.Type = OPERATOR_TYPE.TYPE_CASTING;
+					}
 					retGroup._Operator.Text = meaningGroupList[i].Text;
 					retGroup._Operator.GroupIdx = i;
 					OPERAND oprnd = new OPERAND();
@@ -273,60 +284,62 @@ namespace Mr.Robot
 		static int GetOperationValue(OPERATION_GROUP oper_group, FileParseInfo parse_info)
 		{
 			int retVal = 0;
-			switch (oper_group._Operator.Text)
+			if (OPERATOR_TYPE.TYPE_CASTING == oper_group._Operator.Type)
 			{
-				case "==":																// 逻辑等
-					retVal = CalcLogical_Equal(oper_group, parse_info);
-					break;
-				case "!=":																// 逻辑不等
-					retVal = CalcLogical_Unequal(oper_group, parse_info);
-					break;
-				case "||":																// 逻辑或
-					retVal = CalcLogical_Or(oper_group, parse_info);
-					break;
-				case "&&":																// 逻辑与
-					retVal = CalcLogical_And(oper_group, parse_info);
-					break;
-				case "defined":															// 宏是否定义
-					retVal = CalcLogical_Defined(oper_group, parse_info);
-					break;
-				case "%":																// 取余
-					retVal = CalcLogical_Remainder(oper_group, parse_info);
-					break;
-				case "!":																// 逻辑非
-					retVal = CalcLogical_Not(oper_group, parse_info);
-					break;
-				case ">=":																// 大于等于
-					retVal = CalcLogical_GreaterOrEqual(oper_group, parse_info);
-					break;
-				case "<=":																// 小于等于
-					retVal = CalcLogical_LessOrEqual(oper_group, parse_info);
-					break;
-				case ">":																// 大于
-					retVal = CalcLogical_Greater(oper_group, parse_info);
-					break;
-				case "<":																// 小于
-					retVal = CalcLogical_Less(oper_group, parse_info);
-					break;
-				case "+":
-					retVal = CalcArithmetic_Add(oper_group, parse_info);				// 加
-					break;
-				case "-":
-					retVal = CalcArithmetic_Sub(oper_group, parse_info);				// 减
-					break;
-				case "*":
-					retVal = CalcArithmetic_Multiply(oper_group, parse_info);			// 乘
-					break;
-				case "/":
-					retVal = CalcArithmetic_Divide(oper_group, parse_info);				// 除
-					break;
-				default:
-					//if (oper_group.t)
-					//{
-						
-					//}
-					//throw new System.NotImplementedException();
-					break;
+				retVal = CalcTypeCasting(oper_group, parse_info);
+			}
+			else
+			{
+				switch (oper_group._Operator.Text)
+				{
+					case "==":															// 逻辑等
+						retVal = CalcLogical_Equal(oper_group, parse_info);
+						break;
+					case "!=":															// 逻辑不等
+						retVal = CalcLogical_Unequal(oper_group, parse_info);
+						break;
+					case "||":															// 逻辑或
+						retVal = CalcLogical_Or(oper_group, parse_info);
+						break;
+					case "&&":															// 逻辑与
+						retVal = CalcLogical_And(oper_group, parse_info);
+						break;
+					case "defined":														// 宏是否定义
+						retVal = CalcLogical_Defined(oper_group, parse_info);
+						break;
+					case "%":															// 取余
+						retVal = CalcLogical_Remainder(oper_group, parse_info);
+						break;
+					case "!":															// 逻辑非
+						retVal = CalcLogical_Not(oper_group, parse_info);
+						break;
+					case ">=":															// 大于等于
+						retVal = CalcLogical_GreaterOrEqual(oper_group, parse_info);
+						break;
+					case "<=":															// 小于等于
+						retVal = CalcLogical_LessOrEqual(oper_group, parse_info);
+						break;
+					case ">":															// 大于
+						retVal = CalcLogical_Greater(oper_group, parse_info);
+						break;
+					case "<":															// 小于
+						retVal = CalcLogical_Less(oper_group, parse_info);
+						break;
+					case "+":
+						retVal = CalcArithmetic_Add(oper_group, parse_info);			// 加
+						break;
+					case "-":
+						retVal = CalcArithmetic_Sub(oper_group, parse_info);			// 减
+						break;
+					case "*":
+						retVal = CalcArithmetic_Multiply(oper_group, parse_info);		// 乘
+						break;
+					case "/":
+						retVal = CalcArithmetic_Divide(oper_group, parse_info);			// 除
+						break;
+					default:
+						throw new System.NotImplementedException();
+				}
 			}
 			return retVal;
 		}
@@ -559,6 +572,38 @@ namespace Mr.Robot
 			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
 			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return operand1Value / operand2Value;
+		}
+
+		static int CalcTypeCasting(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 1);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+
+			int operandValue = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			string typeName = GetCastingTypeName(oper_group._Operator, parse_info);
+			if (BasicTypeProc.IsBasicTypeName(typeName))
+			{
+				int retVal = Convert.ToInt32(BasicTypeProc.CalcTypeCastingValue(typeName, operandValue));
+				return retVal;
+			}
+			else
+			{
+				throw new System.NotImplementedException("非基本类型的强制转换 未实现!");
+			}
+		}
+
+		static string GetCastingTypeName(OPERATOR oper, FileParseInfo parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper.Type == OPERATOR_TYPE.TYPE_CASTING);
+			string typeStr = oper.Text.Trim();
+			if (typeStr.StartsWith("(") && typeStr.EndsWith(")"))
+			{
+				typeStr = typeStr.Remove(typeStr.Length - 1).Trim();
+				typeStr = typeStr.Remove(0, 1).Trim();
+				typeStr = parse_info.GetOriginalTypeName(typeStr);
+				return typeStr;
+			}
+			return null;
 		}
 	}
 }

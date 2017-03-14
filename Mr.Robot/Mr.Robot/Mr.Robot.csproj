@@ -61,6 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CCodeAnalyser\BasicTypeProc.cs" />
     <Compile Include="CCodeAnalyser\CCodeAnalyser.cs" />
     <Compile Include="CCodeAnalyser\CCodeInfo.cs" />
     <Compile Include="CCodeAnalyser\ExpCalc.cs" />

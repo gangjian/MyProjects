@@ -30,10 +30,10 @@ namespace Mr.Robot
 					VAR_CTX varCtx = GetVarCtxByName(leftGroupList[0].Text, parse_info, func_ctx);
 					if (null != varCtx)
 					{
-						if (null == varCtx.MeanningGroup)
-						{
-							varCtx.MeanningGroup = leftGroupList[0];
-						}
+						//if (null == varCtx.MeanningGroup)
+						//{
+						//	varCtx.MeanningGroup = leftGroupList[0];
+						//}
 						func_ctx.OutputGlobalList.Add(varCtx);
 					}
 				}
@@ -77,7 +77,7 @@ namespace Mr.Robot
 					VAR_CTX varCtx = GetVarCtxByName(rightVal.Text, parse_info, func_ctx);
 					if (null != varCtx)
 					{
-						varCtx.MeanningGroup = rightVal;
+						//varCtx.MeanningGroup = rightVal;
 						if (null != func_ctx)
 						{
 							func_ctx.InputGlobalList.Add(varCtx);

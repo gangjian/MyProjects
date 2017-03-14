@@ -123,6 +123,19 @@ namespace Mr.Robot
 			return null;
 		}
 
+		/// <summary>
+		/// 如果类型名经过typedef重命名的话,取得原来的类型名
+		/// </summary>
+		public string GetOriginalTypeName(string type_name)
+		{
+			TypeDefineInfo tdi = null;													// 如果经过typedef重命名的话, 找出原来的类型名
+			while (null != (tdi = this.FindTypeDefInfo(type_name)))
+			{
+				type_name = tdi.OldName;
+			}
+			return type_name;
+		}
+
 		#region 以下方法,是针对代码解析结果的各种操作(查找,判断...)
 		/// <summary>
 		/// 根据函数名查找函数的解析结果
