@@ -17,6 +17,8 @@ namespace Mr.Robot
 
 		public VAR_TYPE_CATEGORY Category = VAR_TYPE_CATEGORY.BASIC;
 
+		object Value = null;
+
 		//public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
 																						// TODO: 这个成员在VAR_CTX类改造完成后要删掉!
 																						// 即函数出入力列表与变量上下文分离, 20161206
@@ -31,6 +33,11 @@ namespace Mr.Robot
 			Trace.Assert(!string.IsNullOrEmpty(var_name));
 			this.Type.Name = type_name;
 			this.Name = var_name;
+		}
+
+		public void InitValue(string init_str, FileParseInfo parse_info)
+		{
+			this.Value = ExpCalc.GetLogicalExpressionValue(init_str, parse_info);
 		}
 	}
 
@@ -139,7 +146,7 @@ namespace Mr.Robot
 				List<MeaningGroup> arrayMemberInitList = null;
 				if (null != init_group)
 				{
-					arrayMemberInitList = GetArrayMemberInitGroupList(init_group, parse_info);
+					arrayMemberInitList = GetMemberInitGroupListFromCodeBlock(init_group, parse_info);
 					if (null == arrayMemberInitList
 						|| arrSize != arrayMemberInitList.Count)
 					{
@@ -154,7 +161,7 @@ namespace Mr.Robot
 					{
 						memberInitGroup = arrayMemberInitList[i];
 					}
-					VAR_CTX memberCtx = CreateVarCtx(type_group, memberName, init_group, parse_info);
+					VAR_CTX memberCtx = CreateVarCtx(type_group, memberName, memberInitGroup, parse_info);
 					retVarCtx.MemberList.Add(memberCtx);
 				}
 				retVarCtx.Category = VAR_TYPE_CATEGORY.ARRAY;
@@ -170,6 +177,10 @@ namespace Mr.Robot
 					if (BasicTypeProc.IsBasicTypeName(typeCoreName))
 					{
 						retVarCtx.Category = VAR_TYPE_CATEGORY.BASIC;
+						if (null != init_group)
+						{
+							retVarCtx.InitValue(init_group.Text, parse_info);
+						}
 					}
 					else
 					{
@@ -177,7 +188,7 @@ namespace Mr.Robot
 						if (CommonProcess.IsUsrDefTypeName(typeCoreName, parse_info, out udti))
 						{
 							retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
-							retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info);
+							retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info, init_group);
 						}
 						else
 						{
@@ -215,16 +226,32 @@ namespace Mr.Robot
 		}
 
 		static List<VAR_CTX> GetUsrDefTypeVarCtxMemberList(	UsrDefTypeInfo usr_def_type_var,
-															FileParseInfo parse_info)
+															FileParseInfo parse_info,
+															MeaningGroup init_group)
 		{
 			List<VAR_CTX> retCtxList = new List<VAR_CTX>();
+			List<MeaningGroup> memberInitList = null;
+			if (null != init_group)
+			{
+				memberInitList = GetMemberInitGroupListFromCodeBlock(init_group, parse_info);
+				if (null == memberInitList
+					|| usr_def_type_var.MemberList.Count != memberInitList.Count)
+				{
+					return null;
+				}
+			}
 			for (int i = 0; i < usr_def_type_var.MemberList.Count; i++)
 			{
 				string memberStr = usr_def_type_var.MemberList[i];
 				List<StatementComponent> componentList = StatementAnalysis.GetComponents(memberStr, parse_info);
-				List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+				List<MeaningGroup> mgList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+				MeaningGroup memberInitGroup = null;
+				if (null != memberInitList)
+				{
+					memberInitGroup = memberInitList[i];
+				}
 				VAR_CTX varCtx = null;
-				if (null != (varCtx = StatementAnalysis.IsNewDefineVarible(meaningGroupList, parse_info, null)))
+				if (null != (varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, memberInitGroup, parse_info)))
 				{
 					retCtxList.Add(varCtx);
 				}
@@ -249,39 +276,51 @@ namespace Mr.Robot
 			return sizeVal;
 		}
 
-		static List<MeaningGroup> GetArrayMemberInitGroupList(MeaningGroup array_init_group, FileParseInfo parse_info)
+		static List<MeaningGroup> GetMemberInitGroupListFromCodeBlock(MeaningGroup block_init_group, FileParseInfo parse_info)
 		{
-			if (array_init_group.Type != MeaningGroupType.CodeBlock
-				|| array_init_group.ComponentList.Count <= 2
-				|| "{" != array_init_group.ComponentList.First().Text
-				|| "}" != array_init_group.ComponentList.Last().Text)
+			if (block_init_group.Type != MeaningGroupType.CodeBlock
+				|| block_init_group.ComponentList.Count <= 2
+				|| "{" != block_init_group.ComponentList.First().Text
+				|| "}" != block_init_group.ComponentList.Last().Text)
 			{
 				return null;
 			}
 			List<StatementComponent> componentList = new List<StatementComponent>();
-			for (int i = 1; i < array_init_group.ComponentList.Count - 1; i++)
+			for (int i = 1; i < block_init_group.ComponentList.Count - 1; i++)
 			{
-				componentList.Add(array_init_group.ComponentList[i]);
+				componentList.Add(block_init_group.ComponentList[i]);
 			}
 			List<MeaningGroup> retList = new List<MeaningGroup>();
 			List<MeaningGroup> tmpList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+			MeaningGroup addGroup = new MeaningGroup();
+			addGroup.Type = MeaningGroupType.Expression;
 			for (int i = 0; i < tmpList.Count; i++)
 			{
 				if (i == tmpList.Count - 1)
 				{
 					// 最后一个成员
-					retList.Add(tmpList[i]);
+					addGroup.ComponentList.AddRange(tmpList[i].ComponentList);
+					foreach (var item in addGroup.ComponentList)
+					{
+						addGroup.Text += item.Text;
+					}
+					retList.Add(addGroup);
 				}
 				else
 				{
-					if (tmpList[i + 1].Text.Equals(","))
+					if (tmpList[i].Text.Equals(","))
 					{
-						retList.Add(tmpList[i]);
-						i++;
+						foreach (var item in addGroup.ComponentList)
+						{
+							addGroup.Text += item.Text;
+						}
+						retList.Add(addGroup);
+						addGroup = new MeaningGroup();
+						addGroup.Type = MeaningGroupType.Expression;
 					}
 					else
 					{
-						return null;
+						addGroup.ComponentList.AddRange(tmpList[i].ComponentList);
 					}
 				}
 			}
