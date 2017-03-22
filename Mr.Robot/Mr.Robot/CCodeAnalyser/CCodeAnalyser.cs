@@ -522,15 +522,40 @@ namespace Mr.Robot
 			}
 
 			// 如果上一步没找到, 证明还没被解析, 则在全部头文件list里找
-			foreach (var hd_name in this.HeaderList)
+			if (-1 == incFileName.IndexOf('\\'))
 			{
-				string path;
-				string fName = IOProcess.GetFileName(hd_name, out path);
-				if (fName.ToLower() == incFileName.ToLower())
+				// 不包含相对路径的场合
+				foreach (var hd_name in this.HeaderList)
 				{
-					// 如果找到了, 则要先解析这个头文件
-					CFileProcess(hd_name, ref fi);
-					// TODO: 注意当有多个同名文件符合条件时的情况应对
+					string path;
+					string fName = IOProcess.GetFileName(hd_name, out path);
+					if (fName.ToLower() == incFileName.ToLower())
+					{
+						// 如果找到了, 则要先解析这个头文件
+						CFileProcess(hd_name, ref fi);
+						// TODO: 注意当有多个同名文件符合条件时的情况应对
+					}
+				}
+			}
+			else
+			{
+				// 包含相对路径的场合
+				FileInfo fInfo = new FileInfo(fi.SourceName);
+				string str = Directory.GetCurrentDirectory();
+				Directory.SetCurrentDirectory(fInfo.DirectoryName);
+				FileInfo hInfo = new FileInfo(incFileName);
+				Directory.SetCurrentDirectory(str);										// 恢复当前路径
+				if (!hInfo.Exists)
+				{
+					return;
+				}
+				string headerName = hInfo.FullName;
+				foreach (var hd_name in this.HeaderList)
+				{
+					if (headerName.Equals(hd_name))
+					{
+						CFileProcess(hd_name, ref fi);
+					}
 				}
 			}
 			// 头文件没找到
@@ -846,11 +871,11 @@ namespace Mr.Robot
 				retName += nextIdtf.Text;
 				nextIdtf = CommonProcess.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			}
-			int idx;
-			if (-1 != (idx = retName.LastIndexOf('/')))
-			{
-				retName = retName.Remove(1, idx).Trim();
-			}
+			//int idx;
+			//if (-1 != (idx = retName.LastIndexOf('/')))
+			//{
+			//	retName = retName.Remove(1, idx).Trim();
+			//}
 			return retName + quotIdtf.Text;
 		}
 

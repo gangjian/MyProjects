@@ -57,7 +57,7 @@ namespace Mr.Robot
 			}
 			else
 			{
-				ExpressionAnalysis(componentList, parse_info, func_ctx);
+				//ExpressionAnalysis(componentList, parse_info, func_ctx);
 			}
 		}
 
@@ -1239,7 +1239,21 @@ namespace Mr.Robot
 					MeaningGroup initGroup = null;
 					if (mgList.Count >= 4 && mgList[2].Text.Equals("="))
 					{
-						initGroup = mgList[3];
+						initGroup = new MeaningGroup();
+						for (int i = 3; i < mgList.Count; i++)
+						{
+							initGroup.ComponentList.AddRange(mgList[i].ComponentList);
+							initGroup.Text += " " + mgList[i].Text;
+						}
+						initGroup.Text = initGroup.Text.Trim();
+						if (4 == mgList.Count)
+						{
+							initGroup.Type = mgList[3].Type;
+						}
+						else
+						{
+							initGroup.Type = MeaningGroupType.Expression;
+						}
 					}
 					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, initGroup, parse_info);
 					return varCtx;
