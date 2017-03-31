@@ -28,6 +28,8 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMTBot));
 			this.label1 = new System.Windows.Forms.Label();
 			this.tbxRootPath = new System.Windows.Forms.TextBox();
 			this.btnOpenRoot = new System.Windows.Forms.Button();
@@ -35,10 +37,6 @@
 			this.tbxSourcePath = new System.Windows.Forms.TextBox();
 			this.btnOpenSource = new System.Windows.Forms.Button();
 			this.btnStart = new System.Windows.Forms.Button();
-			this.lvSourceList = new System.Windows.Forms.ListView();
-			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.label3 = new System.Windows.Forms.Label();
 			this.label4 = new System.Windows.Forms.Label();
 			this.lvDetailList = new System.Windows.Forms.ListView();
 			this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -49,7 +47,6 @@
 			this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.progressBar1 = new System.Windows.Forms.ProgressBar();
 			this.tbxLog = new System.Windows.Forms.TextBox();
-			this.label5 = new System.Windows.Forms.Label();
 			this.btnSaveDetail2CSV = new System.Windows.Forms.Button();
 			this.lvSummaryList = new System.Windows.Forms.ListView();
 			this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -58,6 +55,9 @@
 			this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label6 = new System.Windows.Forms.Label();
 			this.btnSaveSummary2CSV = new System.Windows.Forms.Button();
+			this.treeViewSrcFile = new System.Windows.Forms.TreeView();
+			this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+			this.tbxOutputLog = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -72,7 +72,7 @@
 			// 
 			// tbxRootPath
 			// 
-			this.tbxRootPath.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.tbxRootPath.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.tbxRootPath.Location = new System.Drawing.Point(16, 33);
 			this.tbxRootPath.Name = "tbxRootPath";
 			this.tbxRootPath.ReadOnly = true;
@@ -94,7 +94,7 @@
 			// 
 			this.label2.AutoSize = true;
 			this.label2.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.label2.Location = new System.Drawing.Point(12, 66);
+			this.label2.Location = new System.Drawing.Point(12, 59);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(99, 21);
 			this.label2.TabIndex = 0;
@@ -102,8 +102,8 @@
 			// 
 			// tbxSourcePath
 			// 
-			this.tbxSourcePath.Font = new System.Drawing.Font("SimSun", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.tbxSourcePath.Location = new System.Drawing.Point(16, 90);
+			this.tbxSourcePath.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.tbxSourcePath.Location = new System.Drawing.Point(16, 83);
 			this.tbxSourcePath.Name = "tbxSourcePath";
 			this.tbxSourcePath.ReadOnly = true;
 			this.tbxSourcePath.Size = new System.Drawing.Size(736, 23);
@@ -112,7 +112,7 @@
 			// btnOpenSource
 			// 
 			this.btnOpenSource.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.btnOpenSource.Location = new System.Drawing.Point(758, 90);
+			this.btnOpenSource.Location = new System.Drawing.Point(758, 83);
 			this.btnOpenSource.Name = "btnOpenSource";
 			this.btnOpenSource.Size = new System.Drawing.Size(75, 23);
 			this.btnOpenSource.TabIndex = 2;
@@ -130,39 +130,6 @@
 			this.btnStart.Text = "Start";
 			this.btnStart.UseVisualStyleBackColor = true;
 			this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
-			// 
-			// lvSourceList
-			// 
-			this.lvSourceList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2});
-			this.lvSourceList.GridLines = true;
-			this.lvSourceList.Location = new System.Drawing.Point(16, 153);
-			this.lvSourceList.Name = "lvSourceList";
-			this.lvSourceList.Size = new System.Drawing.Size(548, 179);
-			this.lvSourceList.TabIndex = 4;
-			this.lvSourceList.UseCompatibleStateImageBehavior = false;
-			this.lvSourceList.View = System.Windows.Forms.View.Details;
-			// 
-			// columnHeader1
-			// 
-			this.columnHeader1.Text = "No.";
-			this.columnHeader1.Width = 45;
-			// 
-			// columnHeader2
-			// 
-			this.columnHeader2.Text = "Path";
-			this.columnHeader2.Width = 495;
-			// 
-			// label3
-			// 
-			this.label3.AutoSize = true;
-			this.label3.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.label3.Location = new System.Drawing.Point(12, 129);
-			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(123, 21);
-			this.label3.TabIndex = 0;
-			this.label3.Text = "Source File List";
 			// 
 			// label4
 			// 
@@ -232,23 +199,13 @@
 			// 
 			// tbxLog
 			// 
-			this.tbxLog.Location = new System.Drawing.Point(588, 153);
+			this.tbxLog.Location = new System.Drawing.Point(527, 113);
 			this.tbxLog.Multiline = true;
 			this.tbxLog.Name = "tbxLog";
 			this.tbxLog.ReadOnly = true;
 			this.tbxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.tbxLog.Size = new System.Drawing.Size(366, 179);
+			this.tbxLog.Size = new System.Drawing.Size(427, 146);
 			this.tbxLog.TabIndex = 6;
-			// 
-			// label5
-			// 
-			this.label5.AutoSize = true;
-			this.label5.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-			this.label5.Location = new System.Drawing.Point(584, 129);
-			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(38, 21);
-			this.label5.TabIndex = 0;
-			this.label5.Text = "Log";
 			// 
 			// btnSaveDetail2CSV
 			// 
@@ -319,26 +276,56 @@
 			this.btnSaveSummary2CSV.UseVisualStyleBackColor = true;
 			this.btnSaveSummary2CSV.Click += new System.EventHandler(this.btnSaveSummary2CSV_Click);
 			// 
+			// treeViewSrcFile
+			// 
+			this.treeViewSrcFile.CheckBoxes = true;
+			this.treeViewSrcFile.Font = new System.Drawing.Font("Consolas", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.treeViewSrcFile.ImageIndex = 2;
+			this.treeViewSrcFile.ImageList = this.imageList1;
+			this.treeViewSrcFile.Location = new System.Drawing.Point(16, 113);
+			this.treeViewSrcFile.Name = "treeViewSrcFile";
+			this.treeViewSrcFile.SelectedImageIndex = 2;
+			this.treeViewSrcFile.Size = new System.Drawing.Size(492, 219);
+			this.treeViewSrcFile.TabIndex = 8;
+			this.treeViewSrcFile.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeViewSrcFile_AfterCheck);
+			// 
+			// imageList1
+			// 
+			this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+			this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+			this.imageList1.Images.SetKeyName(0, "1490786290_page_white_c.ico");
+			this.imageList1.Images.SetKeyName(1, "1490786648_page_white_h.ico");
+			this.imageList1.Images.SetKeyName(2, "1490786476_folder.ico");
+			// 
+			// tbxOutputLog
+			// 
+			this.tbxOutputLog.Location = new System.Drawing.Point(527, 265);
+			this.tbxOutputLog.Multiline = true;
+			this.tbxOutputLog.Name = "tbxOutputLog";
+			this.tbxOutputLog.ReadOnly = true;
+			this.tbxOutputLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+			this.tbxOutputLog.Size = new System.Drawing.Size(427, 67);
+			this.tbxOutputLog.TabIndex = 6;
+			// 
 			// FormMTBot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(966, 722);
+			this.Controls.Add(this.treeViewSrcFile);
 			this.Controls.Add(this.btnSaveSummary2CSV);
 			this.Controls.Add(this.btnSaveDetail2CSV);
+			this.Controls.Add(this.tbxOutputLog);
 			this.Controls.Add(this.tbxLog);
 			this.Controls.Add(this.progressBar1);
 			this.Controls.Add(this.lvSummaryList);
 			this.Controls.Add(this.lvDetailList);
-			this.Controls.Add(this.lvSourceList);
 			this.Controls.Add(this.btnStart);
 			this.Controls.Add(this.btnOpenSource);
 			this.Controls.Add(this.btnOpenRoot);
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this.tbxSourcePath);
-			this.Controls.Add(this.label5);
-			this.Controls.Add(this.label3);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.tbxRootPath);
 			this.Controls.Add(this.label1);
@@ -346,7 +333,7 @@
 			this.MaximizeBox = false;
 			this.Name = "FormMTBot";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "MTBot v0.1.5";
+			this.Text = "MTBot v0.1.6";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMTBot_FormClosing);
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -362,20 +349,15 @@
 		private System.Windows.Forms.TextBox tbxSourcePath;
 		private System.Windows.Forms.Button btnOpenSource;
 		private System.Windows.Forms.Button btnStart;
-		private System.Windows.Forms.ListView lvSourceList;
-		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.ListView lvDetailList;
 		private System.Windows.Forms.ProgressBar progressBar1;
-		private System.Windows.Forms.ColumnHeader columnHeader1;
-		private System.Windows.Forms.ColumnHeader columnHeader2;
 		private System.Windows.Forms.ColumnHeader columnHeader3;
 		private System.Windows.Forms.ColumnHeader columnHeader4;
 		private System.Windows.Forms.ColumnHeader columnHeader5;
 		private System.Windows.Forms.ColumnHeader columnHeader6;
 		private System.Windows.Forms.ColumnHeader columnHeader7;
 		private System.Windows.Forms.TextBox tbxLog;
-		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.ColumnHeader columnHeader8;
 		private System.Windows.Forms.Button btnSaveDetail2CSV;
 		private System.Windows.Forms.ListView lvSummaryList;
@@ -385,5 +367,8 @@
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Button btnSaveSummary2CSV;
 		private System.Windows.Forms.ColumnHeader columnHeader10;
+		private System.Windows.Forms.TreeView treeViewSrcFile;
+		private System.Windows.Forms.ImageList imageList1;
+		private System.Windows.Forms.TextBox tbxOutputLog;
 	}
 }

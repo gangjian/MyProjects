@@ -127,7 +127,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			List<string> srcList = new List<string>();
 			srcList.Add(src_name);
 			CCodeAnalyser cAnalyser = new CCodeAnalyser(srcList, header_list, ref code_buf_list);
-			FileParseInfo parseInfo = new FileParseInfo(src_name);
+			cAnalyser.MacroSwichAnalyserFlag = true;
 			List<FileParseInfo> parseInfoList = cAnalyser.CFileListProc();
 			if (null == parseInfoList || 0 == parseInfoList.Count)
 			{

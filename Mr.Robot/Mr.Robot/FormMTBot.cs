@@ -60,8 +60,7 @@ namespace Mr.Robot
 		{
 			if (!string.IsNullOrEmpty(root_path))
 			{
-				DirectoryInfo di = new DirectoryInfo(root_path);
-				if (di.Exists)
+				if (Directory.Exists(root_path))
 				{
 					this.tbxRootPath.Text = root_path;
 					this.tbxSourcePath.Text = root_path;
@@ -72,7 +71,7 @@ namespace Mr.Robot
 					this.MkFileList.Clear();
 					// 取得所有源文件和头文件列表
 					IOProcess.GetAllCCodeFiles(root_path, ref this.SourceList, ref this.HeaderList, ref this.MtpjFileList, ref this.MkFileList);
-					UpdateSourceListView();
+					UpdateSourceTreeView(root_path);
 				}
 			}
 		}
@@ -81,8 +80,7 @@ namespace Mr.Robot
 		{
 			if (!string.IsNullOrEmpty(source_path))
 			{
-				DirectoryInfo di = new DirectoryInfo(source_path);
-				if (di.Exists)
+				if (Directory.Exists(source_path))
 				{
 					tbxSourcePath.Text = source_path;
 
@@ -92,25 +90,140 @@ namespace Mr.Robot
 					// 取得所有源文件
 					this.SourceList.Clear();
 					IOProcess.GetAllCCodeFiles(source_path, ref this.SourceList, ref tmpHdList, ref tmpMtptList, ref tmpMkList);
-					UpdateSourceListView();
+					UpdateSourceTreeView(source_path);
 				}
 			}
 		}
 
-		void UpdateSourceListView()
+		void UpdateSourceTreeView(string root_path)
 		{
-			this.lvSourceList.Items.Clear();
-			for (int i = 0; i < this.SourceList.Count; i++)
+			if (string.IsNullOrEmpty(root_path)
+				|| !Directory.Exists(root_path))
 			{
-				ListViewItem item = new ListViewItem((i + 1).ToString());
-				string file_name = this.SourceList[i];
-				if (file_name.StartsWith(this.tbxRootPath.Text))
-				{
-					file_name = "." + file_name.Remove(0, this.tbxRootPath.Text.Length).Trim();
-				}
-				item.SubItems.Add(new ListViewItem.ListViewSubItem(item, file_name));
-				this.lvSourceList.Items.Add(item);
+				return;
 			}
+			this.treeViewSrcFile.Nodes.Clear();
+			DirectoryInfo di = new DirectoryInfo(root_path);
+			TreeNode rootNode = new TreeNode(di.Name);
+			rootNode.Tag = root_path;
+			rootNode.ImageIndex = 2;
+			rootNode.SelectedImageIndex = 2;
+			if (AddDirsAndFiles2TreeView(ref rootNode, root_path, root_path))
+			{
+				this.treeViewSrcFile.Nodes.Add(rootNode);
+				rootNode.Checked = true;
+				rootNode.ExpandAll();
+			}
+		}
+
+		bool AddDirsAndFiles2TreeView(ref TreeNode parent_node, string current_path, string root_path)
+		{
+			if (string.IsNullOrEmpty(current_path)
+				|| !Directory.Exists(current_path))
+			{
+				return false;
+			}
+			bool ret = false;
+			string[] dirs = Directory.GetDirectories(current_path);
+			string[] files = Directory.GetFiles(current_path);
+			foreach (var dir in dirs)
+			{
+				DirectoryInfo di = new DirectoryInfo(dir);
+				TreeNode node = new TreeNode(di.Name);
+				node.Tag = dir;
+				node.ImageIndex = 2;
+				node.SelectedImageIndex = 2;
+				if (AddDirsAndFiles2TreeView(ref node, dir, root_path))
+				{
+					parent_node.Nodes.Add(node);
+					ret = true;
+				}
+			}
+			foreach (var fname in files)
+			{
+				FileInfo fi = new FileInfo(fname);
+				if (fi.Extension.ToLower().Equals(".c"))
+				{
+					string src_name = fname;
+					if (VerifySourceFile(ref src_name, root_path))
+					{
+						TreeNode node = parent_node.Nodes.Add(fi.Name);
+						node.Tag = src_name;
+						node.ImageIndex = 0;
+						node.SelectedImageIndex = 0;
+						// 只要有一个以上验证正确的就返回true
+						ret = true;
+					}
+					else
+					{
+						string errMsg = "*****Source File Verify Error!***** : " + fname;
+						this.tbxOutputLog.AppendText(errMsg + Environment.NewLine);
+						System.Diagnostics.Trace.WriteLine(errMsg);
+					}
+				}
+			}
+			return ret;
+		}
+
+		bool VerifySourceFile(ref string full_name, string root_path)
+		{
+			// 要验证这个文件:	1.(Target路径不是root路径下子路径的场合)在root路径下有对应一致的文件(1.相对路径一致; 2.内容一致);
+			//					2.或者(Target路径是root路径下的子路径的场合)本身就是root路径下的文件;
+			if (root_path.StartsWith(this.tbxRootPath.Text))
+			{
+				return true;
+			}
+			if (full_name.StartsWith(root_path))
+			{
+				string relativePath = full_name.Remove(0, root_path.Length);
+				int matchCount = 0;
+				string actualPath = string.Empty;										// root路径下对应的.c文件
+				foreach (var src in this.SourceList)
+				{
+					if (src.EndsWith(relativePath)
+						&& CommonProc.CompareTextFileContentsSame(src, full_name))
+					{
+						matchCount += 1;
+						actualPath = src;
+					}
+				}
+				if (1 == matchCount)
+				{
+					full_name = actualPath;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		List<string> GetSourceListFromTreeView()
+		{
+			List<string> retList = new List<string>();
+			foreach (TreeNode node in this.treeViewSrcFile.Nodes)
+			{
+				retList.AddRange(GetSourceListFromTreeNode(node));
+			}
+			return retList;
+		}
+
+		List<string> GetSourceListFromTreeNode(TreeNode root_node)
+		{
+			List<string> retList = new List<string>();
+			foreach (TreeNode node in root_node.Nodes)
+			{
+				string pathStr = node.Tag.ToString();
+				if (pathStr.ToLower().EndsWith(".c")
+					&& node.Checked
+					&& File.Exists(pathStr))
+				{
+					retList.Add(pathStr);
+				}
+				else if (Directory.Exists(pathStr))
+				{
+					retList.AddRange(GetSourceListFromTreeNode(node));
+				}
+			}
+			return retList;
 		}
 
 		MacroSwitchAnalyser2 MacroSwitchAnalyzer2 = null;
@@ -118,9 +231,15 @@ namespace Mr.Robot
 
 		private void btnStart_Click(object sender, EventArgs e)
 		{
+			this.SourceList = GetSourceListFromTreeView();
+			if (0 == this.SourceList.Count)
+			{
+				return;
+			}
 			this.lvDetailList.Items.Clear();
 			this.lvSummaryList.Items.Clear();
 			this.tbxLog.Clear();
+			this.tbxOutputLog.Clear();
 			this.progressBar1.Value = 0;
 			this.DetailResultList.Clear();
 			this.SummaryResultList.Clear();
@@ -223,6 +342,7 @@ namespace Mr.Robot
 			this.btnStart.Enabled = enabled;
 			this.btnSaveDetail2CSV.Enabled = enabled;
 			this.btnSaveSummary2CSV.Enabled = enabled;
+			this.treeViewSrcFile.Enabled = enabled;
 		}
 
 		void UpdateDetailListView()
@@ -396,6 +516,15 @@ namespace Mr.Robot
 						this.lvSummaryList.Items.Add(lvItem);
 					}
 				}
+			}
+		}
+
+		private void treeViewSrcFile_AfterCheck(object sender, TreeViewEventArgs e)
+		{
+			TreeNode node = e.Node;
+			for (int i = 0; i < node.Nodes.Count; i++)
+			{
+				node.Nodes[i].Checked = node.Checked;
 			}
 		}
 	}

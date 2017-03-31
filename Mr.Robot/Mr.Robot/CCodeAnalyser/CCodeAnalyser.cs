@@ -18,6 +18,10 @@ namespace Mr.Robot
 
 		public EventHandler UpdateProgress = null;
 		public List<FileParseInfo> ParseInfoList = null;
+
+		public bool MacroSwichAnalyserFlag = false;										// 这个标志是给宏开关分析工具设的, 做宏开关分析时, 为了提高速度, 只分析头文件宏定义等..
+																						// 不做语句分析
+		public List<string> ErrorLogList = new List<string>();
 		#endregion
 
 		public CCodeAnalyser(List<string> source_list, List<string> header_list, ref CodeBufferManager code_buf_manager)
@@ -109,35 +113,39 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		bool CFileProcess(string srcName, ref FileParseInfo fileInfo)
+		bool CFileProcess(string file_name, ref FileParseInfo file_info)
 		{
-			System.Diagnostics.Trace.WriteLine(srcName + ": ");
-			if (null == fileInfo)
+			//System.Diagnostics.Trace.WriteLine(file_name + ": ");
+			if (null == file_info)
 			{
-				fileInfo = new FileParseInfo(srcName);
+				file_info = new FileParseInfo(file_name);
 			}
 			List<string> codeList = null;
 			if (null != this.CodeBuffManagerRef)
 			{
-				codeList = this.CodeBuffManagerRef.SearchCodeBufferList(srcName);
+				codeList = this.CodeBuffManagerRef.SearchCodeBufferList(file_name);
 			}
 			if (null == codeList)
 			{
 				// 去掉注释
-				codeList = RemoveComments(srcName);
-				if (null != this.CodeBuffManagerRef && srcName.ToLower().EndsWith(".h"))
+				codeList = RemoveComments(file_name);
+				if (null != this.CodeBuffManagerRef && file_name.ToLower().EndsWith(".h"))
 				{
-					this.CodeBuffManagerRef.AddCodeBufferList(srcName, codeList);
+					this.CodeBuffManagerRef.AddCodeBufferList(file_name, codeList);
 				}
 			}
 			try
 			{
 				// 预编译处理
-				codeList = PrecompileProcess(srcName, codeList, ref fileInfo);
-				fileInfo.CodeList = codeList;
+				codeList = PrecompileProcess(file_name, codeList, ref file_info);
+				file_info.CodeList = codeList;
 
+				if (this.MacroSwichAnalyserFlag)
+				{
+					return true;
+				}
 				// 文件解析
-				if (!CCodeFileAnalysis(srcName, ref fileInfo))
+				if (!CCodeFileAnalysis(file_name, ref file_info))
 				{
 					return false;
 				}
@@ -264,19 +272,7 @@ namespace Mr.Robot
 							{
 								fi.IncFileList.Add(incFileName);
 							}
-							if (incFileName.StartsWith("\"") && incFileName.EndsWith("\""))
-							{
-								// 去掉引号
-								incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
-								// 取得头文件的解析情报
-								ParseIncludeHeaderFile(incFileName, ref fi);
-							}
-							else if (incFileName.StartsWith("<") && incFileName.EndsWith(">"))
-							{
-								// 尖括号括起来的头文件, 暂时与引号括起来的头文件做相同的处理
-								incFileName = incFileName.Substring(1, incFileName.Length - 2).Trim();
-								ParseIncludeHeaderFile(incFileName, ref fi);
-							}
+							ParseIncludeHeaderFile(incFileName, ref fi, file_name);
 						}
 					}
 					else if ("define" == nextIdtf.Text.ToLower())
@@ -508,58 +504,127 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得include头文件的解析情报
 		/// </summary>
-		void ParseIncludeHeaderFile(string incFileName,
-									ref FileParseInfo fi)
+		void ParseIncludeHeaderFile(string inc_name,
+									ref FileParseInfo fi,
+									string file_name)
 		{
-			// 先在已解析过的文件list里找
-			foreach (string fname in fi.IncFileList)
+			if (	(inc_name.StartsWith("\"") && inc_name.EndsWith("\""))				// 双引号
+				||	(inc_name.StartsWith("<") && inc_name.EndsWith(">"))	)			// 尖括号
 			{
-				if (fname.ToLower() == incFileName.ToLower())
+				// 去掉引号或者尖括号
+				inc_name = inc_name.Substring(1, inc_name.Length - 2).Trim();
+				string headerName = GetActualHeadrFullName(inc_name, file_name);
+				if (!string.IsNullOrEmpty(headerName))
 				{
-					// 如果找到了, 直接返回
-					return;
+					CFileProcess(headerName, ref fi);
+				}
+				else
+				{
+					// Error Log Here!
+					string errLog = "<<< Error LOG >>> : ParseIncludeHeaderFile(..) : " + file_name + " Can't Find Include Header File : " + inc_name;
+					this.ErrorLogList.Add(errLog);
+					System.Diagnostics.Trace.WriteLine(errLog);
 				}
 			}
+		}
 
-			// 如果上一步没找到, 证明还没被解析, 则在全部头文件list里找
-			if (-1 == incFileName.IndexOf('\\'))
-			{
-				// 不包含相对路径的场合
-				foreach (var hd_name in this.HeaderList)
-				{
-					string path;
-					string fName = IOProcess.GetFileName(hd_name, out path);
-					if (fName.ToLower() == incFileName.ToLower())
-					{
-						// 如果找到了, 则要先解析这个头文件
-						CFileProcess(hd_name, ref fi);
-						// TODO: 注意当有多个同名文件符合条件时的情况应对
-					}
-				}
-			}
-			else
+		/// <summary>
+		/// 取得include头文件的实际路径
+		/// </summary>
+		string GetActualHeadrFullName(string inc_name, string src_name)
+		{
+			if (	-1 != inc_name.IndexOf('/')
+				||	-1 != inc_name.IndexOf('\\')	)
 			{
 				// 包含相对路径的场合
-				FileInfo fInfo = new FileInfo(fi.SourceName);
+				FileInfo fInfo = new FileInfo(src_name);
 				string str = Directory.GetCurrentDirectory();
 				Directory.SetCurrentDirectory(fInfo.DirectoryName);
-				FileInfo hInfo = new FileInfo(incFileName);
+				FileInfo hInfo = new FileInfo(inc_name);
 				Directory.SetCurrentDirectory(str);										// 恢复当前路径
 				if (!hInfo.Exists)
 				{
-					return;
+					return string.Empty;
 				}
 				string headerName = hInfo.FullName;
 				foreach (var hd_name in this.HeaderList)
 				{
 					if (headerName.Equals(hd_name))
 					{
-						CFileProcess(hd_name, ref fi);
+						return hd_name;
 					}
 				}
 			}
-			// 头文件没找到
-			// ErrReport(incFileName + " 头文件没找到!");
+			else
+			{
+				List<string> findHeaderList = new List<string>();
+				// 不包含相对路径的场合
+				foreach (var hd_name in this.HeaderList)
+				{
+					string path;
+					string fName = IOProcess.GetFileName(hd_name, out path);
+					if (fName.ToLower() == inc_name.ToLower())
+					{
+						// TODO: 注意当有多个同名文件符合条件时的情况应对
+						findHeaderList.Add(hd_name);
+					}
+				}
+				if (1 == findHeaderList.Count)
+				{
+					return findHeaderList[0];
+				}
+				else if (findHeaderList.Count > 1)
+				{
+					// 找出路径最接近的那个
+					string retHeader = string.Empty;
+					int equalCnt = 0;
+					foreach (var hd_name in findHeaderList)
+					{
+						string hdPath, srcPath;
+						IOProcess.GetFileName(hd_name, out hdPath);
+						IOProcess.GetFileName(src_name, out srcPath);
+						int cnt = CompStrSameCount(hdPath, srcPath);
+						if (cnt > equalCnt)
+						{
+							retHeader = hd_name;
+							equalCnt = cnt;
+						}
+					}
+					return retHeader;
+				}
+			}
+			return string.Empty;
+		}
+
+		/// <summary>
+		/// 找出两个字符串从头开始连续一致字符的个数
+		/// </summary>
+		/// <returns></returns>
+		int CompStrSameCount(string str1, string str2)
+		{
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(str1) && !string.IsNullOrEmpty(str2));
+			int len = 0;
+			if (str1.Length < str2.Length)
+			{
+				len = str1.Length;
+			}
+			else
+			{
+				len = str2.Length;
+			}
+			int retCnt = 0;
+			for (int i = 0; i < len; i++)
+			{
+				if (str1[i].Equals(str2[i]))
+				{
+					retCnt += 1;
+				}
+				else
+				{
+					break;
+				}
+			}
+			return retCnt;
 		}
 
 		/// <summary>

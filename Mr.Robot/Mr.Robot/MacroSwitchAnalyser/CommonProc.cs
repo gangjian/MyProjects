@@ -201,6 +201,32 @@ namespace Mr.Robot.MacroSwitchAnalyser
                             + "," + print_info.CodeText + "," + macro_name + "," + value_str + "," + macro_def_file_name;
             return resultStr;
         }
+
+		/// <summary>
+		/// 比较两个文本文件内容一致
+		/// </summary>
+		public static bool CompareTextFileContentsSame(string file1, string file2)
+		{
+			if (!File.Exists(file1)
+				|| !File.Exists(file2))
+			{
+				return false;
+			}
+			StreamReader sr = new StreamReader(file1);
+			string file1Contents = sr.ReadToEnd();
+			sr.Close();
+			sr = new StreamReader(file2);
+			string file2Contents = sr.ReadToEnd();
+			sr.Close();
+			if (0 == string.Compare(file1Contents, file2Contents))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
     }
 
     public class MacroPrintInfo
