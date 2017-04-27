@@ -17,7 +17,7 @@ namespace Mr.Robot
 
 		public VAR_TYPE_CATEGORY Category = VAR_TYPE_CATEGORY.BASIC;
 
-		object Value = null;
+		public object Value = null;
 
 		//public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
 																						// TODO: 这个成员在VAR_CTX类改造完成后要删掉!
@@ -46,6 +46,24 @@ namespace Mr.Robot
 		public string Name = string.Empty;
 		public List<string> PrefixList = new List<string>();
 		public List<string> SuffixList = new List<string>();
+
+		public string GetFullName()
+		{
+			List<string> tmpList = new List<string>();
+			tmpList.AddRange(this.PrefixList);
+			tmpList.Add(this.Name);
+			tmpList.AddRange(this.SuffixList);
+			string retStr = string.Empty;
+			for (int i = 0; i < tmpList.Count; i++)
+			{
+				if (i > 0)
+				{
+					retStr += " ";
+				}
+				retStr += tmpList[i];
+			}
+			return retStr;
+		}
 	}
 
 	public enum VAR_TYPE_CATEGORY
@@ -143,6 +161,8 @@ namespace Mr.Robot
 				{
 					return null;
 				}
+				int idx = retVarCtx.Name.IndexOf('[');
+				retVarCtx.Name = retVarCtx.Name.Remove(idx);
 				List<MeaningGroup> arrayMemberInitList = null;
 				if (null != init_group)
 				{
@@ -171,6 +191,10 @@ namespace Mr.Robot
 				if (suffixList.Contains("*"))
 				{
 					retVarCtx.Category = VAR_TYPE_CATEGORY.POINTER;
+					if (null != init_group)
+					{
+						retVarCtx.Value = init_group.Text;
+					}
 				}
 				else
 				{

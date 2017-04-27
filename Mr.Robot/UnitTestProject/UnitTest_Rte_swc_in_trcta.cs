@@ -105,6 +105,41 @@ namespace UnitTestProject
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
 			//Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.OutputGlobalList[0].MeanningGroup.Text);
 		}
+
+		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
+		public void Rte_swc_in_trcta_Global()
+		{
+			// extern CONSTP2CONST(struct Rte_CDS_swc_in_trcta, RTE_CONST, RTE_APPL_CONST) Rte_Inst_swc_in_trcta;
+			Assert.AreEqual(1, c_source_parse_info.GlobalDeclareList.Count);
+			Assert.AreEqual(VAR_TYPE_CATEGORY.POINTER, c_source_parse_info.GlobalDeclareList[0].Category);
+			Assert.AreEqual("extern const struct Rte_CDS_swc_in_trcta * const", c_source_parse_info.GlobalDeclareList[0].Type.GetFullName());
+			Assert.AreEqual("Rte_Inst_swc_in_trcta", c_source_parse_info.GlobalDeclareList[0].Name);
+
+			Assert.AreEqual(2, c_source_parse_info.GlobalDefineList.Count);
+			// inTblRctasw
+			Assert.AreEqual(VAR_TYPE_CATEGORY.ARRAY, c_source_parse_info.GlobalDefineList[0].Category);
+			Assert.AreEqual("static const unsigned char", c_source_parse_info.GlobalDefineList[0].Type.GetFullName());
+			Assert.AreEqual("inTblRctasw", c_source_parse_info.GlobalDefineList[0].Name);
+			Assert.AreEqual(3, c_source_parse_info.GlobalDefineList[0].MemberList.Count);
+			Assert.AreEqual(0, c_source_parse_info.GlobalDefineList[0].MemberList[0].Value);	// PV_RCTASW_IN_OFF
+			Assert.AreEqual(1, c_source_parse_info.GlobalDefineList[0].MemberList[1].Value);	// PV_RCTASW_IN_ON
+			Assert.AreEqual(2, c_source_parse_info.GlobalDefineList[0].MemberList[2].Value);	// PV_RCTASW_IN_UNFIX
+
+			// rctasw_can_mng_tbl
+			Assert.AreEqual(VAR_TYPE_CATEGORY.USR_DEF_TYPE, c_source_parse_info.GlobalDefineList[1].Category);
+			Assert.AreEqual("rctasw_can_mng_tbl", c_source_parse_info.GlobalDefineList[1].Name);
+			Assert.AreEqual(5, c_source_parse_info.GlobalDefineList[1].MemberList.Count);
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[0].Category);
+			Assert.AreEqual(3, c_source_parse_info.GlobalDefineList[1].MemberList[0].Value);					// IN_RCTASW_TBL_SIZE
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[1].Category);
+			Assert.AreEqual(0, c_source_parse_info.GlobalDefineList[1].MemberList[1].Value);					// PV_RCTASW_IN_OFF
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[2].Category);
+			Assert.AreEqual(0, c_source_parse_info.GlobalDefineList[1].MemberList[2].Value);					// PV_RCTASW_IN_OFF
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[3].Category);
+			Assert.AreEqual(1, c_source_parse_info.GlobalDefineList[1].MemberList[3].Value);					// PV_RCTASW_IN_ON
+			Assert.AreEqual(VAR_TYPE_CATEGORY.POINTER, c_source_parse_info.GlobalDefineList[1].MemberList[4].Category);
+			Assert.AreEqual("&inTblRctasw[0]", c_source_parse_info.GlobalDefineList[1].MemberList[4].Value);	// &inTblRctasw[0]
+		}
     }
 
 	[TestClass]

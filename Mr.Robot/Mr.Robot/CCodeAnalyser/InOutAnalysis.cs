@@ -27,6 +27,7 @@ namespace Mr.Robot
 				if (1 == leftGroupList.Count
 					&& MeaningGroupType.GlobalVariable == leftGroupList[0].Type)
 				{
+					// 20170406
 					VAR_CTX varCtx = GetVarCtxByName(leftGroupList[0].Text, parse_info, func_ctx);
 					if (null != varCtx)
 					{
@@ -325,5 +326,23 @@ namespace Mr.Robot
 		public List<string> prefixList = new List<string>();
 		public ActParaPassType passType = ActParaPassType.Value;
 		public bool readOut = false;													// 是否是读出值
+	}
+
+	public class VAR_DESCRIPTION
+	{
+		List<VAR_LEVEL> VarList = new List<VAR_LEVEL>();
+	}
+
+	public class VAR_LEVEL
+	{
+		string Name = string.Empty;
+		VAR_MEMBER_OPER MemberOper = VAR_MEMBER_OPER.NONE;
+	}
+
+	public enum VAR_MEMBER_OPER
+	{
+		NONE,
+		DOT,				// .
+		ARROW,				// ->
 	}
 }
