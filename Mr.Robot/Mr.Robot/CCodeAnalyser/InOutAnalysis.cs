@@ -28,14 +28,14 @@ namespace Mr.Robot
 					&& MeaningGroupType.GlobalVariable == leftGroupList[0].Type)
 				{
 					// 20170406
-					VAR_CTX varCtx = GetVarCtxByName(leftGroupList[0].Text, parse_info, func_ctx);
-					if (null != varCtx)
+					VAR_DESCRIPTION varDescrp = GetVarDescriptionFromExpression(leftGroupList[0], parse_info);
+					if (null != varDescrp)
 					{
 						//if (null == varCtx.MeanningGroup)
 						//{
 						//	varCtx.MeanningGroup = leftGroupList[0];
 						//}
-						func_ctx.OutputGlobalList.Add(varCtx);
+						func_ctx.OutputGlobalList.Add(varDescrp);
 					}
 				}
 
@@ -73,16 +73,13 @@ namespace Mr.Robot
 		{
 			foreach (MeaningGroup rightVal in rightList)
 			{
-				if (MeaningGroupType.GlobalVariable == rightVal.Type)					// 全局变量
+				if (MeaningGroupType.GlobalVariable == rightVal.Type					// 全局变量
+					&& null != func_ctx)
 				{
-					VAR_CTX varCtx = GetVarCtxByName(rightVal.Text, parse_info, func_ctx);
-					if (null != varCtx)
+					VAR_DESCRIPTION varDescrp = GetVarDescriptionFromExpression(rightVal, parse_info);
+					if (null != varDescrp)
 					{
-						//varCtx.MeanningGroup = rightVal;
-						if (null != func_ctx)
-						{
-							func_ctx.InputGlobalList.Add(varCtx);
-						}
+						func_ctx.InputGlobalList.Add(varDescrp);
 					}
 				}
 				else if (MeaningGroupType.FunctionCalling == rightVal.Type)				// 函数调用
@@ -307,6 +304,78 @@ namespace Mr.Robot
 			}
 			return string.Empty;
 		}
+
+		/// <summary>
+		/// 从变量表达式得到一个对变量结构层次的描述
+		/// </summary>
+		static VAR_DESCRIPTION GetVarDescriptionFromExpression(MeaningGroup meaning_group, FileParseInfo parse_info)
+		{
+			VAR_DESCRIPTION retDesp = new VAR_DESCRIPTION();
+			if (meaning_group.ComponentList.Count == 1
+				&& meaning_group.ComponentList.Last().Type == StatementComponentType.Identifier)
+			{																			// 单一的变量(无层次结构)
+				VAR_LEVEL varLever = new VAR_LEVEL(meaning_group.ComponentList[0].Text);
+			}
+			else if (meaning_group.ComponentList.Count >= 3)
+			{
+				if (meaning_group.ComponentList.First().Text.Equals("(")
+					&& meaning_group.ComponentList.Last().Text.Equals(")"))
+				{																		// 圆括号括起的表达式
+					MeaningGroup prevGroup = new MeaningGroup();
+					prevGroup.ComponentList.AddRange(meaning_group.ComponentList);
+					// 去掉前后括号
+					prevGroup.ComponentList.RemoveAt(0);
+					prevGroup.ComponentList.RemoveAt(prevGroup.ComponentList.Count - 1);
+					// 递归
+					retDesp = GetVarDescriptionFromExpression(prevGroup, parse_info);
+					return retDesp;
+				}
+				else if (meaning_group.ComponentList.Last().Type == StatementComponentType.Identifier)
+				{																		// 有层次结构的变量
+					int count = meaning_group.ComponentList.Count;
+					string prevStr = meaning_group.ComponentList[count - 2].Text;
+					VAR_MEMBER_OPER prevMemOpt = GetVarMemberOper(prevStr);
+					VAR_LEVEL lastLevel = new VAR_LEVEL(meaning_group.ComponentList.Last().Text);
+					MeaningGroup prevGroup = new MeaningGroup();
+					for (int i = 0; i < count - 2; i++)
+					{
+						prevGroup.ComponentList.Add(meaning_group.ComponentList[i]);
+					}
+					VAR_DESCRIPTION prevDesp = GetVarDescriptionFromExpression(prevGroup, parse_info);
+					if (0 != prevDesp.VarLevelList.Count)
+					{
+						prevDesp.VarLevelList.Last().MemberOper = prevMemOpt;
+						retDesp.VarLevelList.AddRange(prevDesp.VarLevelList);
+						retDesp.VarLevelList.Add(lastLevel);
+						return retDesp;
+					}
+				}
+				else
+				{
+				}
+			}
+			else
+			{
+				throw new MyException("GetVarDescriptionFromExpression(..) : 内部逻辑错误!");
+			}
+			return null;
+		}
+
+		static VAR_MEMBER_OPER GetVarMemberOper(string text_str)
+		{
+			if (text_str.Equals("."))
+			{
+				return VAR_MEMBER_OPER.DOT;
+			}
+			else if (text_str.Equals("->"))
+			{
+				return VAR_MEMBER_OPER.ARROW;
+			}
+			else
+			{
+				return VAR_MEMBER_OPER.NONE;
+			}
+		}
 	}
 
 	/// <summary>
@@ -330,13 +399,18 @@ namespace Mr.Robot
 
 	public class VAR_DESCRIPTION
 	{
-		List<VAR_LEVEL> VarList = new List<VAR_LEVEL>();
+		public List<VAR_LEVEL> VarLevelList = new List<VAR_LEVEL>();
 	}
 
 	public class VAR_LEVEL
 	{
-		string Name = string.Empty;
-		VAR_MEMBER_OPER MemberOper = VAR_MEMBER_OPER.NONE;
+		public string Name = string.Empty;
+		public VAR_MEMBER_OPER MemberOper = VAR_MEMBER_OPER.NONE;
+
+		public VAR_LEVEL(string name)
+		{
+			this.Name = name;
+		}
 	}
 
 	public enum VAR_MEMBER_OPER

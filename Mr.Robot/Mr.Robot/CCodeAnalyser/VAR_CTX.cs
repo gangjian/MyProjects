@@ -113,8 +113,6 @@ namespace Mr.Robot
 			VAR_CTX var_ctx = null;
 			if ((null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.ParameterList)))			// (1)参数?
 				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.LocalVarList)))		// (2)临时变量?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.InputGlobalList)))	// (3)全局变量?
-				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.OutputGlobalList)))
 				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.OtherGlobalList)))
 				)
 			{

@@ -1370,9 +1370,9 @@ namespace Mr.Robot
         // 局部变量列表
 		public List<VAR_CTX> LocalVarList = new List<VAR_CTX>();
 		// 入力全局变量列表
-		public List<VAR_CTX> InputGlobalList = new List<VAR_CTX>();
+		public List<VAR_DESCRIPTION> InputGlobalList = new List<VAR_DESCRIPTION>();
 		// 出力全局变量列表
-		public List<VAR_CTX> OutputGlobalList = new List<VAR_CTX>();
+		public List<VAR_DESCRIPTION> OutputGlobalList = new List<VAR_DESCRIPTION>();
 		// 其它未确定入出力的全局变量(比如函数调用读出值)
 		public List<VAR_CTX> OtherGlobalList = new List<VAR_CTX>();
 		// 调用函数列表
