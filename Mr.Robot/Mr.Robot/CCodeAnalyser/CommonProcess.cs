@@ -865,6 +865,54 @@ namespace Mr.Robot
 				return false;
 			}
 		}
+
+		/// <summary>
+		/// 取得括号括起来的一组操作数
+		/// </summary>
+		/// <returns></returns>
+		public static List<StatementComponent> GetBraceComponents(List<StatementComponent> componentList, ref int idx)
+		{
+			StatementComponent cpnt = componentList[idx];
+			string matchOp = string.Empty;
+			// 
+			if ("(" == cpnt.Text)
+			{
+				matchOp = ")";
+			}
+			else if ("[" == cpnt.Text)
+			{
+				matchOp = "]";
+			}
+			else if ("{" == cpnt.Text)
+			{
+				matchOp = "}";
+			}
+			if (string.Empty == matchOp)
+			{
+				return null;
+			}
+			List<StatementComponent> retList = new List<StatementComponent>();
+			retList.Add(cpnt);
+			int matchCount = 1;
+			for (int j = idx + 1; j < componentList.Count; j++)
+			{
+				idx = j;
+				retList.Add(componentList[j]);
+				if (cpnt.Text == componentList[j].Text)
+				{
+					matchCount += 1;
+				}
+				else if (matchOp == componentList[j].Text)
+				{
+					matchCount -= 1;
+				}
+				if (0 == matchCount)
+				{
+					break;
+				}
+			}
+			return retList;
+		}
 	}
 
 	public class CodeIdentifier

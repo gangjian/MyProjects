@@ -310,70 +310,118 @@ namespace Mr.Robot
 		/// </summary>
 		static VAR_DESCRIPTION GetVarDescriptionFromExpression(MeaningGroup meaning_group, FileParseInfo parse_info)
 		{
+			int cmpntCount = meaning_group.ComponentList.Count;
+			System.Diagnostics.Trace.Assert(cmpntCount > 0);
+
 			VAR_DESCRIPTION retDesp = new VAR_DESCRIPTION();
-			if (meaning_group.ComponentList.Count == 1
-				&& meaning_group.ComponentList.Last().Type == StatementComponentType.Identifier)
-			{																			// 单一的变量(无层次结构)
-				VAR_LEVEL varLever = new VAR_LEVEL(meaning_group.ComponentList[0].Text);
-			}
-			else if (meaning_group.ComponentList.Count >= 3)
+			if (meaning_group.ComponentList.Last().Type == StatementComponentType.Identifier)
 			{
-				if (meaning_group.ComponentList.First().Text.Equals("(")
-					&& meaning_group.ComponentList.Last().Text.Equals(")"))
-				{																		// 圆括号括起的表达式
-					MeaningGroup prevGroup = new MeaningGroup();
-					prevGroup.ComponentList.AddRange(meaning_group.ComponentList);
-					// 去掉前后括号
-					prevGroup.ComponentList.RemoveAt(0);
-					prevGroup.ComponentList.RemoveAt(prevGroup.ComponentList.Count - 1);
-					// 递归
-					retDesp = GetVarDescriptionFromExpression(prevGroup, parse_info);
-					return retDesp;
-				}
-				else if (meaning_group.ComponentList.Last().Type == StatementComponentType.Identifier)
-				{																		// 有层次结构的变量
-					int count = meaning_group.ComponentList.Count;
-					string prevStr = meaning_group.ComponentList[count - 2].Text;
-					VAR_MEMBER_OPER prevMemOpt = GetVarMemberOper(prevStr);
-					VAR_LEVEL lastLevel = new VAR_LEVEL(meaning_group.ComponentList.Last().Text);
-					MeaningGroup prevGroup = new MeaningGroup();
-					for (int i = 0; i < count - 2; i++)
-					{
-						prevGroup.ComponentList.Add(meaning_group.ComponentList[i]);
+				VAR_LEVEL lastVarLever = new VAR_LEVEL(meaning_group.ComponentList.Last().Text);
+				if (cmpntCount > 1)
+				{
+					string prevStr = meaning_group.ComponentList[cmpntCount - 2].Text;
+					VAR_MEMBER_OPERATOR prevMemOpt = GetVarMemberOper(prevStr);
+					if (VAR_MEMBER_OPERATOR.NONE != prevMemOpt)
+					{																	// 有层次结构的变量
+						MeaningGroup prevGroup = new MeaningGroup();
+						for (int i = 0; i < cmpntCount - 2; i++)
+						{
+							prevGroup.ComponentList.Add(meaning_group.ComponentList[i]);
+						}
+						VAR_DESCRIPTION prevDesp = GetVarDescriptionFromExpression(prevGroup, parse_info);
+						if (0 != prevDesp.VarLevelList.Count)
+						{
+							prevDesp.VarLevelList.Last().MemberOperator = prevMemOpt;
+							retDesp.VarLevelList.AddRange(prevDesp.VarLevelList);
+							retDesp.VarLevelList.Add(lastVarLever);
+							retDesp.SetTextStr();
+							return retDesp;
+						}
 					}
-					VAR_DESCRIPTION prevDesp = GetVarDescriptionFromExpression(prevGroup, parse_info);
-					if (0 != prevDesp.VarLevelList.Count)
-					{
-						prevDesp.VarLevelList.Last().MemberOper = prevMemOpt;
-						retDesp.VarLevelList.AddRange(prevDesp.VarLevelList);
-						retDesp.VarLevelList.Add(lastLevel);
+					else if ((prevStr.Equals("&") || prevStr.Equals("*")) && 2 == cmpntCount)
+					{																	// 变量前有修饰符(暂限定只有一个:取地址符&或者星号*)
+						lastVarLever.PrefixList.Add(prevStr);
+						retDesp.VarLevelList.Add(lastVarLever);
+						retDesp.SetTextStr();
 						return retDesp;
+					}
+					else
+					{
 					}
 				}
 				else
+				{																		// 单一的变量(无层次结构)
+					retDesp.VarLevelList.Add(lastVarLever);
+					retDesp.SetTextStr();
+					return retDesp;
+				}
+			}
+			else if (meaning_group.ComponentList.Last().Text.Equals(")"))
+			{																			// 圆括号括起的表达式
+				// 向前找到对应的圆括号
+				int idx = FindPreviousMatchBrace(meaning_group.ComponentList, cmpntCount - 1);
+				if (-1 != idx)
 				{
+					MeaningGroup innerGroup = new MeaningGroup();
+					for (int i = idx + 1; i < cmpntCount - 1; i++)
+					{
+						innerGroup.ComponentList.Add(meaning_group.ComponentList[i]);
+					}
+					// 递归
+					retDesp = GetVarDescriptionFromExpression(innerGroup, parse_info);
+					if (idx > 0)
+					{
+						for (int i = 0; i < idx; i++)
+						{
+							retDesp.VarLevelList.Last().PrefixList.Add(meaning_group.ComponentList[i].Text);
+						}
+					}
+					retDesp.SetTextStr();
+					return retDesp;
 				}
 			}
 			else
 			{
-				throw new MyException("GetVarDescriptionFromExpression(..) : 内部逻辑错误!");
 			}
-			return null;
+			throw new MyException("GetVarDescriptionFromExpression(..) : 内部逻辑错误");
 		}
 
-		static VAR_MEMBER_OPER GetVarMemberOper(string text_str)
+		static int FindPreviousMatchBrace(List<StatementComponent> cmpnt_list, int idx)
+		{
+			System.Diagnostics.Trace.Assert(cmpnt_list.Count > 0 && idx >= 0 && idx < cmpnt_list.Count);
+			System.Diagnostics.Trace.Assert(cmpnt_list[idx].Text.Equals(")"));
+			int counter = 1;
+			for (int i = idx - 1; i >= 0; i--)
+			{
+				if (cmpnt_list[i].Text.Equals(")"))
+				{
+					counter += 1;
+				}
+				else if (cmpnt_list[i].Text.Equals("("))
+				{
+					counter -= 1;
+					if (0 == counter)
+					{
+						return i;
+					}
+				}
+			}
+			return -1;
+		}
+
+		static VAR_MEMBER_OPERATOR GetVarMemberOper(string text_str)
 		{
 			if (text_str.Equals("."))
 			{
-				return VAR_MEMBER_OPER.DOT;
+				return VAR_MEMBER_OPERATOR.DOT;
 			}
 			else if (text_str.Equals("->"))
 			{
-				return VAR_MEMBER_OPER.ARROW;
+				return VAR_MEMBER_OPERATOR.ARROW;
 			}
 			else
 			{
-				return VAR_MEMBER_OPER.NONE;
+				return VAR_MEMBER_OPERATOR.NONE;
 			}
 		}
 	}
@@ -400,20 +448,51 @@ namespace Mr.Robot
 	public class VAR_DESCRIPTION
 	{
 		public List<VAR_LEVEL> VarLevelList = new List<VAR_LEVEL>();
+		public string Text = string.Empty;
+
+		public void SetTextStr()
+		{
+			this.Text = string.Empty;
+			foreach (var vl in this.VarLevelList)
+			{
+				vl.SetTextStr();
+				this.Text += vl.Text;
+			}
+		}
 	}
 
 	public class VAR_LEVEL
 	{
+		public List<string> PrefixList = new List<string>();							// 前缀列表(比如取地址符&,或者*)
 		public string Name = string.Empty;
-		public VAR_MEMBER_OPER MemberOper = VAR_MEMBER_OPER.NONE;
+		public VAR_MEMBER_OPERATOR MemberOperator = VAR_MEMBER_OPERATOR.NONE;
+		public string Text = string.Empty;
 
 		public VAR_LEVEL(string name)
 		{
 			this.Name = name;
 		}
+
+		public void SetTextStr()
+		{
+			this.Text = string.Empty;
+			foreach (var pf in this.PrefixList)
+			{
+				this.Text += pf;
+			}
+			this.Text += this.Name;
+			if (this.MemberOperator == VAR_MEMBER_OPERATOR.ARROW)
+			{
+				this.Text += "->";
+			}
+			else if (this.MemberOperator == VAR_MEMBER_OPERATOR.DOT)
+			{
+				this.Text += ".";
+			}
+		}
 	}
 
-	public enum VAR_MEMBER_OPER
+	public enum VAR_MEMBER_OPERATOR
 	{
 		NONE,
 		DOT,				// .

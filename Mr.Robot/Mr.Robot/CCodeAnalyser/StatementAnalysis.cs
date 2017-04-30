@@ -259,54 +259,6 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
-		/// 取得括号括起来的一组操作数
-		/// </summary>
-		/// <returns></returns>
-		static List<StatementComponent> GetBraceComponents(List<StatementComponent> componentList, ref int idx)
-		{
-			StatementComponent cpnt = componentList[idx];
-			string matchOp = string.Empty;
-			// 
-			if ("(" == cpnt.Text)
-			{
-				matchOp = ")";
-			}
-			else if ("[" == cpnt.Text)
-			{
-				matchOp = "]";
-			}
-			else if ("{" == cpnt.Text)
-			{
-				matchOp = "}";
-			}
-			if (string.Empty == matchOp)
-			{
-				return null;
-			}
-			List<StatementComponent> retList = new List<StatementComponent>();
-			retList.Add(cpnt);
-			int matchCount = 1;
-			for (int j = idx + 1; j < componentList.Count; j++)
-			{
-				idx = j;
-				retList.Add(componentList[j]);
-				if (cpnt.Text == componentList[j].Text)
-				{
-					matchCount += 1;
-				}
-				else if (matchOp == componentList[j].Text)
-				{
-					matchCount -= 1;
-				}
-				if (0 == matchCount)
-				{
-					break;
-				}
-			}
-			return retList;
-		}
-
-		/// <summary>
 		/// 从语句中提取出一个操作数/操作符
 		/// </summary>
 		static StatementComponent GetOneComponent(ref string statementStr,
@@ -968,7 +920,7 @@ namespace Mr.Robot
             else if ("(" == componentList[idx].Text)
             {
                 int tmp_idx = idx;
-                List<StatementComponent> braceList = GetBraceComponents(componentList, ref tmp_idx);
+				List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref tmp_idx);
                 if (null != braceList
                     && (tmp_idx != componentList.Count - 1)
                     && ("." == componentList[tmp_idx + 1].Text
@@ -1027,7 +979,7 @@ namespace Mr.Robot
 				else if ("[" == componentList[i].Text)
 				{
 					idx = i;
-					List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
+					List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
 					foreach (var item in braceList)
 					{
@@ -1056,7 +1008,7 @@ namespace Mr.Robot
 					retGroup.ComponentList.Add(componentList[idx]);
 					retGroup.Text += componentList[idx].Text;
 					idx += 1;
-					List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
+					List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref idx);
 					if (null != braceList)
 					{
 						foreach (StatementComponent item in braceList)
@@ -1076,7 +1028,7 @@ namespace Mr.Robot
 		{
             if ("(" == componentList[idx].Text)
             {
-                List<StatementComponent> braceList = GetBraceComponents(componentList, ref idx);
+				List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref idx);
                 if (null != braceList)
                 {
 					MeaningGroup retGroup = new MeaningGroup();
@@ -1108,7 +1060,7 @@ namespace Mr.Robot
 		{
 			if ("{" == cpnt_list[idx].Text)
 			{
-				List<StatementComponent> braceList = GetBraceComponents(cpnt_list, ref idx);
+				List<StatementComponent> braceList = CommonProcess.GetBraceComponents(cpnt_list, ref idx);
 				if (null != braceList)
 				{
 					MeaningGroup retGroup = new MeaningGroup();

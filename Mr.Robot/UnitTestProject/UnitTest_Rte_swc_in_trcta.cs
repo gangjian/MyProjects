@@ -103,7 +103,7 @@ namespace UnitTestProject
 		{
 			FuncAnalysisContext analysisContext = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_parse_info);
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
-			//Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.OutputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct->value", analysisContext.OutputGlobalList[0].Text);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -377,8 +377,8 @@ namespace UnitTestProject
 			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_1", func_ctx.LocalVarList[2].Type.Name);
 
 			Assert.AreEqual(2, func_ctx.InputGlobalList.Count);
-			//Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value", func_ctx.InputGlobalList[0].MeanningGroup.Text);
-			//Assert.AreEqual("(*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val)).value", func_ctx.InputGlobalList[1].MeanningGroup.Text);
+			Assert.AreEqual("Rte_Inst_swc_in_trcta->*rbl_in_trcta_igon_rp_srIf_in_TRCTA_val.value", func_ctx.InputGlobalList[0].Text);
+			Assert.AreEqual("Rte_Inst_swc_in_trcta->*rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val.value", func_ctx.InputGlobalList[1].Text);
 
 			Assert.AreEqual(1, func_ctx.CalledFunctionList.Count);
 			Assert.AreEqual("ShareLibStepFailJudgeVal", func_ctx.CalledFunctionList[0].FunctionName);
@@ -390,7 +390,7 @@ namespace UnitTestProject
 			Assert.AreEqual(true,						func_ctx.CalledFunctionList[0].ActualParaInfoList[2].readOut);
 
 			Assert.AreEqual(1, func_ctx.OutputGlobalList.Count);
-			//Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct)->value", func_ctx.OutputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct->value", func_ctx.OutputGlobalList[0].Text);
 
 			Assert.AreEqual("ShareLibStepFailJudgeVal(&varInStep,&rctasw_can_mng_tbl,&varOutStep)", func_ctx.CalledFunctionList[0].MeaningGroup.Text);
 		}
@@ -415,7 +415,7 @@ namespace UnitTestProject
 		{
 			FuncAnalysisContext analysisContext = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_parse_info);
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
-			//Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.OutputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct->value", analysisContext.OutputGlobalList[0].Text);
 		}
 	}
 
@@ -438,7 +438,7 @@ namespace UnitTestProject
 		{
 			FuncAnalysisContext analysisContext = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_parse_info);
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
-			//Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct)->value", analysisContext.OutputGlobalList[0].MeanningGroup.Text);
+			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct->value", analysisContext.OutputGlobalList[0].Text);
 		}
 	}
 }
