@@ -27,14 +27,9 @@ namespace Mr.Robot
 				if (1 == leftGroupList.Count
 					&& MeaningGroupType.GlobalVariable == leftGroupList[0].Type)
 				{
-					// 20170406
-					VAR_DESCRIPTION varDescrp = GetVarDescriptionFromExpression(leftGroupList[0], parse_info);
+					VAR_DESCRIPTION varDescrp = GetVarDescriptionFromExpression(leftGroupList[0]);
 					if (null != varDescrp)
 					{
-						//if (null == varCtx.MeanningGroup)
-						//{
-						//	varCtx.MeanningGroup = leftGroupList[0];
-						//}
 						func_ctx.OutputGlobalList.Add(varDescrp);
 					}
 				}
@@ -76,7 +71,7 @@ namespace Mr.Robot
 				if (MeaningGroupType.GlobalVariable == rightVal.Type					// 全局变量
 					&& null != func_ctx)
 				{
-					VAR_DESCRIPTION varDescrp = GetVarDescriptionFromExpression(rightVal, parse_info);
+					VAR_DESCRIPTION varDescrp = GetVarDescriptionFromExpression(rightVal);
 					if (null != varDescrp)
 					{
 						func_ctx.InputGlobalList.Add(varDescrp);
@@ -308,7 +303,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从变量表达式得到一个对变量结构层次的描述
 		/// </summary>
-		static VAR_DESCRIPTION GetVarDescriptionFromExpression(MeaningGroup meaning_group, FileParseInfo parse_info)
+		static VAR_DESCRIPTION GetVarDescriptionFromExpression(MeaningGroup meaning_group)
 		{
 			int cmpntCount = meaning_group.ComponentList.Count;
 			System.Diagnostics.Trace.Assert(cmpntCount > 0);
@@ -328,7 +323,7 @@ namespace Mr.Robot
 						{
 							prevGroup.ComponentList.Add(meaning_group.ComponentList[i]);
 						}
-						VAR_DESCRIPTION prevDesp = GetVarDescriptionFromExpression(prevGroup, parse_info);
+						VAR_DESCRIPTION prevDesp = GetVarDescriptionFromExpression(prevGroup);
 						if (0 != prevDesp.VarLevelList.Count)
 						{
 							prevDesp.VarLevelList.Last().MemberOperator = prevMemOpt;
@@ -368,7 +363,7 @@ namespace Mr.Robot
 						innerGroup.ComponentList.Add(meaning_group.ComponentList[i]);
 					}
 					// 递归
-					retDesp = GetVarDescriptionFromExpression(innerGroup, parse_info);
+					retDesp = GetVarDescriptionFromExpression(innerGroup);
 					if (idx > 0)
 					{
 						for (int i = 0; i < idx; i++)
