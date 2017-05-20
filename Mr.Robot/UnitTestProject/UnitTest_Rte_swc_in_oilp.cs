@@ -22,6 +22,55 @@ namespace UnitTestProject
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
+		public void Rte_swc_in_oilp_Global()
+		{
+			Assert.AreEqual(1, parseInfoList.First().GlobalDeclareList.Count);
+			Assert.AreEqual(VAR_TYPE_CATEGORY.POINTER, parseInfoList.First().GlobalDeclareList[0].VarTypeCategory);
+			Assert.AreEqual("extern const struct Rte_CDS_swc_in_oilp * const", parseInfoList.First().GlobalDeclareList[0].Type.GetFullName());
+			Assert.AreEqual("Rte_Inst_swc_in_oilp", parseInfoList.First().GlobalDeclareList[0].Name);
+
+			Assert.AreEqual(7, parseInfoList.First().GlobalDefineList.Count);
+			// static uint8 igvAdSts;
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, parseInfoList.First().GlobalDefineList[0].VarTypeCategory);
+			Assert.AreEqual("static unsigned char", parseInfoList.First().GlobalDefineList[0].Type.GetFullName());
+			Assert.AreEqual("igvAdSts", parseInfoList.First().GlobalDefineList[0].Name);
+			// static uint8 oilpAdIgAdAvrgSts;
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, parseInfoList.First().GlobalDefineList[1].VarTypeCategory);
+			Assert.AreEqual("static unsigned char", parseInfoList.First().GlobalDefineList[1].Type.GetFullName());
+			Assert.AreEqual("oilpAdIgAdAvrgSts", parseInfoList.First().GlobalDefineList[1].Name);
+			// static uint8 oilpAdIgAdAccumuCnt;
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, parseInfoList.First().GlobalDefineList[2].VarTypeCategory);
+			Assert.AreEqual("static unsigned char", parseInfoList.First().GlobalDefineList[2].Type.GetFullName());
+			Assert.AreEqual("oilpAdIgAdAccumuCnt", parseInfoList.First().GlobalDefineList[2].Name);
+			// static uint16 igvAd;
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, parseInfoList.First().GlobalDefineList[3].VarTypeCategory);
+			Assert.AreEqual("static unsigned short", parseInfoList.First().GlobalDefineList[3].Type.GetFullName());
+			Assert.AreEqual("igvAd", parseInfoList.First().GlobalDefineList[3].Name);
+			// static uint16 oilpAdPreIgAdAvrg;
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, parseInfoList.First().GlobalDefineList[4].VarTypeCategory);
+			Assert.AreEqual("static unsigned short", parseInfoList.First().GlobalDefineList[4].Type.GetFullName());
+			Assert.AreEqual("oilpAdPreIgAdAvrg", parseInfoList.First().GlobalDefineList[4].Name);
+			// static uint16 oilpAdIgAdAvrgBuf[OILPAD_IGAD_AVRG_CNT];
+			Assert.AreEqual(VAR_TYPE_CATEGORY.ARRAY, parseInfoList.First().GlobalDefineList[5].VarTypeCategory);
+			Assert.AreEqual("static unsigned short", parseInfoList.First().GlobalDefineList[5].Type.GetFullName());
+			Assert.AreEqual("oilpAdIgAdAvrgBuf", parseInfoList.First().GlobalDefineList[5].Name);
+			Assert.AreEqual(4, parseInfoList.First().GlobalDefineList[5].MemberList.Count);
+			Assert.AreEqual(0, parseInfoList.First().GlobalDefineList[5].MemberList[0].Value);
+			Assert.AreEqual(0, parseInfoList.First().GlobalDefineList[5].MemberList[1].Value);
+			Assert.AreEqual(0, parseInfoList.First().GlobalDefineList[5].MemberList[2].Value);
+			Assert.AreEqual(0, parseInfoList.First().GlobalDefineList[5].MemberList[3].Value);
+			// static pvU1	  pvEngOnOff3s;
+			Assert.AreEqual(VAR_TYPE_CATEGORY.USR_DEF_TYPE, parseInfoList.First().GlobalDefineList[6].VarTypeCategory);
+			//Assert.AreEqual("pvU1", parseInfoList.First().GlobalDefineList[6].Type.GetFullName());
+			Assert.AreEqual("pvEngOnOff3s", parseInfoList.First().GlobalDefineList[6].Name);
+			Assert.AreEqual(2, parseInfoList.First().GlobalDefineList[6].MemberList.Count);
+			Assert.AreEqual("unsigned char", parseInfoList.First().GlobalDefineList[6].MemberList[0].Type.GetFullName());
+			Assert.AreEqual("dt", parseInfoList.First().GlobalDefineList[6].MemberList[0].Name);
+			Assert.AreEqual("unsigned char", parseInfoList.First().GlobalDefineList[6].MemberList[1].Type.GetFullName());
+			Assert.AreEqual("sts", parseInfoList.First().GlobalDefineList[6].MemberList[1].Name);
+		}
+
+		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
 		public void sym_rbl_in_oilp()
 		{
 			FileParseInfo c_source_parse_info = Common.UnitTest_GetFuncParseResult(source_name, "sym_rbl_in_oilp", parseInfoList, ref root);

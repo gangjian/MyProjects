@@ -9,15 +9,15 @@ namespace UnitTestProject
 	[TestClass]
 	public class sym_rbl_in_trcta_igoff
     {
-        static StatementNode root;                                                      // 函数语句结构的根节点
-        static FileParseInfo c_source_parse_info;
+        static StatementNode _func_root;                                                      // 函数语句结构的根节点
+        static FileParseInfo _source_parse_info;
 
         [ClassInitialize]
         public static void TestClassSetup(TestContext ctx)
         {
 			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
 			string function_name = "sym_rbl_in_trcta_igoff";
-			c_source_parse_info = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
+			_source_parse_info = Common.UnitTest_GetSourceFileStructure(source_name, function_name, ref _func_root);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -25,10 +25,10 @@ namespace UnitTestProject
         {
             // 函数语句分析: 分析入出力
             //CCodeAnalyser.FunctionStatementsAnalysis(root, c_file_result);
-            Assert.AreEqual(3, root.childList.Count);
-            Assert.AreEqual(StatementNodeType.Simple, root.childList[0].Type);
-            Assert.AreEqual(StatementNodeType.Simple, root.childList[1].Type);
-            Assert.AreEqual(StatementNodeType.Simple, root.childList[2].Type);
+            Assert.AreEqual(3, _func_root.childList.Count);
+            Assert.AreEqual(StatementNodeType.Simple, _func_root.childList[0].Type);
+            Assert.AreEqual(StatementNodeType.Simple, _func_root.childList[1].Type);
+            Assert.AreEqual(StatementNodeType.Simple, _func_root.childList[2].Type);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -38,10 +38,10 @@ namespace UnitTestProject
 			FuncAnalysisContext analysisContext = new FuncAnalysisContext();
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, ctx);
 
-			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[0].Scope);
-			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
-			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
+			List<string> codeList = _source_parse_info.CodeList;
+			string statementStr = StatementAnalysis.GetStatementStr(codeList, _func_root.childList[0].Scope);
+			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, _source_parse_info);
+			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, _source_parse_info, analysisContext);
 
             Assert.AreEqual(2, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
@@ -52,7 +52,7 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_1_2()
         {
 			FuncAnalysisContext analysisContext = new FuncAnalysisContext();
-			StatementAnalysis.StatementAnalyze(root.childList[0], c_source_parse_info, analysisContext);
+			StatementAnalysis.StatementAnalyze(_func_root.childList[0], _source_parse_info, analysisContext);
 
 			Assert.AreEqual(1, analysisContext.LocalVarList.Count);
 			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_1", analysisContext.LocalVarList[0].Type.Name);
@@ -63,12 +63,12 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_2()
         {
 			FuncAnalysisContext analysisContext = new FuncAnalysisContext();
-			StatementAnalysis.StatementAnalyze(root.childList[0], c_source_parse_info, analysisContext);
+			StatementAnalysis.StatementAnalyze(_func_root.childList[0], _source_parse_info, analysisContext);
 
-			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[1].Scope);
-			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
-			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
+			List<string> codeList = _source_parse_info.CodeList;
+			string statementStr = StatementAnalysis.GetStatementStr(codeList, _func_root.childList[1].Scope);
+			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, _source_parse_info);
+			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, _source_parse_info, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -82,13 +82,13 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_3()
         {
 			FuncAnalysisContext analysisContext = new FuncAnalysisContext();
-			StatementAnalysis.StatementAnalyze(root.childList[0], c_source_parse_info, analysisContext);
-			StatementAnalysis.StatementAnalyze(root.childList[1], c_source_parse_info, analysisContext);
+			StatementAnalysis.StatementAnalyze(_func_root.childList[0], _source_parse_info, analysisContext);
+			StatementAnalysis.StatementAnalyze(_func_root.childList[1], _source_parse_info, analysisContext);
 
-			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = StatementAnalysis.GetStatementStr(codeList, root.childList[2].Scope);
-			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, c_source_parse_info);
-			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
+			List<string> codeList = _source_parse_info.CodeList;
+			string statementStr = StatementAnalysis.GetStatementStr(codeList, _func_root.childList[2].Scope);
+			List<StatementComponent> componentList = StatementAnalysis.GetComponents(statementStr, _source_parse_info);
+			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, _source_parse_info, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.GlobalVariable, meaningGroupList[0].Type);
@@ -101,7 +101,7 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igoff_IO()
 		{
-			FuncAnalysisContext analysisContext = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_parse_info);
+			FuncAnalysisContext analysisContext = StatementAnalysis.FunctionStatementsAnalysis(_func_root, _source_parse_info);
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
 			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct->value", analysisContext.OutputGlobalList[0].Text);
 		}
@@ -110,35 +110,35 @@ namespace UnitTestProject
 		public void Rte_swc_in_trcta_Global()
 		{
 			// extern CONSTP2CONST(struct Rte_CDS_swc_in_trcta, RTE_CONST, RTE_APPL_CONST) Rte_Inst_swc_in_trcta;
-			Assert.AreEqual(1, c_source_parse_info.GlobalDeclareList.Count);
-			Assert.AreEqual(VAR_TYPE_CATEGORY.POINTER, c_source_parse_info.GlobalDeclareList[0].Category);
-			Assert.AreEqual("extern const struct Rte_CDS_swc_in_trcta * const", c_source_parse_info.GlobalDeclareList[0].Type.GetFullName());
-			Assert.AreEqual("Rte_Inst_swc_in_trcta", c_source_parse_info.GlobalDeclareList[0].Name);
+			Assert.AreEqual(1, _source_parse_info.GlobalDeclareList.Count);
+			Assert.AreEqual(VAR_TYPE_CATEGORY.POINTER, _source_parse_info.GlobalDeclareList[0].VarTypeCategory);
+			Assert.AreEqual("extern const struct Rte_CDS_swc_in_trcta * const", _source_parse_info.GlobalDeclareList[0].Type.GetFullName());
+			Assert.AreEqual("Rte_Inst_swc_in_trcta", _source_parse_info.GlobalDeclareList[0].Name);
 
-			Assert.AreEqual(2, c_source_parse_info.GlobalDefineList.Count);
+			Assert.AreEqual(2, _source_parse_info.GlobalDefineList.Count);
 			// inTblRctasw
-			Assert.AreEqual(VAR_TYPE_CATEGORY.ARRAY, c_source_parse_info.GlobalDefineList[0].Category);
-			Assert.AreEqual("static const unsigned char", c_source_parse_info.GlobalDefineList[0].Type.GetFullName());
-			Assert.AreEqual("inTblRctasw", c_source_parse_info.GlobalDefineList[0].Name);
-			Assert.AreEqual(3, c_source_parse_info.GlobalDefineList[0].MemberList.Count);
-			Assert.AreEqual(0, c_source_parse_info.GlobalDefineList[0].MemberList[0].Value);	// PV_RCTASW_IN_OFF
-			Assert.AreEqual(1, c_source_parse_info.GlobalDefineList[0].MemberList[1].Value);	// PV_RCTASW_IN_ON
-			Assert.AreEqual(2, c_source_parse_info.GlobalDefineList[0].MemberList[2].Value);	// PV_RCTASW_IN_UNFIX
+			Assert.AreEqual(VAR_TYPE_CATEGORY.ARRAY, _source_parse_info.GlobalDefineList[0].VarTypeCategory);
+			Assert.AreEqual("static const unsigned char", _source_parse_info.GlobalDefineList[0].Type.GetFullName());
+			Assert.AreEqual("inTblRctasw", _source_parse_info.GlobalDefineList[0].Name);
+			Assert.AreEqual(3, _source_parse_info.GlobalDefineList[0].MemberList.Count);
+			Assert.AreEqual(0, _source_parse_info.GlobalDefineList[0].MemberList[0].Value);	// PV_RCTASW_IN_OFF
+			Assert.AreEqual(1, _source_parse_info.GlobalDefineList[0].MemberList[1].Value);	// PV_RCTASW_IN_ON
+			Assert.AreEqual(2, _source_parse_info.GlobalDefineList[0].MemberList[2].Value);	// PV_RCTASW_IN_UNFIX
 
 			// rctasw_can_mng_tbl
-			Assert.AreEqual(VAR_TYPE_CATEGORY.USR_DEF_TYPE, c_source_parse_info.GlobalDefineList[1].Category);
-			Assert.AreEqual("rctasw_can_mng_tbl", c_source_parse_info.GlobalDefineList[1].Name);
-			Assert.AreEqual(5, c_source_parse_info.GlobalDefineList[1].MemberList.Count);
-			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[0].Category);
-			Assert.AreEqual(3, c_source_parse_info.GlobalDefineList[1].MemberList[0].Value);					// IN_RCTASW_TBL_SIZE
-			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[1].Category);
-			Assert.AreEqual(0, c_source_parse_info.GlobalDefineList[1].MemberList[1].Value);					// PV_RCTASW_IN_OFF
-			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[2].Category);
-			Assert.AreEqual(0, c_source_parse_info.GlobalDefineList[1].MemberList[2].Value);					// PV_RCTASW_IN_OFF
-			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, c_source_parse_info.GlobalDefineList[1].MemberList[3].Category);
-			Assert.AreEqual(1, c_source_parse_info.GlobalDefineList[1].MemberList[3].Value);					// PV_RCTASW_IN_ON
-			Assert.AreEqual(VAR_TYPE_CATEGORY.POINTER, c_source_parse_info.GlobalDefineList[1].MemberList[4].Category);
-			Assert.AreEqual("&inTblRctasw[0]", c_source_parse_info.GlobalDefineList[1].MemberList[4].Value);	// &inTblRctasw[0]
+			Assert.AreEqual(VAR_TYPE_CATEGORY.USR_DEF_TYPE, _source_parse_info.GlobalDefineList[1].VarTypeCategory);
+			Assert.AreEqual("rctasw_can_mng_tbl", _source_parse_info.GlobalDefineList[1].Name);
+			Assert.AreEqual(5, _source_parse_info.GlobalDefineList[1].MemberList.Count);
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, _source_parse_info.GlobalDefineList[1].MemberList[0].VarTypeCategory);
+			Assert.AreEqual(3, _source_parse_info.GlobalDefineList[1].MemberList[0].Value);					// IN_RCTASW_TBL_SIZE
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, _source_parse_info.GlobalDefineList[1].MemberList[1].VarTypeCategory);
+			Assert.AreEqual(0, _source_parse_info.GlobalDefineList[1].MemberList[1].Value);					// PV_RCTASW_IN_OFF
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, _source_parse_info.GlobalDefineList[1].MemberList[2].VarTypeCategory);
+			Assert.AreEqual(0, _source_parse_info.GlobalDefineList[1].MemberList[2].Value);					// PV_RCTASW_IN_OFF
+			Assert.AreEqual(VAR_TYPE_CATEGORY.BASIC, _source_parse_info.GlobalDefineList[1].MemberList[3].VarTypeCategory);
+			Assert.AreEqual(1, _source_parse_info.GlobalDefineList[1].MemberList[3].Value);					// PV_RCTASW_IN_ON
+			Assert.AreEqual(VAR_TYPE_CATEGORY.POINTER, _source_parse_info.GlobalDefineList[1].MemberList[4].VarTypeCategory);
+			Assert.AreEqual("&inTblRctasw[0]", _source_parse_info.GlobalDefineList[1].MemberList[4].Value);	// &inTblRctasw[0]
 		}
     }
 
@@ -153,7 +153,7 @@ namespace UnitTestProject
 		{
 			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
 			string function_name = "sym_rbl_in_trcta_igon";
-			c_source_parse_info = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
+			c_source_parse_info = Common.UnitTest_GetSourceFileStructure(source_name, function_name, ref root);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -407,7 +407,7 @@ namespace UnitTestProject
 		{
 			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
 			string function_name = "sym_rbl_in_trcta_initReset";
-			c_source_parse_info = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
+			c_source_parse_info = Common.UnitTest_GetSourceFileStructure(source_name, function_name, ref root);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
@@ -430,7 +430,7 @@ namespace UnitTestProject
 		{
 			string source_name = "..\\..\\..\\TestSrc\\swc_in_trcta\\Rte_swc_in_trcta.c";
 			string function_name = "sym_rbl_in_trcta_initWakeup";
-			c_source_parse_info = Common.UnitTest_SourceFileProcess(source_name, function_name, ref root);
+			c_source_parse_info = Common.UnitTest_GetSourceFileStructure(source_name, function_name, ref root);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]

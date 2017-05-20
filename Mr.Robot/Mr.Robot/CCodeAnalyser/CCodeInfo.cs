@@ -67,7 +67,7 @@ namespace Mr.Robot
 	public class FileParseInfo
 	{
 		public string SourceName = string.Empty;
-		public List<string> IncFileList = new List<string>();							// "include"头文件列表
+		public List<string> IncFileList = new List<string>();							// "include"头文件名列表
 		public List<FuncParseInfo> FuncDeclareList = new List<FuncParseInfo>();			// 函数声明列表
 		public List<FuncParseInfo> FunDefineList = new List<FuncParseInfo>();			// 函数定义列表
 		public List<UsrDefTypeInfo> UsrDefTypeList = new List<UsrDefTypeInfo>();		// 用户定义类型列表

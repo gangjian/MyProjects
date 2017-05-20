@@ -9,18 +9,22 @@ namespace UnitTestProject
 {
 	class Common
 	{
-		public static FileParseInfo UnitTest_SourceFileProcess(string full_path, string fun_name, ref StatementNode root_node)
+		public static FileParseInfo UnitTest_GetSourceFileStructure(string full_path, string func_name, ref StatementNode func_root_node)
 		{
 			if (string.IsNullOrEmpty(full_path))
 			{
 				return null;
 			}
+			string folder_path = string.Empty;
 			int idx = full_path.LastIndexOf("\\");
 			if (-1 == idx)
 			{
-				return null;
+				folder_path = System.Environment.CurrentDirectory;
 			}
-			string folder_path = full_path.Remove(idx);
+			else
+			{
+				folder_path = full_path.Remove(idx);
+			}
 
 			List<string> source_list = new List<string>();
 			List<string> header_list = new List<string>();
@@ -35,13 +39,13 @@ namespace UnitTestProject
 			CCodeAnalyser CAnalyser = new CCodeAnalyser(csfList, header_list, ref buffManager);
 			List<FileParseInfo> parseInfoList = CAnalyser.CFileListProc();
 			FileParseInfo code_parse_info;
-			FuncParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, fun_name, parseInfoList, out code_parse_info);
+			FuncParseInfo funInfo = CCodeAnalyser.GetFuncInfoFromParseResult(full_path, func_name, parseInfoList, out code_parse_info);
 
 			// 指定函数语句树结构的分析提取
-			root_node = new StatementNode();
-			root_node.Type = StatementNodeType.Root;
-			root_node.Scope = funInfo.Scope;
-			CCodeAnalyser.GetFuncBlockStruct(code_parse_info, ref root_node);
+			func_root_node = new StatementNode();
+			func_root_node.Type = StatementNodeType.Root;
+			func_root_node.Scope = funInfo.Scope;
+			CCodeAnalyser.GetFuncBlockStruct(code_parse_info, ref func_root_node);
 			return code_parse_info;
 		}
 

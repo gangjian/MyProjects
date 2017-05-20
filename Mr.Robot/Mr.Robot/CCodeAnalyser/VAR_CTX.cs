@@ -15,7 +15,7 @@ namespace Mr.Robot
 
 		public VAR_TYPE Type = new VAR_TYPE();											// 类型名
 
-		public VAR_TYPE_CATEGORY Category = VAR_TYPE_CATEGORY.BASIC;
+		public VAR_TYPE_CATEGORY VarTypeCategory = VAR_TYPE_CATEGORY.BASIC;
 
 		public object Value = null;
 
@@ -182,13 +182,13 @@ namespace Mr.Robot
 					VAR_CTX memberCtx = CreateVarCtx(type_group, memberName, memberInitGroup, parse_info);
 					retVarCtx.MemberList.Add(memberCtx);
 				}
-				retVarCtx.Category = VAR_TYPE_CATEGORY.ARRAY;
+				retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.ARRAY;
 			}
 			else
 			{
 				if (suffixList.Contains("*"))
 				{
-					retVarCtx.Category = VAR_TYPE_CATEGORY.POINTER;
+					retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.POINTER;
 					if (null != init_group)
 					{
 						retVarCtx.Value = init_group.Text;
@@ -198,10 +198,14 @@ namespace Mr.Robot
 				{
 					if (BasicTypeProc.IsBasicTypeName(typeCoreName))
 					{
-						retVarCtx.Category = VAR_TYPE_CATEGORY.BASIC;
+						retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.BASIC;
 						if (null != init_group)
 						{
 							retVarCtx.InitValue(init_group.Text, parse_info);
+						}
+						else
+						{
+							retVarCtx.Value = 0;
 						}
 					}
 					else
@@ -209,7 +213,7 @@ namespace Mr.Robot
 						UsrDefTypeInfo udti = null;
 						if (CommonProcess.IsUsrDefTypeName(typeCoreName, parse_info, out udti))
 						{
-							retVarCtx.Category = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
+							retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
 							retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info, init_group);
 						}
 						else

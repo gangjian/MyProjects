@@ -215,19 +215,6 @@ namespace Mr.Robot
 			this.CAnalyser = new CCodeAnalyser(srcList, this.CHeaderFileList, ref codeBuffManager);
 			this.CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
 			this.CAnalyser.ProcessStart();
-
-			//this.CSourceParseInfoList
-			//					= CAnalyser.CFileListProcess(srcList, CHeaderFileList);
-
-			//lvFunctionList.Enabled = true;
-			//lvVariableList.Enabled = true;
-			//lvBranchList.Enabled = true;
-			//if (0 != lvFileList.SelectedItems.Count
-			//	&& lvFileList.SelectedItems[0].Checked)
-			//{
-			//	labelStatus.Text = lvFileList.SelectedItems[0].Text;
-			//	UpdateFunctionListViewCtrl(lvFileList.SelectedItems[0].Text);
-			//}
         }
 
 		void UpdateAnalyserProgress(object sender, EventArgs args)
