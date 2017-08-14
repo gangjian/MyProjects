@@ -8,7 +8,9 @@ using System.Threading;
 
 namespace Mr.Robot.MacroSwitchAnalyser
 {
-	// Input参数
+	/// <summary>
+	/// 入力参数
+	/// </summary>
 	public class MSA_INPUT_PARA
 	{
 		public List<string> SrcList = null;												// 源文件列表
@@ -27,23 +29,87 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	}
 
 	/// <summary>
+	/// 出力结果
+	/// </summary>
+	public class MSA_OUTPUT_RESULT
+	{
+		public string SourceFileName = string.Empty;
+		public string ProgressStr = string.Empty;
+		public List<string> ResultList = new List<string>();
+
+		public MSA_OUTPUT_RESULT(string src_name, string progress_str, List<string> result_list)
+		{
+			this.SourceFileName = src_name;
+			this.ProgressStr = progress_str;
+			this.ResultList = result_list;
+		}
+	}
+
+	/// <summary>
+	/// 统计信息
+	/// </summary>
+	public class MSA_STATISTICS_INFO
+	{
+		int _totalCount = 0;
+		public int TotalCount
+		{
+			get { return _totalCount; }
+			set { _totalCount = value; }
+		}
+
+		int _successCount = 0;
+		public int SuccessCount
+		{
+			get { return _successCount; }
+			set { _successCount = value; }
+		}
+
+		int _failedCount = 0;
+		public int FailedCount
+		{
+			get { return _failedCount; }
+			set { _failedCount = value; }
+		}
+
+		int _notFoundCount = 0;
+		public int NotFoundCount
+		{
+			get { return _notFoundCount; }
+			set { _notFoundCount = value; }
+		}
+
+		public string PrintOut()
+		{
+			return "Complete! Total:" + this.TotalCount.ToString() + ", Failed:" + this.FailedCount.ToString()
+					+ ", NotFound:" + this.NotFoundCount.ToString() + ", Success:" + this.SuccessCount.ToString();
+		}
+	}
+
+	/// <summary>
 	/// 源代码中的宏开关(On/Off,有效/无效,定义/未定义,define/undefine)分析
 	/// </summary>
     public class MACRO_SWITCH_ANALYSER
     {
 		MSA_INPUT_PARA m_inputPara = null;
-		internal MSA_INPUT_PARA InputPara
+		MSA_INPUT_PARA InputPara
 		{
 			get { return m_inputPara; }
 			set { m_inputPara = value; }
 		}
 
-		int TotalCount = 0;
-		int SuccessCount = 0;
-		int FailedCount = 0;
-		int NotFoundCount = 0;
+		MSA_STATISTICS_INFO m_statisticsInfo = new MSA_STATISTICS_INFO();
+		public MSA_STATISTICS_INFO StatisticsInfo
+		{
+			get { return m_statisticsInfo; }
+			set { m_statisticsInfo = value; }
+		}
 
-		List<string> ResultList = new List<string>();
+		private List<MSA_OUTPUT_RESULT> m_outputResultList = new List<MSA_OUTPUT_RESULT>();
+		public List<MSA_OUTPUT_RESULT> OutputResultList
+		{
+			get { return m_outputResultList; }
+			set { m_outputResultList = value; }
+		}
 
 		public delegate void ReportProgressDel(string progress_str, List<string> result_list);
 
@@ -75,10 +141,9 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		void ProcMain()
 		{
-			this.TotalCount = this.InputPara.SrcList.Count;
-			this.SuccessCount = 0;
-			this.FailedCount = 0;
-			this.NotFoundCount = 0;
+			this.OutputResultList = new List<MSA_OUTPUT_RESULT>();
+			this.StatisticsInfo = new MSA_STATISTICS_INFO();
+			this.StatisticsInfo.TotalCount = this.InputPara.SrcList.Count;
 			int count = 0;
 
 			// 处理.mtpj文件
@@ -102,7 +167,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				}
 			}
 
-			CCodeAnalyser.CodeBufferManager codeBufferList = new CCodeAnalyser.CodeBufferManager();
+			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
 
 			// 处理源文件
 			foreach (string src_name in this.InputPara.SrcList)
@@ -110,13 +175,16 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				count++;
 				string commentStr;
 				List<string> resultList = SrcProc(src_name, this.InputPara.HdList, out commentStr, mtpjInfoList, mkInfoList, ref codeBufferList);
+				string progressStr = src_name + " ==> " + commentStr + " : " + count.ToString() + "/" + this.StatisticsInfo.TotalCount.ToString();
 				if (null != resultList)
 				{
-					//this.ResultList.AddRange(resultList);
+					lock (this.OutputResultList)
+					{
+						this.OutputResultList.Add(new MSA_OUTPUT_RESULT(src_name, progressStr, resultList));
+					}
 				}
 				if (null != this.ReportProgress)
 				{
-					string progressStr = src_name + " ==> " + commentStr + " : " + count.ToString() + "/" + this.TotalCount.ToString();
 					this.ReportProgress(progressStr, resultList);
 					if (null != resultList && 0 != resultList.Count)
 					{
@@ -124,35 +192,34 @@ namespace Mr.Robot.MacroSwitchAnalyser
 					}
 				}
 			}
-			System.Diagnostics.Trace.WriteLine("Complete! Total:" + this.TotalCount.ToString() + ", Failed:"
-					+ this.FailedCount.ToString() + ", NotFound:" + this.NotFoundCount.ToString() + ", Success:" + this.SuccessCount.ToString());
+			System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
 		}
 
-		List<string> SrcProc(string src_name,
-							List<string> header_list,
-							out string comment_str,
-							List<MTPJ_FILE_INFO> mtpj_info_list,
-							List<MK_FILE_INFO> mk_info_list,
-							ref CCodeAnalyser.CodeBufferManager code_buf_list)
+		List<string> SrcProc(	string src_name,
+								List<string> header_list,
+								out string comment_str,
+								List<MTPJ_FILE_INFO> mtpj_info_list,
+								List<MK_FILE_INFO> mk_info_list,
+								ref C_CODE_ANALYSER.CODE_BUFFER_MANAGER code_buf_list)
         {
 			comment_str = string.Empty;
-            List<string> codeList = CCodeAnalyser.RemoveComments(src_name);
+            List<string> codeList = C_CODE_ANALYSER.RemoveComments(src_name);
 			List<MacroSwitchExpInfo> expInfoList = GetMacroExpList(codeList);
             if (0 == expInfoList.Count)
             {
 				comment_str = "NoT Found!";
-				this.NotFoundCount += 1;
+				this.StatisticsInfo.NotFoundCount += 1;
                 return null;
             }
 			List<string> srcList = new List<string>();
 			srcList.Add(src_name);
-			CCodeAnalyser cAnalyser = new CCodeAnalyser(srcList, header_list, ref code_buf_list);
+			C_CODE_ANALYSER cAnalyser = new C_CODE_ANALYSER(srcList, header_list, ref code_buf_list);
 			cAnalyser.MacroSwichAnalyserFlag = true;
-			List<FileParseInfo> parseInfoList = cAnalyser.CFileListProc();
+			List<FILE_PARSE_INFO> parseInfoList = cAnalyser.CFileListProc();
 			if (null == parseInfoList || 0 == parseInfoList.Count)
 			{
 				comment_str = "Failed!";
-				this.FailedCount += 1;
+				this.StatisticsInfo.FailedCount += 1;
 				return null;
 			}
 			List<string> resultList = new List<string>();
@@ -163,7 +230,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, mtpj_info_list, mk_info_list);
 			}
 			comment_str = "Success!";
-			this.SuccessCount += 1;
+			this.StatisticsInfo.SuccessCount += 1;
 			return resultList;
         }
 

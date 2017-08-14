@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Mr.Robot
 {
 	// 条件编译处理情报
-	class ConditionalCompilationInfo
+	class CONDITIONAL_COMPILATION_INFO
 	{
 		public string Exp = string.Empty;
 		public bool UnidentifiedFlag = false;
@@ -17,18 +17,18 @@ namespace Mr.Robot
 	}
 
 	// 文件当中某个内容的位置(行列号)
-	public class CodePosition
+	public class CODE_POSITION
 	{
 		public int RowNum = 0;    // 行号
 		public int ColNum = 0;    // 列号
 
-		public CodePosition(int r, int c)
+		public CODE_POSITION(int r, int c)
 		{
 			this.RowNum = r;
 			this.ColNum = c;
 		}
 
-		public CodePosition(CodePosition nfp)
+		public CODE_POSITION(CODE_POSITION nfp)
 		{
 			if (null != nfp)
 			{
@@ -38,15 +38,15 @@ namespace Mr.Robot
 		}
 	}
 
-	public class CodeScope
+	public class CODE_SCOPE
 	{
-		public CodePosition Start = new CodePosition(-1, -1);
-		public CodePosition End = new CodePosition(-1, -1);
+		public CODE_POSITION Start = new CODE_POSITION(-1, -1);
+		public CODE_POSITION End = new CODE_POSITION(-1, -1);
 
-		public CodeScope(CodePosition start_pos, CodePosition end_pos)
+		public CODE_SCOPE(CODE_POSITION start_pos, CODE_POSITION end_pos)
 		{
-			this.Start = new CodePosition(start_pos);
-			this.End = new CodePosition(end_pos);
+			this.Start = new CODE_POSITION(start_pos);
+			this.End = new CODE_POSITION(end_pos);
 		}
 	}
 
@@ -64,33 +64,33 @@ namespace Mr.Robot
 	/// <summary>
 	/// C源代码文件解析结果情报类
 	/// </summary>
-	public class FileParseInfo
+	public class FILE_PARSE_INFO
 	{
 		public string SourceName = string.Empty;
 		public List<string> IncFileList = new List<string>();							// "include"头文件名列表
-		public List<FuncParseInfo> FuncDeclareList = new List<FuncParseInfo>();			// 函数声明列表
-		public List<FuncParseInfo> FunDefineList = new List<FuncParseInfo>();			// 函数定义列表
-		public List<UsrDefTypeInfo> UsrDefTypeList = new List<UsrDefTypeInfo>();		// 用户定义类型列表
-		public List<VAR_CTX> GlobalDeclareList = new List<VAR_CTX>();					// 全局量声明列表
-		public List<VAR_CTX> GlobalDefineList = new List<VAR_CTX>();					// 全局量定义列表
-		public List<MacroDefineInfo> MacroDefineList = new List<MacroDefineInfo>();		// 宏定义列表
-		public List<TypeDefineInfo> TypeDefineList = new List<TypeDefineInfo>();		// typedef类型定义列表
+		public List<FUNCTION_PARSE_INFO> FuncDeclareList = new List<FUNCTION_PARSE_INFO>();			// 函数声明列表
+		public List<FUNCTION_PARSE_INFO> FunDefineList = new List<FUNCTION_PARSE_INFO>();			// 函数定义列表
+		public List<USER_DEFINE_TYPE_INFO> UsrDefTypeList = new List<USER_DEFINE_TYPE_INFO>();		// 用户定义类型列表
+		public List<VAR_CONTEXT> GlobalDeclareList = new List<VAR_CONTEXT>();					// 全局量声明列表
+		public List<VAR_CONTEXT> GlobalDefineList = new List<VAR_CONTEXT>();					// 全局量定义列表
+		public List<MACRO_DEFINE_INFO> MacroDefineList = new List<MACRO_DEFINE_INFO>();		// 宏定义列表
+		public List<TYPE_DEFINE_INFO> TypeDefineList = new List<TYPE_DEFINE_INFO>();		// typedef类型定义列表
 
 		public List<string> CodeList = new List<string>();								// 解析后(去除注释, 宏展开等)的代码行内容列表
 
 		// MT预编译宏开关值提取追加
 		public List<string> MacroSwitchList = new List<string>();
 
-		public FileParseInfo(string fileName)
+		public FILE_PARSE_INFO(string fileName)
 		{
 			this.SourceName = fileName;
 		}
 
-		public UsrDefTypeInfo FindUsrDefTypeInfo(string type_name, string category_name)
+		public USER_DEFINE_TYPE_INFO FindUsrDefTypeInfo(string type_name, string category_name)
 		{
-			foreach (UsrDefTypeInfo udti in this.UsrDefTypeList)
+			foreach (USER_DEFINE_TYPE_INFO udti in this.UsrDefTypeList)
 			{
-				foreach (CodeIdentifier nameIdtf in udti.NameList)
+				foreach (CODE_IDENTIFIER nameIdtf in udti.NameList)
 				{
 					if (nameIdtf.Text.Equals(type_name))
 					{
@@ -111,9 +111,9 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public TypeDefineInfo FindTypeDefInfo(string type_name)
+		public TYPE_DEFINE_INFO FindTypeDefInfo(string type_name)
 		{
-			foreach (TypeDefineInfo tdi in this.TypeDefineList)
+			foreach (TYPE_DEFINE_INFO tdi in this.TypeDefineList)
 			{
 				if (tdi.NewName.Equals(type_name))
 				{
@@ -128,7 +128,7 @@ namespace Mr.Robot
 		/// </summary>
 		public string GetOriginalTypeName(string type_name)
 		{
-			TypeDefineInfo tdi = null;													// 如果经过typedef重命名的话, 找出原来的类型名
+			TYPE_DEFINE_INFO tdi = null;													// 如果经过typedef重命名的话, 找出原来的类型名
 			while (null != (tdi = this.FindTypeDefInfo(type_name)))
 			{
 				type_name = tdi.OldName;
@@ -140,9 +140,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据函数名查找函数的解析结果
 		/// </summary>
-		public FuncParseInfo FindFuncParseInfo(string fun_name)
+		public FUNCTION_PARSE_INFO FindFuncParseInfo(string fun_name)
 		{
-			FuncParseInfo retFuncInfo = null;
+			FUNCTION_PARSE_INFO retFuncInfo = null;
 			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, this.FuncDeclareList)))
 			{
 				return retFuncInfo;
@@ -154,9 +154,9 @@ namespace Mr.Robot
 			return null;																// 没找到
 		}
 
-		static FuncParseInfo SearchFuncStructInfoList(string fun_name, List<FuncParseInfo> funInfoList)
+		static FUNCTION_PARSE_INFO SearchFuncStructInfoList(string fun_name, List<FUNCTION_PARSE_INFO> funInfoList)
 		{
-			foreach (FuncParseInfo fsi in funInfoList)
+			foreach (FUNCTION_PARSE_INFO fsi in funInfoList)
 			{
 				if (fsi.Name.Equals(fun_name))
 				{
@@ -170,9 +170,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据变量名查找全局变量
 		/// </summary>
-		public VAR_CTX FindGlobalVarInfoByName(string var_name)
+		public VAR_CONTEXT FindGlobalVarInfoByName(string var_name)
 		{
-			VAR_CTX retVarCtx = null;
+			VAR_CONTEXT retVarCtx = null;
 			if (null != (retVarCtx = SearchVariableList(var_name, this.GlobalDeclareList)))
 			{
 				return retVarCtx;
@@ -187,9 +187,9 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CTX SearchVariableList(string var_name, List<VAR_CTX> var_list)
+		static VAR_CONTEXT SearchVariableList(string var_name, List<VAR_CONTEXT> var_list)
 		{
-			foreach (VAR_CTX vi in var_list)
+			foreach (VAR_CONTEXT vi in var_list)
 			{
 				if (vi.Name.Equals(var_name))
 				{
@@ -199,10 +199,10 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public MacroDefineInfo FindMacroDefInfo(string macro_name)
+		public MACRO_DEFINE_INFO FindMacroDefInfo(string macro_name)
 		{
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(macro_name));
-			foreach (MacroDefineInfo mdi in this.MacroDefineList)
+			foreach (MACRO_DEFINE_INFO mdi in this.MacroDefineList)
 			{
 				if (mdi.Name == macro_name)
 				{
@@ -218,28 +218,28 @@ namespace Mr.Robot
 	/// <summary>
 	/// C函数的结构情报
 	/// </summary>
-	public class FuncParseInfo
+	public class FUNCTION_PARSE_INFO
 	{
 		public string Name = string.Empty;												// 函数名称
-		public List<CodeIdentifier> Qualifiers = new List<CodeIdentifier>();	        // 修饰符列表
+		public List<CODE_IDENTIFIER> Qualifiers = new List<CODE_IDENTIFIER>();	        // 修饰符列表
 		public List<string> ParaList = new List<string>();						        // 参数列表
 
-		public CodeScope Scope = null;													// 函数起止范围
+		public CODE_SCOPE Scope = null;													// 函数起止范围
 	}
 
 	/// <summary>
 	/// 用户定义类型情报
 	/// </summary>
-	public class UsrDefTypeInfo
+	public class USER_DEFINE_TYPE_INFO
 	{
 		public string Category = string.Empty;											// "struct, enum, union"
-		public List<CodeIdentifier> NameList = new List<CodeIdentifier>();		        // 可能有多个名(逗号分割)
+		public List<CODE_IDENTIFIER> NameList = new List<CODE_IDENTIFIER>();		    // 可能有多个名(逗号分割)
 		public List<string> MemberList = new List<string>();
 
-		public CodeScope Scope = null;
+		public CODE_SCOPE Scope = null;
 	}
 
-	public class MacroDefineInfo
+	public class MACRO_DEFINE_INFO
 	{
 		public string Name = string.Empty;												// 宏名
 		public List<string> ParaList = new List<string>();							    // 参数列表
@@ -248,14 +248,14 @@ namespace Mr.Robot
 		public string FileName = string.Empty;
 		public int LineNum = -1;
 
-		public MacroDefineInfo(string file_name, int line_num)
+		public MACRO_DEFINE_INFO(string file_name, int line_num)
 		{
 			this.FileName = file_name;
 			this.LineNum = line_num;
 		}
 	}
 
-	public class TypeDefineInfo
+	public class TYPE_DEFINE_INFO
 	{
 		public string OldName = string.Empty;
 		public string NewName = string.Empty;

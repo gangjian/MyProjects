@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Mr.Robot
 {
-	public class CommonProcess
+	public class COMN_PROC
 	{
 		/// <summary>
         /// 从(多行字符)当前位置取得下一个标识符
@@ -16,11 +16,11 @@ namespace Mr.Robot
 		/// <param varName="lineIdx"></param>
 		/// <param varName="startIdx"></param>
 		/// <returns></returns>
-        public static CodeIdentifier GetNextIdentifier(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
+        public static CODE_IDENTIFIER GetNextIdentifier(List<string> codeList, ref CODE_POSITION searchPos, out CODE_POSITION foundPos)
 		{
 			int lineIdx = searchPos.RowNum;
 			int startIdx = searchPos.ColNum;
-			foundPos = new CodePosition(searchPos);
+			foundPos = new CODE_POSITION(searchPos);
 			System.Diagnostics.Trace.Assert(lineIdx >= 0);
 			if (lineIdx >= codeList.Count)
 			{
@@ -128,7 +128,7 @@ namespace Mr.Robot
 		RET_IDF:
 			if (-1 != s_pos && -1 != e_pos)
 			{
-				foundPos = new CodePosition(lineIdx, s_pos);
+				foundPos = new CODE_POSITION(lineIdx, s_pos);
 				if (curIdx >= curLine.Length)
 				{
 					lineIdx++;
@@ -137,7 +137,7 @@ namespace Mr.Robot
 				startIdx = curIdx;
 				searchPos.RowNum = lineIdx;
 				searchPos.ColNum = startIdx;
-				CodeIdentifier retId = new CodeIdentifier(curLine.Substring(s_pos, e_pos - s_pos + 1), foundPos);
+				CODE_IDENTIFIER retId = new CODE_IDENTIFIER(curLine.Substring(s_pos, e_pos - s_pos + 1), foundPos);
 				return retId;
 			}
 			else
@@ -276,7 +276,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从当前位置开始, 找到下一个指定符号出现的位置
 		/// </summary>
-        public static CodePosition FindNextSymbol(List<string> codeList, CodePosition searchPos, Char symbol)
+        public static CODE_POSITION FindNextSymbol(List<string> codeList, CODE_POSITION searchPos, Char symbol)
 		{
 			string curLine = "";
 			int lineIdx = searchPos.RowNum;
@@ -329,7 +329,7 @@ namespace Mr.Robot
 					if (symbol == curChar && !quoteStart)
 					{
 						// 找到了
-						CodePosition fpos = new CodePosition(lineIdx, curIdx);
+						CODE_POSITION fpos = new CODE_POSITION(lineIdx, curIdx);
 						return fpos;
 					}
 				}
@@ -349,7 +349,7 @@ namespace Mr.Robot
 		/// <param varName="searchPos"></param>
 		/// <param varName="rightSymbol"></param>
 		/// <returns></returns>
-		public static CodePosition FindNextMatchSymbol(FileParseInfo parse_info, ref CodePosition searchPos, Char rightSymbol)
+		public static CODE_POSITION FindNextMatchSymbol(FILE_PARSE_INFO parse_info, ref CODE_POSITION searchPos, Char rightSymbol)
 		{
 			Char leftSymbol;
 			if ('}' == rightSymbol)
@@ -367,12 +367,12 @@ namespace Mr.Robot
 			}
 
 			int matchCount = 1;
-			CodePosition foundPos = null;
+			CODE_POSITION foundPos = null;
             bool quoteStart = false;
             string quoteStr = string.Empty;
             while (true)
 			{
-				CodeIdentifier nextIdtf = GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+				CODE_IDENTIFIER nextIdtf = GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 				if (null == nextIdtf)
 				{
 					break;
@@ -383,7 +383,7 @@ namespace Mr.Robot
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
-						searchPos = new CodePosition(foundPos);
+						searchPos = new CODE_POSITION(foundPos);
 						continue;
 					}
 				}
@@ -436,25 +436,25 @@ namespace Mr.Robot
 		/// 宏检测与宏展开
 		/// </summary>
 		public static bool MacroDetectAndExpand_File(string idStr,
-													 CodePosition foundPos,
-													 FileParseInfo parse_info)
+													 CODE_POSITION foundPos,
+													 FILE_PARSE_INFO parse_info)
 		{
 			// 遍历查找宏名
-			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
+			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
 			if (null != mdi
 				&& !string.IsNullOrEmpty(mdi.Value))
 			{
 				string macroName = mdi.Name;
-				CodePosition macroPos = new CodePosition(foundPos);
-				CodePosition removeEndPos = new CodePosition(macroPos.RowNum, macroPos.ColNum + macroName.Length - 1);
+				CODE_POSITION macroPos = new CODE_POSITION(foundPos);
+				CODE_POSITION removeEndPos = new CODE_POSITION(macroPos.RowNum, macroPos.ColNum + macroName.Length - 1);
 				int lineIdx = foundPos.RowNum;
 				string replaceStr = mdi.Value;
 				// 判断有无带参数
 				if (0 != mdi.ParaList.Count)
 				{
 					// 取得实参
-					CodePosition sPos = new CodePosition(foundPos.RowNum, foundPos.ColNum + idStr.Length);
-					CodeIdentifier nextIdtf = GetNextIdentifier(parse_info.CodeList, ref sPos, out foundPos);
+					CODE_POSITION sPos = new CODE_POSITION(foundPos.RowNum, foundPos.ColNum + idStr.Length);
+					CODE_IDENTIFIER nextIdtf = GetNextIdentifier(parse_info.CodeList, ref sPos, out foundPos);
 					if ("(" != nextIdtf.Text)
 					{
 						//ErrReport();
@@ -463,14 +463,14 @@ namespace Mr.Robot
 						// ?: 宏与结构体成员重名, 如何处理...
 						return false;
 					}
-					CodePosition leftBracket = foundPos;
+					CODE_POSITION leftBracket = foundPos;
 					foundPos = FindNextMatchSymbol(parse_info, ref sPos, ')');
 					if (null == foundPos)
 					{
 						ErrReport();
 						return false;
 					}
-					removeEndPos = new CodePosition(foundPos);
+					removeEndPos = new CODE_POSITION(foundPos);
 					nextIdtf.Text = LineStringCat(parse_info.CodeList, macroPos, foundPos);
 					macroName = nextIdtf.Text;
 					List<string> realParas = GetParaList(parse_info.CodeList, leftBracket, foundPos);
@@ -563,7 +563,7 @@ namespace Mr.Robot
 			return input_str;
 		}
 
-		static void RemoveCodeContents(List<string> code_list, CodePosition start_pos, CodePosition end_pos)
+		static void RemoveCodeContents(List<string> code_list, CODE_POSITION start_pos, CODE_POSITION end_pos)
 		{
 			for (int i = start_pos.RowNum; i <= end_pos.RowNum; i++)
 			{
@@ -597,7 +597,7 @@ namespace Mr.Robot
 		/// 取得参数列表
 		/// </summary>
 		/// <returns></returns>
-		public static List<string> GetParaList(List<string> codeList, CodePosition bracketLeft, CodePosition bracketRight)
+		public static List<string> GetParaList(List<string> codeList, CODE_POSITION bracketLeft, CODE_POSITION bracketRight)
 		{
 			List<string> retParaList = new List<string>();
 			string catStr = LineStringCat(codeList, bracketLeft, bracketRight);
@@ -633,7 +633,7 @@ namespace Mr.Robot
         /// <summary>
         /// 将起止位置之间的内容连接成一个字符串(去掉换行)
         /// </summary>
-		public static string LineStringCat(List<string> codeList, CodePosition startPos, CodePosition endPos)
+		public static string LineStringCat(List<string> codeList, CODE_POSITION startPos, CODE_POSITION endPos)
 		{
 			int startRow = startPos.RowNum;
 			int startCol = startPos.ColNum;
@@ -653,9 +653,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个表达式
 		/// </summary>
-		public static string GetPrecompileExpressionStr(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
+		public static string GetPrecompileExpressionStr(List<string> codeList, ref CODE_POSITION searchPos, out CODE_POSITION foundPos)
 		{
-			foundPos = new CodePosition(searchPos);
+			foundPos = new CODE_POSITION(searchPos);
 
 			string lineStr = codeList[searchPos.RowNum];
 			string exprStr = lineStr.Substring(searchPos.ColNum);
@@ -677,9 +677,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断表达式是否已定义(#if defined)
 		/// </summary>
-        public static bool JudgeExpressionDefined(string exp, FileParseInfo parse_info)
+        public static bool JudgeExpressionDefined(string exp, FILE_PARSE_INFO parse_info)
 		{
-			System.Diagnostics.Trace.Assert(CommonProcess.IsStandardIdentifier(exp));
+			System.Diagnostics.Trace.Assert(COMN_PROC.IsStandardIdentifier(exp));
 			if (null != parse_info.FindMacroDefInfo(exp))
 			{
 				return true;
@@ -693,12 +693,12 @@ namespace Mr.Robot
         /// <summary>
         /// 查找下一个指定的标识符
         /// </summary>
-        public static CodePosition FindNextSpecIdentifier(string idStr, List<string> codeList, CodePosition searchPos)
+        public static CODE_POSITION FindNextSpecIdentifier(string idStr, List<string> codeList, CODE_POSITION searchPos)
 		{
-			CodePosition foundPos = null;
+			CODE_POSITION foundPos = null;
 			while (true)
 			{
-				CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				CODE_IDENTIFIER nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
 				if (null == nextIdtf)
 				{
 					break;
@@ -714,9 +714,9 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的下一位置
         /// </summary>
-        public static CodePosition PositionMoveNext(List<string> codeList, CodePosition thisPos)
+        public static CODE_POSITION PositionMoveNext(List<string> codeList, CODE_POSITION thisPos)
 		{
-			CodePosition nextPos = new CodePosition(thisPos);
+			CODE_POSITION nextPos = new CODE_POSITION(thisPos);
             if (thisPos.ColNum == codeList[thisPos.RowNum].Length - 1)
 			{
 				// 已经是最后一列了, 就移到下一行开头
@@ -737,9 +737,9 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的前一位置
         /// </summary>
-        public static CodePosition PositionMovePrevious(List<string> codeList, CodePosition thisPos)
+        public static CODE_POSITION PositionMovePrevious(List<string> codeList, CODE_POSITION thisPos)
         {
-            CodePosition prevPos = new CodePosition(thisPos);
+            CODE_POSITION prevPos = new CODE_POSITION(thisPos);
             if (0 == thisPos.ColNum)
             {
                 // 已经是第一列了, 就移到上一行末尾
@@ -761,7 +761,7 @@ namespace Mr.Robot
 		/// 比较两个位置 0:一致; 1:前者大(靠后); -1:后者大(靠后);
 		/// </summary>
 		/// <returns></returns>
-        public static int PositionCompare(CodePosition p1, CodePosition p2)
+        public static int PositionCompare(CODE_POSITION p1, CODE_POSITION p2)
 		{
 			if (p1.RowNum > p2.RowNum)
 			{
@@ -824,9 +824,9 @@ namespace Mr.Robot
             System.Diagnostics.Trace.Assert(false);
         }
 
-		public static string FindTypeDefName(string type_name, FileParseInfo fpi)
+		public static string FindTypeDefName(string type_name, FILE_PARSE_INFO fpi)
 		{
-			foreach (TypeDefineInfo tdi in fpi.TypeDefineList)
+			foreach (TYPE_DEFINE_INFO tdi in fpi.TypeDefineList)
 			{
 				if (tdi.NewName.Equals(type_name))
 				{
@@ -836,7 +836,7 @@ namespace Mr.Robot
 			return string.Empty;
 		}
 
-		public static bool IsUsrDefTypeName(string type_name, FileParseInfo parse_info, out UsrDefTypeInfo usr_def_type_info)
+		public static bool IsUsrDefTypeName(string type_name, FILE_PARSE_INFO parse_info, out USER_DEFINE_TYPE_INFO usr_def_type_info)
 		{
 			char[] sep = new char[] {' ', '\t'};
 			string[] arr = type_name.Split(sep);
@@ -870,9 +870,9 @@ namespace Mr.Robot
 		/// 取得括号括起来的一组操作数
 		/// </summary>
 		/// <returns></returns>
-		public static List<StatementComponent> GetBraceComponents(List<StatementComponent> componentList, ref int idx)
+		public static List<STATEMENT_COMPONENT> GetBraceComponents(List<STATEMENT_COMPONENT> componentList, ref int idx)
 		{
-			StatementComponent cpnt = componentList[idx];
+			STATEMENT_COMPONENT cpnt = componentList[idx];
 			string matchOp = string.Empty;
 			// 
 			if ("(" == cpnt.Text)
@@ -891,7 +891,7 @@ namespace Mr.Robot
 			{
 				return null;
 			}
-			List<StatementComponent> retList = new List<StatementComponent>();
+			List<STATEMENT_COMPONENT> retList = new List<STATEMENT_COMPONENT>();
 			retList.Add(cpnt);
 			int matchCount = 1;
 			for (int j = idx + 1; j < componentList.Count; j++)
@@ -915,15 +915,15 @@ namespace Mr.Robot
 		}
 	}
 
-	public class CodeIdentifier
+	public class CODE_IDENTIFIER
 	{
 		public string Text = string.Empty;
-		public CodePosition Position = null;
+		public CODE_POSITION Position = null;
 
-		public CodeIdentifier(string text, CodePosition pos)
+		public CODE_IDENTIFIER(string text, CODE_POSITION pos)
 		{
 			this.Text = text;
-			this.Position = new CodePosition(pos);
+			this.Position = new CODE_POSITION(pos);
 		}
 	}
 }

@@ -9,7 +9,7 @@ namespace Mr.Robot
 	/// <summary>
 	/// 变量上下文
 	/// </summary>
-	public class VAR_CTX
+	public class VAR_CONTEXT
 	{
 		public string Name = string.Empty;												// 变量名
 
@@ -25,9 +25,9 @@ namespace Mr.Robot
 
 		public string CalledFunctionReadOut = string.Empty;								// 可能被函数调用的读出值赋值(函数名)
 
-		public List<VAR_CTX> MemberList = new List<VAR_CTX>();							// 成员列表(下一层级)
+		public List<VAR_CONTEXT> MemberList = new List<VAR_CONTEXT>();							// 成员列表(下一层级)
 
-		public VAR_CTX(string type_name, string var_name)								// 构造方法
+		public VAR_CONTEXT(string type_name, string var_name)								// 构造方法
 		{
 			Trace.Assert(!string.IsNullOrEmpty(type_name));
 			Trace.Assert(!string.IsNullOrEmpty(var_name));
@@ -35,7 +35,7 @@ namespace Mr.Robot
 			this.Name = var_name;
 		}
 
-		public void InitValue(string init_str, FileParseInfo parse_info)
+		public void InitValue(string init_str, FILE_PARSE_INFO parse_info)
 		{
 			this.Value = ExpCalc.GetLogicalExpressionValue(init_str, parse_info);
 		}
@@ -82,9 +82,9 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="func_ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtxByName(string var_name, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
+		static public VAR_CONTEXT GetVarCtxByName(string var_name, FILE_PARSE_INFO parse_info, FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
-			VAR_CTX var_ctx = null;
+			VAR_CONTEXT var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, func_ctx)))
 			{
 				// 如果在当前的各个变量上下文列表中找到, 说明变量上下文已经创建, 直接返回
@@ -104,13 +104,13 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CTX SearchVarCtxList(string var_name, FuncAnalysisContext func_ctx)
+		static VAR_CONTEXT SearchVarCtxList(string var_name, FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
 			if (null == func_ctx)
 			{
 				return null;
 			}
-			VAR_CTX var_ctx = null;
+			VAR_CONTEXT var_ctx = null;
 			if ((null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.ParameterList)))			// (1)参数?
 				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.LocalVarList)))		// (2)临时变量?
 				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.OtherGlobalList)))
@@ -124,9 +124,9 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CTX FindVarInVarCtxList(string var_name, List<VAR_CTX> ctx_list)
+		static VAR_CONTEXT FindVarInVarCtxList(string var_name, List<VAR_CONTEXT> ctx_list)
 		{
-			foreach (VAR_CTX ctx in ctx_list)
+			foreach (VAR_CONTEXT ctx in ctx_list)
 			{
 				if (ctx.Name.Equals(var_name))
 				{
@@ -136,10 +136,10 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static VAR_CTX CreateVarCtx(	MeaningGroup type_group,
+		public static VAR_CONTEXT CreateVarCtx(	MEANING_GROUP type_group,
 											string var_name,
-											MeaningGroup init_group,
-											FileParseInfo parse_info)
+											MEANING_GROUP init_group,
+											FILE_PARSE_INFO parse_info)
 		{
 			List<string> prefixList = new List<string>();
 			List<string> suffixList = new List<string>();
@@ -148,7 +148,7 @@ namespace Mr.Robot
 
 			typeCoreName = parse_info.GetOriginalTypeName(typeCoreName);
 
-			VAR_CTX retVarCtx = new VAR_CTX(typeCoreName, var_name);
+			VAR_CONTEXT retVarCtx = new VAR_CONTEXT(typeCoreName, var_name);
 			retVarCtx.Type.PrefixList = prefixList;
 			retVarCtx.Type.SuffixList = suffixList;
 			int arrSize = 0;
@@ -161,7 +161,7 @@ namespace Mr.Robot
 				}
 				int idx = retVarCtx.Name.IndexOf('[');
 				retVarCtx.Name = retVarCtx.Name.Remove(idx);
-				List<MeaningGroup> arrayMemberInitList = null;
+				List<MEANING_GROUP> arrayMemberInitList = null;
 				if (null != init_group)
 				{
 					arrayMemberInitList = GetMemberInitGroupListFromCodeBlock(init_group, parse_info);
@@ -174,12 +174,12 @@ namespace Mr.Robot
 				for (int i = 0; i < arrSize; i++)
 				{																		// 分别创建数组各成员
 					string memberName = "arrayMember" + "_" + i.ToString();
-					MeaningGroup memberInitGroup = null;
+					MEANING_GROUP memberInitGroup = null;
 					if (null != arrayMemberInitList)
 					{
 						memberInitGroup = arrayMemberInitList[i];
 					}
-					VAR_CTX memberCtx = CreateVarCtx(type_group, memberName, memberInitGroup, parse_info);
+					VAR_CONTEXT memberCtx = CreateVarCtx(type_group, memberName, memberInitGroup, parse_info);
 					retVarCtx.MemberList.Add(memberCtx);
 				}
 				retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.ARRAY;
@@ -210,8 +210,8 @@ namespace Mr.Robot
 					}
 					else
 					{
-						UsrDefTypeInfo udti = null;
-						if (CommonProcess.IsUsrDefTypeName(typeCoreName, parse_info, out udti))
+						USER_DEFINE_TYPE_INFO udti = null;
+						if (COMN_PROC.IsUsrDefTypeName(typeCoreName, parse_info, out udti))
 						{
 							retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
 							retVarCtx.MemberList = GetUsrDefTypeVarCtxMemberList(udti, parse_info, init_group);
@@ -226,7 +226,7 @@ namespace Mr.Robot
 			return retVarCtx;
 		}
 
-		static string GetTypeNameFromGroup(MeaningGroup type_group, out List<string> prefix_list, out List<string> suffix_list)
+		static string GetTypeNameFromGroup(MEANING_GROUP type_group, out List<string> prefix_list, out List<string> suffix_list)
 		{
 			prefix_list = new List<string>();
 			suffix_list = new List<string>();
@@ -251,12 +251,12 @@ namespace Mr.Robot
 			return typeName;
 		}
 
-		static List<VAR_CTX> GetUsrDefTypeVarCtxMemberList(	UsrDefTypeInfo usr_def_type_var,
-															FileParseInfo parse_info,
-															MeaningGroup init_group)
+		static List<VAR_CONTEXT> GetUsrDefTypeVarCtxMemberList(	USER_DEFINE_TYPE_INFO usr_def_type_var,
+															FILE_PARSE_INFO parse_info,
+															MEANING_GROUP init_group)
 		{
-			List<VAR_CTX> retCtxList = new List<VAR_CTX>();
-			List<MeaningGroup> memberInitList = null;
+			List<VAR_CONTEXT> retCtxList = new List<VAR_CONTEXT>();
+			List<MEANING_GROUP> memberInitList = null;
 			if (null != init_group)
 			{
 				memberInitList = GetMemberInitGroupListFromCodeBlock(init_group, parse_info);
@@ -269,14 +269,14 @@ namespace Mr.Robot
 			for (int i = 0; i < usr_def_type_var.MemberList.Count; i++)
 			{
 				string memberStr = usr_def_type_var.MemberList[i];
-				List<StatementComponent> componentList = StatementAnalysis.GetComponents(memberStr, parse_info);
-				List<MeaningGroup> mgList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
-				MeaningGroup memberInitGroup = null;
+				List<STATEMENT_COMPONENT> componentList = StatementAnalysis.GetComponents(memberStr, parse_info);
+				List<MEANING_GROUP> mgList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+				MEANING_GROUP memberInitGroup = null;
 				if (null != memberInitList)
 				{
 					memberInitGroup = memberInitList[i];
 				}
-				VAR_CTX varCtx = null;
+				VAR_CONTEXT varCtx = null;
 				if (null != (varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, memberInitGroup, parse_info)))
 				{
 					retCtxList.Add(varCtx);
@@ -285,7 +285,7 @@ namespace Mr.Robot
 			return retCtxList;
 		}
 
-		static int GetArraySizeFromVarName(ref string var_name, FileParseInfo parse_info)
+		static int GetArraySizeFromVarName(ref string var_name, FILE_PARSE_INFO parse_info)
 		{
 			int startIdx = var_name.IndexOf('[');
 			if (-1 == startIdx || !var_name.EndsWith("]"))
@@ -302,7 +302,7 @@ namespace Mr.Robot
 			return sizeVal;
 		}
 
-		static List<MeaningGroup> GetMemberInitGroupListFromCodeBlock(MeaningGroup block_init_group, FileParseInfo parse_info)
+		static List<MEANING_GROUP> GetMemberInitGroupListFromCodeBlock(MEANING_GROUP block_init_group, FILE_PARSE_INFO parse_info)
 		{
 			if (block_init_group.Type != MeaningGroupType.CodeBlock
 				|| block_init_group.ComponentList.Count <= 2
@@ -311,14 +311,14 @@ namespace Mr.Robot
 			{
 				return null;
 			}
-			List<StatementComponent> componentList = new List<StatementComponent>();
+			List<STATEMENT_COMPONENT> componentList = new List<STATEMENT_COMPONENT>();
 			for (int i = 1; i < block_init_group.ComponentList.Count - 1; i++)
 			{
 				componentList.Add(block_init_group.ComponentList[i]);
 			}
-			List<MeaningGroup> retList = new List<MeaningGroup>();
-			List<MeaningGroup> tmpList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
-			MeaningGroup addGroup = new MeaningGroup();
+			List<MEANING_GROUP> retList = new List<MEANING_GROUP>();
+			List<MEANING_GROUP> tmpList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+			MEANING_GROUP addGroup = new MEANING_GROUP();
 			addGroup.Type = MeaningGroupType.Expression;
 			for (int i = 0; i < tmpList.Count; i++)
 			{
@@ -341,7 +341,7 @@ namespace Mr.Robot
 							addGroup.Text += item.Text;
 						}
 						retList.Add(addGroup);
-						addGroup = new MeaningGroup();
+						addGroup = new MEANING_GROUP();
 						addGroup.Type = MeaningGroupType.Expression;
 					}
 					else

@@ -11,10 +11,10 @@ namespace Mr.Robot
 		/// <summary>
 		/// 语句分析
 		/// </summary>
-        public static FuncAnalysisContext FunctionStatementsAnalysis(StatementNode root,
-																	 FileParseInfo p_result)
+        public static FUNCTION_ANALYSIS_CONTEXT FunctionStatementsAnalysis(	StatementNode root,
+																			FILE_PARSE_INFO p_result)
 		{
-            FuncAnalysisContext fCtx = new FuncAnalysisContext();					// (变量)解析上下文
+            FUNCTION_ANALYSIS_CONTEXT fCtx = new FUNCTION_ANALYSIS_CONTEXT();					// (变量)解析上下文
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
@@ -25,8 +25,8 @@ namespace Mr.Robot
 		}
 
 		public static void StatementAnalyze(StatementNode s_node,
-											FileParseInfo parse_info,
-                                            FuncAnalysisContext func_ctx)
+											FILE_PARSE_INFO parse_info,
+                                            FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
 			switch (s_node.Type)
 			{
@@ -46,11 +46,11 @@ namespace Mr.Robot
 		/// 简单语句分析(函数内)
 		/// </summary>
 		public static void SimpleStatementAnalyze(	string statement_str,
-													FileParseInfo parse_info,
-													FuncAnalysisContext func_ctx)
+													FILE_PARSE_INFO parse_info,
+													FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
-			List<StatementComponent> componentList = GetComponents(statement_str, parse_info);
+			List<STATEMENT_COMPONENT> componentList = GetComponents(statement_str, parse_info);
 			if (statement_str.StartsWith("typedef"))
 			{
 				TypeDefProc(componentList, parse_info, func_ctx);
@@ -61,17 +61,17 @@ namespace Mr.Robot
 			}
 		}
 
-		public static string GetStatementStr(List<string> code_list, CodeScope code_scope)
+		public static string GetStatementStr(List<string> code_list, CODE_SCOPE code_scope)
 		{
-			return CommonProcess.LineStringCat(code_list, code_scope.Start, code_scope.End).Trim();
+			return COMN_PROC.LineStringCat(code_list, code_scope.Start, code_scope.End).Trim();
 		}
 
-        public static void ExpressionAnalysis(	List<StatementComponent> componentList,
-												FileParseInfo parse_info,
-												FuncAnalysisContext func_ctx)
+        public static void ExpressionAnalysis(	List<STATEMENT_COMPONENT> componentList,
+												FILE_PARSE_INFO parse_info,
+												FUNCTION_ANALYSIS_CONTEXT func_ctx)
         {
             // 提取含义分组
-			List<MeaningGroup> meaningGroupList = GetMeaningGroups(componentList, parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(componentList, parse_info, func_ctx);
 
             // 含义分组解析
 			MeaningGroupsAnalysis(meaningGroupList, parse_info, func_ctx);
@@ -80,8 +80,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得语句内各基本成分(运算数或者是运算符)
 		/// </summary>
-		public static List<StatementComponent> GetComponents(string statementStr,
-                                                             FileParseInfo parse_info,
+		public static List<STATEMENT_COMPONENT> GetComponents(string statementStr,
+                                                             FILE_PARSE_INFO parse_info,
 															 bool replace_empty_macro_def = true)
         {
 			// 去掉结尾的分号
@@ -89,12 +89,12 @@ namespace Mr.Robot
 			{
 				statementStr = statementStr.Remove(statementStr.Length - 1).Trim();
 			}
-            List<StatementComponent> componentList = new List<StatementComponent>();
+            List<STATEMENT_COMPONENT> componentList = new List<STATEMENT_COMPONENT>();
             int offset = 0;
             do
             {
                 // 提取语句的各个组成部分(操作数或者是操作符)
-                StatementComponent cpnt = GetOneComponent(ref statementStr, ref offset, parse_info, replace_empty_macro_def);
+                STATEMENT_COMPONENT cpnt = GetOneComponent(ref statementStr, ref offset, parse_info, replace_empty_macro_def);
                 if (string.Empty == cpnt.Text)
                 {
                     // 语句结束
@@ -109,11 +109,11 @@ namespace Mr.Robot
             return componentList;
         }
 
-        public static List<MeaningGroup> GetMeaningGroups(	List<StatementComponent> componentList,
-															FileParseInfo parse_info,
-															FuncAnalysisContext func_ctx)
+        public static List<MEANING_GROUP> GetMeaningGroups(	List<STATEMENT_COMPONENT> componentList,
+															FILE_PARSE_INFO parse_info,
+															FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
-            List<MeaningGroup> meaningGroupList;
+            List<MEANING_GROUP> meaningGroupList;
             while (true)
             {
                 // (1). 首先对语句所有组成部分进行结构分组, 每个组代表一个独立完整的语义结构
@@ -144,11 +144,11 @@ namespace Mr.Robot
 		/// <summary>
 		/// 对语句所有构成成分进行结构分组
 		/// </summary>
-		static List<MeaningGroup> GetMeaningGroupList(	List<StatementComponent> componentList,
-														FileParseInfo parse_info,
-														FuncAnalysisContext func_ctx)
+		static List<MEANING_GROUP> GetMeaningGroupList(	List<STATEMENT_COMPONENT> componentList,
+														FILE_PARSE_INFO parse_info,
+														FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
-			List<MeaningGroup> groupList = new List<MeaningGroup>();
+			List<MEANING_GROUP> groupList = new List<MEANING_GROUP>();
 			int idx = 0;
 			while (true) 
 			{
@@ -156,7 +156,7 @@ namespace Mr.Robot
                 {
                     break;
                 }
-				MeaningGroup newGroup = GetOneMeaningGroup(componentList, ref idx, groupList, parse_info, func_ctx);
+				MEANING_GROUP newGroup = GetOneMeaningGroup(componentList, ref idx, groupList, parse_info, func_ctx);
 				if (0 != newGroup.ComponentList.Count)
 				{
 					groupList.Add(newGroup);
@@ -172,13 +172,13 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个构成分组
 		/// </summary>
-		static MeaningGroup GetOneMeaningGroup(	List<StatementComponent> componentList,
+		static MEANING_GROUP GetOneMeaningGroup(List<STATEMENT_COMPONENT> componentList,
 												ref int idx,
-												List<MeaningGroup> groupList,
-												FileParseInfo parse_info,
-												FuncAnalysisContext func_ctx)
+												List<MEANING_GROUP> groupList,
+												FILE_PARSE_INFO parse_info,
+												FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
-			MeaningGroup retGroup = null;
+			MEANING_GROUP retGroup = null;
 			// 是类型名?
 			if (null != (retGroup = GetVarTypeGroup(componentList, ref idx, parse_info)))
 			{
@@ -224,9 +224,9 @@ namespace Mr.Robot
 			{
 				return retGroup;
 			}
-            else if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
+            else if (COMN_PROC.IsStandardIdentifier(componentList[idx].Text))
 			{
-				retGroup = new MeaningGroup();
+				retGroup = new MEANING_GROUP();
 				if (componentList[idx].Type == StatementComponentType.Identifier)
 				{
 					retGroup.Type = MeaningGroupType.Identifier;
@@ -242,7 +242,7 @@ namespace Mr.Robot
 			}
 			else if (IsConstantNumber(componentList[idx].Text))
 			{
-				retGroup = new MeaningGroup();
+				retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.Constant;
 				retGroup.ComponentList.Add(componentList[idx]);
 				retGroup.Text = componentList[idx].Text;
@@ -261,18 +261,18 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从语句中提取出一个操作数/操作符
 		/// </summary>
-		static StatementComponent GetOneComponent(ref string statementStr,
+		static STATEMENT_COMPONENT GetOneComponent(ref string statementStr,
 												  ref int offset,
-												  FileParseInfo parse_info,
+												  FILE_PARSE_INFO parse_info,
 												  bool replace_empty_macro_def)
 		{
 			string idStr = null;
 			int offset_old = -1;
-			StatementComponent retSC = new StatementComponent();
+			STATEMENT_COMPONENT retSC = new STATEMENT_COMPONENT();
 			while (true)
 			{
 				offset_old = offset;
-				idStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
+				idStr = COMN_PROC.GetNextIdentifier2(statementStr, ref offset);
 				if (null == idStr)
 				{
 					break;
@@ -287,7 +287,7 @@ namespace Mr.Robot
 				{
 					break;														        // 字符或者字符串
 				}
-                else if (CommonProcess.IsStandardIdentifier(idStr))						// 标准标识符
+                else if (COMN_PROC.IsStandardIdentifier(idStr))						// 标准标识符
 				{
 					// 如果包含宏, 首先要进行宏展开
 					if (null != parse_info
@@ -298,7 +298,7 @@ namespace Mr.Robot
 					}
 					else
 					{
-						retSC = new StatementComponent(idStr);
+						retSC = new STATEMENT_COMPONENT(idStr);
 						retSC.Type = StatementComponentType.Identifier;
 						break;
 					}
@@ -309,7 +309,7 @@ namespace Mr.Robot
 				}
 				else
 				{
-					retSC = new StatementComponent(idStr);
+					retSC = new STATEMENT_COMPONENT(idStr);
 					break;
 				}
 			}
@@ -323,11 +323,11 @@ namespace Mr.Robot
 		public static bool MacroDetectAndExpand_Statement(	string idStr,
 															ref string statementStr,
 															int offset,
-															FileParseInfo parse_info,
+															FILE_PARSE_INFO parse_info,
 															bool replace_empty_macro_def)
         {
 			// 遍历查找宏名
-			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
+			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
 			if (null != mdi)
 			{
 				if (string.IsNullOrEmpty(mdi.Value)
@@ -342,7 +342,7 @@ namespace Mr.Robot
 					if (0 != mdi.ParaList.Count)
 					{
 						// 取得宏参数
-						string paraStr = CommonProcess.GetNextIdentifier2(statementStr, ref offset);
+						string paraStr = COMN_PROC.GetNextIdentifier2(statementStr, ref offset);
 						if ("(" != paraStr)
 						{
 							//CommonProcess.ErrReport();
@@ -352,7 +352,7 @@ namespace Mr.Robot
 						int rightBracket = statementStr.Substring(offset).IndexOf(')');
 						if (-1 == rightBracket)
 						{
-							CommonProcess.ErrReport();
+							COMN_PROC.ErrReport();
 							return false;
 						}
 						paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
@@ -367,7 +367,7 @@ namespace Mr.Robot
 								// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
 								continue;
 							}
-							replaceStr = CommonProcess.WholeWordSReplace(replaceStr, mdi.ParaList[idx], rp);
+							replaceStr = COMN_PROC.WholeWordSReplace(replaceStr, mdi.ParaList[idx], rp);
 							//replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
 							idx++;
 						}
@@ -387,7 +387,7 @@ namespace Mr.Robot
 					// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
 					if (replaceStr.Contains('#'))
 					{
-						CommonProcess.ErrReport();
+						COMN_PROC.ErrReport();
 						return false;
 					}
 					// 用宏值去替换原来的宏名(宏展开)
@@ -407,7 +407,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断是否是运算符
 		/// </summary>
-		static bool IsOperator(string idStr, string statementStr, ref int offset, ref StatementComponent component)
+		static bool IsOperator(string idStr, string statementStr, ref int offset, ref STATEMENT_COMPONENT component)
 		{
 			if (1 != idStr.Length)
 			{
@@ -643,12 +643,12 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是构造类型/用户定义类型
         /// </summary>
-		static bool IsUsrDefVarType(List<string> idStrList, FileParseInfo parse_info, ref int count)
+		static bool IsUsrDefVarType(List<string> idStrList, FILE_PARSE_INFO parse_info, ref int count)
         {
 			string categoryStr = string.Empty;
 			string idStr = idStrList[0];
 			count = 1;
-			if (CommonProcess.IsUsrDefTypeKWD(idStr))
+			if (COMN_PROC.IsUsrDefTypeKWD(idStr))
 			{
 				categoryStr = idStr;
 				if (idStrList.Count > 1)
@@ -707,9 +707,9 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是局部(临时)变量
         /// </summary>
-		static bool IsLocalVariable(string identifier, List<VAR_CTX>local_var_list)
+		static bool IsLocalVariable(string identifier, List<VAR_CONTEXT>local_var_list)
         {
-			foreach (VAR_CTX vctx in local_var_list)
+			foreach (VAR_CONTEXT vctx in local_var_list)
 			{
 				if (vctx.Name.Equals(identifier))
 				{
@@ -739,7 +739,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断基本成分列表构成的是否是一个变量类型
 		/// </summary>
-		static bool IsVarType(List<StatementComponent> cpntList, ref int index, FileParseInfo parse_info)
+		static bool IsVarType(List<STATEMENT_COMPONENT> cpntList, ref int index, FILE_PARSE_INFO parse_info)
 		{
 			// 判断是否是类型名
 			List<string> idStrList = new List<string>();
@@ -799,10 +799,10 @@ namespace Mr.Robot
 			return false;
 		}
 
-		static MeaningGroup GetVarTypeGroup(List<StatementComponent> componentList, ref int idx, FileParseInfo parse_info)
+		static MEANING_GROUP GetVarTypeGroup(List<STATEMENT_COMPONENT> componentList, ref int idx, FILE_PARSE_INFO parse_info)
 		{
-			MeaningGroup retGroup = null;
-			List<StatementComponent> prefixList = new List<StatementComponent>();
+			MEANING_GROUP retGroup = null;
+			List<STATEMENT_COMPONENT> prefixList = new List<STATEMENT_COMPONENT>();
 			for (int i = idx; i < componentList.Count; i++)
 			{
 				int old_idx = idx;
@@ -814,7 +814,7 @@ namespace Mr.Robot
 				}
 				else if (null == retGroup && IsVarType(componentList, ref idx, parse_info))
 				{
-					retGroup = new MeaningGroup();
+					retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.VariableType;
 					for (int j = 0; j < prefixList.Count; j++)
 					{
@@ -846,7 +846,7 @@ namespace Mr.Robot
 			return retGroup;
 		}
 
-		static MeaningGroup GetSingleKeywordGroup(List<StatementComponent> componentList, ref int idx, FileParseInfo parse_info)
+		static MEANING_GROUP GetSingleKeywordGroup(List<STATEMENT_COMPONENT> componentList, ref int idx, FILE_PARSE_INFO parse_info)
 		{
 			if ("typedef" == componentList[idx].Text
 				|| "auto" == componentList[idx].Text
@@ -858,7 +858,7 @@ namespace Mr.Robot
 				|| "return" == componentList[idx].Text
 				|| "sizeof" == componentList[idx].Text)
 			{
-				MeaningGroup retGroup = new MeaningGroup();
+				MEANING_GROUP retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.SingleKeyword;
 				retGroup.ComponentList.Add(componentList[idx]);
 				retGroup.Text = componentList[idx].Text;
@@ -868,20 +868,20 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static MeaningGroup GetVarNameGroup(List<StatementComponent> componentList,
+		static MEANING_GROUP GetVarNameGroup(List<STATEMENT_COMPONENT> componentList,
                                             ref int idx,
-                                            List<MeaningGroup> groupList,
-											FileParseInfo parse_info,
-											FuncAnalysisContext func_ctx)
+                                            List<MEANING_GROUP> groupList,
+											FILE_PARSE_INFO parse_info,
+											FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
-            if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
+            if (COMN_PROC.IsStandardIdentifier(componentList[idx].Text))
             {
                 // 是否是函数参数
                 // 是否为局部变量
 				if (null != func_ctx
 					&& IsLocalVariable(componentList[idx].Text, func_ctx.LocalVarList))
                 {
-                    MeaningGroup retGroup = new MeaningGroup();
+                    MEANING_GROUP retGroup = new MEANING_GROUP();
                     retGroup.Type = MeaningGroupType.LocalVariable;
                     retGroup.ComponentList.Add(componentList[idx]);
                     retGroup.Text = componentList[idx].Text;
@@ -891,7 +891,7 @@ namespace Mr.Robot
                 // 是否为全局变量
 				else if (null != parse_info.FindGlobalVarInfoByName(componentList[idx].Text))
                 {
-                    MeaningGroup retGroup = new MeaningGroup();
+                    MEANING_GROUP retGroup = new MEANING_GROUP();
                     retGroup.Type = MeaningGroupType.GlobalVariable;
                     retGroup.ComponentList.Add(componentList[idx]);
                     retGroup.Text = componentList[idx].Text;
@@ -902,7 +902,7 @@ namespace Mr.Robot
                 else if (1 == groupList.Count
                     && groupList[0].Type == MeaningGroupType.VariableType)
                 {
-                    MeaningGroup retGroup = new MeaningGroup();
+                    MEANING_GROUP retGroup = new MEANING_GROUP();
 					if (null == func_ctx)
 					{
 						retGroup.Type = MeaningGroupType.GlobalVariable;
@@ -920,15 +920,15 @@ namespace Mr.Robot
             else if ("(" == componentList[idx].Text)
             {
                 int tmp_idx = idx;
-				List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref tmp_idx);
+				List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref tmp_idx);
                 if (null != braceList
                     && (tmp_idx != componentList.Count - 1)
                     && ("." == componentList[tmp_idx + 1].Text
                         || "->" == componentList[tmp_idx + 1].Text))
                 {
-                    MeaningGroup retGroup = new MeaningGroup();
+                    MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = GetVariableType(braceList, parse_info);
-                    foreach (StatementComponent item in braceList)
+                    foreach (STATEMENT_COMPONENT item in braceList)
                     {
                         retGroup.ComponentList.Add(item);
                         retGroup.Text += item.Text;
@@ -941,11 +941,11 @@ namespace Mr.Robot
             return null;
 		}
 
-		static MeaningGroupType GetVariableType(List<StatementComponent> braceList, FileParseInfo parse_info)
+		static MeaningGroupType GetVariableType(List<STATEMENT_COMPONENT> braceList, FILE_PARSE_INFO parse_info)
 		{
-			foreach (StatementComponent item in braceList)
+			foreach (STATEMENT_COMPONENT item in braceList)
 			{
-				if (CommonProcess.IsStandardIdentifier(item.Text))
+				if (COMN_PROC.IsStandardIdentifier(item.Text))
 				{
 					if (null != parse_info.FindGlobalVarInfoByName(item.Text))
 					{
@@ -960,9 +960,9 @@ namespace Mr.Robot
 			return MeaningGroupType.LocalVariable;
 		}
 
-        static void GetVarMemberGroup(List<StatementComponent> componentList,
+        static void GetVarMemberGroup(List<STATEMENT_COMPONENT> componentList,
                                       ref int idx,
-                                      ref MeaningGroup retGroup)
+                                      ref MEANING_GROUP retGroup)
         {
             int i = idx + 1;
             for (i = idx + 1; i < componentList.Count; i++)
@@ -979,7 +979,7 @@ namespace Mr.Robot
 				else if ("[" == componentList[i].Text)
 				{
 					idx = i;
-					List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref idx);
+					List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
 					foreach (var item in braceList)
 					{
@@ -995,23 +995,23 @@ namespace Mr.Robot
             idx = i;
         }
 
-		static MeaningGroup GetFunctionCallingGroup(List<StatementComponent> componentList, ref int idx, FileParseInfo parse_info)
+		static MEANING_GROUP GetFunctionCallingGroup(List<STATEMENT_COMPONENT> componentList, ref int idx, FILE_PARSE_INFO parse_info)
 		{
-			if (CommonProcess.IsStandardIdentifier(componentList[idx].Text))
+			if (COMN_PROC.IsStandardIdentifier(componentList[idx].Text))
 			{
 				// 判断是否是函数名
 				if (null != parse_info.FindFuncParseInfo(componentList[idx].Text)
 					&& "(" == componentList[idx + 1].Text)
 				{
-					MeaningGroup retGroup = new MeaningGroup();
+					MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.FunctionCalling;
 					retGroup.ComponentList.Add(componentList[idx]);
 					retGroup.Text += componentList[idx].Text;
 					idx += 1;
-					List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref idx);
+					List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
 					if (null != braceList)
 					{
-						foreach (StatementComponent item in braceList)
+						foreach (STATEMENT_COMPONENT item in braceList)
 						{
 							retGroup.Text += item.Text;
 						}
@@ -1024,14 +1024,14 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static MeaningGroup GetExpressionGroup(List<StatementComponent> componentList, ref int idx, FileParseInfo parse_info)
+		static MEANING_GROUP GetExpressionGroup(List<STATEMENT_COMPONENT> componentList, ref int idx, FILE_PARSE_INFO parse_info)
 		{
             if ("(" == componentList[idx].Text)
             {
-				List<StatementComponent> braceList = CommonProcess.GetBraceComponents(componentList, ref idx);
+				List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
                 if (null != braceList)
                 {
-					MeaningGroup retGroup = new MeaningGroup();
+					MEANING_GROUP retGroup = new MEANING_GROUP();
 					int tmpIdx = 1;
 					if (IsVarType(braceList, ref tmpIdx, parse_info)
 						&& tmpIdx == braceList.Count - 1)
@@ -1043,7 +1043,7 @@ namespace Mr.Robot
 						retGroup.Type = MeaningGroupType.Expression;
 					}
 					StringBuilder sb = new StringBuilder();
-					foreach (StatementComponent item in braceList)
+					foreach (STATEMENT_COMPONENT item in braceList)
 					{
 						sb.Append(item.Text);
 					}
@@ -1056,14 +1056,14 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static MeaningGroup GetCodeBlockGroup(List<StatementComponent> cpnt_list, ref int idx, FileParseInfo parse_result)
+		static MEANING_GROUP GetCodeBlockGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_result)
 		{
 			if ("{" == cpnt_list[idx].Text)
 			{
-				List<StatementComponent> braceList = CommonProcess.GetBraceComponents(cpnt_list, ref idx);
+				List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(cpnt_list, ref idx);
 				if (null != braceList)
 				{
-					MeaningGroup retGroup = new MeaningGroup();
+					MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.CodeBlock;
 					retGroup.ComponentList.AddRange(braceList);
 					StringBuilder groupTextBuilder = new StringBuilder();
@@ -1079,11 +1079,11 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static MeaningGroup GetStringBlockGroup(List<StatementComponent> cpnt_list, ref int idx, FileParseInfo parse_result)
+		static MEANING_GROUP GetStringBlockGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_result)
 		{
 			if ("\"" == cpnt_list[idx].Text)
 			{
-				MeaningGroup retGroup = new MeaningGroup();
+				MEANING_GROUP retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.StringBlock;
 				retGroup.ComponentList.Add(cpnt_list[idx]);
 				StringBuilder sb = new StringBuilder();
@@ -1104,13 +1104,13 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static MeaningGroup GetCharBlockGroup(List<StatementComponent> cpnt_list, ref int idx, FileParseInfo parse_result)
+		static MEANING_GROUP GetCharBlockGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_result)
 		{
 			if ("\'" == cpnt_list[idx].Text
 				&& idx < cpnt_list.Count - 3
 				&& "\'" == cpnt_list[idx + 2].Text)
 			{
-				MeaningGroup retGroup = new MeaningGroup();
+				MEANING_GROUP retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.CharBlock;
 				retGroup.ComponentList.Add(cpnt_list[idx]);
 				retGroup.Text += cpnt_list[idx].Text;
@@ -1124,12 +1124,12 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static MeaningGroup GetOperatorGroup(List<StatementComponent> componentList, ref int idx)
+		static MEANING_GROUP GetOperatorGroup(List<STATEMENT_COMPONENT> componentList, ref int idx)
 		{
-            MeaningGroup retGroup = null;
+            MEANING_GROUP retGroup = null;
             if (componentList[idx].Type == StatementComponentType.Operator)
             {
-                retGroup = new MeaningGroup();
+                retGroup = new MEANING_GROUP();
                 retGroup.ComponentList.Add(componentList[idx]);
                 retGroup.Text = componentList[idx].Text;
                 if ("=" == componentList[idx].Text)
@@ -1145,12 +1145,12 @@ namespace Mr.Robot
             return retGroup;
 		}
 
-        static void MeaningGroupsAnalysis(	List<MeaningGroup> mgList,
-											FileParseInfo parse_info,
-											FuncAnalysisContext func_ctx)
+        static void MeaningGroupsAnalysis(	List<MEANING_GROUP> mgList,
+											FILE_PARSE_INFO parse_info,
+											FUNCTION_ANALYSIS_CONTEXT func_ctx)
         {
             // 先检查是否是新定义的局部变量
-			VAR_CTX varCtx = null;
+			VAR_CONTEXT varCtx = null;
 			if (null != (varCtx = IsNewDefineVarible(mgList, parse_info, func_ctx)))
 			{
 				// 如果是,为此新定义局部变量创建上下文记录项
@@ -1175,11 +1175,11 @@ namespace Mr.Robot
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
         }
 
-		public static VAR_CTX IsNewDefineVarible(List<MeaningGroup> mgList, FileParseInfo parse_info, FuncAnalysisContext func_ctx)
+		public static VAR_CONTEXT IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNCTION_ANALYSIS_CONTEXT func_ctx)
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx);
+				VAR_CONTEXT varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx);
 				if (null != varCtx)
 				{
 					// 在当前上下文中已存在! (作用域覆盖? 正常情况下不应该出现!)
@@ -1188,10 +1188,10 @@ namespace Mr.Robot
 				else
 				{
 					// 创建变量上下文
-					MeaningGroup initGroup = null;
+					MEANING_GROUP initGroup = null;
 					if (mgList.Count >= 4 && mgList[2].Text.Equals("="))
 					{
-						initGroup = new MeaningGroup();
+						initGroup = new MEANING_GROUP();
 						for (int i = 3; i < mgList.Count; i++)
 						{
 							initGroup.ComponentList.AddRange(mgList[i].ComponentList);
@@ -1214,18 +1214,18 @@ namespace Mr.Robot
             return null;
         }
 
-		public static void TypeDefProc(	List<StatementComponent> component_list,
-										FileParseInfo parse_info,
-										FuncAnalysisContext func_ctx)
+		public static void TypeDefProc(	List<STATEMENT_COMPONENT> component_list,
+										FILE_PARSE_INFO parse_info,
+										FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
 			// 提取含义分组
-			List<MeaningGroup> meaningGroupList = GetMeaningGroups(component_list, parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(component_list, parse_info, func_ctx);
 			if (3 == meaningGroupList.Count
 				&& "typedef" == meaningGroupList[0].Text
 				&& meaningGroupList[1].Type == MeaningGroupType.VariableType
 				&& meaningGroupList[2].Type == MeaningGroupType.Identifier)
 			{
-				TypeDefineInfo tdi = new TypeDefineInfo();
+				TYPE_DEFINE_INFO tdi = new TYPE_DEFINE_INFO();
 				tdi.OldName = meaningGroupList[1].Text;
 				tdi.NewName = meaningGroupList[2].Text;
 				if (tdi.OldName != tdi.NewName)
@@ -1247,7 +1247,7 @@ namespace Mr.Robot
         Operator,               // 运算符
 	}
 
-	public class StatementComponent
+	public class STATEMENT_COMPONENT
 	{
 		private StatementComponentType type = StatementComponentType.Invalid;
 
@@ -1267,11 +1267,11 @@ namespace Mr.Robot
 		public int Priority = -1;	// (如果是运算符的话)运算符的优先级
 		public int OperandCount = 0;// (如果是运算符的话)操作数的个数
 
-		public StatementComponent()
+		public STATEMENT_COMPONENT()
 		{
 		}
 
-		public StatementComponent(string str)
+		public STATEMENT_COMPONENT(string str)
 		{
 			Text = str;
 		}
@@ -1300,13 +1300,13 @@ namespace Mr.Robot
 	/// <summary>
 	/// 一组有意义的语句成分构成的分组
 	/// </summary>
-	public class MeaningGroup
+	public class MEANING_GROUP
 	{
 		public MeaningGroupType Type = MeaningGroupType.Unknown;
 
 		public string Text = string.Empty;
 
-		public List<StatementComponent> ComponentList = new List<StatementComponent>();
+		public List<STATEMENT_COMPONENT> ComponentList = new List<STATEMENT_COMPONENT>();
 
 		public int PrefixCount = 0;														// 如果分组是类型的话, 还包括前后缀的个数
 		public int SuffixCount = 0;
@@ -1315,30 +1315,30 @@ namespace Mr.Robot
     /// <summary>
     /// 解析上下文
     /// </summary>
-    public class FuncAnalysisContext
+    public class FUNCTION_ANALYSIS_CONTEXT
     {
         // 引数列表
-		public List<VAR_CTX> ParameterList = new List<VAR_CTX>();
+		public List<VAR_CONTEXT> ParameterList = new List<VAR_CONTEXT>();
         // 局部变量列表
-		public List<VAR_CTX> LocalVarList = new List<VAR_CTX>();
+		public List<VAR_CONTEXT> LocalVarList = new List<VAR_CONTEXT>();
 		// 入力全局变量列表
 		public List<VAR_DESCRIPTION> InputGlobalList = new List<VAR_DESCRIPTION>();
 		// 出力全局变量列表
 		public List<VAR_DESCRIPTION> OutputGlobalList = new List<VAR_DESCRIPTION>();
 		// 其它未确定入出力的全局变量(比如函数调用读出值)
-		public List<VAR_CTX> OtherGlobalList = new List<VAR_CTX>();
+		public List<VAR_CONTEXT> OtherGlobalList = new List<VAR_CONTEXT>();
 		// 调用函数列表
-		public List<CalledFunction> CalledFunctionList = new List<CalledFunction>();
+		public List<CALLED_FUNCTION> CalledFunctionList = new List<CALLED_FUNCTION>();
 	}
 
 	/// <summary>
 	/// 函数调用
 	/// </summary>
-	public class CalledFunction
+	public class CALLED_FUNCTION
 	{
 		public string FunctionName = string.Empty;										// 函数名
-		public MeaningGroup MeaningGroup = new MeaningGroup();
-		public List<ActualParaInfo> ActualParaInfoList = new List<ActualParaInfo>();	// 实参情报列表
+		public MEANING_GROUP MeaningGroup = new MEANING_GROUP();
+		public List<ACTUAL_PARA_INFO> ActualParaInfoList = new List<ACTUAL_PARA_INFO>();// 实参情报列表
 		public string ReturnValType = string.Empty;
 	}
 }

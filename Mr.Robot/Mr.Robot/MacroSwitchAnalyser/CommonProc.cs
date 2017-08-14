@@ -61,7 +61,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
         public static void MacroSwitchExpressionAnalysis(   string macro_exp,
                                                             MacroPrintInfo print_info,
-                                                            FileParseInfo parse_info,
+                                                            FILE_PARSE_INFO parse_info,
                                                             ref List<string> result_list,
 															List<MTPJ_FILE_INFO> mtpj_info_list,
 															List<MK_FILE_INFO> mk_info_list)
@@ -70,12 +70,12 @@ namespace Mr.Robot.MacroSwitchAnalyser
             {
                 return;
             }
-            List<StatementComponent> cpntList = StatementAnalysis.GetComponents(macro_exp, null);
-            foreach (StatementComponent cpnt in cpntList)
+            List<STATEMENT_COMPONENT> cpntList = StatementAnalysis.GetComponents(macro_exp, null);
+            foreach (STATEMENT_COMPONENT cpnt in cpntList)
             {
                 if (cpnt.Type == StatementComponentType.Identifier && "defined" != cpnt.Text)
                 {
-                    MacroDefineInfo mdi = parse_info.FindMacroDefInfo(cpnt.Text);
+                    MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(cpnt.Text);
                     if (null != mdi)
                     {
                         string valStr = mdi.Value;
@@ -153,26 +153,26 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			return string.Empty;
 		}
 
-        static MacroValueType MacroValueStrAnalysis(ref string macro_value_str, FileParseInfo parse_info)
+        static MacroValueType MacroValueStrAnalysis(ref string macro_value_str, FILE_PARSE_INFO parse_info)
         {
             if (string.IsNullOrEmpty(macro_value_str.Trim()))
             {
                 return MacroValueType.Empty;
             }
             macro_value_str = RemoveExpressionBrackets(macro_value_str);
-			if (CommonProcess.IsStandardIdentifier(macro_value_str))
+			if (COMN_PROC.IsStandardIdentifier(macro_value_str))
 			{
-				MacroDefineInfo mdi = parse_info.FindMacroDefInfo(macro_value_str);
+				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(macro_value_str);
 				if (null != mdi)
 				{
 					macro_value_str = mdi.Value;
 					return MacroValueStrAnalysis(ref macro_value_str, parse_info);
 				}
 			}
-            List<StatementComponent> cpntList = StatementAnalysis.GetComponents(macro_value_str, null);
+            List<STATEMENT_COMPONENT> cpntList = StatementAnalysis.GetComponents(macro_value_str, null);
             int numberCount = 0;
             int identifierCount = 0;
-            foreach (StatementComponent cpnt in cpntList)
+            foreach (STATEMENT_COMPONENT cpnt in cpntList)
             {
                 if (cpnt.Type == StatementComponentType.ConstantNumber)
                 {
@@ -284,7 +284,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				{
 					continue;
 				}
-				else if (CommonProcess.IsStandardIdentifier(rdLine))
+				else if (COMN_PROC.IsStandardIdentifier(rdLine))
 				{
 					if (!this.DefList.Contains(rdLine))
 					{

@@ -7,10 +7,10 @@ namespace Mr.Robot
 {
 	public class ExpCalc
 	{
-		public static int GetLogicalExpressionValue(string exp_str, FileParseInfo parse_info)
+		public static int GetLogicalExpressionValue(string exp_str, FILE_PARSE_INFO parse_info)
 		{
-			List<StatementComponent> componentList = StatementAnalysis.GetComponents(exp_str, parse_info, false);	// 最后一个参数, 在解析逻辑表达式时, 因为涉及 #if define(XXX) 这样的表达式, 所以如果是空的宏定义, 原样不动不展开
-			List<MeaningGroup> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
+			List<STATEMENT_COMPONENT> componentList = StatementAnalysis.GetComponents(exp_str, parse_info, false);	// 最后一个参数, 在解析逻辑表达式时, 因为涉及 #if define(XXX) 这样的表达式, 所以如果是空的宏定义, 原样不动不展开
+			List<MEANING_GROUP> meaningGroupList = StatementAnalysis.GetMeaningGroups(componentList, parse_info, null);
 			int retVal = 0;
 			if (1 == meaningGroupList.Count)
 			{
@@ -23,7 +23,7 @@ namespace Mr.Robot
 			return retVal;
 		}
 
-		static int GetSingleGroupLogicExpVal(MeaningGroup meaning_group, FileParseInfo parse_info)
+		static int GetSingleGroupLogicExpVal(MEANING_GROUP meaning_group, FILE_PARSE_INFO parse_info)
 		{
 			int retVal = 0;
 			// 立即数
@@ -35,7 +35,7 @@ namespace Mr.Robot
 			// 宏定义
 			else if (meaning_group.Type == MeaningGroupType.Identifier)
 			{
-				MacroDefineInfo mdi = parse_info.FindMacroDefInfo(meaning_group.Text);
+				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(meaning_group.Text);
 				if (null != mdi)
 				{
 					return GetLogicalExpressionValue(mdi.Value, parse_info);
@@ -62,7 +62,7 @@ namespace Mr.Robot
 			return 0;
 		}
 
-		static int CaculateCompondLogicExpVal(List<MeaningGroup> meaningGroupList, FileParseInfo parse_info)
+		static int CaculateCompondLogicExpVal(List<MEANING_GROUP> meaningGroupList, FILE_PARSE_INFO parse_info)
 		{
 			OPERATION_GROUP opt = GetNextOperationGroup(meaningGroupList);
 			if (null == opt)
@@ -176,9 +176,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得表达式下一个运算组
 		/// </summary>
-		static OPERATION_GROUP GetNextOperationGroup(List<MeaningGroup> meaningGroupList)
+		static OPERATION_GROUP GetNextOperationGroup(List<MEANING_GROUP> meaningGroupList)
 		{
-			MeaningGroup operatorGroup = null;
+			MEANING_GROUP operatorGroup = null;
 			OPERATION_GROUP retGroup = null;
 			int operatorIdx = -1;
 			for (int i = 0; i < meaningGroupList.Count; i++)
@@ -224,7 +224,7 @@ namespace Mr.Robot
 			return retGroup;
 		}
 
-		static List<OPERAND> GetOperandList(List<MeaningGroup> meaningGroupList, int operator_idx, int operand_count)
+		static List<OPERAND> GetOperandList(List<MEANING_GROUP> meaningGroupList, int operator_idx, int operand_count)
 		{
 			List<OPERAND> retList = new List<OPERAND>();
 			if (1 == operand_count)
@@ -281,7 +281,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得运算值
 		/// </summary>
-		static int GetOperationValue(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int GetOperationValue(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			int retVal = 0;
 			if (OPERATOR_TYPE.TYPE_CASTING == oper_group._Operator.Type)
@@ -347,7 +347,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 逻辑等运算("==")
 		/// </summary>
-		static int CalcLogical_Equal(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Equal(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -364,7 +364,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_Unequal(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Unequal(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -381,7 +381,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_Or(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Or(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -399,7 +399,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_And(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_And(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -417,7 +417,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_Defined(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Defined(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 1);
 			string operand = oper_group._OperandList.First().Text;
@@ -441,7 +441,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_Remainder(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Remainder(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -451,7 +451,7 @@ namespace Mr.Robot
 			return (operand1Value % operand2Value);
 		}
 
-		static int CalcLogical_Not(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Not(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 1);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -466,7 +466,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_GreaterOrEqual(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_GreaterOrEqual(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -483,7 +483,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_LessOrEqual(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_LessOrEqual(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -500,7 +500,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_Greater(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Greater(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -517,7 +517,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcLogical_Less(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcLogical_Less(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -534,7 +534,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static int CalcArithmetic_Add(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcArithmetic_Add(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -544,7 +544,7 @@ namespace Mr.Robot
 			return operand1Value + operand2Value;
 		}
 
-		static int CalcArithmetic_Sub(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcArithmetic_Sub(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -554,7 +554,7 @@ namespace Mr.Robot
 			return operand1Value - operand2Value;
 		}
 
-		static int CalcArithmetic_Multiply(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcArithmetic_Multiply(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -564,7 +564,7 @@ namespace Mr.Robot
 			return operand1Value * operand2Value;
 		}
 
-		static int CalcArithmetic_Divide(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcArithmetic_Divide(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -574,7 +574,7 @@ namespace Mr.Robot
 			return operand1Value / operand2Value;
 		}
 
-		static int CalcTypeCasting(OPERATION_GROUP oper_group, FileParseInfo parse_info)
+		static int CalcTypeCasting(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 1);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
@@ -592,7 +592,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static string GetCastingTypeName(OPERATOR oper, FileParseInfo parse_info)
+		static string GetCastingTypeName(OPERATOR oper, FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert(oper.Type == OPERATOR_TYPE.TYPE_CASTING);
 			string typeStr = oper.Text.Trim();

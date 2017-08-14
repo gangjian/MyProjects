@@ -20,7 +20,7 @@ namespace Mr.Robot
 		List<string> MtpjFileList = new List<string>();
 		List<string> MkFileList = new List<string>();
 
-		CCodeAnalyser CAnalyser = null;
+		C_CODE_ANALYSER CAnalyser = null;
 	#endregion
 
 		public Form1()
@@ -110,7 +110,7 @@ namespace Mr.Robot
             lvBranchList.Enabled = false;
         }
 
-		public List<FileParseInfo> CSourceParseInfoList = new List<FileParseInfo>();
+		public List<FILE_PARSE_INFO> CSourceParseInfoList = new List<FILE_PARSE_INFO>();
 
 		/// <summary>
 		/// 源文件列表控件选中状态改变
@@ -148,12 +148,12 @@ namespace Mr.Robot
 		void UpdateFunctionListViewCtrl(string sourceFileName)
 		{
 			lvFunctionList.Items.Clear();
-			foreach (FileParseInfo srcInfo in this.CSourceParseInfoList)
+			foreach (FILE_PARSE_INFO srcInfo in this.CSourceParseInfoList)
 			{
 				string path;
 				if (sourceFileName == IOProcess.GetFileName(srcInfo.SourceName, out path))
 				{
-					foreach (FuncParseInfo functionInfo in srcInfo.FunDefineList)
+					foreach (FUNCTION_PARSE_INFO functionInfo in srcInfo.FunDefineList)
 					{
 						ListViewItem item = new ListViewItem(functionInfo.Name
                             //+ ": "
@@ -211,8 +211,8 @@ namespace Mr.Robot
                     }
                 }
             }
-			CCodeAnalyser.CodeBufferManager codeBuffManager = new CCodeAnalyser.CodeBufferManager();
-			this.CAnalyser = new CCodeAnalyser(srcList, this.CHeaderFileList, ref codeBuffManager);
+			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBuffManager = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
+			this.CAnalyser = new C_CODE_ANALYSER(srcList, this.CHeaderFileList, ref codeBuffManager);
 			this.CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
 			this.CAnalyser.ProcessStart();
         }

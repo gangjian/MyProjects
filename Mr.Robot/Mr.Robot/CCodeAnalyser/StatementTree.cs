@@ -8,7 +8,7 @@ namespace Mr.Robot
     public class StatementNode
     {
         // 1.语句范围(起止位置)
-		public CodeScope Scope = null;
+		public CODE_SCOPE Scope = null;
 
         // 2.父语句节点引用
         public StatementNode parent = null;
