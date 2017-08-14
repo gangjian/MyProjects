@@ -262,7 +262,7 @@ namespace Mr.Robot
                 if (item.Checked)
                 {
                     functionName = item.Text;
-                    CCodeAnalyser.FunctionAnalysis(fullName, functionName, CSourceParseInfoList);
+					CFunctionAnalysis.FunctionAnalysis(fullName, functionName, CSourceParseInfoList);
                 }
             }
         }

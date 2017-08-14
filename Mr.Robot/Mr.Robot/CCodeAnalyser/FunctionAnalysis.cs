@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Mr.Robot
 {
-	public partial class CCodeAnalyser
+	public partial class CFunctionAnalysis
 	{
         /// <summary>
         /// 函数解析
@@ -30,7 +30,7 @@ namespace Mr.Robot
 			StatementAnalysis.FunctionStatementsAnalysis(root, CSourceParseInfo);
         }
 
-        public static FuncParseInfo GetFuncInfoFromParseResult(string fileName,
+        public static FuncParseInfo GetFuncInfoFromParseResult(	string fileName,
 																string funcName,
 																List<FileParseInfo> parseInfoList,
                                                                 out FileParseInfo parseInfo)
