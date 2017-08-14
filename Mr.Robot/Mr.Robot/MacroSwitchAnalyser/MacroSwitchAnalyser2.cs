@@ -8,12 +8,35 @@ using System.Threading;
 
 namespace Mr.Robot.MacroSwitchAnalyser
 {
-    public class MacroSwitchAnalyser2
+	// Input参数
+	public class MSA_INPUT_PARA
+	{
+		public List<string> SrcList = null;												// 源文件列表
+		public List<string> HdList = null;												// 头文件列表
+		public List<string> MtpjList = null;											// ".mtpj"文件列表
+		public List<string> MkList = null;												// ".mk"源文件列表
+
+		public MSA_INPUT_PARA(	List<string> src_list, List<string> hd_list,
+								List<string> mtpj_list, List<string> mk_list)
+		{
+			this.SrcList = src_list;
+			this.HdList = hd_list;
+			this.MtpjList = mtpj_list;
+			this.MkList = mk_list;
+		}
+	}
+
+	/// <summary>
+	/// 源代码中的宏开关(On/Off,有效/无效,定义/未定义,define/undefine)分析
+	/// </summary>
+    public class MACRO_SWITCH_ANALYSER
     {
-		List<string> SrcList = null;													// 源文件列表
-		List<string> HdList = null;														// 头文件列表
-		List<string> MtpjList = null;													// .mtpj文件列表
-		List<string> MkList = null;														// .mk文件列表
+		MSA_INPUT_PARA m_inputPara = null;
+		internal MSA_INPUT_PARA InputPara
+		{
+			get { return m_inputPara; }
+			set { m_inputPara = value; }
+		}
 
 		int TotalCount = 0;
 		int SuccessCount = 0;
@@ -26,12 +49,9 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		public ReportProgressDel ReportProgress = null;
 
-		public MacroSwitchAnalyser2(List<string> source_list, List<string> header_list, List<string> mtpj_file_list, List<string> mk_file_list)
+		public MACRO_SWITCH_ANALYSER(MSA_INPUT_PARA input_para)
         {
-			this.SrcList = source_list;
-			this.HdList = header_list;
-			this.MtpjList = mtpj_file_list;
-			this.MkList = mk_file_list;
+			this.InputPara = input_para;
         }
 
 		Thread workerThread = null;
@@ -55,7 +75,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		void ProcMain()
 		{
-			this.TotalCount = this.SrcList.Count;
+			this.TotalCount = this.InputPara.SrcList.Count;
 			this.SuccessCount = 0;
 			this.FailedCount = 0;
 			this.NotFoundCount = 0;
@@ -63,7 +83,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 			// 处理.mtpj文件
 			List<MTPJ_FILE_INFO> mtpjInfoList = new List<MTPJ_FILE_INFO>();
-			foreach (string mtpj_name in this.MtpjList)
+			foreach (string mtpj_name in this.InputPara.MtpjList)
 			{
 				MTPJ_FILE_INFO mtpj_info = new MTPJ_FILE_INFO(mtpj_name);
 				mtpj_info.MtpjProc();
@@ -72,7 +92,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 			// 处理.mk文件
 			List<MK_FILE_INFO> mkInfoList = new List<MK_FILE_INFO>();
-			foreach (string mk_name in this.MkList)
+			foreach (string mk_name in this.InputPara.MkList)
 			{
 				MK_FILE_INFO mk_info = new MK_FILE_INFO(mk_name);
 				mk_info.MkProc();
@@ -85,11 +105,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			CCodeAnalyser.CodeBufferManager codeBufferList = new CCodeAnalyser.CodeBufferManager();
 
 			// 处理源文件
-			foreach (string src_name in this.SrcList)
+			foreach (string src_name in this.InputPara.SrcList)
 			{
 				count++;
 				string commentStr;
-				List<string> resultList = SrcProc(src_name, this.HdList, out commentStr, mtpjInfoList, mkInfoList, ref codeBufferList);
+				List<string> resultList = SrcProc(src_name, this.InputPara.HdList, out commentStr, mtpjInfoList, mkInfoList, ref codeBufferList);
 				if (null != resultList)
 				{
 					//this.ResultList.AddRange(resultList);
