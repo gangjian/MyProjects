@@ -523,7 +523,7 @@ namespace Mr.Robot
 					// Error Log Here!
 					string errLog = "<<< Error LOG >>> : ParseIncludeHeaderFile(..) : " + file_name + " Can't Find Include Header File : " + inc_name;
 					this.ErrorLogList.Add(errLog);
-					System.Diagnostics.Trace.WriteLine(errLog);
+					//System.Diagnostics.Trace.WriteLine(errLog);
 				}
 			}
 		}

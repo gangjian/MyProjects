@@ -243,45 +243,63 @@ namespace Mr.Robot
 			this.progressBar1.Value = 0;
 			this.DetailResultList.Clear();
 			this.SummaryResultList.Clear();
+			this.ProcessedSoureList.Clear();
 
 			SetUICtrlEnabled(false);
 			this.MacroSwitchAnalyzer = new MACRO_SWITCH_ANALYSER(new MSA_INPUT_PARA(this.SourceList, this.HeaderList, this.MtpjFileList, this.MkFileList));
-			this.MacroSwitchAnalyzer.ReportProgress += UpdateProgressHandler;
+			this.MacroSwitchAnalyzer.ReportProgressHandler += new EventHandler(UpdateProgressHandler);
 			this.MacroSwitchAnalyzer.ProcStart();
 			this.StopWatch.Restart();
 		}
 
-		Object UpdateMacroSwitchListLock = new object();
-		List<string> UpdateMacroSwitchList = new List<string>();
+		Queue<string> MacroSwitchResultQueue = new Queue<string>();
 
 		public class SUMMARY_INFO
 		{
 			public string MacroName = string.Empty;										// 宏定义名
 			public string Conclusion = string.Empty;									// 解析结论(是否定义, 定义值)
 			public string FileName = string.Empty;										// (宏定义)所在文件名)
+
+			public SUMMARY_INFO(string macro_name, string conclusion, string file_name)
+			{
+				this.MacroName = macro_name;
+				this.Conclusion = conclusion;
+				this.FileName = file_name;
+			}
 		}
 
 		List<string> DetailResultList = new List<string>();								// 详细结果
 		List<SUMMARY_INFO> SummaryResultList = new List<SUMMARY_INFO>();				// 汇总结果
 
-		void UpdateProgressHandler(string progress_str, List<string> result_list)
+		List<string> ProcessedSoureList = new List<string>();							// 已经处理完的源文件列表
+
+		void UpdateProgressHandler(object o, EventArgs e)
 		{
-			if (null != result_list)
+			foreach (var rsltInfo in this.MacroSwitchAnalyzer.OutputResult.SourceResultList)
 			{
-				lock (result_list)
+				if (!this.ProcessedSoureList.Contains(rsltInfo.SourceFileName))
 				{
-					lock (this.UpdateMacroSwitchListLock)
+					this.ProcessedSoureList.Add(rsltInfo.SourceFileName);
+					if (rsltInfo.SourceFileName.EndsWith("r_fdl_user_if.c"))
 					{
-						this.UpdateMacroSwitchList.Clear();
-						this.UpdateMacroSwitchList.AddRange(result_list);
+						System.Diagnostics.Trace.WriteLine("r_fdl_user_if.c MacroSwitchResultList.Count = " + rsltInfo.MacroSwitchResultList.Count.ToString());
 					}
-					AddDetailAndSummaryResultList();
-					UpdateProgress(progress_str);
+					if (null != rsltInfo.MacroSwitchResultList)
+					{
+						foreach (var rsltStr in rsltInfo.MacroSwitchResultList)
+						{
+							lock (this.MacroSwitchResultQueue)
+							{
+								this.MacroSwitchResultQueue.Enqueue(rsltStr);
+							}
+						}
+						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.ProgressStr);
+					}
+					else
+					{
+						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.ProgressStr);
+					}
 				}
-			}
-			else
-			{
-				UpdateProgress(progress_str);
 			}
 		}
 
@@ -302,37 +320,32 @@ namespace Mr.Robot
 
 		void UpdateProgressCtrlView(string progress_str)
 		{
-			UpdateDetailListView();
-			UpdateSummaryListView();
-			this.tbxLog.AppendText(progress_str + " : " + this.StopWatch.Elapsed.ToString() + System.Environment.NewLine);
-			int idx = progress_str.LastIndexOf(':');
-			if (-1 != idx)
+			UpdateProgressBarView(progress_str);
+
+			List<string> tmpList = new List<string>();
+			lock (this.MacroSwitchResultQueue)
 			{
-				string ratioStr = progress_str.Substring(idx + 1).Trim();
-				string[] arr = ratioStr.Split('/');
-				if (2 == arr.Length)
+				while (0 != this.MacroSwitchResultQueue.Count)
 				{
-					int count, total;
-					if (int.TryParse(arr[0].Trim(), out count)
-						&& int.TryParse(arr[1].Trim(), out total))
-					{
-						if (total != this.progressBar1.Maximum)
-						{
-							this.progressBar1.Maximum = total;
-						}
-						if (count != this.progressBar1.Value)
-						{
-							this.progressBar1.Value = count;
-						}
-						if (count == total)
-						{
-							this.StopWatch.Stop();
-							SetUICtrlEnabled(true);
-							MessageBox.Show("Complete!");
-						}
-					}
+					tmpList.Add(this.MacroSwitchResultQueue.Dequeue());
 				}
 			}
+			// 详细结果列表
+			this.DetailResultList.AddRange(tmpList);
+			foreach (string rslt in tmpList)
+			{
+				string[] arr = rslt.Split(',');
+				if (arr.Length >= 6)
+				{
+					string macro_name = arr[arr.Length - 3];
+					string analysis_conclusion = arr[arr.Length - 2];
+					string macro_file_name = arr[arr.Length - 1];
+					UpdateSummaryList(macro_name, analysis_conclusion, macro_file_name);
+				}
+			}
+
+			UpdateDetailListView(tmpList);
+			UpdateSummaryListView();
 		}
 
 		void SetUICtrlEnabled(bool enabled)
@@ -343,37 +356,6 @@ namespace Mr.Robot
 			this.btnSaveDetail2CSV.Enabled = enabled;
 			this.btnSaveSummary2CSV.Enabled = enabled;
 			this.treeViewSrcFile.Enabled = enabled;
-		}
-
-		void UpdateDetailListView()
-		{
-			ListViewItem lvItem = null;
-			lock (this.UpdateMacroSwitchListLock)
-			{
-				if (null == this.UpdateMacroSwitchList
-					|| 0 == this.UpdateMacroSwitchList.Count)
-				{
-					return;
-				}
-				List<string> tmpList = new List<string>();
-				tmpList.AddRange(this.UpdateMacroSwitchList);
-				foreach (string msStr in tmpList)
-				{
-					string[] arr = msStr.Split(',');
-					int num = this.lvDetailList.Items.Count + 1;
-					lvItem = new ListViewItem(num.ToString());
-					for (int i = 0; i < this.lvDetailList.Columns.Count - 1; i++)
-					{
-						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[i].Trim()));
-					}
-					this.lvDetailList.Items.Add(lvItem);
-				}
-				this.UpdateMacroSwitchList.Clear();
-			}
-			if (null != lvItem)
-			{
-				this.lvDetailList.TopItem = lvItem;
-			}
 		}
 
 		private void btnSaveDetail2CSV_Click(object sender, EventArgs e)
@@ -430,29 +412,6 @@ namespace Mr.Robot
 			}
 		}
 
-		void AddDetailAndSummaryResultList()
-		{
-			lock (this.UpdateMacroSwitchListLock)
-			{
-				// 详细结果列表
-				this.DetailResultList.AddRange(this.UpdateMacroSwitchList);
-
-				// 汇总结果列表
-				// 取得宏名, 解析结果
-				foreach (string rslt in this.UpdateMacroSwitchList)
-				{
-					string[] arr = rslt.Split(',');
-					if (arr.Length >= 6)
-					{
-						string macro_name = arr[arr.Length - 3];
-						string analysis_conclusion = arr[arr.Length - 2];
-						string macro_file_name = arr[arr.Length - 1];
-						UpdateSummaryList(macro_name, analysis_conclusion, macro_file_name);
-					}
-				}
-			}
-		}
-
 		void UpdateSummaryList(string macro_name, string conclusion_str, string macro_file_name)
 		{
 			for (int i = 0; i < this.SummaryResultList.Count; i++)
@@ -470,10 +429,7 @@ namespace Mr.Robot
 					return;
 				}
 			}
-			SUMMARY_INFO sm_info = new SUMMARY_INFO();
-			sm_info.MacroName = macro_name;
-			sm_info.Conclusion = conclusion_str;
-			sm_info.FileName = macro_file_name;
+			SUMMARY_INFO sm_info = new SUMMARY_INFO(macro_name, conclusion_str, macro_file_name);
 			this.SummaryResultList.Add(sm_info);
 		}
 
@@ -514,6 +470,59 @@ namespace Mr.Robot
 						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.Conclusion));
 						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.FileName));
 						this.lvSummaryList.Items.Add(lvItem);
+					}
+				}
+			}
+		}
+
+		void UpdateDetailListView(List<string> add_list)
+		{
+			ListViewItem lvItem = null;
+			foreach (var item in add_list)
+			{
+				string[] arr = item.Split(',');
+				int num = this.lvDetailList.Items.Count + 1;
+				lvItem = new ListViewItem(num.ToString());
+				for (int i = 0; i < this.lvDetailList.Columns.Count - 1; i++)
+				{
+					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[i].Trim()));
+				}
+				this.lvDetailList.Items.Add(lvItem);
+			}
+			if (null != lvItem)
+			{
+				this.lvDetailList.TopItem = lvItem;
+			}
+		}
+
+		void UpdateProgressBarView(string progress_str)
+		{
+			this.tbxLog.AppendText(progress_str + " : " + this.StopWatch.Elapsed.ToString() + System.Environment.NewLine);
+			int idx = progress_str.LastIndexOf(':');
+			if (-1 != idx)
+			{
+				string ratioStr = progress_str.Substring(idx + 1).Trim();
+				string[] arr = ratioStr.Split('/');
+				if (2 == arr.Length)
+				{
+					int count, total;
+					if (int.TryParse(arr[0].Trim(), out count)
+						&& int.TryParse(arr[1].Trim(), out total))
+					{
+						if (total != this.progressBar1.Maximum)
+						{
+							this.progressBar1.Maximum = total;
+						}
+						if (count != this.progressBar1.Value)
+						{
+							this.progressBar1.Value = count;
+						}
+						if (count == total)
+						{
+							this.StopWatch.Stop();
+							SetUICtrlEnabled(true);
+							MessageBox.Show("Complete!");
+						}
 					}
 				}
 			}

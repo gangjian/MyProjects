@@ -28,20 +28,32 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		}
 	}
 
+	public class MSA_SOURCE_RESULT
+	{
+		public string SourceFileName = string.Empty;
+		public List<string> MacroSwitchResultList = null;
+
+		public MSA_SOURCE_RESULT(string src_name, List<string> macro_switch_result_list)
+		{
+			this.SourceFileName = src_name;
+			this.MacroSwitchResultList = macro_switch_result_list;
+		}
+	}
 	/// <summary>
 	/// 出力结果
 	/// </summary>
 	public class MSA_OUTPUT_RESULT
 	{
-		public string SourceFileName = string.Empty;
+		public List<MSA_SOURCE_RESULT> SourceResultList = new List<MSA_SOURCE_RESULT>();
 		public string ProgressStr = string.Empty;
-		public List<string> ResultList = new List<string>();
+		object obj_lock = new object();
 
-		public MSA_OUTPUT_RESULT(string src_name, string progress_str, List<string> result_list)
+		public void Add(string src_name, List<string> result_list)
 		{
-			this.SourceFileName = src_name;
-			this.ProgressStr = progress_str;
-			this.ResultList = result_list;
+			lock (obj_lock)
+			{
+				this.SourceResultList.Add(new MSA_SOURCE_RESULT(src_name, result_list));
+			}
 		}
 	}
 
@@ -104,16 +116,15 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			set { m_statisticsInfo = value; }
 		}
 
-		private List<MSA_OUTPUT_RESULT> m_outputResultList = new List<MSA_OUTPUT_RESULT>();
-		public List<MSA_OUTPUT_RESULT> OutputResultList
+		private MSA_OUTPUT_RESULT m_outputResult = new MSA_OUTPUT_RESULT();
+		public MSA_OUTPUT_RESULT OutputResult
 		{
-			get { return m_outputResultList; }
-			set { m_outputResultList = value; }
+			get { return m_outputResult; }
+			set { m_outputResult = value; }
 		}
 
-		public delegate void ReportProgressDel(string progress_str, List<string> result_list);
-
-		public ReportProgressDel ReportProgress = null;
+		// 新的更新处理,用以取代上面的"ReportProgressDel"
+		public EventHandler ReportProgressHandler = null;
 
 		public MACRO_SWITCH_ANALYSER(MSA_INPUT_PARA input_para)
         {
@@ -141,7 +152,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		void ProcMain()
 		{
-			this.OutputResultList = new List<MSA_OUTPUT_RESULT>();
+			this.OutputResult = new MSA_OUTPUT_RESULT();
 			this.StatisticsInfo = new MSA_STATISTICS_INFO();
 			this.StatisticsInfo.TotalCount = this.InputPara.SrcList.Count;
 			int count = 0;
@@ -176,23 +187,14 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				string commentStr;
 				List<string> resultList = SrcProc(src_name, this.InputPara.HdList, out commentStr, mtpjInfoList, mkInfoList, ref codeBufferList);
 				string progressStr = src_name + " ==> " + commentStr + " : " + count.ToString() + "/" + this.StatisticsInfo.TotalCount.ToString();
-				if (null != resultList)
+				this.OutputResult.Add(src_name, resultList);
+				this.OutputResult.ProgressStr = progressStr;
+				if (null != this.ReportProgressHandler)
 				{
-					lock (this.OutputResultList)
-					{
-						this.OutputResultList.Add(new MSA_OUTPUT_RESULT(src_name, progressStr, resultList));
-					}
-				}
-				if (null != this.ReportProgress)
-				{
-					this.ReportProgress(progressStr, resultList);
-					if (null != resultList && 0 != resultList.Count)
-					{
-						Thread.Sleep(30);
-					}
+					this.ReportProgressHandler(this, null);
 				}
 			}
-			System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
+			//System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
 		}
 
 		List<string> SrcProc(	string src_name,
