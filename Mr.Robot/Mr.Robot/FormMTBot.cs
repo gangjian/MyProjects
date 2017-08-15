@@ -241,7 +241,7 @@ namespace Mr.Robot
 			this.tbxLog.Clear();
 			this.tbxOutputLog.Clear();
 			this.progressBar1.Value = 0;
-			this.DetailResultList.Clear();
+			//this.DetailResultList.Clear();
 			this.SummaryResultList.Clear();
 			this.ProcessedSoureList.Clear();
 
@@ -268,7 +268,7 @@ namespace Mr.Robot
 			}
 		}
 
-		List<string> DetailResultList = new List<string>();								// 详细结果
+		//List<string> DetailResultList = new List<string>();								// 详细结果
 		List<SUMMARY_INFO> SummaryResultList = new List<SUMMARY_INFO>();				// 汇总结果
 
 		List<string> ProcessedSoureList = new List<string>();							// 已经处理完的源文件列表
@@ -331,7 +331,7 @@ namespace Mr.Robot
 				}
 			}
 			// 详细结果列表
-			this.DetailResultList.AddRange(tmpList);
+			//this.DetailResultList.AddRange(tmpList);
 			foreach (string rslt in tmpList)
 			{
 				string[] arr = rslt.Split(',');

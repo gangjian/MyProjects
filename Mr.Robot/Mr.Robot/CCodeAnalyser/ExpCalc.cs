@@ -337,6 +337,12 @@ namespace Mr.Robot
 					case "/":
 						retVal = CalcArithmetic_Divide(oper_group, parse_info);			// 除
 						break;
+					case "&":
+						retVal = Calculate_BitAnd(oper_group, parse_info);				// 位与
+						break;
+					case "|":
+						retVal = Calculate_BitOr(oper_group, parse_info);				// 位或
+						break;
 					default:
 						throw new System.NotImplementedException();
 				}
@@ -572,6 +578,26 @@ namespace Mr.Robot
 			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
 			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return operand1Value / operand2Value;
+		}
+
+		static int Calculate_BitAnd(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			return operand1Value & operand2Value;
+		}
+
+		static int Calculate_BitOr(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
+		{
+			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			return operand1Value | operand2Value;
 		}
 
 		static int CalcTypeCasting(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)

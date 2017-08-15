@@ -178,7 +178,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				}
 			}
 
-			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
+			//C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
+			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = null;
 
 			// 处理源文件
 			foreach (string src_name in this.InputPara.SrcList)
