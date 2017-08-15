@@ -67,16 +67,16 @@ namespace Mr.Robot
 	public class FILE_PARSE_INFO
 	{
 		public string SourceName = string.Empty;
-		public List<string> IncFileList = new List<string>();							// "include"头文件名列表
-		public List<FUNCTION_PARSE_INFO> FuncDeclareList = new List<FUNCTION_PARSE_INFO>();			// 函数声明列表
-		public List<FUNCTION_PARSE_INFO> FunDefineList = new List<FUNCTION_PARSE_INFO>();			// 函数定义列表
-		public List<USER_DEFINE_TYPE_INFO> UsrDefTypeList = new List<USER_DEFINE_TYPE_INFO>();		// 用户定义类型列表
+		public List<string> IncFileList = new List<string>();									// "include"头文件名列表
+		public List<FUNCTION_PARSE_INFO> FuncDeclareList = new List<FUNCTION_PARSE_INFO>();		// 函数声明列表
+		public List<FUNCTION_PARSE_INFO> FunDefineList = new List<FUNCTION_PARSE_INFO>();		// 函数定义列表
+		public List<USER_DEFINE_TYPE_INFO> UsrDefTypeList = new List<USER_DEFINE_TYPE_INFO>();	// 用户定义类型列表
 		public List<VAR_CONTEXT> GlobalDeclareList = new List<VAR_CONTEXT>();					// 全局量声明列表
 		public List<VAR_CONTEXT> GlobalDefineList = new List<VAR_CONTEXT>();					// 全局量定义列表
-		public List<MACRO_DEFINE_INFO> MacroDefineList = new List<MACRO_DEFINE_INFO>();		// 宏定义列表
-		public List<TYPE_DEFINE_INFO> TypeDefineList = new List<TYPE_DEFINE_INFO>();		// typedef类型定义列表
+		public List<MACRO_DEFINE_INFO> MacroDefineList = new List<MACRO_DEFINE_INFO>();			// 宏定义列表
+		public List<TYPE_DEFINE_INFO> TypeDefineList = new List<TYPE_DEFINE_INFO>();			// typedef类型定义列表
 
-		public List<string> CodeList = new List<string>();								// 解析后(去除注释, 宏展开等)的代码行内容列表
+		public List<string> CodeList = new List<string>();										// 解析后(去除注释, 宏展开等)的代码行内容列表
 
 		// MT预编译宏开关值提取追加
 		public List<string> MacroSwitchList = new List<string>();

@@ -236,6 +236,13 @@ namespace Mr.Robot
 			{
 				return;
 			}
+			ClearAllLastResults();														// 清除所有上一次的解析结果
+			SetUICtrlEnabled(false);													// 设置GUI控件无效化
+			StartMacroSwitchAnalyzer();													// 启动MacroSwitchAnalyzer开始解析
+		}
+
+		void ClearAllLastResults()
+		{
 			this.lvDetailList.Items.Clear();
 			this.lvSummaryList.Items.Clear();
 			this.tbxLog.Clear();
@@ -244,15 +251,17 @@ namespace Mr.Robot
 			//this.DetailResultList.Clear();
 			this.SummaryResultList.Clear();
 			this.ProcessedSoureList.Clear();
+		}
 
-			SetUICtrlEnabled(false);
+		void StartMacroSwitchAnalyzer()
+		{
 			this.MacroSwitchAnalyzer = new MACRO_SWITCH_ANALYSER(new MSA_INPUT_PARA(this.SourceList, this.HeaderList, this.MtpjFileList, this.MkFileList));
 			this.MacroSwitchAnalyzer.ReportProgressHandler += new EventHandler(UpdateProgressHandler);
 			this.MacroSwitchAnalyzer.ProcStart();
 			this.StopWatch.Restart();
 		}
 
-		Queue<string> MacroSwitchResultQueue = new Queue<string>();
+		Queue<string> MacroSwitchResultQueue = new Queue<string>();						// 用来接收MacroSwitchAnalyzer解析出的宏开关结果的队列
 
 		public class SUMMARY_INFO
 		{
@@ -268,7 +277,7 @@ namespace Mr.Robot
 			}
 		}
 
-		//List<string> DetailResultList = new List<string>();								// 详细结果
+		//List<string> DetailResultList = new List<string>();							// 详细结果
 		List<SUMMARY_INFO> SummaryResultList = new List<SUMMARY_INFO>();				// 汇总结果
 
 		List<string> ProcessedSoureList = new List<string>();							// 已经处理完的源文件列表
@@ -280,10 +289,6 @@ namespace Mr.Robot
 				if (!this.ProcessedSoureList.Contains(rsltInfo.SourceFileName))
 				{
 					this.ProcessedSoureList.Add(rsltInfo.SourceFileName);
-					if (rsltInfo.SourceFileName.EndsWith("r_fdl_user_if.c"))
-					{
-						System.Diagnostics.Trace.WriteLine("r_fdl_user_if.c MacroSwitchResultList.Count = " + rsltInfo.MacroSwitchResultList.Count.ToString());
-					}
 					if (null != rsltInfo.MacroSwitchResultList)
 					{
 						foreach (var rsltStr in rsltInfo.MacroSwitchResultList)
@@ -293,34 +298,34 @@ namespace Mr.Robot
 								this.MacroSwitchResultQueue.Enqueue(rsltStr);
 							}
 						}
-						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.ProgressStr);
+						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.Progress);
 					}
 					else
 					{
-						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.ProgressStr);
+						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.Progress);
 					}
 				}
 			}
 		}
 
-		delegate void UpdateProgressDel(string text);
+		delegate void UpdateProgressDel(MSA_PROGRESS msa_progress);
 
-		void UpdateProgress(string progress_str)
+		void UpdateProgress(MSA_PROGRESS msa_progress)
 		{
 			if (this.InvokeRequired)
 			{
 				UpdateProgressDel del = new UpdateProgressDel(UpdateProgress);
-				this.BeginInvoke(del, new object[] { progress_str });
+				this.BeginInvoke(del, new object[] { msa_progress });
 			}
 			else
 			{
-				UpdateProgressCtrlView(progress_str);
+				UpdateProgressCtrlView(msa_progress);
 			}
 		}
 
-		void UpdateProgressCtrlView(string progress_str)
+		void UpdateProgressCtrlView(MSA_PROGRESS msa_progress)
 		{
-			UpdateProgressBarView(progress_str);
+			UpdateProgressBarView(msa_progress);
 
 			List<string> tmpList = new List<string>();
 			lock (this.MacroSwitchResultQueue)
@@ -409,6 +414,7 @@ namespace Mr.Robot
 			if (null != this.MacroSwitchAnalyzer)
 			{
 				this.MacroSwitchAnalyzer.ProcAbort();
+				this.MacroSwitchAnalyzer = null;
 			}
 		}
 
@@ -495,36 +501,25 @@ namespace Mr.Robot
 			}
 		}
 
-		void UpdateProgressBarView(string progress_str)
+		void UpdateProgressBarView(MSA_PROGRESS msa_progress)
 		{
-			this.tbxLog.AppendText(progress_str + " : " + this.StopWatch.Elapsed.ToString() + System.Environment.NewLine);
-			int idx = progress_str.LastIndexOf(':');
-			if (-1 != idx)
+			string progressStr = msa_progress.CurrentSourceName + " ==> "
+						+ msa_progress.ProcResult.ToString() + " : "
+						+ msa_progress.CurrentCount.ToString() + "/" + msa_progress.TotalCount.ToString();
+			this.tbxLog.AppendText(progressStr + " : " + this.StopWatch.Elapsed.ToString() + System.Environment.NewLine);
+			if (msa_progress.TotalCount != this.progressBar1.Maximum)
 			{
-				string ratioStr = progress_str.Substring(idx + 1).Trim();
-				string[] arr = ratioStr.Split('/');
-				if (2 == arr.Length)
-				{
-					int count, total;
-					if (int.TryParse(arr[0].Trim(), out count)
-						&& int.TryParse(arr[1].Trim(), out total))
-					{
-						if (total != this.progressBar1.Maximum)
-						{
-							this.progressBar1.Maximum = total;
-						}
-						if (count != this.progressBar1.Value)
-						{
-							this.progressBar1.Value = count;
-						}
-						if (count == total)
-						{
-							this.StopWatch.Stop();
-							SetUICtrlEnabled(true);
-							MessageBox.Show("Complete!");
-						}
-					}
-				}
+				this.progressBar1.Maximum = msa_progress.TotalCount;
+			}
+			if (msa_progress.CurrentCount != this.progressBar1.Value)
+			{
+				this.progressBar1.Value = msa_progress.CurrentCount;
+			}
+			if (msa_progress.CurrentCount == msa_progress.TotalCount)
+			{
+				this.StopWatch.Stop();
+				SetUICtrlEnabled(true);
+				MessageBox.Show("Complete!");
 			}
 		}
 

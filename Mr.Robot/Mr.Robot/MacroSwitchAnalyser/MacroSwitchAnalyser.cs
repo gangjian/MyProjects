@@ -45,16 +45,43 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	public class MSA_OUTPUT_RESULT
 	{
 		public List<MSA_SOURCE_RESULT> SourceResultList = new List<MSA_SOURCE_RESULT>();
-		public string ProgressStr = string.Empty;
+		public MSA_PROGRESS Progress = new MSA_PROGRESS();
 		object obj_lock = new object();
 
-		public void Add(string src_name, List<string> result_list)
+		public void Add(MSA_SOURCE_RESULT result)
 		{
 			lock (obj_lock)
 			{
-				this.SourceResultList.Add(new MSA_SOURCE_RESULT(src_name, result_list));
+				this.SourceResultList.Add(result);
 			}
 		}
+	}
+
+	public class MSA_PROGRESS
+	{
+		public string CurrentSourceName = string.Empty;
+		public MSA_SOURCE_PROC_RESULT ProcResult = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
+		public int CurrentCount = 0;
+		public int TotalCount = 0;
+
+		public MSA_PROGRESS()
+		{
+		}
+
+		public MSA_PROGRESS(string cur_file, MSA_SOURCE_PROC_RESULT proc_rslt, int count, int total)
+		{
+			this.CurrentSourceName = cur_file;
+			this.ProcResult = proc_rslt;
+			this.CurrentCount = count;
+			this.TotalCount = total;
+		}
+	}
+
+	public enum MSA_SOURCE_PROC_RESULT
+	{
+		NOT_FOUND,
+		FAIL,
+		SUCCESS,
 	}
 
 	/// <summary>
@@ -90,6 +117,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			set { _notFoundCount = value; }
 		}
 
+		public MSA_STATISTICS_INFO(int total_count)
+		{
+			this.TotalCount = total_count;
+		}
+
 		public string PrintOut()
 		{
 			return "Complete! Total:" + this.TotalCount.ToString() + ", Failed:" + this.FailedCount.ToString()
@@ -109,14 +141,14 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			set { m_inputPara = value; }
 		}
 
-		MSA_STATISTICS_INFO m_statisticsInfo = new MSA_STATISTICS_INFO();
+		MSA_STATISTICS_INFO m_statisticsInfo = null;
 		public MSA_STATISTICS_INFO StatisticsInfo
 		{
 			get { return m_statisticsInfo; }
 			set { m_statisticsInfo = value; }
 		}
 
-		private MSA_OUTPUT_RESULT m_outputResult = new MSA_OUTPUT_RESULT();
+		private MSA_OUTPUT_RESULT m_outputResult = null;
 		public MSA_OUTPUT_RESULT OutputResult
 		{
 			get { return m_outputResult; }
@@ -153,11 +185,41 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		void ProcMain()
 		{
 			this.OutputResult = new MSA_OUTPUT_RESULT();
-			this.StatisticsInfo = new MSA_STATISTICS_INFO();
-			this.StatisticsInfo.TotalCount = this.InputPara.SrcList.Count;
-			int count = 0;
+			this.StatisticsInfo = new MSA_STATISTICS_INFO(this.InputPara.SrcList.Count);
 
 			// 处理.mtpj文件
+			List<MTPJ_FILE_INFO> mtpjInfoList = MtpjProc();
+
+			// 处理.mk文件
+			List<MK_FILE_INFO> mkInfoList = MkProc();
+
+			//C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
+			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = null;
+
+			// 处理源文件
+			int count = 0;
+			foreach (string src_name in this.InputPara.SrcList)
+			{
+				count++;
+				MSA_SOURCE_PROC_RESULT procResult;
+				MSA_SOURCE_RESULT result = SrcProc(src_name, this.InputPara.HdList, out procResult, mtpjInfoList, mkInfoList, ref codeBufferList);
+				this.OutputResult.Add(result);
+				this.OutputResult.Progress = new MSA_PROGRESS(src_name, procResult, count, this.StatisticsInfo.TotalCount);
+				ReportProgress2Caller();
+			}
+			System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
+		}
+
+		void ReportProgress2Caller()
+		{
+			if (null != this.ReportProgressHandler)
+			{
+				this.ReportProgressHandler(this, null);
+			}
+		}
+
+		List<MTPJ_FILE_INFO> MtpjProc()
+		{
 			List<MTPJ_FILE_INFO> mtpjInfoList = new List<MTPJ_FILE_INFO>();
 			foreach (string mtpj_name in this.InputPara.MtpjList)
 			{
@@ -165,8 +227,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				mtpj_info.MtpjProc();
 				mtpjInfoList.Add(mtpj_info);
 			}
+			return mtpjInfoList;
+		}
 
-			// 处理.mk文件
+		List<MK_FILE_INFO> MkProc()
+		{
 			List<MK_FILE_INFO> mkInfoList = new List<MK_FILE_INFO>();
 			foreach (string mk_name in this.InputPara.MkList)
 			{
@@ -177,42 +242,24 @@ namespace Mr.Robot.MacroSwitchAnalyser
 					mkInfoList.Add(mk_info);
 				}
 			}
-
-			//C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
-			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = null;
-
-			// 处理源文件
-			foreach (string src_name in this.InputPara.SrcList)
-			{
-				count++;
-				string commentStr;
-				List<string> resultList = SrcProc(src_name, this.InputPara.HdList, out commentStr, mtpjInfoList, mkInfoList, ref codeBufferList);
-				string progressStr = src_name + " ==> " + commentStr + " : " + count.ToString() + "/" + this.StatisticsInfo.TotalCount.ToString();
-				this.OutputResult.Add(src_name, resultList);
-				this.OutputResult.ProgressStr = progressStr;
-				if (null != this.ReportProgressHandler)
-				{
-					this.ReportProgressHandler(this, null);
-				}
-			}
-			//System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
+			return mkInfoList;
 		}
 
-		List<string> SrcProc(	string src_name,
-								List<string> header_list,
-								out string comment_str,
-								List<MTPJ_FILE_INFO> mtpj_info_list,
-								List<MK_FILE_INFO> mk_info_list,
-								ref C_CODE_ANALYSER.CODE_BUFFER_MANAGER code_buf_list)
+		MSA_SOURCE_RESULT SrcProc(	string src_name,
+									List<string> header_list,
+									out MSA_SOURCE_PROC_RESULT proc_result,
+									List<MTPJ_FILE_INFO> mtpj_info_list,
+									List<MK_FILE_INFO> mk_info_list,
+									ref C_CODE_ANALYSER.CODE_BUFFER_MANAGER code_buf_list)
         {
-			comment_str = string.Empty;
+			proc_result = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
             List<string> codeList = C_CODE_ANALYSER.RemoveComments(src_name);
 			List<MacroSwitchExpInfo> expInfoList = GetMacroExpList(codeList);
             if (0 == expInfoList.Count)
             {
-				comment_str = "NoT Found!";
+				proc_result = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
 				this.StatisticsInfo.NotFoundCount += 1;
-                return null;
+				return new MSA_SOURCE_RESULT(src_name, null);
             }
 			List<string> srcList = new List<string>();
 			srcList.Add(src_name);
@@ -221,9 +268,9 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			List<FILE_PARSE_INFO> parseInfoList = cAnalyser.CFileListProc();
 			if (null == parseInfoList || 0 == parseInfoList.Count)
 			{
-				comment_str = "Failed!";
+				proc_result = MSA_SOURCE_PROC_RESULT.FAIL;
 				this.StatisticsInfo.FailedCount += 1;
-				return null;
+				return new MSA_SOURCE_RESULT(src_name, null);
 			}
 			List<string> resultList = new List<string>();
 			FileInfo fi = new FileInfo(src_name);
@@ -232,9 +279,9 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				MacroPrintInfo printInfo = new MacroPrintInfo(fi.Name, expInfo.LineNum.ToString(), expInfo.CodeLine);
 				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, mtpj_info_list, mk_info_list);
 			}
-			comment_str = "Success!";
+			proc_result = MSA_SOURCE_PROC_RESULT.SUCCESS;
 			this.StatisticsInfo.SuccessCount += 1;
-			return resultList;
+			return new MSA_SOURCE_RESULT(src_name, resultList);
         }
 
 		class MacroSwitchExpInfo
