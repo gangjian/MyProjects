@@ -14,7 +14,6 @@ namespace Mr.Robot
 		#region 全局字段
 		List<string> HeaderList = new List<string>();									// 头文件名列表
 		List<string> SourceList = new List<string>();									// 源文件名列表
-		CODE_BUFFER_MANAGER CodeBuffManagerRef = null;
 
 		public EventHandler UpdateProgress = null;
 		public List<FILE_PARSE_INFO> ParseInfoList = null;
@@ -24,11 +23,10 @@ namespace Mr.Robot
 		public List<string> ErrorLogList = new List<string>();
 		#endregion
 
-		public C_CODE_ANALYSER(List<string> source_list, List<string> header_list, ref CODE_BUFFER_MANAGER code_buf_manager)
+		public C_CODE_ANALYSER(List<string> source_list, List<string> header_list)
 		{
 			this.SourceList = source_list;
 			this.HeaderList = header_list;
-			this.CodeBuffManagerRef = code_buf_manager;
 		}
 
 		#region 向外提供的接口方法
@@ -70,46 +68,6 @@ namespace Mr.Robot
 
 		// 以下都是内部调用方法
 
-		public class CODE_BUFFER_MANAGER
-		{
-			class CODE_BUFFER
-			{
-				public string FileName = string.Empty;
-				public List<string> CodeList = null;
-
-				public CODE_BUFFER(string file_name, List<string> code_list)
-				{
-					this.FileName = file_name;
-					this.CodeList = code_list;
-				}
-			}
-
-			const int MAX_CODE_BUF_LIST_CNT = 1000;
-			List<CODE_BUFFER> CodeBufferList = new List<CODE_BUFFER>();
-
-			public List<string> SearchCodeBufferList(string file_name)
-			{
-				for (int i = this.CodeBufferList.Count - 1; i >= 0; i--)
-				{
-					if (this.CodeBufferList[i].FileName.Equals(file_name))
-					{
-						return this.CodeBufferList[i].CodeList;
-					}
-				}
-				return null;
-			}
-
-			public void AddCodeBufferList(string file_name, List<string> code_list)
-			{
-				CODE_BUFFER cb = new CODE_BUFFER(file_name, code_list);
-				this.CodeBufferList.Add(cb);
-				if (this.CodeBufferList.Count > MAX_CODE_BUF_LIST_CNT)
-				{
-					this.CodeBufferList.RemoveRange(0, this.CodeBufferList.Count - MAX_CODE_BUF_LIST_CNT);
-				}
-			}
-		}
-
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
@@ -121,19 +79,8 @@ namespace Mr.Robot
 				file_info = new FILE_PARSE_INFO(file_name);
 			}
 			List<string> codeList = null;
-			if (null != this.CodeBuffManagerRef)
-			{
-				codeList = this.CodeBuffManagerRef.SearchCodeBufferList(file_name);
-			}
-			if (null == codeList)
-			{
-				// 去掉注释
-				codeList = RemoveComments(file_name);
-				if (null != this.CodeBuffManagerRef && file_name.ToLower().EndsWith(".h"))
-				{
-					this.CodeBuffManagerRef.AddCodeBufferList(file_name, codeList);
-				}
-			}
+			// 去掉注释
+			codeList = RemoveComments(file_name);
 			try
 			{
 				// 预编译处理

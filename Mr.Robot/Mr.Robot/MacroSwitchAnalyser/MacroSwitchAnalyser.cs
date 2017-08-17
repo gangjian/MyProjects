@@ -193,16 +193,13 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			// 处理.mk文件
 			List<MK_FILE_INFO> mkInfoList = MkProc();
 
-			//C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
-			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBufferList = null;
-
 			// 处理源文件
 			int count = 0;
 			foreach (string src_name in this.InputPara.SrcList)
 			{
 				count++;
 				MSA_SOURCE_PROC_RESULT procResult;
-				MSA_SOURCE_RESULT result = SrcProc(src_name, this.InputPara.HdList, out procResult, mtpjInfoList, mkInfoList, ref codeBufferList);
+				MSA_SOURCE_RESULT result = SrcProc(src_name, this.InputPara.HdList, out procResult, mtpjInfoList, mkInfoList);
 				this.OutputResult.Add(result);
 				this.OutputResult.Progress = new MSA_PROGRESS(src_name, procResult, count, this.StatisticsInfo.TotalCount);
 				ReportProgress2Caller();
@@ -249,8 +246,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 									List<string> header_list,
 									out MSA_SOURCE_PROC_RESULT proc_result,
 									List<MTPJ_FILE_INFO> mtpj_info_list,
-									List<MK_FILE_INFO> mk_info_list,
-									ref C_CODE_ANALYSER.CODE_BUFFER_MANAGER code_buf_list)
+									List<MK_FILE_INFO> mk_info_list)
         {
 			proc_result = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
             List<string> codeList = C_CODE_ANALYSER.RemoveComments(src_name);
@@ -263,7 +259,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
 			List<string> srcList = new List<string>();
 			srcList.Add(src_name);
-			C_CODE_ANALYSER cAnalyser = new C_CODE_ANALYSER(srcList, header_list, ref code_buf_list);
+			C_CODE_ANALYSER cAnalyser = new C_CODE_ANALYSER(srcList, header_list);
 			cAnalyser.MacroSwichAnalyserFlag = true;
 			List<FILE_PARSE_INFO> parseInfoList = cAnalyser.CFileListProc();
 			if (null == parseInfoList || 0 == parseInfoList.Count)

@@ -211,8 +211,7 @@ namespace Mr.Robot
                     }
                 }
             }
-			C_CODE_ANALYSER.CODE_BUFFER_MANAGER codeBuffManager = new C_CODE_ANALYSER.CODE_BUFFER_MANAGER();
-			this.CAnalyser = new C_CODE_ANALYSER(srcList, this.CHeaderFileList, ref codeBuffManager);
+			this.CAnalyser = new C_CODE_ANALYSER(srcList, this.CHeaderFileList);
 			this.CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
 			this.CAnalyser.ProcessStart();
         }
