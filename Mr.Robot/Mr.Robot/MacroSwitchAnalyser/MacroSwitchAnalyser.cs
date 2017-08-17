@@ -249,7 +249,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 									List<MK_FILE_INFO> mk_info_list)
         {
 			proc_result = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
-            List<string> codeList = C_CODE_ANALYSER.RemoveComments(src_name);
+            List<string> codeList = COMN_PROC.RemoveComments(src_name);
 			List<MacroSwitchExpInfo> expInfoList = GetMacroExpList(codeList);
             if (0 == expInfoList.Count)
             {

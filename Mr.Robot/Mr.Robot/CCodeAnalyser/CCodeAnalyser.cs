@@ -47,14 +47,11 @@ namespace Mr.Robot
 		public List<FILE_PARSE_INFO> CFileListProc()
 		{
 			this.ParseInfoList = new List<FILE_PARSE_INFO>();
-			int count = 0;
-			int total = this.SourceList.Count;
 			// 逐个解析源文件
 			foreach (string srcName in this.SourceList)
 			{
 				FILE_PARSE_INFO parseInfo = new FILE_PARSE_INFO(srcName);
-				count++;
-				if (CFileProcess(srcName, ref parseInfo))
+				if (CFileProcess(srcName, parseInfo))
 				{
 					this.ParseInfoList.Add(parseInfo);
 				}
@@ -71,22 +68,13 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		bool CFileProcess(string file_name, ref FILE_PARSE_INFO file_info)
+		bool CFileProcess(string file_name, FILE_PARSE_INFO file_info)
 		{
 			//System.Diagnostics.Trace.WriteLine(file_name + ": ");
-			if (null == file_info)
-			{
-				file_info = new FILE_PARSE_INFO(file_name);
-			}
-			List<string> codeList = null;
-			// 去掉注释
-			codeList = RemoveComments(file_name);
 			try
 			{
 				// 预编译处理
-				codeList = PrecompileProcess(file_name, codeList, ref file_info);
-				file_info.CodeList = codeList;
-
+				file_info.CodeList = PrecompileProcess(file_name, file_info);
 				if (this.MacroSwichAnalyserFlag)
 				{
 					return true;
@@ -109,92 +97,12 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
-		/// 移除代码注释
-		/// </summary>
-		public static List<string> RemoveComments(string fileName)
-		{
-			TextReader tr = new StreamReader(fileName);
-			List<string> retList = new List<string>();
-
-			string rdLine = tr.ReadLine();
-			if (null == rdLine)
-			{
-				return retList;
-			}
-            string wtLine = "";
-			do
-			{
-				int idx1 = rdLine.IndexOf("//");
-				int idx2 = rdLine.IndexOf("/*");
-
-				if ((-1 != idx1)
-					&& (-1 != idx2)
-					&& (idx1 < idx2)
-					)
-				{
-					wtLine = rdLine.Remove(idx1).TrimEnd();
-				}
-				else if ((-1 != idx1)
-						 && (-1 == idx2))
-				{
-					// 只包含行注释
-					wtLine = rdLine.Remove(idx1).TrimEnd();
-				}
-				else if (-1 != idx2)
-				{
-					// 只包含块注释
-					int idx_s = idx2;
-					int idx_e = rdLine.IndexOf("*/", idx_s + 2);
-					while (-1 == idx_e)
-					{
-						if (rdLine.Length > idx_s)
-						{
-							wtLine = rdLine.Remove(idx_s).TrimEnd();
-						}
-						retList.Add(wtLine);
-                        idx_s = 0;
-
-						rdLine = tr.ReadLine();
-						if (null == rdLine)
-						{
-							break;
-						}
-						idx_e = rdLine.IndexOf("*/");
-					}
-					if (-1 != idx_e)
-					{
-						rdLine = rdLine.Remove(idx_s, idx_e - idx_s + 2);
-					}
-					else
-					{
-						rdLine = "";
-					}
-					continue;
-				}
-				else
-				{
-					// 不包含注释
-					wtLine = rdLine.TrimEnd();
-				}
-				retList.Add(wtLine);
-				rdLine = tr.ReadLine();
-				if (null == rdLine)
-				{
-					break;
-				}
-			} while (true);
-			tr.Close();
-
-			return retList;
-		}
-
-		/// <summary>
 		/// 预编译处理
 		/// </summary>
 		public List<string> PrecompileProcess(	string file_name,
-												List<string> codeList,
-												ref FILE_PARSE_INFO fi)
+												FILE_PARSE_INFO fi)
 		{
+			List<string> codeList = COMN_PROC.RemoveComments(file_name);
 			List<string> retList = new List<string>();
 			Stack<CONDITIONAL_COMPILATION_INFO> ccStack = new Stack<CONDITIONAL_COMPILATION_INFO>(); // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
 			CONDITIONAL_COMPILATION_INFO cc_info = new CONDITIONAL_COMPILATION_INFO();
@@ -214,19 +122,18 @@ namespace Mr.Robot
 						{
 							// 取得include文件名
 							string incFileName = GetIncludeFileName(codeList, ref searchPos);
-							System.Diagnostics.Trace.Assert(null != incFileName);
 							if (!fi.IncFileList.Contains(incFileName))
 							{
 								fi.IncFileList.Add(incFileName);
 							}
-							ParseIncludeHeaderFile(incFileName, ref fi, file_name);
+							ParseIncludeHeaderFile(incFileName, fi, file_name);
 						}
 					}
 					else if ("define" == nextIdtf.Text.ToLower())
 					{
 						if (false != cc_info.WriteFlag)
 						{
-							DefineProcess(file_name, codeList, ref searchPos, ref fi);
+							DefineProcess(file_name, codeList, ref searchPos, fi);
 						}
 					}
 					else if ("pragma" == nextIdtf.Text.ToLower())
@@ -271,7 +178,6 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
-                                //if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
 								{
 									cc_info.WriteFlag = false;
@@ -385,7 +291,6 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
-                                //if (0 != CommonProcess.JudgeExpressionValue(exprStr, fi.MacroDefineList))
 								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
 								{
 									cc_info.WriteFlag = false;
@@ -452,7 +357,7 @@ namespace Mr.Robot
 		/// 取得include头文件的解析情报
 		/// </summary>
 		void ParseIncludeHeaderFile(string inc_name,
-									ref FILE_PARSE_INFO fi,
+									FILE_PARSE_INFO fi,
 									string file_name)
 		{
 			if (	(inc_name.StartsWith("\"") && inc_name.EndsWith("\""))				// 双引号
@@ -463,14 +368,13 @@ namespace Mr.Robot
 				string headerName = GetActualHeadrFullName(inc_name, file_name);
 				if (!string.IsNullOrEmpty(headerName))
 				{
-					CFileProcess(headerName, ref fi);
+					PrecompileProcess(headerName, fi);
 				}
 				else
 				{
 					// Error Log Here!
 					string errLog = "<<< Error LOG >>> : ParseIncludeHeaderFile(..) : " + file_name + " Can't Find Include Header File : " + inc_name;
 					this.ErrorLogList.Add(errLog);
-					//System.Diagnostics.Trace.WriteLine(errLog);
 				}
 			}
 		}
@@ -546,7 +450,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 找出两个字符串从头开始连续一致字符的个数
 		/// </summary>
-		/// <returns></returns>
 		int CompStrSameCount(string str1, string str2)
 		{
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(str1) && !string.IsNullOrEmpty(str2));
@@ -711,9 +614,6 @@ namespace Mr.Robot
 						}
 						else
 						{
-							// TODO: SimpleStatementAnalyze替换GlobalVarProcess
-							//GlobalVarProcess(qualifierList, ref parse_info);
-
 							statementStr = StatementAnalysis.GetStatementStr(parse_info.CodeList,
 								new CODE_SCOPE(qualifierList.First().Position, nextIdtf.Position));
 						}
@@ -737,10 +637,10 @@ namespace Mr.Robot
 		/// 函数检测(声明, 定义)
 		/// </summary>
 		static FUNCTION_PARSE_INFO FunctionDetectProcess(	string src_name,
-													FILE_PARSE_INFO parse_info,
-													List<CODE_IDENTIFIER> qualifierList,
-													ref CODE_POSITION searchPos,
-													CODE_POSITION bracketLeft)
+															FILE_PARSE_INFO parse_info,
+															List<CODE_IDENTIFIER> qualifierList,
+															ref CODE_POSITION searchPos,
+															CODE_POSITION bracketLeft)
 		{
 			if (0 == qualifierList.Count
 				|| "typedef" == qualifierList.First().Text)
@@ -857,9 +757,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得包含头文件名
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="searchPos"></param>
-		/// <returns></returns>
 		static string GetIncludeFileName(List<string> codeList, ref CODE_POSITION searchPos)
 		{
 			CODE_POSITION foundPos = null;
@@ -883,24 +780,15 @@ namespace Mr.Robot
 				retName += nextIdtf.Text;
 				nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			}
-			//int idx;
-			//if (-1 != (idx = retName.LastIndexOf('/')))
-			//{
-			//	retName = retName.Remove(1, idx).Trim();
-			//}
 			return retName + quotIdtf.Text;
 		}
 
 		/// <summary>
 		/// 用户定义类型处理
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="startPos"></param>
-		/// <param varName="qualifierList"></param>
-		/// <returns></returns>
 		static USER_DEFINE_TYPE_INFO UsrDefTypeProc(FILE_PARSE_INFO parse_info,
-											 List<CODE_IDENTIFIER> qualifier_list,
-											 ref CODE_POSITION start_pos)
+													List<CODE_IDENTIFIER> qualifier_list,
+													ref CODE_POSITION start_pos)
 		{
 			if (0 == qualifier_list.Count)
 			{
@@ -1003,7 +891,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得自定义类型表示成员的字符串
 		/// </summary>
-		/// <returns></returns>
 		static string GetUsrDefTypeMemberStr(string in_mem_str,
 											 FILE_PARSE_INFO source_info)
 		{
@@ -1036,7 +923,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 宏定义处理
 		/// </summary>
-		static void DefineProcess(string file_name, List<string> codeList, ref CODE_POSITION searchPos, ref FILE_PARSE_INFO cfi)
+		static void DefineProcess(string file_name, List<string> codeList, ref CODE_POSITION searchPos, FILE_PARSE_INFO cfi)
 		{
 			CODE_POSITION sPos, fPos;
 			sPos = new CODE_POSITION(searchPos);
@@ -1129,7 +1016,6 @@ namespace Mr.Robot
 					retName = retName.Insert(i, "_");
 				}
 			}
-
             return retName;
         }
 	}

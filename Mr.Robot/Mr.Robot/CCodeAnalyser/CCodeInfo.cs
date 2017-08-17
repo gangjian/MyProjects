@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Mr.Robot
 {
@@ -83,6 +84,7 @@ namespace Mr.Robot
 
 		public FILE_PARSE_INFO(string fileName)
 		{
+			System.Diagnostics.Trace.Assert(File.Exists(fileName));
 			this.SourceName = fileName;
 		}
 

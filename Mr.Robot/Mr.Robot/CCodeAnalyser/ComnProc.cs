@@ -10,12 +10,88 @@ namespace Mr.Robot
 	public class COMN_PROC
 	{
 		/// <summary>
+		/// 移除代码注释
+		/// </summary>
+		public static List<string> RemoveComments(string fileName)
+		{
+			TextReader tr = new StreamReader(fileName);
+			List<string> retList = new List<string>();
+
+			string rdLine = tr.ReadLine();
+			if (null == rdLine)
+			{
+				return retList;
+			}
+			string wtLine = "";
+			do
+			{
+				int idx1 = rdLine.IndexOf("//");
+				int idx2 = rdLine.IndexOf("/*");
+
+				if ((-1 != idx1)
+					&& (-1 != idx2)
+					&& (idx1 < idx2)
+					)
+				{
+					wtLine = rdLine.Remove(idx1).TrimEnd();
+				}
+				else if ((-1 != idx1)
+						 && (-1 == idx2))
+				{
+					// 只包含行注释
+					wtLine = rdLine.Remove(idx1).TrimEnd();
+				}
+				else if (-1 != idx2)
+				{
+					// 只包含块注释
+					int idx_s = idx2;
+					int idx_e = rdLine.IndexOf("*/", idx_s + 2);
+					while (-1 == idx_e)
+					{
+						if (rdLine.Length > idx_s)
+						{
+							wtLine = rdLine.Remove(idx_s).TrimEnd();
+						}
+						retList.Add(wtLine);
+						idx_s = 0;
+
+						rdLine = tr.ReadLine();
+						if (null == rdLine)
+						{
+							break;
+						}
+						idx_e = rdLine.IndexOf("*/");
+					}
+					if (-1 != idx_e)
+					{
+						rdLine = rdLine.Remove(idx_s, idx_e - idx_s + 2);
+					}
+					else
+					{
+						rdLine = "";
+					}
+					continue;
+				}
+				else
+				{
+					// 不包含注释
+					wtLine = rdLine.TrimEnd();
+				}
+				retList.Add(wtLine);
+				rdLine = tr.ReadLine();
+				if (null == rdLine)
+				{
+					break;
+				}
+			} while (true);
+			tr.Close();
+
+			return retList;
+		}
+
+		/// <summary>
         /// 从(多行字符)当前位置取得下一个标识符
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="lineIdx"></param>
-		/// <param varName="startIdx"></param>
-		/// <returns></returns>
         public static CODE_IDENTIFIER GetNextIdentifier(List<string> codeList, ref CODE_POSITION searchPos, out CODE_POSITION foundPos)
 		{
 			int lineIdx = searchPos.RowNum;
