@@ -37,6 +37,12 @@ namespace Mr.Robot
 				this.ColNum = nfp.ColNum;
 			}
 		}
+
+		public void Move2HeadOfNextRow()
+		{
+			this.RowNum += 1;
+			this.ColNum = 0;
+		}
 	}
 
 	public class CODE_SCOPE

@@ -421,10 +421,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 找到下一个配对的符号
 		/// </summary>
-		/// <param varName="codeList"></param>
-		/// <param varName="searchPos"></param>
-		/// <param varName="rightSymbol"></param>
-		/// <returns></returns>
 		public static CODE_POSITION FindNextMatchSymbol(FILE_PARSE_INFO parse_info, ref CODE_POSITION searchPos, Char rightSymbol)
 		{
 			Char leftSymbol;
@@ -729,24 +725,18 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个表达式
 		/// </summary>
-		public static string GetPrecompileExpressionStr(List<string> codeList, ref CODE_POSITION searchPos, out CODE_POSITION foundPos)
+		public static string GetPrecompileExpressionStr(List<string> codeList, ref CODE_POSITION searchPos)
 		{
-			foundPos = new CODE_POSITION(searchPos);
-
 			string lineStr = codeList[searchPos.RowNum];
 			string exprStr = lineStr.Substring(searchPos.ColNum);
-			foundPos.ColNum = lineStr.IndexOf(exprStr);
 			while (exprStr.EndsWith("\\"))
 			{
 				exprStr = exprStr.Remove(exprStr.Length - 1);
-				searchPos.RowNum += 1;
-				searchPos.ColNum = 0;
+				searchPos.Move2HeadOfNextRow();
 				lineStr = codeList[searchPos.RowNum];
 				exprStr += lineStr.Substring(searchPos.ColNum);
 			}
-			searchPos.RowNum += 1;
-			searchPos.ColNum = 0;
-
+			searchPos.Move2HeadOfNextRow();
 			return exprStr.Trim();
 		}
 
@@ -798,8 +788,7 @@ namespace Mr.Robot
 				// 已经是最后一列了, 就移到下一行开头
                 if (thisPos.RowNum < codeList.Count - 1)
                 {
-                    nextPos.RowNum += 1;
-                    nextPos.ColNum = 0;
+					nextPos.Move2HeadOfNextRow();
                 }
 			}
 			else

@@ -487,19 +487,6 @@ namespace Mr.Robot
 		}
 
 		/// <summary>
-		/// 取得switch case语句中case分支的表达式
-		/// </summary>
-		static string GetCaseBranchExpression(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
-		{
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
-			CODE_POSITION foundPos = new CODE_POSITION(searchPos);
-
-			// 找到冒号":"的位置
-			foundPos = COMN_PROC.FindNextSpecIdentifier(":", parse_info.CodeList, searchPos);
-			return null;
-		}
-
-		/// <summary>
 		/// 取得下一个语句块的范围(起止位置)
 		/// </summary>
 		/// <param varName="codeList"></param>

@@ -68,19 +68,19 @@ namespace Mr.Robot
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
-		bool CFileProcess(string file_name, FILE_PARSE_INFO file_info)
+		bool CFileProcess(string file_name, FILE_PARSE_INFO parse_info)
 		{
 			//System.Diagnostics.Trace.WriteLine(file_name + ": ");
 			try
 			{
 				// 预编译处理
-				file_info.CodeList = PrecompileProcess(file_name, file_info);
+				parse_info.CodeList = PrecompileProcess(file_name, parse_info);
 				if (this.MacroSwichAnalyserFlag)
 				{
 					return true;
 				}
 				// 文件解析
-				if (!CCodeFileAnalysis(file_name, ref file_info))
+				if (!CCodeFileAnalysis(file_name, parse_info))
 				{
 					return false;
 				}
@@ -174,7 +174,7 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
@@ -202,7 +202,7 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式是否已定义
@@ -230,7 +230,7 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式是否已定义
@@ -287,7 +287,7 @@ namespace Mr.Robot
 							else
 							{
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos, out foundPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
@@ -368,7 +368,7 @@ namespace Mr.Robot
 				string headerName = GetActualHeadrFullName(inc_name, file_name);
 				if (!string.IsNullOrEmpty(headerName))
 				{
-					PrecompileProcess(headerName, fi);
+					CFileProcess(headerName, fi);
 				}
 				else
 				{
@@ -481,7 +481,7 @@ namespace Mr.Robot
 		/// 文件代码解析
 		/// </summary>
 		public static bool CCodeFileAnalysis(string src_name,
-											 ref FILE_PARSE_INFO parse_info)
+											 FILE_PARSE_INFO parse_info)
 		{
 			System.Diagnostics.Trace.Assert((null != parse_info.CodeList));
 			if (0 == parse_info.CodeList.Count)
@@ -496,10 +496,6 @@ namespace Mr.Robot
 			CODE_POSITION foundPos = null;
 			while (null != (nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref search_pos, out foundPos)))
 			{
-				//if (src_name.EndsWith("gerdaC_dd.h") && nextIdtf.Position.RowNum > 340)
-				//{
-				//	int a = 100;
-				//}
 				// 如果是标准标识符(字母,数字,下划线组成且开头不是数字)
 				if (COMN_PROC.IsStandardIdentifier(nextIdtf.Text)
 					|| ("*" == nextIdtf.Text))
@@ -511,7 +507,7 @@ namespace Mr.Robot
 						search_pos = new CODE_POSITION(foundPos);
 						continue;
 					}
-					else if (UserDefTypeExpand(nextIdtf.Text, parse_info.CodeList, foundPos, parse_info, qualifierList))
+					else if (UserDefTypeExpand(nextIdtf.Text, foundPos, parse_info, qualifierList))
 					{
 						search_pos = new CODE_POSITION(foundPos);
 						continue;
@@ -558,7 +554,7 @@ namespace Mr.Robot
 						// 预编译命令, 因为已经处理过了, 不在这里解析, 跳到宏定义结束
 						while (parse_info.CodeList[search_pos.RowNum].EndsWith("\\"))
 						{
-							search_pos.RowNum += 1;
+							search_pos.Move2HeadOfNextRow();
 						}
 						search_pos.ColNum = parse_info.CodeList[search_pos.RowNum].Length;
 					}
@@ -958,23 +954,20 @@ namespace Mr.Robot
 				while (defineValStr.EndsWith(@"\"))
 				{
 					defineValStr = defineValStr.Remove(defineValStr.Length - 1);
-					sPos.RowNum += 1;
-					sPos.ColNum = 0;
+					sPos.Move2HeadOfNextRow();
 					defineValStr += codeList[sPos.RowNum].Substring(sPos.ColNum);
 				}
 				mdi.Value = defineValStr.Trim();
 				cfi.MacroDefineList.Add(mdi);
 
-				sPos.RowNum += 1;
-				sPos.ColNum = 0;
+				sPos.Move2HeadOfNextRow();
 				searchPos = new CODE_POSITION(sPos);
 			}
 		}
 
 		static bool UserDefTypeExpand(	string idStr,
-										List<string> codeList,
 										CODE_POSITION foundPos,
-										FILE_PARSE_INFO curFileInfo,
+										FILE_PARSE_INFO parse_info,
 										List<CODE_IDENTIFIER> qualifierList)
 		{
 			if (0 != qualifierList.Count && COMN_PROC.IsUsrDefTypeKWD(qualifierList.Last().Text))
@@ -984,7 +977,7 @@ namespace Mr.Robot
 				return false;
 			}
 			// typedef 用户自定义类型
-			foreach (TYPE_DEFINE_INFO tdi in curFileInfo.TypeDefineList)
+			foreach (TYPE_DEFINE_INFO tdi in parse_info.TypeDefineList)
 			{
 				if (idStr == tdi.NewName)
 				{
@@ -993,7 +986,7 @@ namespace Mr.Robot
 					int lineIdx = foundPos.RowNum;
 					string realTypeName = tdi.OldName;
 					// 用原类型名去替换用户定义类型名
-					codeList[lineIdx] = codeList[lineIdx].Replace(usrTypeName, realTypeName);
+					parse_info.CodeList[lineIdx] = parse_info.CodeList[lineIdx].Replace(usrTypeName, realTypeName);
 					return true;
 				}
 			}
