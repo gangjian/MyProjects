@@ -121,12 +121,15 @@ namespace Mr.Robot
 						if (false != cc_info.WriteFlag)
 						{
 							// 取得include文件名
-							string incFileName = GetIncludeFileName(codeList, ref searchPos);
-							if (!fi.IncFileList.Contains(incFileName))
+							string incFileName = GetIncludeFileName(codeList, ref searchPos, file_name);
+							if (!string.IsNullOrEmpty(incFileName))
 							{
-								fi.IncFileList.Add(incFileName);
+								if (!fi.IncFileList.Contains(incFileName))
+								{
+									fi.IncFileList.Add(incFileName);
+								}
+								CFileProcess(incFileName, fi);
 							}
-							ParseIncludeHeaderFile(incFileName, fi, file_name);
 						}
 					}
 					else if ("define" == nextIdtf.Text.ToLower())
@@ -351,32 +354,6 @@ namespace Mr.Robot
 			}
 
 			return retList;
-		}
-
-		/// <summary>
-		/// 取得include头文件的解析情报
-		/// </summary>
-		void ParseIncludeHeaderFile(string inc_name,
-									FILE_PARSE_INFO fi,
-									string file_name)
-		{
-			if (	(inc_name.StartsWith("\"") && inc_name.EndsWith("\""))				// 双引号
-				||	(inc_name.StartsWith("<") && inc_name.EndsWith(">"))	)			// 尖括号
-			{
-				// 去掉引号或者尖括号
-				inc_name = inc_name.Substring(1, inc_name.Length - 2).Trim();
-				string headerName = GetActualHeadrFullName(inc_name, file_name);
-				if (!string.IsNullOrEmpty(headerName))
-				{
-					CFileProcess(headerName, fi);
-				}
-				else
-				{
-					// Error Log Here!
-					string errLog = "<<< Error LOG >>> : ParseIncludeHeaderFile(..) : " + file_name + " Can't Find Include Header File : " + inc_name;
-					this.ErrorLogList.Add(errLog);
-				}
-			}
 		}
 
 		/// <summary>
@@ -753,11 +730,11 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得包含头文件名
 		/// </summary>
-		static string GetIncludeFileName(List<string> codeList, ref CODE_POSITION searchPos)
+		string GetIncludeFileName(List<string> codeList, ref CODE_POSITION searchPos, string file_name)
 		{
 			CODE_POSITION foundPos = null;
             CODE_IDENTIFIER quotIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-			string retName = quotIdtf.Text;
+			string inc_name = quotIdtf.Text;
 			if ("\"" == quotIdtf.Text)
 			{
 			}
@@ -773,10 +750,24 @@ namespace Mr.Robot
             CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			while (quotIdtf.Text != nextIdtf.Text)
 			{
-				retName += nextIdtf.Text;
+				inc_name += nextIdtf.Text;
 				nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			}
-			return retName + quotIdtf.Text;
+			inc_name = inc_name + quotIdtf.Text;
+			if ((inc_name.StartsWith("\"") && inc_name.EndsWith("\""))					// 双引号
+				|| (inc_name.StartsWith("<") && inc_name.EndsWith(">")))				// 尖括号
+			{
+				// 去掉引号或者尖括号
+				inc_name = inc_name.Substring(1, inc_name.Length - 2).Trim();
+				inc_name = GetActualHeadrFullName(inc_name, file_name);
+				if (string.IsNullOrEmpty(inc_name))
+				{
+					// Error Log Here!
+					string errLog = "<<< Error LOG >>> : ParseIncludeHeaderFile(..) : " + file_name + " Can't Find Include Header File : " + inc_name;
+					this.ErrorLogList.Add(errLog);
+				}
+			}
+			return inc_name;
 		}
 
 		/// <summary>
