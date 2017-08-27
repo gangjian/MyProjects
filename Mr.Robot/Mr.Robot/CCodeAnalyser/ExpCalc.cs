@@ -55,6 +55,19 @@ namespace Mr.Robot
 				newExp = newExp.Remove(0, 1);
 				return GetLogicalExpressionValue(newExp, parse_info);
 			}
+			else if (meaning_group.Type == MeaningGroupType.Expression
+					 && meaning_group.ComponentList[0].Text == "defined")
+			{
+				string newExp = meaning_group.Text.Remove(0, "defined".Length).Trim();
+				if (COMN_PROC.JudgeExpressionDefined(newExp, parse_info))
+				{
+					return 1;
+				}
+				else
+				{
+					return 0;
+				}
+			}
 			else
 			{
 				System.Diagnostics.Trace.Assert(false);
@@ -80,8 +93,16 @@ namespace Mr.Robot
 			{
 				secondExpStr += meaningGroupList[i].Text;
 			}
-			string nextExpStr = firstExpStr + retVal.ToString() + secondExpStr;
-			return GetLogicalExpressionValue(nextExpStr, parse_info);
+			if (!string.IsNullOrEmpty(firstExpStr)
+				|| !string.IsNullOrEmpty(secondExpStr))
+			{
+				string nextExpStr = firstExpStr + retVal.ToString() + secondExpStr;
+				return GetLogicalExpressionValue(nextExpStr, parse_info);
+			}
+			else
+			{
+				return retVal;
+			}
 		}
 
 		static bool GetConstantNumberValue(string const_num_text, out int val)
@@ -427,17 +448,7 @@ namespace Mr.Robot
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 1);
 			string operand = oper_group._OperandList.First().Text;
-			while (operand.StartsWith("(")
-					&& operand.EndsWith(")"))
-			{
-				operand = operand.Remove(operand.Length - 1);
-				operand = operand.Remove(0, 1).Trim();
-			}
-			if (null != parse_info.FindMacroDefInfo(operand))
-			{
-				return 1;
-			}
-			else if (StatementAnalysis.IsConstantNumber(operand))
+			if (COMN_PROC.JudgeExpressionDefined(operand, parse_info))
 			{
 				return 1;
 			}
@@ -552,12 +563,27 @@ namespace Mr.Robot
 
 		static int CalcArithmetic_Sub(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)
 		{
-			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
-			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
-			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
-			return operand1Value - operand2Value;
+			if (2 == oper_group._OperandList.Count)
+			{
+				// 减号
+				System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+				System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
+				int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+				int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+				return operand1Value - operand2Value;
+			}
+			else if (1 == oper_group._OperandList.Count)
+			{
+				// 负号
+				System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
+				int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+				return -operand1Value;
+			}
+			else
+			{
+				System.Diagnostics.Trace.Assert(false);
+				return 0;
+			}
 		}
 
 		static int CalcArithmetic_Multiply(OPERATION_GROUP oper_group, FILE_PARSE_INFO parse_info)

@@ -25,9 +25,9 @@ namespace Mr.Robot
 
 		public string CalledFunctionReadOut = string.Empty;								// 可能被函数调用的读出值赋值(函数名)
 
-		public List<VAR_CONTEXT> MemberList = new List<VAR_CONTEXT>();							// 成员列表(下一层级)
+		public List<VAR_CONTEXT> MemberList = new List<VAR_CONTEXT>();					// 成员列表(下一层级)
 
-		public VAR_CONTEXT(string type_name, string var_name)								// 构造方法
+		public VAR_CONTEXT(string type_name, string var_name)							// 构造方法
 		{
 			Trace.Assert(!string.IsNullOrEmpty(type_name));
 			Trace.Assert(!string.IsNullOrEmpty(var_name));

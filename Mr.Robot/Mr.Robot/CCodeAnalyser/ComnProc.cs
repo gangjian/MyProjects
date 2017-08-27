@@ -745,8 +745,17 @@ namespace Mr.Robot
 		/// </summary>
         public static bool JudgeExpressionDefined(string exp, FILE_PARSE_INFO parse_info)
 		{
-			System.Diagnostics.Trace.Assert(COMN_PROC.IsStandardIdentifier(exp));
+			while (exp.StartsWith("(")
+				   && exp.EndsWith(")"))
+			{
+				exp = exp.Remove(exp.Length - 1);
+				exp = exp.Remove(0, 1).Trim();
+			}
 			if (null != parse_info.FindMacroDefInfo(exp))
+			{
+				return true;
+			}
+			else if (StatementAnalysis.IsConstantNumber(exp))
 			{
 				return true;
 			}

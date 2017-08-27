@@ -80,9 +80,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得语句内各基本成分(运算数或者是运算符)
 		/// </summary>
-		public static List<STATEMENT_COMPONENT> GetComponents(string statementStr,
-                                                             FILE_PARSE_INFO parse_info,
-															 bool replace_empty_macro_def = true)
+		public static List<STATEMENT_COMPONENT> GetComponents(	string statementStr,
+																FILE_PARSE_INFO parse_info,
+																bool replace_empty_macro_def = true)
         {
 			// 去掉结尾的分号
 			if (statementStr.EndsWith(";"))
@@ -135,8 +135,8 @@ namespace Mr.Robot
 			// 如果以类型开头那应该是变量定义;
 			// 然后找有没有赋值运算符(优先级14), ++/--也可能表示有左值
 			// 是表达式的话要进一步递归解析
-			int a, b, c = 20;
-			(a) = b = c + 3;
+			//int a, b, c = 20;
+			//(a) = b = c + 3;
 
             return meaningGroupList;
 		}
@@ -166,7 +166,153 @@ namespace Mr.Robot
 					break;
 				}
 			}
+			ConfirmUncertainPriorityOperator(groupList);
+			while (CombineHighPriorityOperatorToExpression(groupList))
+			{
+
+			}
 			return groupList;
+		}
+
+		/// <summary>
+		/// 如果MeaningGroup里有多于一个以上的运算符,把高优先级的运算符跟对应的运算数结合成表达式
+		/// </summary>
+		static bool CombineHighPriorityOperatorToExpression(List<MEANING_GROUP> in_list)
+		{
+			int operatorCount = 0;	// 运算符的个数
+			int highestPriority = int.MaxValue;
+			int idx = -1;
+			// TODO: 20170823 如果有多个相同(最高)优先级的运算符且连续,要根据运算符的结合方向进行结合
+			for (int i = in_list.Count - 1; i >= 0; i--)
+			{
+				if (in_list[i].Type == MeaningGroupType.OtherOperator
+					|| in_list[i].Type == MeaningGroupType.EqualMark)
+				{
+					if (in_list[i].ComponentList[0].Priority < highestPriority)
+					{
+						highestPriority = in_list[i].ComponentList[0].Priority;
+						idx = i;
+					}
+					operatorCount++;
+				}
+			}
+			if (operatorCount > 1)
+			{
+				int operandCount = in_list[idx].ComponentList[0].OperandCount;
+				if (2 == operandCount)
+				{
+					List<STATEMENT_COMPONENT> newList = new List<STATEMENT_COMPONENT>();
+					string newText = in_list[idx - 1].Text + in_list[idx].Text + in_list[idx + 1].Text;
+					newList.AddRange(in_list[idx - 1].ComponentList);
+					newList.AddRange(in_list[idx].ComponentList);
+					newList.AddRange(in_list[idx + 1].ComponentList);
+					in_list.RemoveRange(idx - 1, 3);
+					MEANING_GROUP newGroup = new MEANING_GROUP();
+					newGroup.ComponentList = newList;
+					newGroup.Text = newText;
+					newGroup.Type = MeaningGroupType.Expression;
+					in_list.Insert(idx - 1, newGroup);
+				}
+				else if (1 == operandCount)
+				{
+					List<STATEMENT_COMPONENT> newList = new List<STATEMENT_COMPONENT>();
+					string newText = in_list[idx].Text + in_list[idx + 1].Text;
+					newList.AddRange(in_list[idx].ComponentList);
+					newList.AddRange(in_list[idx + 1].ComponentList);
+					in_list.RemoveRange(idx, 2);
+					MEANING_GROUP newGroup = new MEANING_GROUP();
+					newGroup.ComponentList = newList;
+					newGroup.Text = newText;
+					newGroup.Type = MeaningGroupType.Expression;
+					in_list.Insert(idx, newGroup);
+				}
+				else
+				{
+					System.Diagnostics.Trace.Assert(false);
+				}
+				return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// 确定未明确的运算符(比如-是减号还是负号)
+		/// </summary>
+		static void ConfirmUncertainPriorityOperator(List<MEANING_GROUP> mg_list)
+		{
+			for (int i = 0; i < mg_list.Count; i++)
+			{
+				if (mg_list[i].Type == MeaningGroupType.OtherOperator
+					&& mg_list[i].ComponentList[0].Priority == -1)
+				{
+					string oprStr = mg_list[i].Text;
+					int oprCnt = ConfirmUnaryOrBinaryOperator(mg_list, i);
+					switch (oprStr)
+					{
+						case "&":														// 单目取地址或者双目位与
+							if (1 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 2;
+								mg_list[i].ComponentList[0].OperandCount = 1;
+							}
+							else if (2 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 8;
+								mg_list[i].ComponentList[0].OperandCount = 2;
+							}
+							break;
+						case "-":														// 单目负号或者双目减号
+							if (1 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 2;
+								mg_list[i].ComponentList[0].OperandCount = 1;
+							}
+							else if (2 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 4;
+								mg_list[i].ComponentList[0].OperandCount = 2;
+							}
+							break;
+						case "*":														// 单目指针取值或者双目乘号
+							if (1 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 2;
+								mg_list[i].ComponentList[0].OperandCount = 1;
+							}
+							else if (2 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 3;
+								mg_list[i].ComponentList[0].OperandCount = 2;
+							}
+							break;
+						default:
+							System.Diagnostics.Trace.Assert(false);
+							break;
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// 判定是单目运算符还是双目运算符
+		/// </summary>
+		/// <returns></returns>
+		static int ConfirmUnaryOrBinaryOperator(List<MEANING_GROUP> mg_list, int opr_idx)
+		{
+			System.Diagnostics.Trace.Assert(opr_idx >= 0 && mg_list.Count > opr_idx);
+			if (0 == opr_idx)
+			{
+				return 1;
+			}
+			else if (mg_list[opr_idx - 1].Type == MeaningGroupType.OtherOperator
+					|| mg_list[opr_idx - 1].Type == MeaningGroupType.EqualMark)
+			{
+				return 1;
+			}
+			else
+			{
+				return 2;
+			}
 		}
 
 		/// <summary>
@@ -238,6 +384,19 @@ namespace Mr.Robot
 				retGroup.ComponentList.Add(componentList[idx]);
 				retGroup.Text = componentList[idx].Text;
 				idx += 1;
+				if ("defined" == retGroup.Text)
+				{
+					MEANING_GROUP nextGroup = GetOneMeaningGroup(componentList, ref idx, groupList, parse_info, func_ctx);
+					if (null != nextGroup)
+					{
+						MEANING_GROUP defGroup = new MEANING_GROUP();
+						defGroup.ComponentList.AddRange(retGroup.ComponentList);
+						defGroup.ComponentList.AddRange(nextGroup.ComponentList);
+						defGroup.Text = retGroup.Text + " " + nextGroup.Text;
+						defGroup.Type = MeaningGroupType.Expression;
+						return defGroup;
+					}
+				}
 				return retGroup;
 			}
 			else if (IsConstantNumber(componentList[idx].Text))
@@ -477,11 +636,18 @@ namespace Mr.Robot
 					{
 						// "+", "-" : 加, 减
 						component.Text = idStr;
-						component.Priority = 4;									        // 不确定, 也可能是单目运算符的正负号(优先级为2)
+						if ("-" == idStr)
+						{
+							component.Priority = -1;								    // 不确定:可能是减号(优先级4)也可能是单目运算符的负号(优先级2)
+						}
+						else
+						{
+							component.Priority = 4;										// 加号
+						}
 						component.OperandCount = 2;
 					}
 					break;
-				case "*":														        // 不确定, 可能是乘号, 也可能是指针运算符
+				case "*":
 				case "/":
 					if ("=" == nextIdStr)
 					{
@@ -491,9 +657,16 @@ namespace Mr.Robot
 						component.OperandCount = 2;
 						offset += 1;
 					}
+					else if ("*" == idStr)
+					{
+						// "*" : 乘
+						component.Text = idStr;
+						component.Priority = -1;										// 不确定:可能是乘号(优先级3), 也可能是指针运算符(优先级2)
+						component.OperandCount = 2;
+					}
 					else
 					{
-						// "*", "/" : 乘, 除
+						// "/" : 除
 						component.Text = idStr;
 						component.Priority = 3;
 						component.OperandCount = 2;
@@ -559,7 +732,14 @@ namespace Mr.Robot
 					{
 						// "&", "|" : 位与, 位或
 						component.Text = idStr;
-						component.Priority = 7;									        // 不确定, 可能是双目位与&,也可能是取地址符&(优先级2)
+						if ("&" == idStr)
+						{
+							component.Priority = -1;									// 不确定, 可能是双目位与&(优先级8),也可能是取地址符&(优先级2)
+						}
+						else
+						{
+							component.Priority = 8;
+						}
 						component.OperandCount = 2;
 					}
 
