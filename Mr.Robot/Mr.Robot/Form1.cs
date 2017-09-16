@@ -15,12 +15,12 @@ namespace Mr.Robot
 	public partial class Form1 : Form
 	{
 	#region 全局字段
-		List<string> CSourceFileList = new List<string>();
-		List<string> CHeaderFileList = new List<string>();
-		List<string> MtpjFileList = new List<string>();
-		List<string> MkFileList = new List<string>();
+		List<string> m_CSourceFileList = new List<string>();
+		List<string> m_CHeaderFileList = new List<string>();
+		List<string> m_MtpjFileList = new List<string>();
+		List<string> m_MkFileList = new List<string>();
 
-		C_CODE_ANALYSER CAnalyser = null;
+		C_PROSPECTOR m_CProspector = null;
 	#endregion
 
 		public Form1()
@@ -79,12 +79,12 @@ namespace Mr.Robot
 				return;
 			}
 
-			this.CSourceFileList = new List<string>();
-			this.CHeaderFileList = new List<string>();
+			this.m_CSourceFileList = new List<string>();
+			this.m_CHeaderFileList = new List<string>();
             // 遍历文件夹, 取得所有.c源文件和.h头文件
-			IOProcess.GetAllCCodeFiles(path_name, ref this.CSourceFileList, ref CHeaderFileList, ref this.MtpjFileList, ref this.MkFileList);
+			IOProcess.GetAllCCodeFiles(path_name, ref this.m_CSourceFileList, ref m_CHeaderFileList, ref this.m_MtpjFileList, ref this.m_MkFileList);
 
-            UpdateFileListViewCtrl(this.CSourceFileList);
+            UpdateFileListViewCtrl(this.m_CSourceFileList);
 		}
 
         void UpdateFileListViewCtrl(List<string> src_list)
@@ -211,9 +211,9 @@ namespace Mr.Robot
                     }
                 }
             }
-			this.CAnalyser = new C_CODE_ANALYSER(srcList, this.CHeaderFileList);
-			this.CAnalyser.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
-			this.CAnalyser.ProcessStart();
+			this.m_CProspector = new C_PROSPECTOR(srcList, this.m_CHeaderFileList);
+			this.m_CProspector.UpdateProgress += new EventHandler(UpdateAnalyserProgress);
+			this.m_CProspector.ProcessStart();
         }
 
 		void UpdateAnalyserProgress(object sender, EventArgs args)

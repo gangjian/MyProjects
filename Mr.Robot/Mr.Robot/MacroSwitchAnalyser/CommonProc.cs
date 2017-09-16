@@ -118,7 +118,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 						}
 						if (!findInMtpjDef)
 						{
-							string resultStr = MakeResultStr(cpnt.Text, @"X", print_info, string.Empty);
+							string resultStr = MakeResultStr(cpnt.Text, @"×", print_info, string.Empty);
 							result_list.Add(resultStr);
 						}
                     }

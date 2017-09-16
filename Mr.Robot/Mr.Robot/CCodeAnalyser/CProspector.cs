@@ -9,7 +9,7 @@ using Mr.Robot.MacroSwitchAnalyser;
 
 namespace Mr.Robot
 {
-	public partial class C_CODE_ANALYSER
+	public partial class C_PROSPECTOR
 	{
 		#region 全局字段
 		List<string> HeaderList = new List<string>();									// 头文件名列表
@@ -23,7 +23,7 @@ namespace Mr.Robot
 		public List<string> ErrorLogList = new List<string>();
 		#endregion
 
-		public C_CODE_ANALYSER(List<string> source_list, List<string> header_list)
+		public C_PROSPECTOR(List<string> source_list, List<string> header_list)
 		{
 			this.SourceList = source_list;
 			this.HeaderList = header_list;

@@ -35,8 +35,8 @@ namespace UnitTestProject
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
-			C_CODE_ANALYSER CAnalyser = new C_CODE_ANALYSER(csfList, header_list);
-			List<FILE_PARSE_INFO> parseInfoList = CAnalyser.CFileListProc();
+			C_PROSPECTOR cProspector = new C_PROSPECTOR(csfList, header_list);
+			List<FILE_PARSE_INFO> parseInfoList = cProspector.CFileListProc();
 			FILE_PARSE_INFO code_parse_info;
 			FUNCTION_PARSE_INFO funInfo = CFunctionAnalysis.GetFuncInfoFromParseResult(full_path, func_name, parseInfoList, out code_parse_info);
 
@@ -70,8 +70,8 @@ namespace UnitTestProject
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
-			C_CODE_ANALYSER CAnalyser = new C_CODE_ANALYSER(csfList, header_list);
-			List<FILE_PARSE_INFO> parseInfoList = CAnalyser.CFileListProc();
+			C_PROSPECTOR cProspector = new C_PROSPECTOR(csfList, header_list);
+			List<FILE_PARSE_INFO> parseInfoList = cProspector.CFileListProc();
 
 			return parseInfoList;
 		}

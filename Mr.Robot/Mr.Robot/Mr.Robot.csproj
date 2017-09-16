@@ -62,7 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CCodeAnalyser\BasicTypeProc.cs" />
-    <Compile Include="CCodeAnalyser\CCodeAnalyser.cs" />
+    <Compile Include="CCodeAnalyser\CProspector.cs" />
     <Compile Include="CCodeAnalyser\CCodeInfo.cs" />
     <Compile Include="CCodeAnalyser\ExpCalc.cs" />
     <Compile Include="CCodeAnalyser\InOutAnalysis.cs" />

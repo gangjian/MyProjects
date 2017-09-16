@@ -109,6 +109,16 @@ namespace Mr.Robot
             return componentList;
         }
 
+		static string GetComponentListStr(List<STATEMENT_COMPONENT> componentList)
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach (var item in componentList)
+			{
+				sb.Append(item.Text);
+			}
+			return sb.ToString();
+		}
+
         public static List<MEANING_GROUP> GetMeaningGroups(	List<STATEMENT_COMPONENT> componentList,
 															FILE_PARSE_INFO parse_info,
 															FUNCTION_ANALYSIS_CONTEXT func_ctx)
@@ -148,6 +158,7 @@ namespace Mr.Robot
 														FILE_PARSE_INFO parse_info,
 														FUNCTION_ANALYSIS_CONTEXT func_ctx)
 		{
+			string statementStr = GetComponentListStr(componentList);
 			List<MEANING_GROUP> groupList = new List<MEANING_GROUP>();
 			int idx = 0;
 			while (true) 
@@ -196,7 +207,8 @@ namespace Mr.Robot
 					operatorCount++;
 				}
 			}
-			if (operatorCount > 1)
+			if (operatorCount > 1
+				&& "," != in_list[idx].Text)
 			{
 				int operandCount = in_list[idx].ComponentList[0].OperandCount;
 				if (2 == operandCount)
@@ -397,6 +409,15 @@ namespace Mr.Robot
 						return defGroup;
 					}
 				}
+				else if (idx < componentList.Count
+						 && "[" == componentList[idx].Text)								// 标识符后面跟着一个中括号(数组?)
+				{
+					List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
+					retGroup.ComponentList.AddRange(braceList);
+					retGroup.Text += GetComponentListStr(braceList);
+					retGroup.Type = MeaningGroupType.Expression;
+					idx += 1;
+				}
 				return retGroup;
 			}
 			else if (IsConstantNumber(componentList[idx].Text))
@@ -595,7 +616,7 @@ namespace Mr.Robot
 					{
 						// "==" : 等于
 						component.Text = idStr + nextIdStr;
-						component.Priority = 6;
+						component.Priority = 7;
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -603,7 +624,7 @@ namespace Mr.Robot
 					{
 						// "=" : 赋值
 						component.Text = idStr;
-						component.Priority = 10;
+						component.Priority = 14;
 						component.OperandCount = 2;
 					}
 					break;
@@ -621,7 +642,7 @@ namespace Mr.Robot
 					{
 						// "+=", "-=" : 加减运算赋值
 						component.Text = idStr + nextIdStr;
-						component.Priority = 10;
+						component.Priority = 14;
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -653,7 +674,7 @@ namespace Mr.Robot
 					{
 						// "*=", "/=" : 乘除运算赋值
 						component.Text = idStr + nextIdStr;
-						component.Priority = 10;
+						component.Priority = 14;
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -681,7 +702,7 @@ namespace Mr.Robot
 						{
 							// ">>=", "<<=" : 位移赋值
 							component.Text = idStr + nextIdStr + thirdChar;
-							component.Priority = 10;
+							component.Priority = 14;
 							component.OperandCount = 2;
 							offset += 2;
 						}
@@ -716,7 +737,14 @@ namespace Mr.Robot
 					{
 						// "&&", "||" : 逻辑与, 逻辑或
 						component.Text = idStr + nextIdStr;
-						component.Priority = 8;
+						if ("&" == idStr)
+						{
+							component.Priority = 11;
+						}
+						else
+						{
+							component.Priority = 12;
+						}
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -724,7 +752,7 @@ namespace Mr.Robot
 					{
 						// "&=", "|=" : 位运算赋值
 						component.Text = idStr + nextIdStr;
-						component.Priority = 10;
+						component.Priority = 14;
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -738,7 +766,7 @@ namespace Mr.Robot
 						}
 						else
 						{
-							component.Priority = 8;
+							component.Priority = 10;
 						}
 						component.OperandCount = 2;
 					}
@@ -749,7 +777,7 @@ namespace Mr.Robot
 					{
 						// "!=" : 不等于
 						component.Text = idStr + nextIdStr;
-						component.Priority = 6;
+						component.Priority = 7;
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -772,7 +800,7 @@ namespace Mr.Robot
 					{
 						// "%=" : 取余赋值
 						component.Text = idStr + nextIdStr;
-						component.Priority = 10;
+						component.Priority = 14;
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -789,7 +817,7 @@ namespace Mr.Robot
 					{
 						// "^=" : 位异或赋值
 						component.Text = idStr + nextIdStr;
-						component.Priority = 10;
+						component.Priority = 14;
 						component.OperandCount = 2;
 						offset += 1;
 					}
@@ -797,21 +825,21 @@ namespace Mr.Robot
 					{
 						// "^" : 位异或
 						component.Text = idStr;
-						component.Priority = 7;
+						component.Priority = 9;
 						component.OperandCount = 2;
 					}
 					break;
 				case ",":
 					// "," : 逗号
 					component.Text = idStr;
-					component.Priority = 11;
+					component.Priority = 15;
 					component.OperandCount = 2;
 					break;
 				case "?":
 				case ":":
 					// "?:" : 条件(三目)
 					component.Text = idStr;
-					component.Priority = 9;
+					component.Priority = 13;
 					component.OperandCount = 3;
 					break;
 				default:
@@ -1108,11 +1136,8 @@ namespace Mr.Robot
                 {
                     MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = GetVariableType(braceList, parse_info);
-                    foreach (STATEMENT_COMPONENT item in braceList)
-                    {
-                        retGroup.ComponentList.Add(item);
-                        retGroup.Text += item.Text;
-                    }
+					retGroup.ComponentList.AddRange(braceList);
+					retGroup.Text = GetComponentListStr(braceList);
                     GetVarMemberGroup(componentList, ref tmp_idx, ref retGroup);
                     idx = tmp_idx;
                     return retGroup;
@@ -1161,10 +1186,7 @@ namespace Mr.Robot
 					idx = i;
 					List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
-					foreach (var item in braceList)
-					{
-						retGroup.Text += item.Text;
-					}
+					retGroup.Text += GetComponentListStr(braceList);
 					i = idx;
 				}
                 else
@@ -1191,11 +1213,8 @@ namespace Mr.Robot
 					List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
 					if (null != braceList)
 					{
-						foreach (STATEMENT_COMPONENT item in braceList)
-						{
-							retGroup.Text += item.Text;
-						}
 						retGroup.ComponentList.AddRange(braceList);
+						retGroup.Text += GetComponentListStr(braceList);
 						idx += 1;
 						return retGroup;
 					}
@@ -1222,13 +1241,8 @@ namespace Mr.Robot
 					{
 						retGroup.Type = MeaningGroupType.Expression;
 					}
-					StringBuilder sb = new StringBuilder();
-					foreach (STATEMENT_COMPONENT item in braceList)
-					{
-						sb.Append(item.Text);
-					}
-					retGroup.Text = sb.ToString();
 					retGroup.ComponentList.AddRange(braceList);
+					retGroup.Text = GetComponentListStr(braceList);
 					idx += 1;
 					return retGroup;
 				}
@@ -1246,12 +1260,7 @@ namespace Mr.Robot
 					MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.CodeBlock;
 					retGroup.ComponentList.AddRange(braceList);
-					StringBuilder groupTextBuilder = new StringBuilder();
-					for (int i = 0; i < braceList.Count; i++)
-					{
-						groupTextBuilder.Append(braceList[i].Text);
-					}
-					retGroup.Text = groupTextBuilder.ToString();
+					retGroup.Text = GetComponentListStr(braceList);
 					idx += 1;
 					return retGroup;
 				}

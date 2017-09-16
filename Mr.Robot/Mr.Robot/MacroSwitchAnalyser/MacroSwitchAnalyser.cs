@@ -259,9 +259,9 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
 			List<string> srcList = new List<string>();
 			srcList.Add(src_name);
-			C_CODE_ANALYSER cAnalyser = new C_CODE_ANALYSER(srcList, header_list);
-			cAnalyser.MacroSwichAnalyserFlag = true;
-			List<FILE_PARSE_INFO> parseInfoList = cAnalyser.CFileListProc();
+			C_PROSPECTOR cProspector = new C_PROSPECTOR(srcList, header_list);
+			cProspector.MacroSwichAnalyserFlag = true;
+			List<FILE_PARSE_INFO> parseInfoList = cProspector.CFileListProc();
 			if (null == parseInfoList || 0 == parseInfoList.Count)
 			{
 				proc_result = MSA_SOURCE_PROC_RESULT.FAIL;
