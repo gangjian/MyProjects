@@ -62,7 +62,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
         public static void MacroSwitchExpressionAnalysis(   string macro_exp,
                                                             MacroPrintInfo print_info,
                                                             FILE_PARSE_INFO parse_info,
-                                                            ref List<string> result_list,
+															ref List<MSA_MACRO_SWITCH_RESULT> result_list,
 															List<MTPJ_FILE_INFO> mtpj_info_list,
 															List<MK_FILE_INFO> mk_info_list)
         {
@@ -84,8 +84,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
                         // 立即数
                         if (mType == MacroValueType.ConstNumber)
                         {
-							string resultStr = MakeResultStr(mdi.Name, valStr, print_info, mdi.FileName);
-                            result_list.Add(resultStr);
+							MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, mdi.Name, true, valStr, mdi.FileName);
+							result_list.Add(msResult);
                         }
                         // 表达式
                         else if (mType == MacroValueType.Expression)
@@ -95,31 +95,41 @@ namespace Mr.Robot.MacroSwitchAnalyser
                         // 空
                         else if (mType == MacroValueType.Empty)
                         {
-							string resultStr = MakeResultStr(mdi.Name, @"○", print_info, mdi.FileName);
-                            result_list.Add(resultStr);
+							MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, mdi.Name, true, string.Empty, mdi.FileName);
+							result_list.Add(msResult);
                         }
                     }
                     else
                     {
                         // 未定义
-						bool findInMtpjDef = false;
+						bool bFindInPrjDef = false;
 						if (null != mtpj_info_list)
 						{
 							foreach (MTPJ_FILE_INFO prj_info in mtpj_info_list)
 							{
 								if (prj_info.DefList.Contains(cpnt.Text))
 								{
-									string resultStr = MakeResultStr(cpnt.Text, @".mtpj def", print_info, prj_info.FileName);
-									result_list.Add(resultStr);
-									findInMtpjDef = true;
+									MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, true, @".mtpj def", prj_info.FileName);
+									result_list.Add(msResult);
+									bFindInPrjDef = true;
 									break;
 								}
 							}
 						}
-						if (!findInMtpjDef)
+						if (null != mk_info_list)
 						{
-							string resultStr = MakeResultStr(cpnt.Text, @"×", print_info, string.Empty);
-							result_list.Add(resultStr);
+							foreach (var item in mk_info_list)
+							{
+								if (item.DefList.Contains(cpnt.Text))
+								{
+									MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, true, @".mk def", item.FileName);
+								}
+							}
+						}
+						if (!bFindInPrjDef)
+						{
+							MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, false, string.Empty, string.Empty);
+							result_list.Add(msResult);
 						}
                     }
                 }
@@ -193,15 +203,6 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
         }
 
-		static string MakeResultStr(string macro_name, string value_str, MacroPrintInfo print_info, string macro_def_file_name)
-        {
-			//						表达式所在的源文件名					行号
-            string resultStr = print_info.SourceName + "," + print_info.LineNumStr
-			//						表达式						宏名					宏值				宏定义所在的文件名
-                            + "," + print_info.CodeText + "," + macro_name + "," + value_str + "," + macro_def_file_name;
-            return resultStr;
-        }
-
 		/// <summary>
 		/// 比较两个文本文件内容一致
 		/// </summary>
@@ -232,13 +233,13 @@ namespace Mr.Robot.MacroSwitchAnalyser
     public class MacroPrintInfo
     {
         public string SourceName = string.Empty;
-        public string LineNumStr = string.Empty;
+        public int LineNum = -1;
         public string CodeText = string.Empty;
 
-        public MacroPrintInfo(string src_name, string line_num, string code_text)
+        public MacroPrintInfo(string src_name, int line_num, string code_text)
         {
             this.SourceName = src_name;
-            this.LineNumStr = line_num;
+            this.LineNum = line_num;
             this.CodeText = code_text.Trim().Replace('\t', ' ');
         }
     }

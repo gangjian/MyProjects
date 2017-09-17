@@ -261,7 +261,8 @@ namespace Mr.Robot
 			this.StopWatch.Restart();
 		}
 
-		Queue<string> MacroSwitchResultQueue = new Queue<string>();						// 用来接收MacroSwitchAnalyzer解析出的宏开关结果的队列
+		// 用来接收MacroSwitchAnalyzer解析出的宏开关结果的队列
+		Queue<MSA_MACRO_SWITCH_RESULT> MacroSwitchResultQueue = new Queue<MSA_MACRO_SWITCH_RESULT>();
 
 		public class SUMMARY_INFO
 		{
@@ -291,11 +292,11 @@ namespace Mr.Robot
 					this.ProcessedSoureList.Add(rsltInfo.SourceFileName);
 					if (null != rsltInfo.MacroSwitchResultList)
 					{
-						foreach (var rsltStr in rsltInfo.MacroSwitchResultList)
+						foreach (var result in rsltInfo.MacroSwitchResultList)
 						{
 							lock (this.MacroSwitchResultQueue)
 							{
-								this.MacroSwitchResultQueue.Enqueue(rsltStr);
+								this.MacroSwitchResultQueue.Enqueue(result);
 							}
 						}
 						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.Progress);
@@ -327,7 +328,7 @@ namespace Mr.Robot
 		{
 			UpdateProgressBarView(msa_progress);
 
-			List<string> tmpList = new List<string>();
+			List<MSA_MACRO_SWITCH_RESULT> tmpList = new List<MSA_MACRO_SWITCH_RESULT>();
 			lock (this.MacroSwitchResultQueue)
 			{
 				while (0 != this.MacroSwitchResultQueue.Count)
@@ -337,16 +338,27 @@ namespace Mr.Robot
 			}
 			// 详细结果列表
 			//this.DetailResultList.AddRange(tmpList);
-			foreach (string rslt in tmpList)
+			foreach (MSA_MACRO_SWITCH_RESULT result in tmpList)
 			{
-				string[] arr = rslt.Split(',');
-				if (arr.Length >= 6)
+				string macro_name = result.MacroName;
+				string analysis_conclusion = string.Empty;
+				if (result.IsValid)
 				{
-					string macro_name = arr[arr.Length - 3];
-					string analysis_conclusion = arr[arr.Length - 2];
-					string macro_file_name = arr[arr.Length - 1];
-					UpdateSummaryList(macro_name, analysis_conclusion, macro_file_name);
+					if (string.Empty == result.ValueStr)
+					{
+						analysis_conclusion = @"○";
+					}
+					else
+					{
+						analysis_conclusion = result.ValueStr;
+					}
 				}
+				else
+				{
+					analysis_conclusion = @"×";
+				}
+				string macro_file_name = result.MacroDefFileName;
+				UpdateSummaryList(macro_name, analysis_conclusion, macro_file_name);
 			}
 
 			UpdateDetailListView(tmpList);
@@ -406,7 +418,6 @@ namespace Mr.Robot
 					sw.Close();
 				}
 			}
-
 		}
 
 		private void FormMTBot_FormClosing(object sender, FormClosingEventArgs e)
@@ -481,17 +492,32 @@ namespace Mr.Robot
 			}
 		}
 
-		void UpdateDetailListView(List<string> add_list)
+		void UpdateDetailListView(List<MSA_MACRO_SWITCH_RESULT> add_list)
 		{
 			ListViewItem lvItem = null;
 			foreach (var item in add_list)
 			{
-				string[] arr = item.Split(',');
 				int num = this.lvDetailList.Items.Count + 1;
 				lvItem = new ListViewItem(num.ToString());
-				for (int i = 0; i < this.lvDetailList.Columns.Count - 1; i++)
+				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, item.SrcName));
+				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, item.LineNumber.ToString()));
+				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, item.ExpressionStr));
+				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, item.MacroName));
+				string valStr = item.ValueStr;
+				if (string.Empty == valStr)
 				{
-					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, arr[i].Trim()));
+					if (item.IsValid)
+					{
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, @"○"));
+					}
+					else
+					{
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, @"×"));
+					}
+				}
+				else
+				{
+					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, item.ValueStr));
 				}
 				this.lvDetailList.Items.Add(lvItem);
 			}

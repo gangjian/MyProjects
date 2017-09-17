@@ -11,7 +11,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// <summary>
 	/// 入力参数
 	/// </summary>
-	public class MSA_INPUT_PARA
+	class MSA_INPUT_PARA
 	{
 		public List<string> SrcList = null;												// 源文件列表
 		public List<string> HdList = null;												// 头文件列表
@@ -28,12 +28,35 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		}
 	}
 
-	public class MSA_SOURCE_RESULT
+	public class MSA_MACRO_SWITCH_RESULT
+	{
+		public string SrcName = string.Empty;
+		public int LineNumber = -1;
+		public string ExpressionStr = string.Empty;
+		public string MacroName = string.Empty;
+		public bool IsValid = false;
+		public string ValueStr = string.Empty;
+		public string MacroDefFileName = string.Empty;
+
+		public MSA_MACRO_SWITCH_RESULT(	string src_name, int line_num, string exp_str, string macro_name,
+										bool valid, string val_str, string macro_def_file_name)
+		{
+			this.SrcName = src_name;
+			this.LineNumber = line_num;
+			this.ExpressionStr = exp_str;
+			this.MacroName = macro_name;
+			this.IsValid = valid;
+			this.ValueStr = val_str;
+			this.MacroDefFileName = macro_def_file_name;
+		}
+	}
+
+	class MSA_SOURCE_RESULT
 	{
 		public string SourceFileName = string.Empty;
-		public List<string> MacroSwitchResultList = null;
+		public List<MSA_MACRO_SWITCH_RESULT> MacroSwitchResultList = null;
 
-		public MSA_SOURCE_RESULT(string src_name, List<string> macro_switch_result_list)
+		public MSA_SOURCE_RESULT(string src_name, List<MSA_MACRO_SWITCH_RESULT> macro_switch_result_list)
 		{
 			this.SourceFileName = src_name;
 			this.MacroSwitchResultList = macro_switch_result_list;
@@ -42,7 +65,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// <summary>
 	/// 出力结果
 	/// </summary>
-	public class MSA_OUTPUT_RESULT
+	class MSA_OUTPUT_RESULT
 	{
 		public List<MSA_SOURCE_RESULT> SourceResultList = new List<MSA_SOURCE_RESULT>();
 		public MSA_PROGRESS Progress = new MSA_PROGRESS();
@@ -57,7 +80,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		}
 	}
 
-	public class MSA_PROGRESS
+	class MSA_PROGRESS
 	{
 		public string CurrentSourceName = string.Empty;
 		public MSA_SOURCE_PROC_RESULT ProcResult = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
@@ -132,7 +155,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// <summary>
 	/// 源代码中的宏开关(On/Off,有效/无效,定义/未定义,define/undefine)分析
 	/// </summary>
-    public class MACRO_SWITCH_ANALYSER
+    class MACRO_SWITCH_ANALYSER
     {
 		MSA_INPUT_PARA m_inputPara = null;
 		MSA_INPUT_PARA InputPara
@@ -268,11 +291,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				this.StatisticsInfo.FailedCount += 1;
 				return new MSA_SOURCE_RESULT(src_name, null);
 			}
-			List<string> resultList = new List<string>();
+			List<MSA_MACRO_SWITCH_RESULT> resultList = new List<MSA_MACRO_SWITCH_RESULT>();
 			FileInfo fi = new FileInfo(src_name);
 			foreach (MacroSwitchExpInfo expInfo in expInfoList)
 			{
-				MacroPrintInfo printInfo = new MacroPrintInfo(fi.Name, expInfo.LineNum.ToString(), expInfo.CodeLine);
+				MacroPrintInfo printInfo = new MacroPrintInfo(fi.Name, expInfo.LineNum, expInfo.CodeLine);
 				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, mtpj_info_list, mk_info_list);
 			}
 			proc_result = MSA_SOURCE_PROC_RESULT.SUCCESS;
