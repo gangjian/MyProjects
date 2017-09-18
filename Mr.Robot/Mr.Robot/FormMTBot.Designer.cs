@@ -49,10 +49,11 @@
 			this.tbxLog = new System.Windows.Forms.TextBox();
 			this.btnSaveDetail2CSV = new System.Windows.Forms.Button();
 			this.lvSummaryList = new System.Windows.Forms.ListView();
-			this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader14 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeaderIdx = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeaderMacroName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeaderDefined = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeaderValue = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeaderDefFile = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.label6 = new System.Windows.Forms.Label();
 			this.btnSaveSummary2CSV = new System.Windows.Forms.Button();
 			this.treeViewSrcFile = new System.Windows.Forms.TreeView();
@@ -63,7 +64,7 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label1.Location = new System.Drawing.Point(12, 9);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(86, 21);
@@ -81,7 +82,7 @@
 			// 
 			// btnOpenRoot
 			// 
-			this.btnOpenRoot.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenRoot.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenRoot.Location = new System.Drawing.Point(758, 33);
 			this.btnOpenRoot.Name = "btnOpenRoot";
 			this.btnOpenRoot.Size = new System.Drawing.Size(75, 23);
@@ -93,7 +94,7 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label2.Location = new System.Drawing.Point(12, 59);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(99, 21);
@@ -111,7 +112,7 @@
 			// 
 			// btnOpenSource
 			// 
-			this.btnOpenSource.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenSource.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenSource.Location = new System.Drawing.Point(758, 83);
 			this.btnOpenSource.Name = "btnOpenSource";
 			this.btnOpenSource.Size = new System.Drawing.Size(75, 23);
@@ -135,7 +136,7 @@
 			// 
 			this.label4.AutoSize = true;
 			this.label4.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.label4.Location = new System.Drawing.Point(391, 352);
+			this.label4.Location = new System.Drawing.Point(452, 352);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(108, 19);
 			this.label4.TabIndex = 0;
@@ -150,44 +151,44 @@
             this.columnHeader8,
             this.columnHeader6,
             this.columnHeader7});
-			this.lvDetailList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvDetailList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvDetailList.FullRowSelect = true;
 			this.lvDetailList.GridLines = true;
-			this.lvDetailList.Location = new System.Drawing.Point(395, 374);
+			this.lvDetailList.Location = new System.Drawing.Point(456, 374);
 			this.lvDetailList.Name = "lvDetailList";
-			this.lvDetailList.Size = new System.Drawing.Size(559, 310);
+			this.lvDetailList.Size = new System.Drawing.Size(498, 310);
 			this.lvDetailList.TabIndex = 4;
 			this.lvDetailList.UseCompatibleStateImageBehavior = false;
 			this.lvDetailList.View = System.Windows.Forms.View.Details;
 			// 
 			// columnHeader3
 			// 
-			this.columnHeader3.Text = "Idx";
+			this.columnHeader3.Text = "idx";
 			this.columnHeader3.Width = 35;
 			// 
 			// columnHeader4
 			// 
-			this.columnHeader4.Text = "FileName";
+			this.columnHeader4.Text = "file";
 			this.columnHeader4.Width = 220;
 			// 
 			// columnHeader5
 			// 
-			this.columnHeader5.Text = "LineNum";
+			this.columnHeader5.Text = "line";
 			this.columnHeader5.Width = 55;
 			// 
 			// columnHeader8
 			// 
-			this.columnHeader8.Text = "Expression";
+			this.columnHeader8.Text = "expression";
 			this.columnHeader8.Width = 260;
 			// 
 			// columnHeader6
 			// 
-			this.columnHeader6.Text = "MacroName";
+			this.columnHeader6.Text = "macro";
 			this.columnHeader6.Width = 230;
 			// 
 			// columnHeader7
 			// 
-			this.columnHeader7.Text = "Value";
+			this.columnHeader7.Text = "value";
 			this.columnHeader7.Width = 120;
 			// 
 			// progressBar1
@@ -221,39 +222,45 @@
 			// lvSummaryList
 			// 
 			this.lvSummaryList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader9,
-            this.columnHeader13,
-            this.columnHeader14,
-            this.columnHeader10});
-			this.lvSummaryList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.columnHeaderIdx,
+            this.columnHeaderMacroName,
+            this.columnHeaderDefined,
+            this.columnHeaderValue,
+            this.columnHeaderDefFile});
+			this.lvSummaryList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvSummaryList.FullRowSelect = true;
 			this.lvSummaryList.GridLines = true;
 			this.lvSummaryList.Location = new System.Drawing.Point(16, 374);
 			this.lvSummaryList.Name = "lvSummaryList";
-			this.lvSummaryList.Size = new System.Drawing.Size(364, 310);
+			this.lvSummaryList.Size = new System.Drawing.Size(421, 310);
 			this.lvSummaryList.TabIndex = 4;
 			this.lvSummaryList.UseCompatibleStateImageBehavior = false;
 			this.lvSummaryList.View = System.Windows.Forms.View.Details;
 			// 
-			// columnHeader9
+			// columnHeaderIdx
 			// 
-			this.columnHeader9.Text = "Idx";
-			this.columnHeader9.Width = 30;
+			this.columnHeaderIdx.Text = "idx";
+			this.columnHeaderIdx.Width = 30;
 			// 
-			// columnHeader13
+			// columnHeaderMacroName
 			// 
-			this.columnHeader13.Text = "MacroName";
-			this.columnHeader13.Width = 180;
+			this.columnHeaderMacroName.Text = "macro";
+			this.columnHeaderMacroName.Width = 180;
 			// 
-			// columnHeader14
+			// columnHeaderDefined
 			// 
-			this.columnHeader14.Text = "Value";
-			this.columnHeader14.Width = 50;
+			this.columnHeaderDefined.Text = "def";
+			this.columnHeaderDefined.Width = 35;
 			// 
-			// columnHeader10
+			// columnHeaderValue
 			// 
-			this.columnHeader10.Text = "DefineFile";
-			this.columnHeader10.Width = 120;
+			this.columnHeaderValue.Text = "value";
+			this.columnHeaderValue.Width = 55;
+			// 
+			// columnHeaderDefFile
+			// 
+			this.columnHeaderDefFile.Text = "path";
+			this.columnHeaderDefFile.Width = 120;
 			// 
 			// label6
 			// 
@@ -268,7 +275,7 @@
 			// btnSaveSummary2CSV
 			// 
 			this.btnSaveSummary2CSV.Font = new System.Drawing.Font("Consolas", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.btnSaveSummary2CSV.Location = new System.Drawing.Point(284, 343);
+			this.btnSaveSummary2CSV.Location = new System.Drawing.Point(341, 343);
 			this.btnSaveSummary2CSV.Name = "btnSaveSummary2CSV";
 			this.btnSaveSummary2CSV.Size = new System.Drawing.Size(96, 28);
 			this.btnSaveSummary2CSV.TabIndex = 7;
@@ -333,7 +340,7 @@
 			this.MaximizeBox = false;
 			this.Name = "FormMTBot";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "MTBot v0.1.6";
+			this.Text = "MTBot v0.1.7";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMTBot_FormClosing);
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -361,14 +368,15 @@
 		private System.Windows.Forms.ColumnHeader columnHeader8;
 		private System.Windows.Forms.Button btnSaveDetail2CSV;
 		private System.Windows.Forms.ListView lvSummaryList;
-		private System.Windows.Forms.ColumnHeader columnHeader9;
-		private System.Windows.Forms.ColumnHeader columnHeader13;
-		private System.Windows.Forms.ColumnHeader columnHeader14;
+		private System.Windows.Forms.ColumnHeader columnHeaderIdx;
+		private System.Windows.Forms.ColumnHeader columnHeaderMacroName;
+		private System.Windows.Forms.ColumnHeader columnHeaderValue;
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Button btnSaveSummary2CSV;
-		private System.Windows.Forms.ColumnHeader columnHeader10;
+		private System.Windows.Forms.ColumnHeader columnHeaderDefFile;
 		private System.Windows.Forms.TreeView treeViewSrcFile;
 		private System.Windows.Forms.ImageList imageList1;
 		private System.Windows.Forms.TextBox tbxOutputLog;
+		private System.Windows.Forms.ColumnHeader columnHeaderDefined;
 	}
 }

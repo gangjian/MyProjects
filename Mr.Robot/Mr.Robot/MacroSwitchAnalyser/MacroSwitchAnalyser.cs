@@ -34,7 +34,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		public int LineNumber = -1;
 		public string ExpressionStr = string.Empty;
 		public string MacroName = string.Empty;
-		public bool IsValid = false;
+		public bool IsDefined = false;
 		public string ValueStr = string.Empty;
 		public string MacroDefFileName = string.Empty;
 
@@ -45,7 +45,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			this.LineNumber = line_num;
 			this.ExpressionStr = exp_str;
 			this.MacroName = macro_name;
-			this.IsValid = valid;
+			this.IsDefined = valid;
 			this.ValueStr = val_str;
 			this.MacroDefFileName = macro_def_file_name;
 		}

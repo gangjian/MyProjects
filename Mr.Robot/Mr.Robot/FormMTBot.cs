@@ -267,13 +267,15 @@ namespace Mr.Robot
 		public class SUMMARY_INFO
 		{
 			public string MacroName = string.Empty;										// 宏定义名
-			public string Conclusion = string.Empty;									// 解析结论(是否定义, 定义值)
+			public string DefinedStr = string.Empty;									// 是否定义(是:○, 否:×, 有冲突(有两处以上定义不一致):▼)
+			public string ValueStr = string.Empty;										// 解析结论(是否定义, 定义值)
 			public string FileName = string.Empty;										// (宏定义)所在文件名)
 
-			public SUMMARY_INFO(string macro_name, string conclusion, string file_name)
+			public SUMMARY_INFO(string macro_name, string def_str, string value_str, string file_name)
 			{
 				this.MacroName = macro_name;
-				this.Conclusion = conclusion;
+				this.DefinedStr = def_str;
+				this.ValueStr = value_str;
 				this.FileName = file_name;
 			}
 		}
@@ -340,27 +342,8 @@ namespace Mr.Robot
 			//this.DetailResultList.AddRange(tmpList);
 			foreach (MSA_MACRO_SWITCH_RESULT result in tmpList)
 			{
-				string macro_name = result.MacroName;
-				string analysis_conclusion = string.Empty;
-				if (result.IsValid)
-				{
-					if (string.Empty == result.ValueStr)
-					{
-						analysis_conclusion = @"○";
-					}
-					else
-					{
-						analysis_conclusion = result.ValueStr;
-					}
-				}
-				else
-				{
-					analysis_conclusion = @"×";
-				}
-				string macro_file_name = result.MacroDefFileName;
-				UpdateSummaryList(macro_name, analysis_conclusion, macro_file_name);
+				UpdateSummaryList(result.MacroName, result.IsDefined, result.ValueStr, result.MacroDefFileName);
 			}
-
 			UpdateDetailListView(tmpList);
 			UpdateSummaryListView();
 		}
@@ -429,16 +412,20 @@ namespace Mr.Robot
 			}
 		}
 
-		void UpdateSummaryList(string macro_name, string conclusion_str, string macro_file_name)
+		void UpdateSummaryList(string macro_name, bool is_defined, string value_str, string macro_file_name)
 		{
+			string definedStr = GetDefinedStr(is_defined);
 			for (int i = 0; i < this.SummaryResultList.Count; i++)
 			{
 				if (this.SummaryResultList[i].MacroName == macro_name)
 				{
-					if (@"▼" != this.SummaryResultList[i].Conclusion
-						&& conclusion_str != this.SummaryResultList[i].Conclusion)
+					if (@"▼" != this.SummaryResultList[i].DefinedStr)
 					{
-						this.SummaryResultList[i].Conclusion = @"▼";
+						if (	definedStr != this.SummaryResultList[i].DefinedStr
+							||	value_str != this.SummaryResultList[i].ValueStr)
+						{
+							this.SummaryResultList[i].ValueStr = @"▼";
+						}
 					}
 					else
 					{
@@ -446,8 +433,13 @@ namespace Mr.Robot
 					return;
 				}
 			}
-			SUMMARY_INFO sm_info = new SUMMARY_INFO(macro_name, conclusion_str, macro_file_name);
+			SUMMARY_INFO sm_info = new SUMMARY_INFO(macro_name, definedStr, value_str, macro_file_name);
 			this.SummaryResultList.Add(sm_info);
+		}
+
+		string GetDefinedStr(bool is_defined)
+		{
+			return is_defined ? "○" : "×";
 		}
 
 		private void btnSaveSummary2CSV_Click(object sender, EventArgs e)
@@ -466,13 +458,17 @@ namespace Mr.Robot
 					{
 						lvItem.SubItems[1].Text = this.SummaryResultList[i].MacroName;
 					}
-					if (lvItem.SubItems[2].Text != this.SummaryResultList[i].Conclusion)
+					if (lvItem.SubItems[2].Text != this.SummaryResultList[i].DefinedStr)
 					{
-						lvItem.SubItems[2].Text = this.SummaryResultList[i].Conclusion;
+						lvItem.SubItems[2].Text = this.SummaryResultList[i].DefinedStr;
 					}
-					if (lvItem.SubItems[3].Text != this.SummaryResultList[i].FileName)
+					if (lvItem.SubItems[3].Text != this.SummaryResultList[i].ValueStr)
 					{
-						lvItem.SubItems[3].Text = this.SummaryResultList[i].FileName;
+						lvItem.SubItems[3].Text = this.SummaryResultList[i].ValueStr;
+					}
+					if (lvItem.SubItems[4].Text != this.SummaryResultList[i].FileName)
+					{
+						lvItem.SubItems[4].Text = this.SummaryResultList[i].FileName;
 					}
 				}
 				if (this.SummaryResultList.Count > this.lvSummaryList.Items.Count)
@@ -484,7 +480,8 @@ namespace Mr.Robot
 						int num = this.lvSummaryList.Items.Count + 1;
 						ListViewItem lvItem = new ListViewItem(num.ToString());
 						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.MacroName));
-						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.Conclusion));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.DefinedStr));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.ValueStr));
 						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.FileName));
 						this.lvSummaryList.Items.Add(lvItem);
 					}
@@ -506,7 +503,7 @@ namespace Mr.Robot
 				string valStr = item.ValueStr;
 				if (string.Empty == valStr)
 				{
-					if (item.IsValid)
+					if (item.IsDefined)
 					{
 						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, @"○"));
 					}
