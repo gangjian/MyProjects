@@ -36,7 +36,7 @@ namespace UnitTestProject
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
 			C_PROSPECTOR cProspector = new C_PROSPECTOR(csfList, header_list);
-			List<FILE_PARSE_INFO> parseInfoList = cProspector.CFileListProc();
+			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();
 			FILE_PARSE_INFO code_parse_info;
 			FUNCTION_PARSE_INFO funInfo = CFunctionAnalysis.GetFuncInfoFromParseResult(full_path, func_name, parseInfoList, out code_parse_info);
 
@@ -71,7 +71,7 @@ namespace UnitTestProject
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
 			C_PROSPECTOR cProspector = new C_PROSPECTOR(csfList, header_list);
-			List<FILE_PARSE_INFO> parseInfoList = cProspector.CFileListProc();
+			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();
 
 			return parseInfoList;
 		}

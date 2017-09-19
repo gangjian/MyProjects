@@ -17,14 +17,17 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		public List<string> HdList = null;												// 头文件列表
 		public List<string> MtpjList = null;											// ".mtpj"文件列表
 		public List<string> MkList = null;												// ".mk"源文件列表
+		public int WorkerThreadNum = 1;
 
 		public MSA_INPUT_PARA(	List<string> src_list, List<string> hd_list,
-								List<string> mtpj_list, List<string> mk_list)
+								List<string> mtpj_list, List<string> mk_list,
+								int worker_thread_num = 1)
 		{
 			this.SrcList = src_list;
 			this.HdList = hd_list;
 			this.MtpjList = mtpj_list;
 			this.MkList = mk_list;
+			this.WorkerThreadNum = worker_thread_num;
 		}
 	}
 
@@ -178,63 +181,105 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			set { m_outputResult = value; }
 		}
 
-		// 新的更新处理,用以取代上面的"ReportProgressDel"
-		public EventHandler ReportProgressHandler = null;
+		public EventHandler MSA_ReportProgressHandler = null;
 
 		public MACRO_SWITCH_ANALYSER(MSA_INPUT_PARA input_para)
         {
 			this.InputPara = input_para;
+			this.WorkerThreadGroup = new Thread[input_para.WorkerThreadNum];
         }
 
-		Thread workerThread = null;
+		Thread[] WorkerThreadGroup = null;
 
 		public void ProcStart()
 		{
 			ProcAbort();
-			this.workerThread = new Thread(new ThreadStart(ProcMain));
-			workerThread.Start();
+
+			this.OutputResult = new MSA_OUTPUT_RESULT();
+			this.StatisticsInfo = new MSA_STATISTICS_INFO(this.InputPara.SrcList.Count);
+
+			this.m_ProcInfo = new PROC_INFO();
+			// 处理.mtpj文件
+			m_ProcInfo.mtpjInfoList = MtpjProc();
+			// 处理.mk文件
+			m_ProcInfo.mkInfoList = MkProc();
+			m_ProcInfo.count = 0;
+
+			// 处理源文件
+			foreach (string src_name in this.InputPara.SrcList)
+			{
+				m_ProcInfo.SourceFileQueue.Enqueue(src_name);
+			}
+			for (int i = 0; i < this.WorkerThreadGroup.Length; i++)
+			{
+				this.WorkerThreadGroup[i] = new Thread(new ThreadStart(ThreadMain));
+				this.WorkerThreadGroup[i].Start();
+			}
+			//System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
 		}
 
 		public void ProcAbort()
 		{
-			if (null != this.workerThread
-				&& this.workerThread.IsAlive)
+			for (int i = 0; i < this.WorkerThreadGroup.Length; i++)
 			{
-				this.workerThread.Abort();
-				this.workerThread = null;
+				WorkerThreadAbord(this.WorkerThreadGroup[i]);
 			}
 		}
 
-		void ProcMain()
+		void WorkerThreadAbord(Thread worker_thread)
 		{
-			this.OutputResult = new MSA_OUTPUT_RESULT();
-			this.StatisticsInfo = new MSA_STATISTICS_INFO(this.InputPara.SrcList.Count);
-
-			// 处理.mtpj文件
-			List<MTPJ_FILE_INFO> mtpjInfoList = MtpjProc();
-
-			// 处理.mk文件
-			List<MK_FILE_INFO> mkInfoList = MkProc();
-
-			// 处理源文件
-			int count = 0;
-			foreach (string src_name in this.InputPara.SrcList)
+			if (null != worker_thread
+				&& worker_thread.IsAlive)
 			{
-				count++;
-				MSA_SOURCE_PROC_RESULT procResult;
-				MSA_SOURCE_RESULT result = SrcProc(src_name, this.InputPara.HdList, out procResult, mtpjInfoList, mkInfoList);
-				this.OutputResult.Add(result);
-				this.OutputResult.Progress = new MSA_PROGRESS(src_name, procResult, count, this.StatisticsInfo.TotalCount);
-				ReportProgress2Caller();
+				worker_thread.Abort();
+				worker_thread = null;
 			}
-			System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
+		}
+
+		class PROC_INFO
+		{
+			public List<MTPJ_FILE_INFO> mtpjInfoList = null;
+			public List<MK_FILE_INFO> mkInfoList = null;
+			public int count = 0;
+			public Queue<string> SourceFileQueue = new Queue<string>();
+		}
+
+		PROC_INFO m_ProcInfo = null;
+
+		void ThreadMain()
+		{
+			while (true)
+			{
+				string srcName = string.Empty;
+				lock (this.m_ProcInfo)
+				{
+					if (0 == this.m_ProcInfo.SourceFileQueue.Count)
+					{
+						// 检查其它线程是否都已结束
+						break;
+					}
+					srcName = this.m_ProcInfo.SourceFileQueue.Dequeue();
+				}
+				MSA_SOURCE_PROC_RESULT procResult;
+				MSA_SOURCE_RESULT result = SrcProc(srcName, this.InputPara.HdList, out procResult, this.m_ProcInfo.mtpjInfoList, this.m_ProcInfo.mkInfoList);
+				lock (this.m_ProcInfo)
+				{
+					this.m_ProcInfo.count++;
+				}
+				lock (this.OutputResult)
+				{
+					this.OutputResult.Add(result);
+					this.OutputResult.Progress = new MSA_PROGRESS(srcName, procResult, m_ProcInfo.count, this.StatisticsInfo.TotalCount);
+					ReportProgress2Caller();
+				}
+			}
 		}
 
 		void ReportProgress2Caller()
 		{
-			if (null != this.ReportProgressHandler)
+			if (null != this.MSA_ReportProgressHandler)
 			{
-				this.ReportProgressHandler(this, null);
+				this.MSA_ReportProgressHandler(this, null);
 			}
 		}
 
@@ -284,7 +329,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			srcList.Add(src_name);
 			C_PROSPECTOR cProspector = new C_PROSPECTOR(srcList, header_list);
 			cProspector.MacroSwichAnalyserFlag = true;
-			List<FILE_PARSE_INFO> parseInfoList = cProspector.CFileListProc();
+			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();
 			if (null == parseInfoList || 0 == parseInfoList.Count)
 			{
 				proc_result = MSA_SOURCE_PROC_RESULT.FAIL;

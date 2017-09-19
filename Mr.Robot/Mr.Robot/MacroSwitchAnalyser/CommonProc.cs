@@ -123,6 +123,9 @@ namespace Mr.Robot.MacroSwitchAnalyser
 								if (item.DefList.Contains(cpnt.Text))
 								{
 									MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, true, @".mk def", item.FileName);
+									result_list.Add(msResult);
+									bFindInPrjDef = true;
+									break;
 								}
 							}
 						}

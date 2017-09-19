@@ -9,7 +9,7 @@ namespace UnitTestProject
 	[TestClass]
 	public class sym_rbl_in_trcta_igoff
     {
-        static StatementNode _func_root;                                                      // 函数语句结构的根节点
+        static StatementNode _func_root;                                                // 函数语句结构的根节点
         static FILE_PARSE_INFO _source_parse_info;
 
         [ClassInitialize]
@@ -23,8 +23,6 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
         public void sym_rbl_in_trcta_igoff_0()
         {
-            // 函数语句分析: 分析入出力
-            //CCodeAnalyser.FunctionStatementsAnalysis(root, c_file_result);
             Assert.AreEqual(3, _func_root.childList.Count);
             Assert.AreEqual(StatementNodeType.Simple, _func_root.childList[0].Type);
             Assert.AreEqual(StatementNodeType.Simple, _func_root.childList[1].Type);
@@ -36,7 +34,6 @@ namespace UnitTestProject
         {
             // 顺次分析各语句
 			FUNCTION_ANALYSIS_CONTEXT analysisContext = new FUNCTION_ANALYSIS_CONTEXT();
-			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, ctx);
 
 			List<string> codeList = _source_parse_info.CodeList;
 			string statementStr = StatementAnalysis.GetStatementStr(codeList, _func_root.childList[0].Scope);

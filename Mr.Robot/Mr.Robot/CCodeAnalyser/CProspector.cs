@@ -15,7 +15,7 @@ namespace Mr.Robot
 		List<string> HeaderList = new List<string>();									// 头文件名列表
 		List<string> SourceList = new List<string>();									// 源文件名列表
 
-		public EventHandler UpdateProgress = null;
+		public EventHandler CProspectorUpdateProgressHandler = null;
 		public List<FILE_PARSE_INFO> ParseInfoList = null;
 
 		public bool MacroSwichAnalyserFlag = false;										// 这个标志是给宏开关分析工具设的, 做宏开关分析时, 为了提高速度, 只分析头文件宏定义等..
@@ -30,7 +30,7 @@ namespace Mr.Robot
 		}
 
 		#region 向外提供的接口方法
-		public void ProcessStart()
+		public void AsyncStart()
 		{
 			Thread workerThread = new Thread(new ThreadStart(ProcessMain));
 			workerThread.Start();
@@ -41,10 +41,10 @@ namespace Mr.Robot
 
 		void ProcessMain()
 		{
-			CFileListProc();
+			SyncStart();
 		}
 
-		public List<FILE_PARSE_INFO> CFileListProc()
+		public List<FILE_PARSE_INFO> SyncStart()
 		{
 			this.ParseInfoList = new List<FILE_PARSE_INFO>();
 			// 逐个解析源文件

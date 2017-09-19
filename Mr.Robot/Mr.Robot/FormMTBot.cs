@@ -255,8 +255,8 @@ namespace Mr.Robot
 
 		void StartMacroSwitchAnalyzer()
 		{
-			this.MacroSwitchAnalyzer = new MACRO_SWITCH_ANALYSER(new MSA_INPUT_PARA(this.SourceList, this.HeaderList, this.MtpjFileList, this.MkFileList));
-			this.MacroSwitchAnalyzer.ReportProgressHandler += new EventHandler(UpdateProgressHandler);
+			this.MacroSwitchAnalyzer = new MACRO_SWITCH_ANALYSER(new MSA_INPUT_PARA(this.SourceList, this.HeaderList, this.MtpjFileList, this.MkFileList, 4));
+			this.MacroSwitchAnalyzer.MSA_ReportProgressHandler += new EventHandler(UpdateProgressHandler);
 			this.MacroSwitchAnalyzer.ProcStart();
 			this.StopWatch.Restart();
 		}
@@ -264,19 +264,29 @@ namespace Mr.Robot
 		// 用来接收MacroSwitchAnalyzer解析出的宏开关结果的队列
 		Queue<MSA_MACRO_SWITCH_RESULT> MacroSwitchResultQueue = new Queue<MSA_MACRO_SWITCH_RESULT>();
 
-		public class SUMMARY_INFO
+		class MACRO_VALUE_INFO
+		{
+			public string ValueStr = string.Empty;										// 表示宏定义的值的字符串
+			public string DefFile = string.Empty;										// 定义宏所在的文件
+
+			public MACRO_VALUE_INFO(string val_str, string def_file)
+			{
+				this.ValueStr = val_str;
+				this.DefFile = def_file;
+			}
+		}
+
+		class SUMMARY_INFO
 		{
 			public string MacroName = string.Empty;										// 宏定义名
 			public string DefinedStr = string.Empty;									// 是否定义(是:○, 否:×, 有冲突(有两处以上定义不一致):▼)
-			public string ValueStr = string.Empty;										// 解析结论(是否定义, 定义值)
-			public string FileName = string.Empty;										// (宏定义)所在文件名)
+			public MACRO_VALUE_INFO ValueInfo = null;
 
 			public SUMMARY_INFO(string macro_name, string def_str, string value_str, string file_name)
 			{
 				this.MacroName = macro_name;
 				this.DefinedStr = def_str;
-				this.ValueStr = value_str;
-				this.FileName = file_name;
+				this.ValueInfo = new MACRO_VALUE_INFO(value_str, file_name);
 			}
 		}
 
@@ -301,12 +311,8 @@ namespace Mr.Robot
 								this.MacroSwitchResultQueue.Enqueue(result);
 							}
 						}
-						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.Progress);
 					}
-					else
-					{
-						UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.Progress);
-					}
+					UpdateProgress(this.MacroSwitchAnalyzer.OutputResult.Progress);
 				}
 			}
 		}
@@ -419,12 +425,12 @@ namespace Mr.Robot
 			{
 				if (this.SummaryResultList[i].MacroName == macro_name)
 				{
-					if (@"▼" != this.SummaryResultList[i].DefinedStr)
+					if (	definedStr != this.SummaryResultList[i].DefinedStr
+						||	value_str != this.SummaryResultList[i].ValueInfo.ValueStr)
 					{
-						if (	definedStr != this.SummaryResultList[i].DefinedStr
-							||	value_str != this.SummaryResultList[i].ValueStr)
+						if (@"▼" != this.SummaryResultList[i].DefinedStr)
 						{
-							this.SummaryResultList[i].ValueStr = @"▼";
+							this.SummaryResultList[i].DefinedStr = @"▼";
 						}
 					}
 					else
@@ -432,6 +438,11 @@ namespace Mr.Robot
 					}
 					return;
 				}
+			}
+			string rootPath = this.tbxRootPath.Text;
+			if (macro_file_name.StartsWith(rootPath))
+			{
+				macro_file_name = "." + macro_file_name.Remove(0, rootPath.Length).Trim();
 			}
 			SUMMARY_INFO sm_info = new SUMMARY_INFO(macro_name, definedStr, value_str, macro_file_name);
 			this.SummaryResultList.Add(sm_info);
@@ -462,13 +473,13 @@ namespace Mr.Robot
 					{
 						lvItem.SubItems[2].Text = this.SummaryResultList[i].DefinedStr;
 					}
-					if (lvItem.SubItems[3].Text != this.SummaryResultList[i].ValueStr)
+					if (lvItem.SubItems[3].Text != this.SummaryResultList[i].ValueInfo.ValueStr)
 					{
-						lvItem.SubItems[3].Text = this.SummaryResultList[i].ValueStr;
+						lvItem.SubItems[3].Text = this.SummaryResultList[i].ValueInfo.ValueStr;
 					}
-					if (lvItem.SubItems[4].Text != this.SummaryResultList[i].FileName)
+					if (lvItem.SubItems[4].Text != this.SummaryResultList[i].ValueInfo.DefFile)
 					{
-						lvItem.SubItems[4].Text = this.SummaryResultList[i].FileName;
+						lvItem.SubItems[4].Text = this.SummaryResultList[i].ValueInfo.DefFile;
 					}
 				}
 				if (this.SummaryResultList.Count > this.lvSummaryList.Items.Count)
@@ -481,8 +492,8 @@ namespace Mr.Robot
 						ListViewItem lvItem = new ListViewItem(num.ToString());
 						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.MacroName));
 						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.DefinedStr));
-						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.ValueStr));
-						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.FileName));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.ValueInfo.ValueStr));
+						lvItem.SubItems.Add(new ListViewItem.ListViewSubItem(lvItem, sm_info.ValueInfo.DefFile));
 						this.lvSummaryList.Items.Add(lvItem);
 					}
 				}

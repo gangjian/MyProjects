@@ -33,7 +33,7 @@ namespace Mr.Robot
         Invalid,
         Root,                 // 根节点(函数体)
         Simple,               // 简单句
-                                            // 以下是复合语句
+                              // 以下是复合语句
         Compound_IfElse,      // if-else分支语句
         Compound_SwitchCase,  // switch-case分支语句
         Compound_While,       // while循环语句

@@ -64,7 +64,7 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label1.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label1.Location = new System.Drawing.Point(12, 9);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(86, 21);
@@ -82,7 +82,7 @@
 			// 
 			// btnOpenRoot
 			// 
-			this.btnOpenRoot.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenRoot.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenRoot.Location = new System.Drawing.Point(758, 33);
 			this.btnOpenRoot.Name = "btnOpenRoot";
 			this.btnOpenRoot.Size = new System.Drawing.Size(75, 23);
@@ -94,7 +94,7 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label2.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label2.Location = new System.Drawing.Point(12, 59);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(99, 21);
@@ -112,7 +112,7 @@
 			// 
 			// btnOpenSource
 			// 
-			this.btnOpenSource.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenSource.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenSource.Location = new System.Drawing.Point(758, 83);
 			this.btnOpenSource.Name = "btnOpenSource";
 			this.btnOpenSource.Size = new System.Drawing.Size(75, 23);
@@ -151,7 +151,7 @@
             this.columnHeader8,
             this.columnHeader6,
             this.columnHeader7});
-			this.lvDetailList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvDetailList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvDetailList.FullRowSelect = true;
 			this.lvDetailList.GridLines = true;
 			this.lvDetailList.Location = new System.Drawing.Point(456, 374);
@@ -227,7 +227,7 @@
             this.columnHeaderDefined,
             this.columnHeaderValue,
             this.columnHeaderDefFile});
-			this.lvSummaryList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvSummaryList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvSummaryList.FullRowSelect = true;
 			this.lvSummaryList.GridLines = true;
 			this.lvSummaryList.Location = new System.Drawing.Point(16, 374);
@@ -336,11 +336,12 @@
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.tbxRootPath);
 			this.Controls.Add(this.label1);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MaximizeBox = false;
 			this.Name = "FormMTBot";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "MTBot v0.1.7";
+			this.Text = "MTBot v0.1.8";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMTBot_FormClosing);
 			this.ResumeLayout(false);
 			this.PerformLayout();
