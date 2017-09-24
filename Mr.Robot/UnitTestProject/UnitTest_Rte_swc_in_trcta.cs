@@ -9,7 +9,7 @@ namespace UnitTestProject
 	[TestClass]
 	public class sym_rbl_in_trcta_igoff
     {
-        static StatementNode c_func_root;                                               // 函数语句结构的根节点
+        static STATEMENT_NODE c_func_root;                                               // 函数语句结构的根节点
         static FILE_PARSE_INFO c_source_parse_info;
 
         [ClassInitialize]
@@ -24,20 +24,20 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
         public void sym_rbl_in_trcta_igoff_0()
         {
-            Assert.AreEqual(3, c_func_root.childList.Count);
-            Assert.AreEqual(StatementNodeType.Simple, c_func_root.childList[0].Type);
-            Assert.AreEqual(StatementNodeType.Simple, c_func_root.childList[1].Type);
-            Assert.AreEqual(StatementNodeType.Simple, c_func_root.childList[2].Type);
+            Assert.AreEqual(3, c_func_root.ChildNodeList.Count);
+            Assert.AreEqual(E_STATEMENT_TYPE.Simple, c_func_root.ChildNodeList[0].Type);
+            Assert.AreEqual(E_STATEMENT_TYPE.Simple, c_func_root.ChildNodeList[1].Type);
+            Assert.AreEqual(E_STATEMENT_TYPE.Simple, c_func_root.ChildNodeList[2].Type);
         }
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
         public void sym_rbl_in_trcta_igoff_1_1()
         {
             // 顺次分析各语句
-			FUNCTION_ANALYSIS_CONTEXT analysisContext = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO analysisContext = new FUNC_INFO();
 
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.childList[0].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.ChildNodeList[0].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
@@ -49,8 +49,8 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
         public void sym_rbl_in_trcta_igoff_1_2()
         {
-			FUNCTION_ANALYSIS_CONTEXT analysisContext = new FUNCTION_ANALYSIS_CONTEXT();
-			C_DEDUCER.StatementAnalyze(c_func_root.childList[0], c_source_parse_info, analysisContext);
+			FUNC_INFO analysisContext = new FUNC_INFO();
+			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
 
 			Assert.AreEqual(1, analysisContext.LocalVarList.Count);
 			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_1", analysisContext.LocalVarList[0].Type.Name);
@@ -60,11 +60,11 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
         public void sym_rbl_in_trcta_igoff_2()
         {
-			FUNCTION_ANALYSIS_CONTEXT analysisContext = new FUNCTION_ANALYSIS_CONTEXT();
-			C_DEDUCER.StatementAnalyze(c_func_root.childList[0], c_source_parse_info, analysisContext);
+			FUNC_INFO analysisContext = new FUNC_INFO();
+			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
 
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.childList[1].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.ChildNodeList[1].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
@@ -79,12 +79,12 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
         public void sym_rbl_in_trcta_igoff_3()
         {
-			FUNCTION_ANALYSIS_CONTEXT analysisContext = new FUNCTION_ANALYSIS_CONTEXT();
-			C_DEDUCER.StatementAnalyze(c_func_root.childList[0], c_source_parse_info, analysisContext);
-			C_DEDUCER.StatementAnalyze(c_func_root.childList[1], c_source_parse_info, analysisContext);
+			FUNC_INFO analysisContext = new FUNC_INFO();
+			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
+			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[1], c_source_parse_info, analysisContext);
 
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.childList[2].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.ChildNodeList[2].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
@@ -99,7 +99,7 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igoff_IO()
 		{
-			FUNCTION_ANALYSIS_CONTEXT analysisContext = C_DEDUCER.DeducerStart(c_func_root, c_source_parse_info);
+			FUNC_INFO analysisContext = C_DEDUCER.DeducerStart(c_func_root, c_source_parse_info);
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
 			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct->value", analysisContext.OutputGlobalList[0].Text);
 		}
@@ -143,7 +143,7 @@ namespace UnitTestProject
 	[TestClass]
 	public class sym_rbl_in_trcta_igon
 	{
-		static StatementNode root;                                                      // 函数语句结构的根节点
+		static STATEMENT_NODE root;                                                      // 函数语句结构的根节点
 		static FILE_PARSE_INFO c_source_parse_info;
 
 		[ClassInitialize]
@@ -160,29 +160,29 @@ namespace UnitTestProject
 		{
 			// 函数语句分析: 分析入出力
 			//CCodeAnalyser.FunctionStatementsAnalysis(root, c_file_result);
-			Assert.AreEqual(10, root.childList.Count);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[0].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[1].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[2].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[3].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[4].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[5].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[6].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[7].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[8].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[9].Type);
+			Assert.AreEqual(10, root.ChildNodeList.Count);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[0].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[1].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[2].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[3].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[4].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[5].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[6].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[7].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[8].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[9].Type);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_1To3()
 		{
 			// 顺次分析各语句
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO func_ctx = new FUNC_INFO();
 			//CCodeAnalyser.StatementAnalysis(root.childList[0], c_source_file_parse_result, localVarList);
 
 			List<string> codeList = c_source_parse_info.CodeList;
 			// 第一条语句
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[0].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[0].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -191,7 +191,7 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第二条语句
-			statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[1].Scope);
+			statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[1].Scope);
 			componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -200,7 +200,7 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第三条语句
-			statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[2].Scope);
+			statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[2].Scope);
 			componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -212,13 +212,13 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_4()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
-			C_DEDUCER.StatementAnalyze(root.childList[0], c_source_parse_info, func_ctx);
-			C_DEDUCER.StatementAnalyze(root.childList[1], c_source_parse_info, func_ctx);
-			C_DEDUCER.StatementAnalyze(root.childList[2], c_source_parse_info, func_ctx);
+			FUNC_INFO func_ctx = new FUNC_INFO();
+			C_DEDUCER.StatementAnalyze(root.ChildNodeList[0], c_source_parse_info, func_ctx);
+			C_DEDUCER.StatementAnalyze(root.ChildNodeList[1], c_source_parse_info, func_ctx);
+			C_DEDUCER.StatementAnalyze(root.ChildNodeList[2], c_source_parse_info, func_ctx);
 			List<string> codeList = c_source_parse_info.CodeList;
 			// 第4句
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[3].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[3].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -233,14 +233,14 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_5()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 4; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第5句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[4].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[4].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -255,14 +255,14 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_6()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 5; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第6句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[5].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[5].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -277,14 +277,14 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_7()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 6; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第7句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[6].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[6].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -299,14 +299,14 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_8()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 7; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第8句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[7].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[7].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -318,14 +318,14 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_9()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 8; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第9句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[8].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[8].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -340,14 +340,14 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_10()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = new FUNCTION_ANALYSIS_CONTEXT();
+			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 9; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.childList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第9句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.childList[9].Scope);
+			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[9].Scope);
 			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
@@ -362,7 +362,7 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_igon_IO()
 		{
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
+			FUNC_INFO func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 
 			Assert.AreEqual(3, func_ctx.LocalVarList.Count);
 
@@ -398,7 +398,7 @@ namespace UnitTestProject
 	[TestClass]
 	public class sym_rbl_in_trcta_initReset
 	{
-		static StatementNode root;                                                      // 函数语句结构的根节点
+		static STATEMENT_NODE root;                                                      // 函数语句结构的根节点
 		static FILE_PARSE_INFO c_source_parse_info;
 
 		[ClassInitialize]
@@ -413,7 +413,7 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_initReset_IO()
 		{
-			FUNCTION_ANALYSIS_CONTEXT analysisContext = C_DEDUCER.DeducerStart(root, c_source_parse_info);
+			FUNC_INFO analysisContext = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
 			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_initReset_pp_srIf_pv_PvRctasw_struct->value", analysisContext.OutputGlobalList[0].Text);
 		}
@@ -422,7 +422,7 @@ namespace UnitTestProject
 	[TestClass]
 	public class sym_rbl_in_trcta_initWakeup
 	{
-		static StatementNode root;                                                      // 函数语句结构的根节点
+		static STATEMENT_NODE root;                                                      // 函数语句结构的根节点
 		static FILE_PARSE_INFO c_source_parse_info;
 
 		[ClassInitialize]
@@ -437,7 +437,7 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_trcta.c")]
 		public void sym_rbl_in_trcta_initWakeup_IO()
 		{
-			FUNCTION_ANALYSIS_CONTEXT analysisContext = C_DEDUCER.DeducerStart(root, c_source_parse_info);
+			FUNC_INFO analysisContext = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(1, analysisContext.OutputGlobalList.Count);
 			Assert.AreEqual("Rte_Inst_swc_in_trcta->rbl_in_trcta_initWakeup_pp_srIf_pv_PvRctasw_struct->value", analysisContext.OutputGlobalList[0].Text);
 		}

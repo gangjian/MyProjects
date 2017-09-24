@@ -9,7 +9,7 @@ namespace Mr.Robot
 	/// <summary>
 	/// 变量上下文
 	/// </summary>
-	public class VAR_CONTEXT
+	public class VAR_CTX
 	{
 		public string Name = string.Empty;												// 变量名
 
@@ -25,9 +25,9 @@ namespace Mr.Robot
 
 		public string CalledFunctionReadOut = string.Empty;								// 可能被函数调用的读出值赋值(函数名)
 
-		public List<VAR_CONTEXT> MemberList = new List<VAR_CONTEXT>();					// 成员列表(下一层级)
+		public List<VAR_CTX> MemberList = new List<VAR_CTX>();							// 成员列表(下一层级)
 
-		public VAR_CONTEXT(string type_name, string var_name)							// 构造方法
+		public VAR_CTX(string type_name, string var_name)								// 构造方法
 		{
 			Trace.Assert(!string.IsNullOrEmpty(type_name));
 			Trace.Assert(!string.IsNullOrEmpty(var_name));
@@ -82,9 +82,9 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="func_ctx"></param>
 		/// <returns></returns>
-		static public VAR_CONTEXT GetVarCtxByName(string var_name, FILE_PARSE_INFO parse_info, FUNCTION_ANALYSIS_CONTEXT func_ctx)
+		static public VAR_CTX GetVarCtxByName(string var_name, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
 		{
-			VAR_CONTEXT var_ctx = null;
+			VAR_CTX var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, func_ctx)))
 			{
 				// 如果在当前的各个变量上下文列表中找到, 说明变量上下文已经创建, 直接返回
@@ -104,13 +104,13 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CONTEXT SearchVarCtxList(string var_name, FUNCTION_ANALYSIS_CONTEXT func_ctx)
+		static VAR_CTX SearchVarCtxList(string var_name, FUNC_INFO func_ctx)
 		{
 			if (null == func_ctx)
 			{
 				return null;
 			}
-			VAR_CONTEXT var_ctx = null;
+			VAR_CTX var_ctx = null;
 			if ((null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.ParameterList)))			// (1)参数?
 				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.LocalVarList)))		// (2)临时变量?
 				|| (null != (var_ctx = FindVarInVarCtxList(var_name, func_ctx.OtherGlobalList)))
@@ -124,9 +124,9 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CONTEXT FindVarInVarCtxList(string var_name, List<VAR_CONTEXT> ctx_list)
+		static VAR_CTX FindVarInVarCtxList(string var_name, List<VAR_CTX> ctx_list)
 		{
-			foreach (VAR_CONTEXT ctx in ctx_list)
+			foreach (VAR_CTX ctx in ctx_list)
 			{
 				if (ctx.Name.Equals(var_name))
 				{
@@ -136,7 +136,7 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public static VAR_CONTEXT CreateVarCtx(	MEANING_GROUP type_group,
+		public static VAR_CTX CreateVarCtx(	MEANING_GROUP type_group,
 											string var_name,
 											MEANING_GROUP init_group,
 											FILE_PARSE_INFO parse_info)
@@ -148,7 +148,7 @@ namespace Mr.Robot
 
 			typeCoreName = parse_info.GetOriginalTypeName(typeCoreName);
 
-			VAR_CONTEXT retVarCtx = new VAR_CONTEXT(typeCoreName, var_name);
+			VAR_CTX retVarCtx = new VAR_CTX(typeCoreName, var_name);
 			retVarCtx.Type.PrefixList = prefixList;
 			retVarCtx.Type.SuffixList = suffixList;
 			int arrSize = 0;
@@ -179,7 +179,7 @@ namespace Mr.Robot
 					{
 						memberInitGroup = arrayMemberInitList[i];
 					}
-					VAR_CONTEXT memberCtx = CreateVarCtx(type_group, memberName, memberInitGroup, parse_info);
+					VAR_CTX memberCtx = CreateVarCtx(type_group, memberName, memberInitGroup, parse_info);
 					retVarCtx.MemberList.Add(memberCtx);
 				}
 				retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.ARRAY;
@@ -251,11 +251,11 @@ namespace Mr.Robot
 			return typeName;
 		}
 
-		static List<VAR_CONTEXT> GetUsrDefTypeVarCtxMemberList(	USER_DEFINE_TYPE_INFO usr_def_type_var,
+		static List<VAR_CTX> GetUsrDefTypeVarCtxMemberList(	USER_DEFINE_TYPE_INFO usr_def_type_var,
 															FILE_PARSE_INFO parse_info,
 															MEANING_GROUP init_group)
 		{
-			List<VAR_CONTEXT> retCtxList = new List<VAR_CONTEXT>();
+			List<VAR_CTX> retCtxList = new List<VAR_CTX>();
 			List<MEANING_GROUP> memberInitList = null;
 			if (null != init_group)
 			{
@@ -276,7 +276,7 @@ namespace Mr.Robot
 				{
 					memberInitGroup = memberInitList[i];
 				}
-				VAR_CONTEXT varCtx = null;
+				VAR_CTX varCtx = null;
 				if (null != (varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, memberInitGroup, parse_info)))
 				{
 					retCtxList.Add(varCtx);

@@ -11,24 +11,24 @@ namespace Mr.Robot
 		/// <summary>
 		/// 语句分析
 		/// </summary>
-        public static FUNCTION_ANALYSIS_CONTEXT DeducerStart(StatementNode root, FILE_PARSE_INFO parse_info)
+        public static FUNC_INFO DeducerStart(STATEMENT_NODE root, FILE_PARSE_INFO parse_info)
 		{
-            FUNCTION_ANALYSIS_CONTEXT fCtx = new FUNCTION_ANALYSIS_CONTEXT();			// (变量)解析上下文
+            FUNC_INFO fCtx = new FUNC_INFO();
 			// 顺次解析各条语句
-			foreach (StatementNode childNode in root.childList)
+			foreach (STATEMENT_NODE childNode in root.ChildNodeList)
 			{
 				StatementAnalyze(childNode, parse_info, fCtx);
 			}
             return fCtx;
 		}
 
-		public static void StatementAnalyze(StatementNode s_node,
+		public static void StatementAnalyze(STATEMENT_NODE s_node,
 											FILE_PARSE_INFO parse_info,
-                                            FUNCTION_ANALYSIS_CONTEXT func_ctx)
+                                            FUNC_INFO func_ctx)
 		{
 			switch (s_node.Type)
 			{
-				case StatementNodeType.Simple:
+				case E_STATEMENT_TYPE.Simple:
 					// 取得完整的语句内容
 					string statementStr = GetStatementStr(parse_info.CodeList, s_node.Scope);
 					SimpleStatementAnalyze(statementStr, parse_info, func_ctx);
@@ -44,7 +44,7 @@ namespace Mr.Robot
 		/// </summary>
 		public static void SimpleStatementAnalyze(	string statement_str,
 													FILE_PARSE_INFO parse_info,
-													FUNCTION_ANALYSIS_CONTEXT func_ctx)
+													FUNC_INFO func_ctx)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
 			List<STATEMENT_COMPONENT> componentList = GetComponents(statement_str, parse_info);
@@ -65,7 +65,7 @@ namespace Mr.Robot
 
         public static void ExpressionAnalysis(	List<STATEMENT_COMPONENT> componentList,
 												FILE_PARSE_INFO parse_info,
-												FUNCTION_ANALYSIS_CONTEXT func_ctx)
+												FUNC_INFO func_ctx)
         {
             // 提取含义分组
 			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(componentList, parse_info, func_ctx);
@@ -118,7 +118,7 @@ namespace Mr.Robot
 
         public static List<MEANING_GROUP> GetMeaningGroups(	List<STATEMENT_COMPONENT> componentList,
 															FILE_PARSE_INFO parse_info,
-															FUNCTION_ANALYSIS_CONTEXT func_ctx)
+															FUNC_INFO func_ctx)
 		{
             List<MEANING_GROUP> meaningGroupList;
             while (true)
@@ -153,7 +153,7 @@ namespace Mr.Robot
 		/// </summary>
 		static List<MEANING_GROUP> GetMeaningGroupList(	List<STATEMENT_COMPONENT> componentList,
 														FILE_PARSE_INFO parse_info,
-														FUNCTION_ANALYSIS_CONTEXT func_ctx)
+														FUNC_INFO func_ctx)
 		{
 			string statementStr = GetComponentListStr(componentList);
 			List<MEANING_GROUP> groupList = new List<MEANING_GROUP>();
@@ -331,7 +331,7 @@ namespace Mr.Robot
 												ref int idx,
 												List<MEANING_GROUP> groupList,
 												FILE_PARSE_INFO parse_info,
-												FUNCTION_ANALYSIS_CONTEXT func_ctx)
+												FUNC_INFO func_ctx)
 		{
 			MEANING_GROUP retGroup = null;
 			// 是类型名?
@@ -912,9 +912,9 @@ namespace Mr.Robot
         /// <summary>
         /// 判断标识符是否是局部(临时)变量
         /// </summary>
-		static bool IsLocalVariable(string identifier, List<VAR_CONTEXT>local_var_list)
+		static bool IsLocalVariable(string identifier, List<VAR_CTX>local_var_list)
         {
-			foreach (VAR_CONTEXT vctx in local_var_list)
+			foreach (VAR_CTX vctx in local_var_list)
 			{
 				if (vctx.Name.Equals(identifier))
 				{
@@ -1077,7 +1077,7 @@ namespace Mr.Robot
                                             ref int idx,
                                             List<MEANING_GROUP> groupList,
 											FILE_PARSE_INFO parse_info,
-											FUNCTION_ANALYSIS_CONTEXT func_ctx)
+											FUNC_INFO func_ctx)
 		{
             if (COMN_PROC.IsStandardIdentifier(componentList[idx].Text))
             {
@@ -1333,10 +1333,10 @@ namespace Mr.Robot
 
         static void MeaningGroupsAnalysis(	List<MEANING_GROUP> mgList,
 											FILE_PARSE_INFO parse_info,
-											FUNCTION_ANALYSIS_CONTEXT func_ctx)
+											FUNC_INFO func_ctx)
         {
             // 先检查是否是新定义的局部变量
-			VAR_CONTEXT varCtx = null;
+			VAR_CTX varCtx = null;
 			if (null != (varCtx = IsNewDefineVarible(mgList, parse_info, func_ctx)))
 			{
 				// 如果是,为此新定义局部变量创建上下文记录项
@@ -1361,11 +1361,11 @@ namespace Mr.Robot
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
         }
 
-		public static VAR_CONTEXT IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNCTION_ANALYSIS_CONTEXT func_ctx)
+		public static VAR_CTX IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-				VAR_CONTEXT varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx);
+				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx);
 				if (null != varCtx)
 				{
 					// 在当前上下文中已存在! (作用域覆盖? 正常情况下不应该出现!)
@@ -1402,7 +1402,7 @@ namespace Mr.Robot
 
 		public static void TypeDefProc(	List<STATEMENT_COMPONENT> component_list,
 										FILE_PARSE_INFO parse_info,
-										FUNCTION_ANALYSIS_CONTEXT func_ctx)
+										FUNC_INFO func_ctx)
 		{
 			// 提取含义分组
 			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(component_list, parse_info, func_ctx);
@@ -1501,18 +1501,18 @@ namespace Mr.Robot
     /// <summary>
     /// 解析上下文
     /// </summary>
-    public class FUNCTION_ANALYSIS_CONTEXT
+    public class FUNC_INFO
     {
         // 引数列表
-		public List<VAR_CONTEXT> ParameterList = new List<VAR_CONTEXT>();
+		public List<VAR_CTX> ParameterList = new List<VAR_CTX>();
         // 局部变量列表
-		public List<VAR_CONTEXT> LocalVarList = new List<VAR_CONTEXT>();
+		public List<VAR_CTX> LocalVarList = new List<VAR_CTX>();
 		// 入力全局变量列表
 		public List<VAR_DESCRIPTION> InputGlobalList = new List<VAR_DESCRIPTION>();
 		// 出力全局变量列表
 		public List<VAR_DESCRIPTION> OutputGlobalList = new List<VAR_DESCRIPTION>();
 		// 其它未确定入出力的全局变量(比如函数调用读出值)
-		public List<VAR_CONTEXT> OtherGlobalList = new List<VAR_CONTEXT>();
+		public List<VAR_CTX> OtherGlobalList = new List<VAR_CTX>();
 		// 调用函数列表
 		public List<CALLED_FUNCTION> CalledFunctionList = new List<CALLED_FUNCTION>();
 	}

@@ -78,8 +78,8 @@ namespace Mr.Robot
 		public List<FUNCTION_PARSE_INFO> FuncDeclareList = new List<FUNCTION_PARSE_INFO>();		// 函数声明列表
 		public List<FUNCTION_PARSE_INFO> FunDefineList = new List<FUNCTION_PARSE_INFO>();		// 函数定义列表
 		public List<USER_DEFINE_TYPE_INFO> UsrDefTypeList = new List<USER_DEFINE_TYPE_INFO>();	// 用户定义类型列表
-		public List<VAR_CONTEXT> GlobalDeclareList = new List<VAR_CONTEXT>();					// 全局量声明列表
-		public List<VAR_CONTEXT> GlobalDefineList = new List<VAR_CONTEXT>();					// 全局量定义列表
+		public List<VAR_CTX> GlobalDeclareList = new List<VAR_CTX>();					// 全局量声明列表
+		public List<VAR_CTX> GlobalDefineList = new List<VAR_CTX>();					// 全局量定义列表
 		public List<MACRO_DEFINE_INFO> MacroDefineList = new List<MACRO_DEFINE_INFO>();			// 宏定义列表
 		public List<TYPE_DEFINE_INFO> TypeDefineList = new List<TYPE_DEFINE_INFO>();			// typedef类型定义列表
 
@@ -178,9 +178,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据变量名查找全局变量
 		/// </summary>
-		public VAR_CONTEXT FindGlobalVarInfoByName(string var_name)
+		public VAR_CTX FindGlobalVarInfoByName(string var_name)
 		{
-			VAR_CONTEXT retVarCtx = null;
+			VAR_CTX retVarCtx = null;
 			if (null != (retVarCtx = SearchVariableList(var_name, this.GlobalDeclareList)))
 			{
 				return retVarCtx;
@@ -195,9 +195,9 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CONTEXT SearchVariableList(string var_name, List<VAR_CONTEXT> var_list)
+		static VAR_CTX SearchVariableList(string var_name, List<VAR_CTX> var_list)
 		{
-			foreach (VAR_CONTEXT vi in var_list)
+			foreach (VAR_CTX vi in var_list)
 			{
 				if (vi.Name.Equals(var_name))
 				{

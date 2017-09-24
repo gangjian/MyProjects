@@ -5,35 +5,32 @@ using System.Text;
 
 namespace Mr.Robot
 {
-    public class StatementNode
+    public class STATEMENT_NODE
     {
         // 1.语句范围(起止位置)
 		public CODE_SCOPE Scope = null;
 
         // 2.父语句节点引用
-        public StatementNode parent = null;
+        public STATEMENT_NODE ParentNode = null;
         // 3.子语句节点列表
-        public List<StatementNode> childList = new List<StatementNode>();
+        public List<STATEMENT_NODE> ChildNodeList = new List<STATEMENT_NODE>();
         // 4.语句类型
-		private StatementNodeType type = StatementNodeType.Invalid;
-
-		public StatementNodeType Type
-		{
-			get { return type; }
-			set { type = value; }
-		}
+		public E_STATEMENT_TYPE Type = E_STATEMENT_TYPE.Invalid;
 
         // 5.条件表达式(可以为空,表示恒成立)
-        public string expression = string.Empty;
+        public string Expression = string.Empty;
+
+		public List<VAR_CTX> VarCtxList = null;
     }
 
     // 语句节点类型枚举
-    public enum StatementNodeType
+    public enum E_STATEMENT_TYPE
     {
         Invalid,
         Root,                 // 根节点(函数体)
         Simple,               // 简单句
-                              // 以下是复合语句
+
+        // 以下是复合语句
         Compound_IfElse,      // if-else分支语句
         Compound_SwitchCase,  // switch-case分支语句
         Compound_While,       // while循环语句

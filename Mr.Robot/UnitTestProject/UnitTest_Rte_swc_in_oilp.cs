@@ -11,7 +11,7 @@ namespace UnitTestProject
 	[TestClass]
 	public class UnitTest_Rte_swc_in_oilp
 	{
-		static StatementNode root;                                                      // 函数语句结构的根节点
+		static STATEMENT_NODE root;                                                      // 函数语句结构的根节点
 		static List<FILE_PARSE_INFO> parseInfoList;
 		static string source_name = "..\\..\\..\\TestSrc\\swc_in_oilp\\Rte_swc_in_oilp.c";
 
@@ -76,12 +76,12 @@ namespace UnitTestProject
 			FILE_PARSE_INFO c_source_parse_info;
 			root = C_FUNC_LOCATOR.FuncLocatorStart(source_name, "sym_rbl_in_oilp", parseInfoList, out c_source_parse_info);
 
-			Assert.AreEqual(3, root.childList.Count);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[0].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[1].Type);
-			Assert.AreEqual(StatementNodeType.Simple, root.childList[2].Type);
+			Assert.AreEqual(3, root.ChildNodeList.Count);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[0].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[1].Type);
+			Assert.AreEqual(E_STATEMENT_TYPE.Simple, root.ChildNodeList[2].Type);
 
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
+			FUNC_INFO func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(3, func_ctx.CalledFunctionList.Count);
 			Assert.AreEqual("makeEngOnOff3s()", func_ctx.CalledFunctionList[0].MeaningGroup.Text);
 			Assert.AreEqual("makeIgv()", func_ctx.CalledFunctionList[1].MeaningGroup.Text);
@@ -94,7 +94,7 @@ namespace UnitTestProject
 			FILE_PARSE_INFO c_source_parse_info;
 			root = C_FUNC_LOCATOR.FuncLocatorStart(source_name, "sym_rbl_in_oilp_initReset", parseInfoList, out c_source_parse_info);
 
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
+			FUNC_INFO func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(1, func_ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", func_ctx.InputGlobalList[0].VarLevelList[0].Name);
 			Assert.AreEqual(1, func_ctx.CalledFunctionList.Count);
@@ -110,7 +110,7 @@ namespace UnitTestProject
 			FILE_PARSE_INFO c_source_parse_info;
 			root = C_FUNC_LOCATOR.FuncLocatorStart(source_name, "sym_rbl_in_oilp_initWakeup", parseInfoList, out c_source_parse_info);
 
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
+			FUNC_INFO func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(1, func_ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", func_ctx.InputGlobalList[0].VarLevelList[0].Name);
 			Assert.AreEqual(1, func_ctx.CalledFunctionList.Count);

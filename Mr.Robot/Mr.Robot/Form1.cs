@@ -262,7 +262,7 @@ namespace Mr.Robot
                 {
                     functionName = item.Text;
 					FILE_PARSE_INFO srcParseInfo;
-					StatementNode rootNode = C_FUNC_LOCATOR.FuncLocatorStart(fullName, functionName, CSourceParseInfoList, out srcParseInfo);
+					STATEMENT_NODE rootNode = C_FUNC_LOCATOR.FuncLocatorStart(fullName, functionName, CSourceParseInfoList, out srcParseInfo);
 					// 函数语句分析: 分析入出力
 					C_DEDUCER.DeducerStart(rootNode, srcParseInfo);
 
