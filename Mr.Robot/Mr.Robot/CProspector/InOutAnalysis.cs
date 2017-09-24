@@ -83,7 +83,7 @@ namespace Mr.Robot
 				}
 				else if (MeaningGroupType.Expression == rightVal.Type)					// 表达式
 				{
-					StatementAnalysis.ExpressionAnalysis(rightVal.ComponentList, parse_info, func_ctx);
+					C_DEDUCER.ExpressionAnalysis(rightVal.ComponentList, parse_info, func_ctx);
 				}
 
 				if (   MeaningGroupType.GlobalVariable == rightVal.Type

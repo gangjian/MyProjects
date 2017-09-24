@@ -6,25 +6,23 @@ using System.Threading.Tasks;
 
 namespace Mr.Robot
 {
-	public partial class CFunctionAnalysis
+	public partial class C_FUNC_LOCATOR
 	{
         /// <summary>
         /// 函数解析
         /// </summary>
-        public static void FunctionAnalysis(string fullPath, string funcName, List<FILE_PARSE_INFO> parsedInfoList)
+		public static StatementNode FuncLocatorStart(string fullPath, string funcName, List<FILE_PARSE_INFO> parsedInfoList, out FILE_PARSE_INFO source_parse_info)
         {
             // 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
-            FILE_PARSE_INFO CSourceParseInfo = null;
-            FUNCTION_PARSE_INFO funInfo = GetFuncInfoFromParseResult(fullPath, funcName, parsedInfoList, out CSourceParseInfo);
+			source_parse_info = null;
+			FUNCTION_PARSE_INFO funInfo = GetFuncInfoFromParseResult(fullPath, funcName, parsedInfoList, out source_parse_info);
 
             // 函数语句树结构的分析提取
             StatementNode root = new StatementNode();
             root.Type = StatementNodeType.Root;
             root.Scope = funInfo.Scope;
-            GetFuncBlockStruct(CSourceParseInfo, ref root);
-
-			// 函数语句分析: 分析入出力
-			StatementAnalysis.FunctionStatementsAnalysis(root, CSourceParseInfo);
+			GetFunctionStatmentsNodeTree(source_parse_info, ref root);
+			return root;
         }
 
         public static FUNCTION_PARSE_INFO GetFuncInfoFromParseResult(	string fileName,
@@ -57,7 +55,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 解析一个代码块,提取语句树结构
 		/// </summary>
-		public static void GetFuncBlockStruct(FILE_PARSE_INFO parse_info, ref StatementNode root)
+		public static void GetFunctionStatmentsNodeTree(FILE_PARSE_INFO parse_info, ref StatementNode root)
 		{
 			CODE_POSITION searchPos = new CODE_POSITION(root.Scope.Start);
 			// 如果开头第一个字符是左花括号"{", 先要移到下一个位置开始检索
@@ -203,7 +201,7 @@ namespace Mr.Robot
 					startPos = searchPos;
 					retNode.Scope = scope;
 					// 递归解析语句块
-					GetFuncBlockStruct(parse_info, ref retNode);
+					GetFunctionStatmentsNodeTree(parse_info, ref retNode);
 					return retNode;
 				}
 			}
@@ -235,7 +233,7 @@ namespace Mr.Robot
                     {
                         retNode.expression = expression;
                         // 递归解析语句块
-						GetFuncBlockStruct(parse_info, ref retNode);
+						GetFunctionStatmentsNodeTree(parse_info, ref retNode);
                         startPos = searchPos;
                         return retNode;
                     }
@@ -267,7 +265,7 @@ namespace Mr.Robot
 					ifBranch.Type = StatementNodeType.Branch_If;
 					ifBranch.Scope = scope;
 					// 递归解析分支语句块
-					GetFuncBlockStruct(parse_info, ref ifBranch);
+					GetFunctionStatmentsNodeTree(parse_info, ref ifBranch);
 
 					retNode.Scope.Start = scope.Start;									// if分支的开始位置, 作为整个if else复合语句的起始位置
 					retNode.childList.Add(ifBranch);
@@ -279,7 +277,7 @@ namespace Mr.Robot
 						lastElseEnd = elseBranch.Scope.End;
 						elseBranch.parent = retNode;
 						// 递归解析分支语句块
-						GetFuncBlockStruct(parse_info, ref elseBranch);
+						GetFunctionStatmentsNodeTree(parse_info, ref elseBranch);
 
 						retNode.childList.Add(elseBranch);
 						if (StatementNodeType.Branch_Else == elseBranch.Type)
@@ -324,7 +322,7 @@ namespace Mr.Robot
 					{
 						caseBranch.parent = retNode;
 						// 递归解析分支语句块
-						GetFuncBlockStruct(parse_info, ref caseBranch);
+						GetFunctionStatmentsNodeTree(parse_info, ref caseBranch);
 
 						retNode.childList.Add(caseBranch);
 						if (StatementNodeType.Branch_Default == caseBranch.Type)

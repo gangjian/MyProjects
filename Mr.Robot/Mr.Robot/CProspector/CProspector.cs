@@ -55,16 +55,12 @@ namespace Mr.Robot
 				{
 					this.ParseInfoList.Add(parseInfo);
 				}
-				else
-				{
-				}
 			}
 			return this.ParseInfoList;
 		}
 		#endregion
 
 		// 以下都是内部调用方法
-
 		/// <summary>
 		/// C文件(包括源文件和头文件)处理
 		/// </summary>
@@ -73,13 +69,14 @@ namespace Mr.Robot
 			//System.Diagnostics.Trace.WriteLine(file_name + ": ");
 			try
 			{
-				// 预编译处理
+				// 预编译处理(宏定义)
 				parse_info.CodeList = PrecompileProcess(file_name, parse_info);
 				if (this.MacroSwichAnalyserFlag)
 				{
 					return true;
 				}
-				// 文件解析
+
+				// 文件解析(全局量,函数定位)
 				if (!CCodeFileAnalysis(file_name, parse_info))
 				{
 					return false;
@@ -100,7 +97,7 @@ namespace Mr.Robot
 		/// 预编译处理
 		/// </summary>
 		public List<string> PrecompileProcess(	string file_name,
-												FILE_PARSE_INFO fi)
+												FILE_PARSE_INFO parse_info)
 		{
 			List<string> codeList = COMN_PROC.RemoveComments(file_name);
 			List<string> retList = new List<string>();
@@ -124,11 +121,11 @@ namespace Mr.Robot
 							string incFileName = GetIncludeFileName(codeList, ref searchPos, file_name);
 							if (!string.IsNullOrEmpty(incFileName))
 							{
-								if (!fi.IncFileList.Contains(incFileName))
+								if (!parse_info.IncFileList.Contains(incFileName))
 								{
-									fi.IncFileList.Add(incFileName);
+									parse_info.IncFileList.Add(incFileName);
 								}
-								CFileProcess(incFileName, fi);
+								CFileProcess(incFileName, parse_info);
 							}
 						}
 					}
@@ -136,7 +133,7 @@ namespace Mr.Robot
 					{
 						if (false != cc_info.WriteFlag)
 						{
-							DefineProcess(file_name, codeList, ref searchPos, fi);
+							DefineProcess(file_name, codeList, ref searchPos, parse_info);
 						}
 					}
 					else if ("pragma" == nextIdtf.Text.ToLower())
@@ -181,7 +178,7 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
-								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
+								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, parse_info))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -209,7 +206,7 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式是否已定义
-                                if (COMN_PROC.JudgeExpressionDefined(exprStr, fi))
+                                if (COMN_PROC.JudgeExpressionDefined(exprStr, parse_info))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -237,7 +234,7 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式是否已定义
-                                if (COMN_PROC.JudgeExpressionDefined(exprStr, fi))
+                                if (COMN_PROC.JudgeExpressionDefined(exprStr, parse_info))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = false;
@@ -294,7 +291,7 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
-								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, fi))
+								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, parse_info))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -587,10 +584,10 @@ namespace Mr.Robot
 						}
 						else
 						{
-							statementStr = StatementAnalysis.GetStatementStr(parse_info.CodeList,
+							statementStr = C_DEDUCER.GetStatementStr(parse_info.CodeList,
 								new CODE_SCOPE(qualifierList.First().Position, nextIdtf.Position));
 						}
-						StatementAnalysis.SimpleStatementAnalyze(statementStr.Trim(), parse_info, null);
+						C_DEDUCER.SimpleStatementAnalyze(statementStr.Trim(), parse_info, null);
 					}
 					else if ("," == nextIdtf.Text)
 					{
@@ -894,7 +891,7 @@ namespace Mr.Robot
 					break;
 				}
 				else if (COMN_PROC.IsStandardIdentifier(idStr)
-						 && StatementAnalysis.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info, true))
+						 && C_DEDUCER.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info, true))
 				{
 					offset = old_offset;
 					continue;

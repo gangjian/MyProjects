@@ -236,12 +236,13 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			}
 		}
 
+		// 处理工作全局量
 		class PROC_INFO
 		{
-			public List<MTPJ_FILE_INFO> mtpjInfoList = null;
+			public List<MTPJ_FILE_INFO> mtpjInfoList = null;							// .mtpj, .mk文件情报列表
 			public List<MK_FILE_INFO> mkInfoList = null;
-			public int count = 0;
-			public Queue<string> SourceFileQueue = new Queue<string>();
+			public int count = 0;														// 完成解析文件的计数
+			public Queue<string> SourceFileQueue = new Queue<string>();					// 源文件队列(各工作线程从中提取文件并分别解析)
 		}
 
 		PROC_INFO m_ProcInfo = null;
@@ -327,9 +328,13 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
 			List<string> srcList = new List<string>();
 			srcList.Add(src_name);
-			C_PROSPECTOR cProspector = new C_PROSPECTOR(srcList, header_list);
+
+			// ==============================
+			C_PROSPECTOR cProspector = new C_PROSPECTOR(srcList, header_list);			// <--- 这里调用C_PROSPECTOR取得代码文件宏定义解析结果
 			cProspector.MacroSwichAnalyserFlag = true;
 			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();
+			// ==============================
+
 			if (null == parseInfoList || 0 == parseInfoList.Count)
 			{
 				proc_result = MSA_SOURCE_PROC_RESULT.FAIL;

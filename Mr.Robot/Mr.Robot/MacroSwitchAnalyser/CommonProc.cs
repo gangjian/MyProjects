@@ -70,7 +70,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
             {
                 return;
             }
-            List<STATEMENT_COMPONENT> cpntList = StatementAnalysis.GetComponents(macro_exp, null);
+            List<STATEMENT_COMPONENT> cpntList = C_DEDUCER.GetComponents(macro_exp, null);
             foreach (STATEMENT_COMPONENT cpnt in cpntList)
             {
                 if (cpnt.Type == StatementComponentType.Identifier && "defined" != cpnt.Text)
@@ -107,9 +107,14 @@ namespace Mr.Robot.MacroSwitchAnalyser
 						{
 							foreach (MTPJ_FILE_INFO prj_info in mtpj_info_list)
 							{
-								if (prj_info.DefList.Contains(cpnt.Text))
+								string valStr;
+								if (prj_info.DefListContains(cpnt.Text, out valStr))
 								{
-									MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, true, @".mtpj def", prj_info.FileName);
+									if (string.IsNullOrEmpty(valStr))
+									{
+										valStr = @".mtpj def";
+									}
+									MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, true, valStr, prj_info.FileName);
 									result_list.Add(msResult);
 									bFindInPrjDef = true;
 									break;
@@ -139,33 +144,6 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
         }
 
-		static string SearchUndefInOtherFiles(	string def_str,
-												List<MTPJ_FILE_INFO> mtpj_info_list,
-												List<MK_FILE_INFO> mk_info_list)
-		{
-			if (null != mk_info_list)
-			{
-				foreach (MTPJ_FILE_INFO mtpj_info in mtpj_info_list)
-				{
-					if (mtpj_info.DefList.Contains(def_str))
-					{
-						return @".mtpj def";
-					}
-				}
-			}
-			if (null != mk_info_list)
-			{
-				foreach (MK_FILE_INFO mk_info in mk_info_list)
-				{
-					if (mk_info.DefList.Contains(def_str))
-					{
-						return @".mk def";
-					}
-				}
-			}
-			return string.Empty;
-		}
-
         static MacroValueType MacroValueStrAnalysis(ref string macro_value_str, FILE_PARSE_INFO parse_info)
         {
             if (string.IsNullOrEmpty(macro_value_str.Trim()))
@@ -182,7 +160,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 					return MacroValueStrAnalysis(ref macro_value_str, parse_info);
 				}
 			}
-            List<STATEMENT_COMPONENT> cpntList = StatementAnalysis.GetComponents(macro_value_str, null);
+            List<STATEMENT_COMPONENT> cpntList = C_DEDUCER.GetComponents(macro_value_str, null);
             int numberCount = 0;
             int identifierCount = 0;
             foreach (STATEMENT_COMPONENT cpnt in cpntList)
@@ -260,7 +238,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	public class MTPJ_FILE_INFO
 	{
 		public string FileName = string.Empty;
-		public List<string> DefList = new List<string>();								// .mtpj文件里定义的宏定义列表
+		public List<DEF_INFO> DefList = new List<DEF_INFO>();							// .mtpj文件里定义的宏定义列表
 		public MTPJ_FILE_INFO(string file_name)
 		{
 			this.FileName = file_name;
@@ -288,15 +266,53 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				{
 					continue;
 				}
-				else if (COMN_PROC.IsStandardIdentifier(rdLine))
+				else
 				{
-					if (!this.DefList.Contains(rdLine))
+					string valStr = string.Empty;
+					if (-1 != rdLine.IndexOf('='))
 					{
-						this.DefList.Add(rdLine);
+						int idx = rdLine.IndexOf('=');
+						valStr = rdLine.Substring(idx + 1).Trim();
+						rdLine = rdLine.Remove(idx).Trim();
+					}
+					if (COMN_PROC.IsStandardIdentifier(rdLine))
+					{
+						string strTmp;
+						if (!DefListContains(rdLine, out strTmp))
+						{
+							DEF_INFO defInfo = new DEF_INFO(rdLine, valStr);
+							this.DefList.Add(defInfo);
+						}
 					}
 				}
 			}
 			sr.Close();
+		}
+
+		public bool DefListContains(string def_str, out string val_str)
+		{
+			val_str = string.Empty;
+			foreach (var item in this.DefList)
+			{
+				if (item.NameStr.Equals(def_str))
+				{
+					val_str = item.ValStr;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public class DEF_INFO
+		{
+			public string NameStr = string.Empty;
+			public string ValStr = string.Empty;
+
+			public DEF_INFO(string name, string val)
+			{
+				this.NameStr = name;
+				this.ValStr = val;
+			}
 		}
 	}
 

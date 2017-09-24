@@ -755,7 +755,7 @@ namespace Mr.Robot
 			{
 				return true;
 			}
-			else if (StatementAnalysis.IsConstantNumber(exp))
+			else if (C_DEDUCER.IsConstantNumber(exp))
 			{
 				return true;
 			}

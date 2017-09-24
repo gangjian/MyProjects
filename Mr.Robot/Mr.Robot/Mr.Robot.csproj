@@ -64,16 +64,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CCodeAnalyser\BasicTypeProc.cs" />
-    <Compile Include="CCodeAnalyser\CProspector.cs" />
-    <Compile Include="CCodeAnalyser\CCodeInfo.cs" />
-    <Compile Include="CCodeAnalyser\ExpCalc.cs" />
-    <Compile Include="CCodeAnalyser\InOutAnalysis.cs" />
-    <Compile Include="CCodeAnalyser\StatementAnalysis.cs" />
-    <Compile Include="CCodeAnalyser\ComnProc.cs" />
-    <Compile Include="CCodeAnalyser\FunctionAnalysis.cs" />
-    <Compile Include="CCodeAnalyser\StatementTree.cs" />
-    <Compile Include="CCodeAnalyser\VAR_CTX.cs" />
+    <Compile Include="CProspector\BasicTypeProc.cs" />
+    <Compile Include="CProspector\CProspector.cs" />
+    <Compile Include="CProspector\CCodeInfo.cs" />
+    <Compile Include="CProspector\ExpCalc.cs" />
+    <Compile Include="CProspector\InOutAnalysis.cs" />
+    <Compile Include="CDeducer\CDeducer.cs" />
+    <Compile Include="CProspector\ComnProc.cs" />
+    <Compile Include="CFuncLocator\CFuncLocator.cs" />
+    <Compile Include="CProspector\StatementTree.cs" />
+    <Compile Include="CProspector\VAR_CTX.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

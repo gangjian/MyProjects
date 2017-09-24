@@ -255,7 +255,7 @@
 			// columnHeaderValue
 			// 
 			this.columnHeaderValue.Text = "value";
-			this.columnHeaderValue.Width = 55;
+			this.columnHeaderValue.Width = 70;
 			// 
 			// columnHeaderDefFile
 			// 
@@ -341,7 +341,7 @@
 			this.MaximizeBox = false;
 			this.Name = "FormMTBot";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "MTBot v0.1.8";
+			this.Text = "MTBot v0.1.9";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMTBot_FormClosing);
 			this.ResumeLayout(false);
 			this.PerformLayout();

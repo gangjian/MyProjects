@@ -9,7 +9,7 @@ namespace UnitTestProject
 {
 	class Common
 	{
-		public static FILE_PARSE_INFO UnitTest_GetSourceFileStructure(string full_path, string func_name, ref StatementNode func_root_node)
+		public static List<FILE_PARSE_INFO> UnitTest_GetSourceFileStructure(string full_path)
 		{
 			if (string.IsNullOrEmpty(full_path))
 			{
@@ -35,17 +35,12 @@ namespace UnitTestProject
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
-			C_PROSPECTOR cProspector = new C_PROSPECTOR(csfList, header_list);
-			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();
-			FILE_PARSE_INFO code_parse_info;
-			FUNCTION_PARSE_INFO funInfo = CFunctionAnalysis.GetFuncInfoFromParseResult(full_path, func_name, parseInfoList, out code_parse_info);
 
-			// 指定函数语句树结构的分析提取
-			func_root_node = new StatementNode();
-			func_root_node.Type = StatementNodeType.Root;
-			func_root_node.Scope = funInfo.Scope;
-			CFunctionAnalysis.GetFuncBlockStruct(code_parse_info, ref func_root_node);
-			return code_parse_info;
+			// =================================
+			C_PROSPECTOR cProspector = new C_PROSPECTOR(csfList, header_list);
+			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();				// <--- 解析源文件宏定义, 全局量, 函数定位
+			// =================================
+			return parseInfoList;
 		}
 
 		public static List<FILE_PARSE_INFO> UnitTest_SourceFileProcess2(string full_path)
@@ -74,21 +69,6 @@ namespace UnitTestProject
 			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();
 
 			return parseInfoList;
-		}
-
-		public static FILE_PARSE_INFO UnitTest_GetFuncParseResult(string full_path, string fun_name,
-																List<FILE_PARSE_INFO> parseInfoList,
-																ref StatementNode root_node)
-		{
-			FILE_PARSE_INFO code_parse_info;
-			FUNCTION_PARSE_INFO funInfo = CFunctionAnalysis.GetFuncInfoFromParseResult(full_path, fun_name, parseInfoList, out code_parse_info);
-
-			// 指定函数语句树结构的分析提取
-			root_node = new StatementNode();
-			root_node.Type = StatementNodeType.Root;
-			root_node.Scope = funInfo.Scope;
-			CFunctionAnalysis.GetFuncBlockStruct(code_parse_info, ref root_node);
-			return code_parse_info;
 		}
 	}
 }

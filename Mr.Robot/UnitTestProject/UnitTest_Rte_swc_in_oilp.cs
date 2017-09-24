@@ -73,14 +73,15 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
 		public void sym_rbl_in_oilp()
 		{
-			FILE_PARSE_INFO c_source_parse_info = Common.UnitTest_GetFuncParseResult(source_name, "sym_rbl_in_oilp", parseInfoList, ref root);
+			FILE_PARSE_INFO c_source_parse_info;
+			root = C_FUNC_LOCATOR.FuncLocatorStart(source_name, "sym_rbl_in_oilp", parseInfoList, out c_source_parse_info);
 
 			Assert.AreEqual(3, root.childList.Count);
 			Assert.AreEqual(StatementNodeType.Simple, root.childList[0].Type);
 			Assert.AreEqual(StatementNodeType.Simple, root.childList[1].Type);
 			Assert.AreEqual(StatementNodeType.Simple, root.childList[2].Type);
 
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_parse_info);
+			FUNCTION_ANALYSIS_CONTEXT func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(3, func_ctx.CalledFunctionList.Count);
 			Assert.AreEqual("makeEngOnOff3s()", func_ctx.CalledFunctionList[0].MeaningGroup.Text);
 			Assert.AreEqual("makeIgv()", func_ctx.CalledFunctionList[1].MeaningGroup.Text);
@@ -90,9 +91,10 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
 		public void sym_rbl_in_oilp_initReset()
 		{
-			FILE_PARSE_INFO c_source_parse_info = Common.UnitTest_GetFuncParseResult(source_name, "sym_rbl_in_oilp_initReset", parseInfoList, ref root);
+			FILE_PARSE_INFO c_source_parse_info;
+			root = C_FUNC_LOCATOR.FuncLocatorStart(source_name, "sym_rbl_in_oilp_initReset", parseInfoList, out c_source_parse_info);
 
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_parse_info);
+			FUNCTION_ANALYSIS_CONTEXT func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(1, func_ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", func_ctx.InputGlobalList[0].VarLevelList[0].Name);
 			Assert.AreEqual(1, func_ctx.CalledFunctionList.Count);
@@ -105,9 +107,10 @@ namespace UnitTestProject
 		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
 		public void sym_rbl_in_oilp_initWakeup()
 		{
-			FILE_PARSE_INFO c_source_parse_info = Common.UnitTest_GetFuncParseResult(source_name, "sym_rbl_in_oilp_initWakeup", parseInfoList, ref root);
+			FILE_PARSE_INFO c_source_parse_info;
+			root = C_FUNC_LOCATOR.FuncLocatorStart(source_name, "sym_rbl_in_oilp_initWakeup", parseInfoList, out c_source_parse_info);
 
-			FUNCTION_ANALYSIS_CONTEXT func_ctx = StatementAnalysis.FunctionStatementsAnalysis(root, c_source_parse_info);
+			FUNCTION_ANALYSIS_CONTEXT func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 			Assert.AreEqual(1, func_ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", func_ctx.InputGlobalList[0].VarLevelList[0].Name);
 			Assert.AreEqual(1, func_ctx.CalledFunctionList.Count);

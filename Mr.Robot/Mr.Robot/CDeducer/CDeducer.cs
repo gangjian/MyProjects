@@ -6,21 +6,19 @@ using System.Threading.Tasks;
 
 namespace Mr.Robot
 {
-	public static partial class StatementAnalysis
+	public static partial class C_DEDUCER
 	{
 		/// <summary>
 		/// 语句分析
 		/// </summary>
-        public static FUNCTION_ANALYSIS_CONTEXT FunctionStatementsAnalysis(	StatementNode root,
-																			FILE_PARSE_INFO p_result)
+        public static FUNCTION_ANALYSIS_CONTEXT DeducerStart(StatementNode root, FILE_PARSE_INFO parse_info)
 		{
-            FUNCTION_ANALYSIS_CONTEXT fCtx = new FUNCTION_ANALYSIS_CONTEXT();					// (变量)解析上下文
+            FUNCTION_ANALYSIS_CONTEXT fCtx = new FUNCTION_ANALYSIS_CONTEXT();			// (变量)解析上下文
 			// 顺次解析各条语句
 			foreach (StatementNode childNode in root.childList)
 			{
-				StatementAnalyze(childNode, p_result, fCtx);
+				StatementAnalyze(childNode, parse_info, fCtx);
 			}
-
             return fCtx;
 		}
 
@@ -32,8 +30,7 @@ namespace Mr.Robot
 			{
 				case StatementNodeType.Simple:
 					// 取得完整的语句内容
-					List<string> codeList = parse_info.CodeList;
-					string statementStr = GetStatementStr(codeList, s_node.Scope);
+					string statementStr = GetStatementStr(parse_info.CodeList, s_node.Scope);
 					SimpleStatementAnalyze(statementStr, parse_info, func_ctx);
 					break;
 				default:

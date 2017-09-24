@@ -261,7 +261,11 @@ namespace Mr.Robot
                 if (item.Checked)
                 {
                     functionName = item.Text;
-					CFunctionAnalysis.FunctionAnalysis(fullName, functionName, CSourceParseInfoList);
+					FILE_PARSE_INFO srcParseInfo;
+					StatementNode rootNode = C_FUNC_LOCATOR.FuncLocatorStart(fullName, functionName, CSourceParseInfoList, out srcParseInfo);
+					// 函数语句分析: 分析入出力
+					C_DEDUCER.DeducerStart(rootNode, srcParseInfo);
+
                 }
             }
         }
