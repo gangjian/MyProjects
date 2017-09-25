@@ -39,7 +39,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, c_func_root.ChildNodeList[0].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
             Assert.AreEqual(2, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
@@ -66,7 +66,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, c_func_root.ChildNodeList[1].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -86,7 +86,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, c_func_root.ChildNodeList[2].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.GlobalVariable, meaningGroupList[0].Type);
@@ -184,7 +184,7 @@ namespace UnitTestProject
 			// 第一条语句
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[0].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
@@ -193,7 +193,7 @@ namespace UnitTestProject
 			// 第二条语句
 			statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[1].Scope);
 			componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
@@ -202,7 +202,7 @@ namespace UnitTestProject
 			// 第三条语句
 			statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[2].Scope);
 			componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.VariableType, meaningGroupList[0].Type);
@@ -220,7 +220,7 @@ namespace UnitTestProject
 			// 第4句
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[3].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -242,7 +242,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[4].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -264,7 +264,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[5].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -286,7 +286,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[6].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -308,7 +308,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[7].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(1, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.FunctionCalling, meaningGroupList[0].Type);
@@ -327,7 +327,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[8].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
@@ -349,7 +349,7 @@ namespace UnitTestProject
 			List<string> codeList = c_source_parse_info.CodeList;
 			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[9].Scope);
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
-			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.GlobalVariable, meaningGroupList[0].Type);

@@ -270,7 +270,7 @@ namespace Mr.Robot
 			{
 				string memberStr = usr_def_type_var.MemberList[i];
 				List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(memberStr, parse_info);
-				List<MEANING_GROUP> mgList = C_DEDUCER.GetMeaningGroups(componentList, parse_info, null);
+				List<MEANING_GROUP> mgList = COMN_PROC.GetMeaningGroups(componentList, parse_info, null);
 				MEANING_GROUP memberInitGroup = null;
 				if (null != memberInitList)
 				{
@@ -317,7 +317,7 @@ namespace Mr.Robot
 				componentList.Add(block_init_group.ComponentList[i]);
 			}
 			List<MEANING_GROUP> retList = new List<MEANING_GROUP>();
-			List<MEANING_GROUP> tmpList = C_DEDUCER.GetMeaningGroups(componentList, parse_info, null);
+			List<MEANING_GROUP> tmpList = COMN_PROC.GetMeaningGroups(componentList, parse_info, null);
 			MEANING_GROUP addGroup = new MEANING_GROUP();
 			addGroup.Type = MeaningGroupType.Expression;
 			for (int i = 0; i < tmpList.Count; i++)

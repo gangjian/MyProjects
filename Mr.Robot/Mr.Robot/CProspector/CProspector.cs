@@ -840,7 +840,7 @@ namespace Mr.Robot
 			}
 			foreach (string m in members)
 			{
-				string memStr = GetUsrDefTypeMemberStr(m.Trim(), parse_info);
+				string memStr = COMN_PROC.GetUsrDefTypeMemberStr(m.Trim(), parse_info);
 				if (string.Empty != memStr)
 				{
 					retUsrTypeInfo.MemberList.Add(memStr);
@@ -870,38 +870,6 @@ namespace Mr.Robot
 			start_pos = searchPos;
 
 			return retUsrTypeInfo;
-		}
-
-		/// <summary>
-		/// 取得自定义类型表示成员的字符串
-		/// </summary>
-		static string GetUsrDefTypeMemberStr(string in_mem_str,
-											 FILE_PARSE_INFO source_info)
-		{
-			string memberStr = in_mem_str;
-			string idStr;
-			int offset = 0, old_offset;
-			// 可能包含宏, 所有要检测宏, 有的话要做宏展开
-			while (true)
-			{
-				old_offset = offset;
-				idStr = COMN_PROC.GetNextIdentifier2(memberStr, ref offset);
-				if (null == idStr)
-				{
-					break;
-				}
-				else if (COMN_PROC.IsStandardIdentifier(idStr)
-						 && COMN_PROC.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info, true))
-				{
-					offset = old_offset;
-					continue;
-				}
-				else
-				{
-					offset += idStr.Length;
-				}
-			}
-			return memberStr.Trim();
 		}
 
 		/// <summary>

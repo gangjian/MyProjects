@@ -1339,7 +1339,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断标识符是否是立即数常量
 		/// </summary>
-		public static bool IsConstantNumber(string idStr)
+		static bool IsConstantNumber(string idStr)
 		{
 			int i = 0;
 			bool retVal = false;
@@ -1381,11 +1381,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数内的宏展开 TODO:以后考虑重构跟MacroDetectAndExpand_File合并
 		/// </summary>
-		public static bool MacroDetectAndExpand_Statement(	string idStr,
-															ref string statementStr,
-															int offset,
-															FILE_PARSE_INFO parse_info,
-															bool replace_empty_macro_def)
+		static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, FILE_PARSE_INFO parse_info, bool replace_empty_macro_def)
 		{
 			// 遍历查找宏名
 			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
@@ -1465,9 +1461,763 @@ namespace Mr.Robot
 			return false;
 		}
 
+		/// <summary>
+		/// 取得自定义类型表示成员的字符串
+		/// </summary>
+		public static string GetUsrDefTypeMemberStr(string in_mem_str, FILE_PARSE_INFO source_info)
+		{
+			string memberStr = in_mem_str;
+			string idStr;
+			int offset = 0, old_offset;
+			// 可能包含宏, 所有要检测宏, 有的话要做宏展开
+			while (true)
+			{
+				old_offset = offset;
+				idStr = GetNextIdentifier2(memberStr, ref offset);
+				if (null == idStr)
+				{
+					break;
+				}
+				else if (IsStandardIdentifier(idStr)
+						 && MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info, true))
+				{
+					offset = old_offset;
+					continue;
+				}
+				else
+				{
+					offset += idStr.Length;
+				}
+			}
+			return memberStr.Trim();
+		}
+
 		public static string GetStatementStr(List<string> code_list, CODE_SCOPE code_scope)
 		{
 			return LineStringCat(code_list, code_scope.Start, code_scope.End).Trim();
+		}
+
+		static bool IsTypePrefix(string identifier)
+		{
+			switch (identifier)
+			{
+				case "extern":
+				case "const":
+				case "static":
+				case "register":
+				case "volatile":
+					return true;
+				default:
+					break;
+			}
+			return false;
+		}
+
+		static bool IsTypeSuffix(string identifier)
+		{
+			switch (identifier)
+			{
+				case "*":
+				case "const":
+					return true;
+				default:
+					break;
+			}
+			return false;
+		}
+
+		static bool IsUsrDefVarType(List<string> idStrList, FILE_PARSE_INFO parse_info, ref int count)
+		{
+			string categoryStr = string.Empty;
+			string idStr = idStrList[0];
+			count = 1;
+			if (IsUsrDefTypeKWD(idStr))
+			{
+				categoryStr = idStr;
+				if (idStrList.Count > 1)
+				{
+					idStr = idStrList[1];
+					count = 2;
+				}
+				else
+				{
+					return false;
+				}
+				if (null != parse_info.FindUsrDefTypeInfo(idStr, categoryStr))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else if (null != parse_info.FindTypeDefInfo(idStr))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		static bool IsVarType(List<STATEMENT_COMPONENT> cpntList, ref int index, FILE_PARSE_INFO parse_info)
+		{
+			// 判断是否是类型名
+			List<string> idStrList = new List<string>();
+			for (int i = index; i < cpntList.Count; i++)
+			{
+				idStrList.Add(cpntList[i].Text);
+			}
+			int count = 0;
+			if (BasicTypeProc.IsBasicTypeName(idStrList, ref count))
+			{
+				index += count;
+				return true;
+			}
+			else if (IsUsrDefVarType(idStrList, parse_info, ref count))
+			{
+				index += count;
+				return true;
+			}
+			return false;
+		}
+
+		static MEANING_GROUP GetCodeBlockGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_result)
+		{
+			if ("{" == cpnt_list[idx].Text)
+			{
+				List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
+				if (null != braceList)
+				{
+					MEANING_GROUP retGroup = new MEANING_GROUP();
+					retGroup.Type = MeaningGroupType.CodeBlock;
+					retGroup.ComponentList.AddRange(braceList);
+					retGroup.Text = GetComponentListStr(braceList);
+					idx += 1;
+					return retGroup;
+				}
+			}
+			return null;
+		}
+
+		static MEANING_GROUP GetStringBlockGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_result)
+		{
+			if ("\"" == cpnt_list[idx].Text)
+			{
+				MEANING_GROUP retGroup = new MEANING_GROUP();
+				retGroup.Type = MeaningGroupType.StringBlock;
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				StringBuilder sb = new StringBuilder();
+				sb.Append(cpnt_list[idx].Text);
+				for (int i = idx + 1; i < cpnt_list.Count; i++)
+				{
+					retGroup.ComponentList.Add(cpnt_list[i]);
+					sb.Append(cpnt_list[idx].Text);
+					if ("\"" == cpnt_list[i].Text && "\\" != cpnt_list[i - 1].Text)
+					{
+						idx = i + 1;
+						break;
+					}
+				}
+				retGroup.Text = sb.ToString();
+				return retGroup;
+			}
+			return null;
+		}
+
+		static MEANING_GROUP GetCharBlockGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_result)
+		{
+			if ("\'" == cpnt_list[idx].Text
+				&& idx < cpnt_list.Count - 3
+				&& "\'" == cpnt_list[idx + 2].Text)
+			{
+				MEANING_GROUP retGroup = new MEANING_GROUP();
+				retGroup.Type = MeaningGroupType.CharBlock;
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				retGroup.Text += cpnt_list[idx].Text;
+				retGroup.ComponentList.Add(cpnt_list[idx + 1]);
+				retGroup.Text += cpnt_list[idx + 1].Text;
+				retGroup.ComponentList.Add(cpnt_list[idx + 2]);
+				retGroup.Text += cpnt_list[idx + 2].Text;
+				idx += 3;
+				return retGroup;
+			}
+			return null;
+		}
+
+		static MEANING_GROUP GetOperatorGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx)
+		{
+			MEANING_GROUP retGroup = null;
+			if (cpnt_list[idx].Type == StatementComponentType.Operator)
+			{
+				retGroup = new MEANING_GROUP();
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				retGroup.Text = cpnt_list[idx].Text;
+				if ("=" == cpnt_list[idx].Text)
+				{
+					retGroup.Type = MeaningGroupType.EqualMark;
+				}
+				else
+				{
+					retGroup.Type = MeaningGroupType.OtherOperator;
+				}
+				idx += 1;
+			}
+			return retGroup;
+		}
+
+		static MEANING_GROUP GetVarTypeGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_info)
+		{
+			MEANING_GROUP retGroup = null;
+			List<STATEMENT_COMPONENT> prefixList = new List<STATEMENT_COMPONENT>();
+			for (int i = idx; i < cpnt_list.Count; i++)
+			{
+				int old_idx = idx;
+				// 判断有无类型前缀
+				if (null == retGroup && IsTypePrefix(cpnt_list[i].Text))
+				{
+					prefixList.Add(cpnt_list[i]);
+					idx++;
+				}
+				else if (null == retGroup && IsVarType(cpnt_list, ref idx, parse_info))
+				{
+					retGroup = new MEANING_GROUP();
+					retGroup.Type = MeaningGroupType.VariableType;
+					for (int j = 0; j < prefixList.Count; j++)
+					{
+						retGroup.ComponentList.Add(prefixList[j]);
+						retGroup.Text += prefixList[j].Text + " ";
+					}
+					retGroup.PrefixCount = prefixList.Count;
+					for (int j = old_idx; j < idx; j++)
+					{
+						retGroup.ComponentList.Add(cpnt_list[j]);
+						retGroup.Text += cpnt_list[j].Text + " ";
+					}
+					i = idx - 1;
+					retGroup.Text = retGroup.Text.Trim();
+				}
+				else if (null != retGroup
+						 && IsTypeSuffix(cpnt_list[i].Text))
+				{
+					retGroup.ComponentList.Add(cpnt_list[i]);
+					retGroup.Text += " " + cpnt_list[i].Text;
+					retGroup.SuffixCount++;
+					idx++;
+				}
+				else
+				{
+					break;
+				}
+			}
+			return retGroup;
+		}
+
+		static MEANING_GROUP GetSingleKeywordGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_info)
+		{
+			if ("typedef" == cpnt_list[idx].Text
+				|| "auto" == cpnt_list[idx].Text
+				|| "break" == cpnt_list[idx].Text
+				|| "case" == cpnt_list[idx].Text
+				|| "continue" == cpnt_list[idx].Text
+				|| "default" == cpnt_list[idx].Text
+				|| "goto" == cpnt_list[idx].Text
+				|| "return" == cpnt_list[idx].Text
+				|| "sizeof" == cpnt_list[idx].Text)
+			{
+				MEANING_GROUP retGroup = new MEANING_GROUP();
+				retGroup.Type = MeaningGroupType.SingleKeyword;
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				retGroup.Text = cpnt_list[idx].Text;
+				idx += 1;
+				return retGroup;
+			}
+			return null;
+		}
+
+		static MEANING_GROUP GetExpressionGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_info)
+		{
+			if ("(" == cpnt_list[idx].Text)
+			{
+				List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
+				if (null != braceList)
+				{
+					MEANING_GROUP retGroup = new MEANING_GROUP();
+					int tmpIdx = 1;
+					if (IsVarType(braceList, ref tmpIdx, parse_info)
+						&& tmpIdx == braceList.Count - 1)
+					{
+						retGroup.Type = MeaningGroupType.TypeCasting;
+					}
+					else
+					{
+						retGroup.Type = MeaningGroupType.Expression;
+					}
+					retGroup.ComponentList.AddRange(braceList);
+					retGroup.Text = GetComponentListStr(braceList);
+					idx += 1;
+					return retGroup;
+				}
+			}
+			return null;
+		}
+
+		static MEANING_GROUP GetFunctionCallingGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_info)
+		{
+			if (IsStandardIdentifier(cpnt_list[idx].Text))
+			{
+				// 判断是否是函数名
+				if (null != parse_info.FindFuncParseInfo(cpnt_list[idx].Text)
+					&& "(" == cpnt_list[idx + 1].Text)
+				{
+					MEANING_GROUP retGroup = new MEANING_GROUP();
+					retGroup.Type = MeaningGroupType.FunctionCalling;
+					retGroup.ComponentList.Add(cpnt_list[idx]);
+					retGroup.Text += cpnt_list[idx].Text;
+					idx += 1;
+					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
+					if (null != braceList)
+					{
+						retGroup.ComponentList.AddRange(braceList);
+						retGroup.Text += GetComponentListStr(braceList);
+						idx += 1;
+						return retGroup;
+					}
+				}
+			}
+			return null;
+		}
+
+		static MeaningGroupType GetVariableType(List<STATEMENT_COMPONENT> braceList, FILE_PARSE_INFO parse_info)
+		{
+			foreach (STATEMENT_COMPONENT item in braceList)
+			{
+				if (IsStandardIdentifier(item.Text))
+				{
+					if (null != parse_info.FindGlobalVarInfoByName(item.Text))
+					{
+						return MeaningGroupType.GlobalVariable;
+					}
+					else
+					{
+						return MeaningGroupType.LocalVariable;
+					}
+				}
+			}
+			return MeaningGroupType.LocalVariable;
+		}
+
+		static void GetVarMemberGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, ref MEANING_GROUP ret_group)
+		{
+			int i = idx + 1;
+			for (i = idx + 1; i < cpnt_list.Count; i++)
+			{
+				if ("." == cpnt_list[i].Text
+					|| "->" == cpnt_list[i].Text)
+				{
+					ret_group.ComponentList.Add(cpnt_list[i]);
+					ret_group.Text += cpnt_list[i].Text;
+					i += 1;
+					ret_group.ComponentList.Add(cpnt_list[i]);
+					ret_group.Text += cpnt_list[i].Text;
+				}
+				else if ("[" == cpnt_list[i].Text)
+				{
+					idx = i;
+					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
+					ret_group.ComponentList.AddRange(braceList);
+					ret_group.Text += GetComponentListStr(braceList);
+					i = idx;
+				}
+				else
+				{
+					break;
+				}
+			}
+			idx = i;
+		}
+
+		static MEANING_GROUP GetVarNameGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		{
+			if (IsStandardIdentifier(cpnt_list[idx].Text))
+			{
+				// 是否是函数参数
+				// 是否为局部变量
+				if (null != func_ctx
+					&& func_ctx.IsLocalVariable(cpnt_list[idx].Text))
+				{
+					MEANING_GROUP retGroup = new MEANING_GROUP();
+					retGroup.Type = MeaningGroupType.LocalVariable;
+					retGroup.ComponentList.Add(cpnt_list[idx]);
+					retGroup.Text = cpnt_list[idx].Text;
+					GetVarMemberGroup(cpnt_list, ref idx, ref retGroup);
+					return retGroup;
+				}
+				// 是否为全局变量
+				else if (null != parse_info.FindGlobalVarInfoByName(cpnt_list[idx].Text))
+				{
+					MEANING_GROUP retGroup = new MEANING_GROUP();
+					retGroup.Type = MeaningGroupType.GlobalVariable;
+					retGroup.ComponentList.Add(cpnt_list[idx]);
+					retGroup.Text = cpnt_list[idx].Text;
+					GetVarMemberGroup(cpnt_list, ref idx, ref retGroup);
+					return retGroup;
+				}
+				// 如果前面是类型名且是开头,那么可能是新定义变量
+				else if (1 == group_list.Count
+					&& group_list[0].Type == MeaningGroupType.VariableType)
+				{
+					MEANING_GROUP retGroup = new MEANING_GROUP();
+					if (null == func_ctx)
+					{
+						retGroup.Type = MeaningGroupType.GlobalVariable;
+					}
+					else
+					{
+						retGroup.Type = MeaningGroupType.LocalVariable;
+					}
+					retGroup.ComponentList.Add(cpnt_list[idx]);
+					retGroup.Text = cpnt_list[idx].Text;
+					GetVarMemberGroup(cpnt_list, ref idx, ref retGroup);
+					return retGroup;
+				}
+			}
+			else if ("(" == cpnt_list[idx].Text)
+			{
+				int tmp_idx = idx;
+				List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref tmp_idx);
+				if (null != braceList
+					&& (tmp_idx != cpnt_list.Count - 1)
+					&& ("." == cpnt_list[tmp_idx + 1].Text
+						|| "->" == cpnt_list[tmp_idx + 1].Text))
+				{
+					MEANING_GROUP retGroup = new MEANING_GROUP();
+					retGroup.Type = GetVariableType(braceList, parse_info);
+					retGroup.ComponentList.AddRange(braceList);
+					retGroup.Text = GetComponentListStr(braceList);
+					GetVarMemberGroup(cpnt_list, ref tmp_idx, ref retGroup);
+					idx = tmp_idx;
+					return retGroup;
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// 取得一个构成分组
+		/// </summary>
+		public static MEANING_GROUP GetOneMeaningGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		{
+			MEANING_GROUP retGroup = null;
+			// 是类型名?
+			if (null != (retGroup = GetVarTypeGroup(cpnt_list, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// 基本类型名以外的关键字?
+			else if (null != (retGroup = GetSingleKeywordGroup(cpnt_list, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// 是变量名?
+			else if (null != (retGroup = GetVarNameGroup(cpnt_list, ref idx, group_list, parse_info, func_ctx)))
+			{
+				return retGroup;
+			}
+			// 是函数调用?
+			else if (null != (retGroup = GetFunctionCallingGroup(cpnt_list, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// 是表达式? 或者是强制类型转换运算符
+			else if (null != (retGroup = GetExpressionGroup(cpnt_list, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// "{和}括起的代码块"
+			else if (null != (retGroup = GetCodeBlockGroup(cpnt_list, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// 双引号""括起的字符串
+			else if (null != (retGroup = GetStringBlockGroup(cpnt_list, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// 单引号''括起的单个字符
+			else if (null != (retGroup = GetCharBlockGroup(cpnt_list, ref idx, parse_info)))
+			{
+				return retGroup;
+			}
+			// 是运算符
+			else if (null != (retGroup = GetOperatorGroup(cpnt_list, ref idx)))
+			{
+				return retGroup;
+			}
+			else if (IsStandardIdentifier(cpnt_list[idx].Text))
+			{
+				retGroup = new MEANING_GROUP();
+				if (cpnt_list[idx].Type == StatementComponentType.Identifier)
+				{
+					retGroup.Type = MeaningGroupType.Identifier;
+				}
+				else
+				{
+					retGroup.Type = MeaningGroupType.Unknown;
+				}
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				retGroup.Text = cpnt_list[idx].Text;
+				idx += 1;
+				if ("defined" == retGroup.Text)
+				{
+					MEANING_GROUP nextGroup = GetOneMeaningGroup(cpnt_list, ref idx, group_list, parse_info, func_ctx);
+					if (null != nextGroup)
+					{
+						MEANING_GROUP defGroup = new MEANING_GROUP();
+						defGroup.ComponentList.AddRange(retGroup.ComponentList);
+						defGroup.ComponentList.AddRange(nextGroup.ComponentList);
+						defGroup.Text = retGroup.Text + " " + nextGroup.Text;
+						defGroup.Type = MeaningGroupType.Expression;
+						return defGroup;
+					}
+				}
+				else if (idx < cpnt_list.Count
+						 && "[" == cpnt_list[idx].Text)								// 标识符后面跟着一个中括号(数组?)
+				{
+					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
+					retGroup.ComponentList.AddRange(braceList);
+					retGroup.Text += GetComponentListStr(braceList);
+					retGroup.Type = MeaningGroupType.Expression;
+					idx += 1;
+				}
+				return retGroup;
+			}
+			else if (IsConstantNumber(cpnt_list[idx].Text))
+			{
+				retGroup = new MEANING_GROUP();
+				retGroup.Type = MeaningGroupType.Constant;
+				retGroup.ComponentList.Add(cpnt_list[idx]);
+				retGroup.Text = cpnt_list[idx].Text;
+				idx += 1;
+				return retGroup;
+			}
+			else
+			{
+				// What the hell is this?
+				System.Windows.Forms.MessageBox.Show("=== GetOneMeaningGroup === Assert!!!");
+				System.Diagnostics.Trace.Assert(false);
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// 如果MeaningGroup里有多于一个以上的运算符,把高优先级的运算符跟对应的运算数结合成表达式
+		/// </summary>
+		static bool CombineHighPriorityOperatorToExpression(List<MEANING_GROUP> in_list)
+		{
+			int operatorCount = 0;	// 运算符的个数
+			int highestPriority = int.MaxValue;
+			int idx = -1;
+			// TODO: 20170823 如果有多个相同(最高)优先级的运算符且连续,要根据运算符的结合方向进行结合
+			for (int i = in_list.Count - 1; i >= 0; i--)
+			{
+				if (in_list[i].Type == MeaningGroupType.OtherOperator
+					|| in_list[i].Type == MeaningGroupType.EqualMark)
+				{
+					if (in_list[i].ComponentList[0].Priority < highestPriority)
+					{
+						highestPriority = in_list[i].ComponentList[0].Priority;
+						idx = i;
+					}
+					operatorCount++;
+				}
+			}
+			if (operatorCount > 1
+				&& "," != in_list[idx].Text)
+			{
+				int operandCount = in_list[idx].ComponentList[0].OperandCount;
+				if (2 == operandCount)
+				{
+					List<STATEMENT_COMPONENT> newList = new List<STATEMENT_COMPONENT>();
+					string newText = in_list[idx - 1].Text + in_list[idx].Text + in_list[idx + 1].Text;
+					newList.AddRange(in_list[idx - 1].ComponentList);
+					newList.AddRange(in_list[idx].ComponentList);
+					newList.AddRange(in_list[idx + 1].ComponentList);
+					in_list.RemoveRange(idx - 1, 3);
+					MEANING_GROUP newGroup = new MEANING_GROUP();
+					newGroup.ComponentList = newList;
+					newGroup.Text = newText;
+					newGroup.Type = MeaningGroupType.Expression;
+					in_list.Insert(idx - 1, newGroup);
+				}
+				else if (1 == operandCount)
+				{
+					List<STATEMENT_COMPONENT> newList = new List<STATEMENT_COMPONENT>();
+					string newText = in_list[idx].Text + in_list[idx + 1].Text;
+					newList.AddRange(in_list[idx].ComponentList);
+					newList.AddRange(in_list[idx + 1].ComponentList);
+					in_list.RemoveRange(idx, 2);
+					MEANING_GROUP newGroup = new MEANING_GROUP();
+					newGroup.ComponentList = newList;
+					newGroup.Text = newText;
+					newGroup.Type = MeaningGroupType.Expression;
+					in_list.Insert(idx, newGroup);
+				}
+				else
+				{
+					System.Diagnostics.Trace.Assert(false);
+				}
+				return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// 确定未明确的运算符(比如-是减号还是负号)
+		/// </summary>
+		static void ConfirmUncertainPriorityOperator(List<MEANING_GROUP> mg_list)
+		{
+			for (int i = 0; i < mg_list.Count; i++)
+			{
+				if (mg_list[i].Type == MeaningGroupType.OtherOperator
+					&& mg_list[i].ComponentList[0].Priority == -1)
+				{
+					string oprStr = mg_list[i].Text;
+					int oprCnt = ConfirmUnaryOrBinaryOperator(mg_list, i);
+					switch (oprStr)
+					{
+						case "&":														// 单目取地址或者双目位与
+							if (1 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 2;
+								mg_list[i].ComponentList[0].OperandCount = 1;
+							}
+							else if (2 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 8;
+								mg_list[i].ComponentList[0].OperandCount = 2;
+							}
+							break;
+						case "-":														// 单目负号或者双目减号
+							if (1 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 2;
+								mg_list[i].ComponentList[0].OperandCount = 1;
+							}
+							else if (2 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 4;
+								mg_list[i].ComponentList[0].OperandCount = 2;
+							}
+							break;
+						case "*":														// 单目指针取值或者双目乘号
+							if (1 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 2;
+								mg_list[i].ComponentList[0].OperandCount = 1;
+							}
+							else if (2 == oprCnt)
+							{
+								mg_list[i].ComponentList[0].Priority = 3;
+								mg_list[i].ComponentList[0].OperandCount = 2;
+							}
+							break;
+						default:
+							System.Diagnostics.Trace.Assert(false);
+							break;
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// 判定是单目运算符还是双目运算符
+		/// </summary>
+		static int ConfirmUnaryOrBinaryOperator(List<MEANING_GROUP> mg_list, int opr_idx)
+		{
+			System.Diagnostics.Trace.Assert(opr_idx >= 0 && mg_list.Count > opr_idx);
+			if (0 == opr_idx)
+			{
+				return 1;
+			}
+			else if (mg_list[opr_idx - 1].Type == MeaningGroupType.OtherOperator
+					|| mg_list[opr_idx - 1].Type == MeaningGroupType.EqualMark)
+			{
+				return 1;
+			}
+			else
+			{
+				return 2;
+			}
+		}
+
+		/// <summary>
+		/// 对语句所有构成成分进行结构分组
+		/// </summary>
+		public static List<MEANING_GROUP> GetMeaningGroups(List<STATEMENT_COMPONENT> cpnt_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		{
+			string statementStr = GetComponentListStr(cpnt_list);
+			List<MEANING_GROUP> groupList = new List<MEANING_GROUP>();
+			int idx = 0;
+			while (true)
+			{
+				if (idx >= cpnt_list.Count)
+				{
+					break;
+				}
+				MEANING_GROUP newGroup = GetOneMeaningGroup(cpnt_list, ref idx, groupList, parse_info, func_ctx);
+				if (0 != newGroup.ComponentList.Count)
+				{
+					groupList.Add(newGroup);
+				}
+				else
+				{
+					break;
+				}
+			}
+			ConfirmUncertainPriorityOperator(groupList);
+			while (CombineHighPriorityOperatorToExpression(groupList))
+			{
+			}
+			while (true)
+			{
+				if (1 == groupList.Count
+					&& groupList[0].ComponentList.Count >= 2
+					&& "(" == groupList[0].ComponentList.First().Text
+					&& ")" == groupList[0].ComponentList.Last().Text)
+				{
+					List<STATEMENT_COMPONENT> cpntList = groupList[0].ComponentList;
+					cpntList.RemoveAt(0);
+					cpntList.RemoveAt(cpntList.Count - 1);
+					groupList = GetMeaningGroups(cpntList, parse_info, func_ctx);
+				}
+				else
+				{
+					break;
+				}
+			}
+			return groupList;
+		}
+
+		public static void TypeDefProc(List<STATEMENT_COMPONENT> cpnt_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		{
+			// 提取含义分组
+			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(cpnt_list, parse_info, func_ctx);
+			if (3 == meaningGroupList.Count
+				&& "typedef" == meaningGroupList[0].Text
+				&& meaningGroupList[1].Type == MeaningGroupType.VariableType
+				&& meaningGroupList[2].Type == MeaningGroupType.Identifier)
+			{
+				TYPE_DEFINE_INFO tdi = new TYPE_DEFINE_INFO();
+				tdi.OldName = meaningGroupList[1].Text;
+				tdi.NewName = meaningGroupList[2].Text;
+				if (tdi.OldName != tdi.NewName)
+				{
+					parse_info.TypeDefineList.Add(tdi);
+				}
+			}
 		}
 	}
 
