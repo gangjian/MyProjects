@@ -37,8 +37,8 @@ namespace UnitTestProject
 			FUNC_INFO analysisContext = new FUNC_INFO();
 
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.ChildNodeList[0].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, c_func_root.ChildNodeList[0].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
             Assert.AreEqual(2, meaningGroupList.Count);
@@ -50,7 +50,7 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_1_2()
         {
 			FUNC_INFO analysisContext = new FUNC_INFO();
-			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
+			C_DEDUCER.StatementProc(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
 
 			Assert.AreEqual(1, analysisContext.LocalVarList.Count);
 			Assert.AreEqual("struct RTE_SWC_IN_TRCTA_C_USR_DEF_TYPE_1", analysisContext.LocalVarList[0].Type.Name);
@@ -61,11 +61,11 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_2()
         {
 			FUNC_INFO analysisContext = new FUNC_INFO();
-			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
+			C_DEDUCER.StatementProc(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
 
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.ChildNodeList[1].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, c_func_root.ChildNodeList[1].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
@@ -80,12 +80,12 @@ namespace UnitTestProject
         public void sym_rbl_in_trcta_igoff_3()
         {
 			FUNC_INFO analysisContext = new FUNC_INFO();
-			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
-			C_DEDUCER.StatementAnalyze(c_func_root.ChildNodeList[1], c_source_parse_info, analysisContext);
+			C_DEDUCER.StatementProc(c_func_root.ChildNodeList[0], c_source_parse_info, analysisContext);
+			C_DEDUCER.StatementProc(c_func_root.ChildNodeList[1], c_source_parse_info, analysisContext);
 
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, c_func_root.ChildNodeList[2].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, c_func_root.ChildNodeList[2].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, analysisContext);
 
             Assert.AreEqual(3, meaningGroupList.Count);
@@ -182,8 +182,8 @@ namespace UnitTestProject
 
 			List<string> codeList = c_source_parse_info.CodeList;
 			// 第一条语句
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[0].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[0].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -191,8 +191,8 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第二条语句
-			statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[1].Scope);
-			componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[1].Scope);
+			componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -200,8 +200,8 @@ namespace UnitTestProject
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[1].Type);
 
 			// 第三条语句
-			statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[2].Scope);
-			componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[2].Scope);
+			componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(2, meaningGroupList.Count);
@@ -213,13 +213,13 @@ namespace UnitTestProject
 		public void sym_rbl_in_trcta_igon_4()
 		{
 			FUNC_INFO func_ctx = new FUNC_INFO();
-			C_DEDUCER.StatementAnalyze(root.ChildNodeList[0], c_source_parse_info, func_ctx);
-			C_DEDUCER.StatementAnalyze(root.ChildNodeList[1], c_source_parse_info, func_ctx);
-			C_DEDUCER.StatementAnalyze(root.ChildNodeList[2], c_source_parse_info, func_ctx);
+			C_DEDUCER.StatementProc(root.ChildNodeList[0], c_source_parse_info, func_ctx);
+			C_DEDUCER.StatementProc(root.ChildNodeList[1], c_source_parse_info, func_ctx);
+			C_DEDUCER.StatementProc(root.ChildNodeList[2], c_source_parse_info, func_ctx);
 			List<string> codeList = c_source_parse_info.CodeList;
 			// 第4句
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[3].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[3].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -236,12 +236,12 @@ namespace UnitTestProject
 			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 4; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementProc(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第5句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[4].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[4].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -258,12 +258,12 @@ namespace UnitTestProject
 			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 5; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementProc(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第6句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[5].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[5].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -280,12 +280,12 @@ namespace UnitTestProject
 			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 6; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementProc(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第7句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[6].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[6].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -302,12 +302,12 @@ namespace UnitTestProject
 			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 7; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementProc(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第8句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[7].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[7].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(1, meaningGroupList.Count);
@@ -321,12 +321,12 @@ namespace UnitTestProject
 			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 8; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementProc(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第9句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[8].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[8].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);
@@ -343,12 +343,12 @@ namespace UnitTestProject
 			FUNC_INFO func_ctx = new FUNC_INFO();
 			for (int i = 0; i < 9; i++)
 			{
-				C_DEDUCER.StatementAnalyze(root.ChildNodeList[i], c_source_parse_info, func_ctx);
+				C_DEDUCER.StatementProc(root.ChildNodeList[i], c_source_parse_info, func_ctx);
 			}
 			// 第9句
 			List<string> codeList = c_source_parse_info.CodeList;
-			string statementStr = C_DEDUCER.GetStatementStr(codeList, root.ChildNodeList[9].Scope);
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(statementStr, c_source_parse_info);
+			string statementStr = COMN_PROC.GetStatementStr(codeList, root.ChildNodeList[9].Scope);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statementStr, c_source_parse_info);
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, c_source_parse_info, func_ctx);
 
 			Assert.AreEqual(3, meaningGroupList.Count);

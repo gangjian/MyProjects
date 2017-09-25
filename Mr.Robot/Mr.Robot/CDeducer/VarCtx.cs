@@ -269,7 +269,7 @@ namespace Mr.Robot
 			for (int i = 0; i < usr_def_type_var.MemberList.Count; i++)
 			{
 				string memberStr = usr_def_type_var.MemberList[i];
-				List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(memberStr, parse_info);
+				List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(memberStr, parse_info);
 				List<MEANING_GROUP> mgList = C_DEDUCER.GetMeaningGroups(componentList, parse_info, null);
 				MEANING_GROUP memberInitGroup = null;
 				if (null != memberInitList)

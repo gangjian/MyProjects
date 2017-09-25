@@ -70,7 +70,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
             {
                 return;
             }
-            List<STATEMENT_COMPONENT> cpntList = C_DEDUCER.GetComponents(macro_exp, null);
+            List<STATEMENT_COMPONENT> cpntList = COMN_PROC.GetComponents(macro_exp, null);
             foreach (STATEMENT_COMPONENT cpnt in cpntList)
             {
                 if (cpnt.Type == StatementComponentType.Identifier && "defined" != cpnt.Text)
@@ -160,7 +160,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 					return MacroValueStrAnalysis(ref macro_value_str, parse_info);
 				}
 			}
-            List<STATEMENT_COMPONENT> cpntList = C_DEDUCER.GetComponents(macro_value_str, null);
+            List<STATEMENT_COMPONENT> cpntList = COMN_PROC.GetComponents(macro_value_str, null);
             int numberCount = 0;
             int identifierCount = 0;
             foreach (STATEMENT_COMPONENT cpnt in cpntList)

@@ -17,12 +17,12 @@ namespace Mr.Robot
 			// 顺次解析各条语句
 			foreach (STATEMENT_NODE childNode in root.ChildNodeList)
 			{
-				StatementAnalyze(childNode, parse_info, fCtx);
+				StatementProc(childNode, parse_info, fCtx);
 			}
             return fCtx;
 		}
 
-		public static void StatementAnalyze(STATEMENT_NODE s_node,
+		public static void StatementProc(	STATEMENT_NODE s_node,
 											FILE_PARSE_INFO parse_info,
                                             FUNC_INFO func_ctx)
 		{
@@ -30,8 +30,8 @@ namespace Mr.Robot
 			{
 				case E_STATEMENT_TYPE.Simple:
 					// 取得完整的语句内容
-					string statementStr = GetStatementStr(parse_info.CodeList, s_node.Scope);
-					SimpleStatementAnalyze(statementStr, parse_info, func_ctx);
+					string statementStr = COMN_PROC.GetStatementStr(parse_info.CodeList, s_node.Scope);
+					SimpleStatementProc(statementStr, parse_info, func_ctx, s_node);
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -42,129 +42,54 @@ namespace Mr.Robot
 		/// <summary>
 		/// 简单语句分析(函数内)
 		/// </summary>
-		public static void SimpleStatementAnalyze(	string statement_str,
-													FILE_PARSE_INFO parse_info,
-													FUNC_INFO func_ctx)
+		public static void SimpleStatementProc(	string statement_str,
+												FILE_PARSE_INFO parse_info,
+												FUNC_INFO func_ctx,
+												STATEMENT_NODE s_node)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
-			List<STATEMENT_COMPONENT> componentList = GetComponents(statement_str, parse_info);
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statement_str, parse_info);
 			if (statement_str.StartsWith("typedef"))
 			{
 				TypeDefProc(componentList, parse_info, func_ctx);
 			}
 			else
 			{
-				ExpressionAnalysis(componentList, parse_info, func_ctx);
+				ExpressionProc(componentList, parse_info, func_ctx, s_node);
 			}
 		}
 
-		public static string GetStatementStr(List<string> code_list, CODE_SCOPE code_scope)
-		{
-			return COMN_PROC.LineStringCat(code_list, code_scope.Start, code_scope.End).Trim();
-		}
-
-        public static void ExpressionAnalysis(	List<STATEMENT_COMPONENT> componentList,
-												FILE_PARSE_INFO parse_info,
-												FUNC_INFO func_ctx)
+        public static void ExpressionProc(	List<STATEMENT_COMPONENT> component_list,
+											FILE_PARSE_INFO parse_info,
+											FUNC_INFO func_ctx,
+											STATEMENT_NODE s_node)
         {
             // 提取含义分组
-			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(componentList, parse_info, func_ctx);
+			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(component_list, parse_info, func_ctx);
 
             // 含义分组解析
-			MeaningGroupsAnalysis(meaningGroupList, parse_info, func_ctx);
-        }
-
-		/// <summary>
-		/// 取得语句内各基本成分(运算数或者是运算符)
-		/// </summary>
-		public static List<STATEMENT_COMPONENT> GetComponents(	string statementStr,
-																FILE_PARSE_INFO parse_info,
-																bool replace_empty_macro_def = true)
-        {
-			// 去掉结尾的分号
-			if (statementStr.EndsWith(";"))
-			{
-				statementStr = statementStr.Remove(statementStr.Length - 1).Trim();
-			}
-            List<STATEMENT_COMPONENT> componentList = new List<STATEMENT_COMPONENT>();
-            int offset = 0;
-            do
-            {
-                // 提取语句的各个组成部分(操作数或者是操作符)
-                STATEMENT_COMPONENT cpnt = GetOneComponent(ref statementStr, ref offset, parse_info, replace_empty_macro_def);
-                if (string.Empty == cpnt.Text)
-                {
-                    // 语句结束
-                    break;
-                }
-                else
-                {
-                    componentList.Add(cpnt);
-                }
-            } while (true);
-
-            return componentList;
-        }
-
-		static string GetComponentListStr(List<STATEMENT_COMPONENT> componentList)
-		{
-			StringBuilder sb = new StringBuilder();
-			foreach (var item in componentList)
-			{
-				sb.Append(item.Text);
-			}
-			return sb.ToString();
-		}
-
-        public static List<MEANING_GROUP> GetMeaningGroups(	List<STATEMENT_COMPONENT> componentList,
-															FILE_PARSE_INFO parse_info,
-															FUNC_INFO func_ctx)
-		{
-            List<MEANING_GROUP> meaningGroupList;
-            while (true)
-            {
-                // (1). 首先对语句所有组成部分进行结构分组, 每个组代表一个独立完整的语义结构
-				meaningGroupList = GetMeaningGroupList(componentList, parse_info, func_ctx);
-                if (1 == meaningGroupList.Count
-                    && "(" == meaningGroupList[0].ComponentList.First().Text
-                    && ")" == meaningGroupList[0].ComponentList.Last().Text)
-                {
-                    componentList.RemoveAt(0);
-                    componentList.RemoveAt(componentList.Count - 1);
-                    continue;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-			// 如果以类型开头那应该是变量定义;
-			// 然后找有没有赋值运算符(优先级14), ++/--也可能表示有左值
-			// 是表达式的话要进一步递归解析
+			MeaningGroupsAnalysis(meaningGroupList, parse_info, func_ctx, s_node);
 			//int a, b, c = 20;
 			//(a) = b = c + 3;
-
-            return meaningGroupList;
 		}
 
 		/// <summary>
 		/// 对语句所有构成成分进行结构分组
 		/// </summary>
-		static List<MEANING_GROUP> GetMeaningGroupList(	List<STATEMENT_COMPONENT> componentList,
-														FILE_PARSE_INFO parse_info,
-														FUNC_INFO func_ctx)
+		public static List<MEANING_GROUP> GetMeaningGroups(	List<STATEMENT_COMPONENT> component_list,
+															FILE_PARSE_INFO parse_info,
+															FUNC_INFO func_ctx)
 		{
-			string statementStr = GetComponentListStr(componentList);
+			string statementStr = COMN_PROC.GetComponentListStr(component_list);
 			List<MEANING_GROUP> groupList = new List<MEANING_GROUP>();
 			int idx = 0;
 			while (true) 
 			{
-                if (idx >= componentList.Count)
+                if (idx >= component_list.Count)
                 {
                     break;
                 }
-				MEANING_GROUP newGroup = GetOneMeaningGroup(componentList, ref idx, groupList, parse_info, func_ctx);
+				MEANING_GROUP newGroup = GetOneMeaningGroup(component_list, ref idx, groupList, parse_info, func_ctx);
 				if (0 != newGroup.ComponentList.Count)
 				{
 					groupList.Add(newGroup);
@@ -177,7 +102,23 @@ namespace Mr.Robot
 			ConfirmUncertainPriorityOperator(groupList);
 			while (CombineHighPriorityOperatorToExpression(groupList))
 			{
-
+			}
+			while (true)
+			{
+				if (1 == groupList.Count
+					&& groupList[0].ComponentList.Count >= 2
+					&& "(" == groupList[0].ComponentList.First().Text
+					&& ")" == groupList[0].ComponentList.Last().Text)
+				{
+					List<STATEMENT_COMPONENT> cpntList = groupList[0].ComponentList;
+					cpntList.RemoveAt(0);
+					cpntList.RemoveAt(cpntList.Count - 1);
+					groupList = GetMeaningGroups(cpntList, parse_info, func_ctx);
+				}
+				else
+				{
+					break;
+				}
 			}
 			return groupList;
 		}
@@ -411,13 +352,13 @@ namespace Mr.Robot
 				{
 					List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text += GetComponentListStr(braceList);
+					retGroup.Text += COMN_PROC.GetComponentListStr(braceList);
 					retGroup.Type = MeaningGroupType.Expression;
 					idx += 1;
 				}
 				return retGroup;
 			}
-			else if (IsConstantNumber(componentList[idx].Text))
+			else if (COMN_PROC.IsConstantNumber(componentList[idx].Text))
 			{
 				retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.Constant;
@@ -433,416 +374,6 @@ namespace Mr.Robot
 				System.Diagnostics.Trace.Assert(false);
                 return null;
 			}
-		}
-
-		/// <summary>
-		/// 从语句中提取出一个操作数/操作符
-		/// </summary>
-		static STATEMENT_COMPONENT GetOneComponent(ref string statementStr,
-												  ref int offset,
-												  FILE_PARSE_INFO parse_info,
-												  bool replace_empty_macro_def)
-		{
-			string idStr = null;
-			int offset_old = -1;
-			STATEMENT_COMPONENT retSC = new STATEMENT_COMPONENT();
-			while (true)
-			{
-				offset_old = offset;
-				idStr = COMN_PROC.GetNextIdentifier2(statementStr, ref offset);
-				if (null == idStr)
-				{
-					break;
-				}
-				else if (IsConstantNumber(idStr))
-				{
-                    retSC.Type = StatementComponentType.ConstantNumber;
-                    retSC.Text = idStr;
-					break;														        // 数字常量
-				}
-				else if (IsStringOrChar(idStr, statementStr, ref offset))
-				{
-					break;														        // 字符或者字符串
-				}
-                else if (COMN_PROC.IsStandardIdentifier(idStr))						// 标准标识符
-				{
-					// 如果包含宏, 首先要进行宏展开
-					if (null != parse_info
-						&& MacroDetectAndExpand_Statement(idStr, ref statementStr, offset, parse_info, replace_empty_macro_def))
-					{
-						offset = offset_old;
-						continue;
-					}
-					else
-					{
-						retSC = new STATEMENT_COMPONENT(idStr);
-						retSC.Type = StatementComponentType.Identifier;
-						break;
-					}
-				}
-				else if (IsOperator(idStr, statementStr, ref offset, ref retSC))
-				{
-					break;
-				}
-				else
-				{
-					retSC = new STATEMENT_COMPONENT(idStr);
-					break;
-				}
-			}
-
-			return retSC;
-		}
-
-		/// <summary>
-		/// 函数内的宏展开 TODO:以后考虑重构跟MacroDetectAndExpand_File合并
-		/// </summary>
-		public static bool MacroDetectAndExpand_Statement(	string idStr,
-															ref string statementStr,
-															int offset,
-															FILE_PARSE_INFO parse_info,
-															bool replace_empty_macro_def)
-        {
-			// 遍历查找宏名
-			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
-			if (null != mdi)
-			{
-				if (string.IsNullOrEmpty(mdi.Value)
-					&& false == replace_empty_macro_def)
-				{
-				}
-				else
-				{
-					string macroName = mdi.Name;
-					string replaceStr = mdi.Value;
-					// 判断有无带参数
-					if (0 != mdi.ParaList.Count)
-					{
-						// 取得宏参数
-						string paraStr = COMN_PROC.GetNextIdentifier2(statementStr, ref offset);
-						if ("(" != paraStr)
-						{
-							//CommonProcess.ErrReport();
-							return false;
-						}
-						int leftBracket = offset;
-						int rightBracket = statementStr.Substring(offset).IndexOf(')');
-						if (-1 == rightBracket)
-						{
-							COMN_PROC.ErrReport();
-							return false;
-						}
-						paraStr = statementStr.Substring(leftBracket + 1, rightBracket - 1).Trim();
-						macroName += statementStr.Substring(leftBracket, rightBracket + 1);
-						string[] realParas = paraStr.Split(',');
-						// 然后用实参去替换宏值里的形参
-						int idx = 0;
-						foreach (string rp in realParas)
-						{
-							if (string.Empty == rp)
-							{
-								// 参数有可能为空, 即没有参数, 只有一对空的括号里面什么参数也不带
-								continue;
-							}
-							replaceStr = COMN_PROC.WholeWordSReplace(replaceStr, mdi.ParaList[idx], rp);
-							//replaceStr = replaceStr.Replace(mdi.ParaList[idx], rp);
-							idx++;
-						}
-					}
-					// 应对宏里面出现的"##"
-					string[] seps = { "##" };
-					string[] arr = replaceStr.Split(seps, StringSplitOptions.None);
-					if (arr.Length > 1)
-					{
-						string newStr = "";
-						foreach (string sepStr in arr)
-						{
-							newStr += sepStr.Trim();
-						}
-						replaceStr = newStr;
-					}
-					// 单个"#"转成字串的情况暂未对应, 以后遇到再说, 先出个error report作为保护
-					if (replaceStr.Contains('#'))
-					{
-						COMN_PROC.ErrReport();
-						return false;
-					}
-					// 用宏值去替换原来的宏名(宏展开)
-					if (idStr == replaceStr)
-					{
-						return false;
-					}
-					int macroIdx = offset - idStr.Length;
-					statementStr = statementStr.Remove(macroIdx, idStr.Length);
-					statementStr = statementStr.Insert(macroIdx, replaceStr);
-					return true;
-				}
-			}
-			return false;
-        }
-
-		/// <summary>
-		/// 判断是否是运算符
-		/// </summary>
-		static bool IsOperator(string idStr, string statementStr, ref int offset, ref STATEMENT_COMPONENT component)
-		{
-			if (1 != idStr.Length)
-			{
-				return false;
-			}
-			component.Type = StatementComponentType.Operator;
-			int startOffset = offset;
-            string nextIdStr = string.Empty;
-            offset += 1;
-            if (offset != statementStr.Length)
-            {                                                                           // 不是本语句的末尾,取得下一个位置的字符
-                nextIdStr = statementStr.Substring(offset, 1);
-            }
-			switch (idStr)
-			{
-				case "(":
-				case ")":
-				case "[":
-				case "]":
-				case ".":
-					component.Text = idStr;
-					component.Priority = 1;
-					break;
-				case "=":
-					if (nextIdStr == idStr)
-					{
-						// "==" : 等于
-						component.Text = idStr + nextIdStr;
-						component.Priority = 7;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else
-					{
-						// "=" : 赋值
-						component.Text = idStr;
-						component.Priority = 14;
-						component.OperandCount = 2;
-					}
-					break;
-				case "+":
-				case "-":
-					if (nextIdStr == idStr)
-					{
-						// "++", "--" : 自增, 自减
-						component.Text = idStr + nextIdStr;
-						component.Priority = 2;
-						component.OperandCount = 1;
-						offset += 1;
-					}
-					else if ("=" == nextIdStr)
-					{
-						// "+=", "-=" : 加减运算赋值
-						component.Text = idStr + nextIdStr;
-						component.Priority = 14;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else if ( "-" == idStr && ">" == nextIdStr)
-					{
-						// "->" : 指针成员
-						component.Text = idStr + nextIdStr;
-						component.Priority = 1;
-						offset += 1;
-					}
-					else
-					{
-						// "+", "-" : 加, 减
-						component.Text = idStr;
-						if ("-" == idStr)
-						{
-							component.Priority = -1;								    // 不确定:可能是减号(优先级4)也可能是单目运算符的负号(优先级2)
-						}
-						else
-						{
-							component.Priority = 4;										// 加号
-						}
-						component.OperandCount = 2;
-					}
-					break;
-				case "*":
-				case "/":
-					if ("=" == nextIdStr)
-					{
-						// "*=", "/=" : 乘除运算赋值
-						component.Text = idStr + nextIdStr;
-						component.Priority = 14;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else if ("*" == idStr)
-					{
-						// "*" : 乘
-						component.Text = idStr;
-						component.Priority = -1;										// 不确定:可能是乘号(优先级3), 也可能是指针运算符(优先级2)
-						component.OperandCount = 2;
-					}
-					else
-					{
-						// "/" : 除
-						component.Text = idStr;
-						component.Priority = 3;
-						component.OperandCount = 2;
-					}
-					break;
-				case ">":
-				case "<":
-					if (nextIdStr == idStr)
-					{
-						string thirdChar = statementStr.Substring(offset + 1, 1);
-						if ("=" == thirdChar)
-						{
-							// ">>=", "<<=" : 位移赋值
-							component.Text = idStr + nextIdStr + thirdChar;
-							component.Priority = 14;
-							component.OperandCount = 2;
-							offset += 2;
-						}
-						else
-						{
-							// ">>", "<<" : 左移, 右移
-							component.Text = idStr + nextIdStr;
-							component.Priority = 5;
-							component.OperandCount = 2;
-							offset += 1;
-						}
-					}
-					else if ("=" == nextIdStr)
-					{
-						// ">=", "<=" : 大于等于, 小于等于
-						component.Text = idStr + nextIdStr;
-						component.Priority = 6;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else
-					{
-						// ">", "<" : 大于, 小于
-						component.Text = idStr;
-						component.Priority = 6;
-						component.OperandCount = 2;
-					}
-					break;
-				case "&":
-				case "|":
-					if (nextIdStr == idStr)
-					{
-						// "&&", "||" : 逻辑与, 逻辑或
-						component.Text = idStr + nextIdStr;
-						if ("&" == idStr)
-						{
-							component.Priority = 11;
-						}
-						else
-						{
-							component.Priority = 12;
-						}
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else if ("=" == nextIdStr)
-					{
-						// "&=", "|=" : 位运算赋值
-						component.Text = idStr + nextIdStr;
-						component.Priority = 14;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else
-					{
-						// "&", "|" : 位与, 位或
-						component.Text = idStr;
-						if ("&" == idStr)
-						{
-							component.Priority = -1;									// 不确定, 可能是双目位与&(优先级8),也可能是取地址符&(优先级2)
-						}
-						else
-						{
-							component.Priority = 10;
-						}
-						component.OperandCount = 2;
-					}
-
-					break;
-				case "!":
-					if ("=" == nextIdStr)
-					{
-						// "!=" : 不等于
-						component.Text = idStr + nextIdStr;
-						component.Priority = 7;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else
-					{
-						// "!" : 逻辑非
-						component.Text = idStr;
-						component.Priority = 2;
-						component.OperandCount = 1;
-					}
-					break;
-				case "~":
-					// "~" : 按位取反
-					component.Text = idStr;
-					component.Priority = 2;
-					component.OperandCount = 1;
-					break;
-				case "%":
-					if ("=" == nextIdStr)
-					{
-						// "%=" : 取余赋值
-						component.Text = idStr + nextIdStr;
-						component.Priority = 14;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else
-					{
-						// "%" : 取余
-						component.Text = idStr;
-						component.Priority = 3;
-						component.OperandCount = 2;
-					}
-					break;
-				case "^":
-					if ("=" == nextIdStr)
-					{
-						// "^=" : 位异或赋值
-						component.Text = idStr + nextIdStr;
-						component.Priority = 14;
-						component.OperandCount = 2;
-						offset += 1;
-					}
-					else
-					{
-						// "^" : 位异或
-						component.Text = idStr;
-						component.Priority = 9;
-						component.OperandCount = 2;
-					}
-					break;
-				case ",":
-					// "," : 逗号
-					component.Text = idStr;
-					component.Priority = 15;
-					component.OperandCount = 2;
-					break;
-				case "?":
-				case ":":
-					// "?:" : 条件(三目)
-					component.Text = idStr;
-					component.Priority = 13;
-					component.OperandCount = 3;
-					break;
-				default:
-					return false;
-			}
-			return true;
 		}
 
         /// <summary>
@@ -885,31 +416,6 @@ namespace Mr.Robot
         }
 
         /// <summary>
-        /// 判断标识符是否是立即数常量
-        /// </summary>
-        public static bool IsConstantNumber(string idStr)
-        {
-            int i = 0;
-            bool retVal = false;
-            for (; i < idStr.Length; i++)
-            {
-                if (!Char.IsDigit(idStr[i]))
-                {
-                    if (Char.IsLetter(idStr[i]) && (i > 0))
-                    {
-                    }
-                    else
-                    {
-                        retVal = false;
-                        break;
-                    }
-                }
-                retVal = true;
-            }
-            return retVal;
-        }
-
-        /// <summary>
         /// 判断标识符是否是局部(临时)变量
         /// </summary>
 		static bool IsLocalVariable(string identifier, List<VAR_CTX>local_var_list)
@@ -923,23 +429,6 @@ namespace Mr.Robot
 			}
             return false;
         }
-
-		static bool IsStringOrChar(string idStr, string statementStr, ref int offset)
-		{
-            if ("\"" == idStr)
-            {
-                
-            }
-            else if ("\'" == idStr)
-            {
-
-            }
-            else
-            {
-                return false;
-            }
-			return false;
-		}
 
 		/// <summary>
 		/// 判断基本成分列表构成的是否是一个变量类型
@@ -1134,7 +623,7 @@ namespace Mr.Robot
                     MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = GetVariableType(braceList, parse_info);
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text = GetComponentListStr(braceList);
+					retGroup.Text = COMN_PROC.GetComponentListStr(braceList);
                     GetVarMemberGroup(componentList, ref tmp_idx, ref retGroup);
                     idx = tmp_idx;
                     return retGroup;
@@ -1183,7 +672,7 @@ namespace Mr.Robot
 					idx = i;
 					List<STATEMENT_COMPONENT> braceList = COMN_PROC.GetBraceComponents(componentList, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text += GetComponentListStr(braceList);
+					retGroup.Text += COMN_PROC.GetComponentListStr(braceList);
 					i = idx;
 				}
                 else
@@ -1211,7 +700,7 @@ namespace Mr.Robot
 					if (null != braceList)
 					{
 						retGroup.ComponentList.AddRange(braceList);
-						retGroup.Text += GetComponentListStr(braceList);
+						retGroup.Text += COMN_PROC.GetComponentListStr(braceList);
 						idx += 1;
 						return retGroup;
 					}
@@ -1239,7 +728,7 @@ namespace Mr.Robot
 						retGroup.Type = MeaningGroupType.Expression;
 					}
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text = GetComponentListStr(braceList);
+					retGroup.Text = COMN_PROC.GetComponentListStr(braceList);
 					idx += 1;
 					return retGroup;
 				}
@@ -1257,7 +746,7 @@ namespace Mr.Robot
 					MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.CodeBlock;
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text = GetComponentListStr(braceList);
+					retGroup.Text = COMN_PROC.GetComponentListStr(braceList);
 					idx += 1;
 					return retGroup;
 				}
@@ -1333,7 +822,8 @@ namespace Mr.Robot
 
         static void MeaningGroupsAnalysis(	List<MEANING_GROUP> mgList,
 											FILE_PARSE_INFO parse_info,
-											FUNC_INFO func_ctx)
+											FUNC_INFO func_ctx,
+											STATEMENT_NODE s_node)
         {
             // 先检查是否是新定义的局部变量
 			VAR_CTX varCtx = null;

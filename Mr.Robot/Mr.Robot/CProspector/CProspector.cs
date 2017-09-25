@@ -584,10 +584,10 @@ namespace Mr.Robot
 						}
 						else
 						{
-							statementStr = C_DEDUCER.GetStatementStr(parse_info.CodeList,
+							statementStr = COMN_PROC.GetStatementStr(parse_info.CodeList,
 								new CODE_SCOPE(qualifierList.First().Position, nextIdtf.Position));
 						}
-						C_DEDUCER.SimpleStatementAnalyze(statementStr.Trim(), parse_info, null);
+						C_DEDUCER.SimpleStatementProc(statementStr.Trim(), parse_info, null, null);
 					}
 					else if ("," == nextIdtf.Text)
 					{
@@ -891,7 +891,7 @@ namespace Mr.Robot
 					break;
 				}
 				else if (COMN_PROC.IsStandardIdentifier(idStr)
-						 && C_DEDUCER.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info, true))
+						 && COMN_PROC.MacroDetectAndExpand_Statement(idStr, ref memberStr, offset, source_info, true))
 				{
 					offset = old_offset;
 					continue;

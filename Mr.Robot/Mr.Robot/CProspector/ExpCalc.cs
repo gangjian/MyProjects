@@ -9,7 +9,7 @@ namespace Mr.Robot
 	{
 		public static int GetLogicalExpressionValue(string exp_str, FILE_PARSE_INFO parse_info)
 		{
-			List<STATEMENT_COMPONENT> componentList = C_DEDUCER.GetComponents(exp_str, parse_info, false);	// 最后一个参数, 在解析逻辑表达式时, 因为涉及 #if define(XXX) 这样的表达式, 所以如果是空的宏定义, 原样不动不展开
+			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(exp_str, parse_info, false);	// 最后一个参数, 在解析逻辑表达式时, 因为涉及 #if define(XXX) 这样的表达式, 所以如果是空的宏定义, 原样不动不展开
 			List<MEANING_GROUP> meaningGroupList = C_DEDUCER.GetMeaningGroups(componentList, parse_info, null);
 			int retVal = 0;
 			if (1 == meaningGroupList.Count)
