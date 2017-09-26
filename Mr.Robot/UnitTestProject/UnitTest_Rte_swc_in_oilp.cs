@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Mr.Robot;
+using Mr.Robot.CDeducer;
 
 namespace UnitTestProject
 {
@@ -118,6 +120,14 @@ namespace UnitTestProject
 			Assert.AreEqual(2, func_ctx.OutputGlobalList.Count);
 			//Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvEngOnOff3s_struct)->value", func_ctx.OutputGlobalList[0].MeanningGroup.Text);
 			//Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvOilpAd_struct)->value", func_ctx.OutputGlobalList[1].MeanningGroup.Text);
+		}
+
+		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
+		public void Test_calcIgAdAvrgData()
+		{
+			//FILE_PARSE_INFO c_source_parse_info;
+			//root = C_FUNC_LOCATOR.FuncLocatorStart(source_name, "calcIgAdAvrgData", parseInfoList, out c_source_parse_info);
+			//FUNC_INFO func_ctx = C_DEDUCER.DeducerStart(root, c_source_parse_info);
 		}
 	}
 }

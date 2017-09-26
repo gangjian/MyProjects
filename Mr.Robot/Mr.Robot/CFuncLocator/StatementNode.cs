@@ -7,7 +7,6 @@ namespace Mr.Robot
 {
     public class STATEMENT_NODE
     {
-		// 第一部分: CFuncLocator用到的
         // 1.语句范围(起止位置)
 		public CODE_SCOPE Scope = null;
 
@@ -20,9 +19,6 @@ namespace Mr.Robot
 
         // 5.条件表达式(可以为空,表示恒成立)
         public string Expression = string.Empty;
-
-		// 第二部分: CDeducer用到的
-		public List<VAR_CTX> VarCtxList = new List<VAR_CTX>();
     }
 
     // 语句节点类型枚举

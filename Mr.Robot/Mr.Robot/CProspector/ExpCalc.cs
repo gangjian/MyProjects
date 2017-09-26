@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Mr.Robot.CDeducer;
+
 namespace Mr.Robot
 {
 	public class ExpCalc

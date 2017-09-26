@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Mr.Robot;
 
-namespace Mr.Robot
+namespace Mr.Robot.CDeducer
 {
 	public static partial class C_DEDUCER
 	{

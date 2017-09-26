@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
+using Mr.Robot.CDeducer;
+
 namespace Mr.Robot
 {
 	public class COMN_PROC

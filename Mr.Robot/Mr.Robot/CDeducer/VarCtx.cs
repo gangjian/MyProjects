@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
+using Mr.Robot.CDeducer;
+
 namespace Mr.Robot
 {
 	/// <summary>

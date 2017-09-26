@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
+
 using Mr.Robot.MacroSwitchAnalyser;
+using Mr.Robot.CDeducer;
 
 namespace Mr.Robot
 {

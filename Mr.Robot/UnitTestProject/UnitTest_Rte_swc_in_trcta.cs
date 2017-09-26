@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Mr.Robot;
 using System.IO;
+
+using Mr.Robot;
+using Mr.Robot.CDeducer;
 
 namespace UnitTestProject
 {
