@@ -589,7 +589,7 @@ namespace Mr.Robot
 							statementStr = COMN_PROC.GetStatementStr(parse_info.CodeList,
 								new CODE_SCOPE(qualifierList.First().Position, nextIdtf.Position));
 						}
-						C_DEDUCER.SimpleStatementProc(statementStr.Trim(), parse_info, null, null);
+						C_DEDUCER.SimpleStatementProc(statementStr.Trim(), parse_info, null, null, null);
 					}
 					else if ("," == nextIdtf.Text)
 					{

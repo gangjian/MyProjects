@@ -84,7 +84,7 @@ namespace Mr.Robot
 		/// <param name="var_name"></param>
 		/// <param name="func_ctx"></param>
 		/// <returns></returns>
-		static public VAR_CTX GetVarCtxByName(string var_name, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static public VAR_CTX GetVarCtxByName(string var_name, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			VAR_CTX var_ctx = null;
 			if (null != (var_ctx = SearchVarCtxList(var_name, func_ctx)))
@@ -106,7 +106,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_CTX SearchVarCtxList(string var_name, FUNC_INFO func_ctx)
+		static VAR_CTX SearchVarCtxList(string var_name, FUNC_CONTEXT func_ctx)
 		{
 			if (null == func_ctx)
 			{

@@ -267,7 +267,7 @@ namespace Mr.Robot
 					// 递归解析分支语句块
 					GetFunctionStatmentsNodeTree(parse_info, ref ifBranch);
 
-					retNode.Scope.Start = scope.Start;									// if分支的开始位置, 作为整个if else复合语句的起始位置
+					CODE_POSITION firstIfStart = scope.Start;							// if分支的开始位置, 作为整个if else复合语句的起始位置
 					retNode.ChildNodeList.Add(ifBranch);
 
 					CODE_POSITION lastElseEnd = ifBranch.Scope.End;						// 最后一个else分支的结束位置, 作为整个if else复合语句的结束位置
@@ -288,7 +288,7 @@ namespace Mr.Robot
 						elseBranch = GetNextElseBrachNode(parse_info, ref searchPos);
 					}
 					startPos = searchPos;
-					retNode.Scope.End = lastElseEnd;
+					retNode.Scope = new CODE_SCOPE(firstIfStart, lastElseEnd);
 					return retNode;
 				}
 			}

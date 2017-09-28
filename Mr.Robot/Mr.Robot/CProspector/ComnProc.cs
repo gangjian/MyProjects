@@ -1841,7 +1841,7 @@ namespace Mr.Robot
 			idx = i;
 		}
 
-		static MEANING_GROUP GetVarNameGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static MEANING_GROUP GetVarNameGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			if (IsStandardIdentifier(cpnt_list[idx].Text))
 			{
@@ -1910,7 +1910,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个构成分组
 		/// </summary>
-		public static MEANING_GROUP GetOneMeaningGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		public static MEANING_GROUP GetOneMeaningGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			MEANING_GROUP retGroup = null;
 			// 是类型名?
@@ -2158,7 +2158,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 对语句所有构成成分进行结构分组
 		/// </summary>
-		public static List<MEANING_GROUP> GetMeaningGroups(List<STATEMENT_COMPONENT> cpnt_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		public static List<MEANING_GROUP> GetMeaningGroups(List<STATEMENT_COMPONENT> cpnt_list, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			string statementStr = GetComponentListStr(cpnt_list);
 			List<MEANING_GROUP> groupList = new List<MEANING_GROUP>();
@@ -2203,7 +2203,7 @@ namespace Mr.Robot
 			return groupList;
 		}
 
-		public static void TypeDefProc(List<STATEMENT_COMPONENT> cpnt_list, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		public static void TypeDefProc(List<STATEMENT_COMPONENT> cpnt_list, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			// 提取含义分组
 			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(cpnt_list, parse_info, func_ctx);

@@ -12,27 +12,33 @@ namespace Mr.Robot.CDeducer
 		/// <summary>
 		/// 语句分析
 		/// </summary>
-        public static FUNC_INFO DeducerStart(STATEMENT_NODE root, FILE_PARSE_INFO parse_info)
+        public static FUNC_CONTEXT DeducerStart(STATEMENT_NODE root, FILE_PARSE_INFO parse_info)
 		{
-            FUNC_INFO fCtx = new FUNC_INFO();
+            FUNC_CONTEXT fCtx = new FUNC_CONTEXT();
+			DEDUCER_CONTEXT dCtx = new DEDUCER_CONTEXT();
 			// 顺次解析各条语句
 			foreach (STATEMENT_NODE childNode in root.ChildNodeList)
 			{
-				StatementProc(childNode, parse_info, fCtx);
+				StatementProc(childNode, parse_info, fCtx, dCtx);
 			}
             return fCtx;
 		}
 
 		public static void StatementProc(	STATEMENT_NODE s_node,
 											FILE_PARSE_INFO parse_info,
-                                            FUNC_INFO func_ctx)
+                                            FUNC_CONTEXT func_ctx,
+											DEDUCER_CONTEXT deducer_ctx)
 		{
 			switch (s_node.Type)
 			{
 				case E_STATEMENT_TYPE.Simple:
 					// 取得完整的语句内容
 					string statementStr = COMN_PROC.GetStatementStr(parse_info.CodeList, s_node.Scope);
-					SimpleStatementProc(statementStr, parse_info, func_ctx, s_node);
+					SimpleStatementProc(statementStr, parse_info, func_ctx, deducer_ctx, s_node);
+					break;
+				case E_STATEMENT_TYPE.Compound_IfElse:
+					break;
+				case E_STATEMENT_TYPE.Compound_For:
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -45,7 +51,8 @@ namespace Mr.Robot.CDeducer
 		/// </summary>
 		public static void SimpleStatementProc(	string statement_str,
 												FILE_PARSE_INFO parse_info,
-												FUNC_INFO func_ctx,
+												FUNC_CONTEXT func_ctx,
+												DEDUCER_CONTEXT deducer_ctx,
 												STATEMENT_NODE s_node)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
@@ -62,7 +69,7 @@ namespace Mr.Robot.CDeducer
 
         public static void ExpressionProc(	List<STATEMENT_COMPONENT> component_list,
 											FILE_PARSE_INFO parse_info,
-											FUNC_INFO func_ctx,
+											FUNC_CONTEXT func_ctx,
 											STATEMENT_NODE s_node)
         {
             // 提取含义分组
@@ -76,7 +83,7 @@ namespace Mr.Robot.CDeducer
 
         static void MeaningGroupsAnalysis(	List<MEANING_GROUP> mgList,
 											FILE_PARSE_INFO parse_info,
-											FUNC_INFO func_ctx,
+											FUNC_CONTEXT func_ctx,
 											STATEMENT_NODE s_node)
         {
             // 先检查是否是新定义的局部变量
@@ -105,7 +112,7 @@ namespace Mr.Robot.CDeducer
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
         }
 
-		public static VAR_CTX IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		public static VAR_CTX IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
@@ -224,7 +231,7 @@ namespace Mr.Robot.CDeducer
     /// <summary>
     /// 解析上下文
     /// </summary>
-    public class FUNC_INFO
+    public class FUNC_CONTEXT
     {
         // 引数列表
 		public List<VAR_CTX> ParameterList = new List<VAR_CTX>();

@@ -14,7 +14,7 @@ namespace Mr.Robot
 	{
 		public static bool LeftRightValueAnalysis(	List<MEANING_GROUP> mgList,
 													FILE_PARSE_INFO parse_info,
-													FUNC_INFO func_ctx)
+													FUNC_CONTEXT func_ctx)
 		{
 			List<MEANING_GROUP> rightValue = new List<MEANING_GROUP>();
 			int eqIdx = -1;
@@ -66,7 +66,7 @@ namespace Mr.Robot
 			return -1;
 		}
 
-		static void RightValProcess(List<MEANING_GROUP> rightList, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static void RightValProcess(List<MEANING_GROUP> rightList, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			foreach (MEANING_GROUP rightVal in rightList)
 			{
@@ -98,7 +98,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static void CalledFunctionProcess(MEANING_GROUP mg, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static void CalledFunctionProcess(MEANING_GROUP mg, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			CALLED_FUNCTION cf = new CALLED_FUNCTION();
 			cf.MeaningGroup = mg;
@@ -134,7 +134,7 @@ namespace Mr.Robot
 		static void RegisterVarPossibleReadOut(ACTUAL_PARA_INFO api,
 												CALLED_FUNCTION cf,
 												FILE_PARSE_INFO parse_info,
-												FUNC_INFO func_ctx)
+												FUNC_CONTEXT func_ctx)
 		{
 			// 在上下文中找出该变量
 			VAR_CTX var_ctx = GetVarCtxByName(api.varName, parse_info, func_ctx);
@@ -144,7 +144,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static List<MEANING_GROUP> GetActualParameterList(MEANING_GROUP mg, FUNC_INFO func_ctx)
+		static List<MEANING_GROUP> GetActualParameterList(MEANING_GROUP mg, FUNC_CONTEXT func_ctx)
 		{
 			List<MEANING_GROUP> act_para_list = new List<MEANING_GROUP>();
 			if (mg.ComponentList.Count >= 3
@@ -177,7 +177,7 @@ namespace Mr.Robot
 		}
 
 		// 判断实参的种别(传值或者传引用)
-		static ACTUAL_PARA_INFO GetActualParaInfo(MEANING_GROUP act_para, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static ACTUAL_PARA_INFO GetActualParaInfo(MEANING_GROUP act_para, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			ACTUAL_PARA_INFO actParaInfo = new ACTUAL_PARA_INFO();
 			// 前缀 + 变量名
@@ -217,7 +217,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 判断变量的类型是值类型亦或是指针类型
 		/// </summary>
-		static ActParaPassType JudgeVarParaType(string var_name, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static ActParaPassType JudgeVarParaType(string var_name, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			// 在当前的上下文中查找该名称的变量, 取得其类型名
 			VAR_TYPE var_type = GetVarType(var_name, parse_info, func_ctx);
@@ -235,7 +235,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static VAR_TYPE GetVarType(string var_name, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static VAR_TYPE GetVarType(string var_name, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			// TODO: 引数?
 
@@ -259,7 +259,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 确定一个作右值的变量是否被标记过做过函数调用的实参并传引用
 		/// </summary>
-		static void CheckRightVarReadOut(MEANING_GROUP rightVal, FILE_PARSE_INFO parse_info, FUNC_INFO func_ctx)
+		static void CheckRightVarReadOut(MEANING_GROUP rightVal, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
 		{
 			string rVarName = GetPrimaryVarName(rightVal);
 			if (string.Empty == rVarName)
