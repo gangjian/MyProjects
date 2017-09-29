@@ -63,20 +63,21 @@ namespace Mr.Robot.CDeducer
 			}
 			else
 			{
-				ExpressionProc(componentList, parse_info, func_ctx, s_node);
+				ExpressionProc(componentList, parse_info, func_ctx, deducer_ctx, s_node);
 			}
 		}
 
         public static void ExpressionProc(	List<STATEMENT_COMPONENT> component_list,
 											FILE_PARSE_INFO parse_info,
 											FUNC_CONTEXT func_ctx,
+											DEDUCER_CONTEXT deducer_ctx,
 											STATEMENT_NODE s_node)
         {
             // 提取含义分组
 			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(component_list, parse_info, func_ctx);
 
             // 含义分组解析
-			MeaningGroupsAnalysis(meaningGroupList, parse_info, func_ctx, s_node);
+			MeaningGroupsAnalysis(meaningGroupList, parse_info, func_ctx, deducer_ctx, s_node);
 			//int a, b, c = 20;
 			//(a) = b = c + 3;
 		}
@@ -84,6 +85,7 @@ namespace Mr.Robot.CDeducer
         static void MeaningGroupsAnalysis(	List<MEANING_GROUP> mgList,
 											FILE_PARSE_INFO parse_info,
 											FUNC_CONTEXT func_ctx,
+											DEDUCER_CONTEXT deducer_ctx,
 											STATEMENT_NODE s_node)
         {
             // 先检查是否是新定义的局部变量
@@ -110,9 +112,19 @@ namespace Mr.Robot.CDeducer
 			}
 			// 分析左值/右值
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
+
+			/////////////////////// 以下是新方案 /////////////////////
+			if (IfNewDefVar(mgList, parse_info, deducer_ctx, s_node))
+			{
+				
+			}
+			else
+			{
+
+			}
         }
 
-		public static VAR_CTX IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
+		static VAR_CTX IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
@@ -150,6 +162,16 @@ namespace Mr.Robot.CDeducer
             }
             return null;
         }
+
+		static bool IfNewDefVar(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx, STATEMENT_NODE s_node)
+		{
+			if (mgList.Count < 2
+				|| MeaningGroupType.VariableType != mgList[0].Type)
+			{
+				return false;
+			}
+			return false;
+		}
 	}
 
 	public enum StatementComponentType
