@@ -22,6 +22,7 @@ namespace Mr.Robot
             root.Type = E_STATEMENT_TYPE.Root;
             root.Scope = funInfo.Scope;
 			GetFunctionStatmentsNodeTree(source_parse_info, ref root);
+			SetStatementNodeTreeStepMark(root);											// 设置语句标号
 			return root;
         }
 
@@ -118,9 +119,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得复合语句情报
 		/// </summary>
-        static STATEMENT_NODE GetCompondStatementNode(string keyWord,
-													 FILE_PARSE_INFO parse_info,
-													 ref CODE_POSITION startPos)
+        static STATEMENT_NODE GetCompondStatementNode(string keyWord, FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = null;
 			E_STATEMENT_TYPE type = GetNodeType(keyWord);
@@ -160,9 +159,7 @@ namespace Mr.Robot
         /// <summary>
         /// 取得简单语句的语句节点对象
         /// </summary>
-		static STATEMENT_NODE GetSimpleStatementNode(FILE_PARSE_INFO parse_info,
-													ref CODE_POSITION startPos,
-													CODE_POSITION foundPos)
+		static STATEMENT_NODE GetSimpleStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos, CODE_POSITION foundPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
 			CODE_POSITION searchPos = new CODE_POSITION(foundPos);
@@ -174,7 +171,7 @@ namespace Mr.Robot
 				string statementStr = COMN_PROC.LineStringCat(parse_info.CodeList, oldPos, foundPos);
 				retNode.Scope = new CODE_SCOPE(oldPos, foundPos);
 				retNode.Type = E_STATEMENT_TYPE.Simple;
-
+				retNode.SNodeExprsn = statementStr;
 				startPos = searchPos;
 				return retNode;
 			}
@@ -193,7 +190,7 @@ namespace Mr.Robot
 			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
-				retNode.Expression = expression;
+				retNode.SNodeExprsn = expression;
 				// 取得分支范围
 				CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
 				if (null != scope)
@@ -231,7 +228,7 @@ namespace Mr.Robot
                     if (string.Empty != expression
 						&& ";" == nextIdtf.Text)
                     {
-                        retNode.Expression = expression;
+                        retNode.SNodeExprsn = expression;
                         // 递归解析语句块
 						GetFunctionStatmentsNodeTree(parse_info, ref retNode);
                         startPos = searchPos;
@@ -254,14 +251,14 @@ namespace Mr.Robot
 			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
-				retNode.Expression = expression;
+				retNode.SNodeExprsn = expression;
 				// 取得if分支范围
 				CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
 				if (null != scope)
 				{
 					STATEMENT_NODE ifBranch = new STATEMENT_NODE();
 					ifBranch.ParentNode = retNode;
-					ifBranch.Expression = expression;
+					ifBranch.SNodeExprsn = expression;
 					ifBranch.Type = E_STATEMENT_TYPE.Branch_If;
 					ifBranch.Scope = scope;
 					// 递归解析分支语句块
@@ -307,7 +304,7 @@ namespace Mr.Robot
 			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
-				retNode.Expression = expression;
+				retNode.SNodeExprsn = expression;
 				// 取得switch分支范围
 				CODE_POSITION oldPos = COMN_PROC.PositionMoveNext(parse_info.CodeList, searchPos);	// 移到左{的位置
 				CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
@@ -359,7 +356,7 @@ namespace Mr.Robot
 					string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
 					if (string.Empty != expression)
 					{
-						retNode.Expression = expression;
+						retNode.SNodeExprsn = expression;
 						// 确定分支范围
 						CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
 						if (null != scope)
@@ -392,7 +389,6 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得下一个case/default分支节点
 		/// </summary>
-		/// <returns></returns>
 		static STATEMENT_NODE GetNextCaseBranchNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
@@ -408,7 +404,7 @@ namespace Mr.Robot
             if (null != foundPos)
             {
 				string caseStr = COMN_PROC.LineStringCat(parse_info.CodeList, oldPos, foundPos);
-                retNode.Expression = caseStr;
+                retNode.SNodeExprsn = caseStr;
 				retNode.Type = GetNodeType(nextIdtf.Text);
                 if (E_STATEMENT_TYPE.Invalid == retNode.Type)
                 {
@@ -549,6 +545,47 @@ namespace Mr.Robot
 					break;
 			}
 			return retType;
+		}
+
+		/// <summary>
+		/// 设置语句树各节点的标号
+		/// </summary>
+		static void SetStatementNodeTreeStepMark(STATEMENT_NODE root_node)
+		{
+			string parentMarkStr = root_node.StepMarkStr;
+			if (!string.IsNullOrEmpty(parentMarkStr))
+			{
+				parentMarkStr += ",";
+			}
+			for (int i = 0; i < root_node.ChildNodeList.Count; i++)
+			{
+				string childMarkStr = string.Empty;
+				switch (root_node.ChildNodeList[i].Type)
+				{
+					case E_STATEMENT_TYPE.Root:
+					case E_STATEMENT_TYPE.Simple:
+					case E_STATEMENT_TYPE.Compound_IfElse:
+					case E_STATEMENT_TYPE.Compound_SwitchCase:
+					case E_STATEMENT_TYPE.Compound_While:
+					case E_STATEMENT_TYPE.Compound_For:
+					case E_STATEMENT_TYPE.Compound_DoWhile:
+					case E_STATEMENT_TYPE.Compound_GoTo:
+					case E_STATEMENT_TYPE.Compound_Block:
+						childMarkStr = (i + 1).ToString();
+						break;
+					case E_STATEMENT_TYPE.Branch_If:
+					case E_STATEMENT_TYPE.Branch_ElseIf:
+					case E_STATEMENT_TYPE.Branch_Else:
+					case E_STATEMENT_TYPE.Branch_Case:
+					case E_STATEMENT_TYPE.Branch_Default:
+						childMarkStr = "-" + (i + 1).ToString();
+						break;
+					default:
+						break;
+				}
+				root_node.ChildNodeList[i].StepMarkStr = parentMarkStr + childMarkStr;
+				SetStatementNodeTreeStepMark(root_node.ChildNodeList[i]);
+			}
 		}
 	}
 }

@@ -170,7 +170,7 @@ namespace Mr.Robot.CDeducer
 			{
 				return false;
 			}
-			return false;
+			return true;
 		}
 	}
 

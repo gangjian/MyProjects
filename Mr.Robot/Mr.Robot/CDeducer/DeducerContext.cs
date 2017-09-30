@@ -33,6 +33,6 @@ namespace Mr.Robot.CDeducer
 
 	public class STEP_MARK
 	{
-		string StepMarkStr = string.Empty;												// 例: 7-2,3-1,4		(第一层第7个step的第2号分支, 第二层第三个step的1号分支, 第三层第4个step)
+		string StepMarkStr = string.Empty;
 	}
 }

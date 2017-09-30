@@ -18,7 +18,9 @@ namespace Mr.Robot
 		public E_STATEMENT_TYPE Type = E_STATEMENT_TYPE.Invalid;
 
         // 5.条件表达式(可以为空,表示恒成立)
-        public string Expression = string.Empty;
+        public string SNodeExprsn = string.Empty;
+
+		public string StepMarkStr = string.Empty;
     }
 
     // 语句节点类型枚举
