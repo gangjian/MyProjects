@@ -13,9 +13,15 @@ namespace Mr.Robot.CDeducer
 	public class VAR_CTX2
 	{
 		public string VarName = string.Empty;											// 变量名
-		public VAR_TYPE2 VarType = new VAR_TYPE2();										// 变量类型
+		public VAR_TYPE2 VarType = null;												// 变量类型
 		public List<VAR_CTX2> MemberList = new List<VAR_CTX2>();						// 成员列表(非基本型时)
 		public List<VAR_VALUE> ValueEvolveList = new List<VAR_VALUE>();					// 变量值的Step演化列表(基本型时)
+
+		public VAR_CTX2(VAR_TYPE2 var_type, string var_name)
+		{
+			this.VarName = var_name;
+			this.VarType = var_type;
+		}
 	}
 
 	public class VAR_TYPE2
@@ -23,16 +29,24 @@ namespace Mr.Robot.CDeducer
 		public string TypeName = string.Empty;											// 类型名
 		public List<string> PrefixList = new List<string>();							// 前缀列表
 		public List<string> SuffixList = new List<string>();							// 后缀列表
+
+		public VAR_TYPE2(string type_name, List<string> prefix_list, List<string> suffix_list)
+		{
+			this.TypeName = type_name;
+			this.PrefixList = prefix_list;
+			this.SuffixList = suffix_list;
+		}
 	}
 
 	public class VAR_VALUE
 	{
 		public object Value = null;														// 变量值(基本型)
-		public STEP_MARK StepMark = new STEP_MARK();									// Step标号
-	}
+		public string StepMarkStr = string.Empty;										// Step标号
 
-	public class STEP_MARK
-	{
-		string StepMarkStr = string.Empty;
+		public VAR_VALUE(object val, string step_mark)
+		{
+			this.Value = val;
+			this.StepMarkStr = step_mark;
+		}
 	}
 }

@@ -64,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CDeducer\DCommon.cs" />
     <Compile Include="CDeducer\DeducerContext.cs" />
     <Compile Include="CProspector\BasicTypeProc.cs" />
     <Compile Include="CProspector\CProspector.cs" />

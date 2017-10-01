@@ -114,9 +114,18 @@ namespace Mr.Robot.CDeducer
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
 
 			/////////////////////// 以下是新方案 /////////////////////
-			if (IfNewDefVar(mgList, parse_info, deducer_ctx, s_node))
+			if (IfNewDefVar(mgList, parse_info))
 			{
-				
+				string stepMarkStr = string.Empty;
+				if (null != s_node)
+				{
+					stepMarkStr = s_node.StepMarkStr;
+				}
+				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr);
+				if (null != deducer_ctx)
+				{
+					deducer_ctx.VarCtxList.Add(varCtx2);
+				}
 			}
 			else
 			{
@@ -163,7 +172,7 @@ namespace Mr.Robot.CDeducer
             return null;
         }
 
-		static bool IfNewDefVar(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx, STATEMENT_NODE s_node)
+		static bool IfNewDefVar(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info)
 		{
 			if (mgList.Count < 2
 				|| MeaningGroupType.VariableType != mgList[0].Type)

@@ -94,7 +94,7 @@ namespace Mr.Robot
 			this.SourceName = fileName;
 		}
 
-		public USER_DEFINE_TYPE_INFO FindUsrDefTypeInfo(string type_name, string category_name)
+		public USER_DEFINE_TYPE_INFO FindUsrDefTypeInfo(string type_name, string category_name = null)
 		{
 			foreach (USER_DEFINE_TYPE_INFO udti in this.UsrDefTypeList)
 			{
@@ -102,7 +102,7 @@ namespace Mr.Robot
 				{
 					if (nameIdtf.Text.Equals(type_name))
 					{
-						if (string.Empty != category_name)
+						if (null != category_name)
 						{
 							if (udti.Category.Equals(category_name))
 							{
@@ -136,7 +136,7 @@ namespace Mr.Robot
 		/// </summary>
 		public string GetOriginalTypeName(string type_name)
 		{
-			TYPE_DEFINE_INFO tdi = null;													// 如果经过typedef重命名的话, 找出原来的类型名
+			TYPE_DEFINE_INFO tdi = null;												// 如果经过typedef重命名的话, 找出原来的类型名
 			while (null != (tdi = this.FindTypeDefInfo(type_name)))
 			{
 				type_name = tdi.OldName;

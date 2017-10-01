@@ -136,11 +136,11 @@ namespace Mr.Robot
 					startPos = searchPos;
 					break;
 				case E_STATEMENT_TYPE.Compound_While:									// while
-				case E_STATEMENT_TYPE.Compound_For:									// for
+				case E_STATEMENT_TYPE.Compound_For:										// for
 					retNode = GetForOrWhileStatementNode(type, parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case E_STATEMENT_TYPE.Compound_DoWhile:								// do while
+				case E_STATEMENT_TYPE.Compound_DoWhile:									// do while
 					retNode = GetDoWhileStatementNode(parse_info, ref searchPos);
 					startPos = searchPos;
 					break;

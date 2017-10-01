@@ -131,5 +131,165 @@ namespace Mr.Robot
 					return null;
 			}
 		}
+
+		public static object GetBasicTypeInitVal(string type_name, string init_str)
+		{
+			string signedStr = "signed";
+			if (type_name.StartsWith(signedStr))
+			{
+				type_name = type_name.Remove(0, signedStr.Length).Trim();
+			}
+			if (string.IsNullOrEmpty(init_str))
+			{
+				init_str = "0";
+			}
+			switch (type_name)
+			{
+				case "char":
+					return GetCharVal(init_str);
+				case "unsigned char":
+					return GetByteVal(init_str);
+				case "int":
+					return GetInt32Val(init_str);
+				case "unsigned int":
+					return GetUInt32Val(init_str);
+				case "short":
+					return GetInt16Val(init_str);
+				case "unsigned short":
+					return GetUInt16Val(init_str);
+				case "long":
+					return GetInt64Val(init_str);
+				case "unsigned long":
+					return GetUInt64Val(init_str);
+				case "float":
+					return GetFloatVal(init_str);
+				case "double":
+					return GetDoubleVal(init_str);
+				default:
+					return null;
+			}
+		}
+
+		// TODO: 以后要用泛型方法替换下列实现
+		static object GetCharVal(string init_str)
+		{
+			char val;
+			if (char.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetByteVal(string init_str)
+		{
+			byte val;
+			if (byte.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetInt32Val(string init_str)
+		{
+			Int32 val;
+			if (Int32.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetUInt32Val(string init_str)
+		{
+			UInt32 val;
+			if (UInt32.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetInt16Val(string init_str)
+		{
+			Int16 val;
+			if (Int16.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetUInt16Val(string init_str)
+		{
+			UInt16 val;
+			if (UInt16.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetInt64Val(string init_str)
+		{
+			Int64 val;
+			if (Int64.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetUInt64Val(string init_str)
+		{
+			UInt64 val;
+			if (UInt64.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetFloatVal(string init_str)
+		{
+			float val;
+			if (float.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		static object GetDoubleVal(string init_str)
+		{
+			double val;
+			if (double.TryParse(init_str, out val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
 	}
 }
