@@ -24,6 +24,111 @@ namespace Mr.Robot.CDeducer
             return fCtx;
 		}
 
+		bool DeducerRun(List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
+		{
+			string prevStep = string.Empty;
+			while (true)
+			{
+				STATEMENT_NODE nextStep = GetNextStep(prevStep, fork_list, root_node, d_ctx);
+				if (null == nextStep)
+				{
+					break;
+				}
+				else
+				{
+					// 处理语句
+				}
+			}
+			return false;
+		}
+
+		STATEMENT_NODE GetNextStep(string previous_step, List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
+		{
+			if (string.IsNullOrEmpty(previous_step))
+			{
+				// 本趟头回跑
+				if (null == fork_list)
+				{
+					// 整个函数都是头回跑, 返回函数第一条语句
+					previous_step = root_node.ChildNodeList.First().StepMarkStr;
+					return root_node.ChildNodeList.First();
+				}
+				else
+				{
+					if (0 != fork_list.Count)
+					{
+						// 定位到最后一个岔路点
+						string lastFork = fork_list.Last();
+						fork_list.RemoveAt(fork_list.Count - 1);
+						// 还原岔路点处的上下文
+						RestoreDeducerContext(d_ctx, lastFork);
+						// 返回岔路点的下一条分支,并更新岔路点列表
+					}
+					else
+					{
+						return null;
+					}
+				}
+			}
+			else
+			{
+				// 定位到本趟上回跑到的位置,返回上回跑到位置的下一步
+				STATEMENT_NODE prevStep = GetTargetNodeByStepMark(root_node, previous_step);
+				return GetNextBrotherNode(prevStep);
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// 根据语句标号找到指定的语句节点
+		/// </summary>
+		STATEMENT_NODE GetTargetNodeByStepMark(STATEMENT_NODE root_node, string step_mark)
+		{
+			foreach (var item in root_node.ChildNodeList)
+			{
+				if (item.StepMarkStr.Equals(step_mark))
+				{
+					return item;
+				}
+				if (step_mark.StartsWith(item.StepMarkStr))
+				{
+					return GetTargetNodeByStepMark(item, step_mark);
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// 找到指定节点的下一个兄弟节点
+		/// </summary>
+		STATEMENT_NODE GetNextBrotherNode(STATEMENT_NODE target_node)
+		{
+			string curStepMark = target_node.StepMarkStr;
+			STATEMENT_NODE parentNode = target_node.ParentNode;
+			for (int i = 0; i < parentNode.ChildNodeList.Count; i++)
+			{
+				if (parentNode.ChildNodeList[i].StepMarkStr.Equals(curStepMark)
+					&& i < parentNode.ChildNodeList.Count - 1)
+				{
+					return parentNode.ChildNodeList[i + 1];
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// 还原Deducer上下文到指定节点位置
+		/// </summary>
+		void RestoreDeducerContext(DEDUCER_CONTEXT d_ctx, string step_mark)
+		{
+			// TODO
+		}
+
+		STATEMENT_NODE GetLastForkNext()
+		{
+			return null;
+		}
+
 		public static void StatementProc(	STATEMENT_NODE s_node,
 											FILE_PARSE_INFO parse_info,
                                             FUNC_CONTEXT func_ctx,
