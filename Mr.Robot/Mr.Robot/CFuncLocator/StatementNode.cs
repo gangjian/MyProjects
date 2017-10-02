@@ -20,7 +20,11 @@ namespace Mr.Robot
         // 5.条件表达式(可以为空,表示恒成立)
         public string SNodeExprsn = string.Empty;
 
+		// 6.语句标号
 		public string StepMarkStr = string.Empty;
+
+		// 7.语句状态(for, if-else等条件判定状态等, 待定)
+		public string StatusStr = string.Empty;
     }
 
     // 语句节点类型枚举

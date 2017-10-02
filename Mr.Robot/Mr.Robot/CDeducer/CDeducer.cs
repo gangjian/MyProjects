@@ -24,7 +24,7 @@ namespace Mr.Robot.CDeducer
             return fCtx;
 		}
 
-		bool DeducerRun(List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
+		static bool DeducerRun(List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
 		{
 			string prevStep = string.Empty;
 			while (true)
@@ -32,6 +32,7 @@ namespace Mr.Robot.CDeducer
 				STATEMENT_NODE nextStep = GetNextStep(prevStep, fork_list, root_node, d_ctx);
 				if (null == nextStep)
 				{
+					// 如果本趟有过处理,就结束本趟; 如果本趟一条语句也没有处理,就是所有路径都跑完了
 					break;
 				}
 				else
@@ -42,15 +43,15 @@ namespace Mr.Robot.CDeducer
 			return false;
 		}
 
-		STATEMENT_NODE GetNextStep(string previous_step, List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
+		static STATEMENT_NODE GetNextStep(string prev_step_mark, List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
 		{
-			if (string.IsNullOrEmpty(previous_step))
+			if (string.IsNullOrEmpty(prev_step_mark))
 			{
 				// 本趟头回跑
 				if (null == fork_list)
 				{
 					// 整个函数都是头回跑, 返回函数第一条语句
-					previous_step = root_node.ChildNodeList.First().StepMarkStr;
+					fork_list = new List<string>();
 					return root_node.ChildNodeList.First();
 				}
 				else
@@ -66,15 +67,52 @@ namespace Mr.Robot.CDeducer
 					}
 					else
 					{
+						// 说明所有能跑的支路都跑遍了,再没有可跑的了
 						return null;
 					}
 				}
 			}
 			else
 			{
-				// 定位到本趟上回跑到的位置,返回上回跑到位置的下一步
-				STATEMENT_NODE prevStep = GetTargetNodeByStepMark(root_node, previous_step);
-				return GetNextBrotherNode(prevStep);
+				// 定位到本趟上回跑到的语句位置,根据上一条语句的状态决定下一步的位置
+				STATEMENT_NODE prevStep = GetTargetNodeByStepMark(root_node, prev_step_mark);
+				if (prevStep.Type == E_STATEMENT_TYPE.Simple)
+				{
+					STATEMENT_NODE nextBrother = GetNextBrotherNode(prevStep);
+					if (null != nextBrother)
+					{
+						return nextBrother;
+					}
+					else
+					{
+						// 如果后面没有兄弟节点要退回上一层
+						prevStep.ParentNode.StatusStr = "BranchOut";
+						return prevStep.ParentNode;
+					}
+				}
+				else if (prevStep.Type == E_STATEMENT_TYPE.Compound_For)
+				{
+					// 如果前一步是for语句,根据条件判定结果决定进入for循环or越过for循环
+					if (prevStep.StatusStr.Equals("Enter"))
+					{
+						return prevStep.ChildNodeList.First();
+						// 如果for语句循环体内没有子语句怎么办?
+					}
+					else
+					{
+						STATEMENT_NODE nextBrother = GetNextBrotherNode(prevStep);
+						if (null != nextBrother)
+						{
+							return nextBrother;
+						}
+						else
+						{
+							// 如果后面没有兄弟节点要退回上一层
+							prevStep.ParentNode.StatusStr = "BranchOut";
+							return prevStep.ParentNode;
+						}
+					}
+				}
 			}
 			return null;
 		}
@@ -82,7 +120,7 @@ namespace Mr.Robot.CDeducer
 		/// <summary>
 		/// 根据语句标号找到指定的语句节点
 		/// </summary>
-		STATEMENT_NODE GetTargetNodeByStepMark(STATEMENT_NODE root_node, string step_mark)
+		static STATEMENT_NODE GetTargetNodeByStepMark(STATEMENT_NODE root_node, string step_mark)
 		{
 			foreach (var item in root_node.ChildNodeList)
 			{
@@ -101,7 +139,7 @@ namespace Mr.Robot.CDeducer
 		/// <summary>
 		/// 找到指定节点的下一个兄弟节点
 		/// </summary>
-		STATEMENT_NODE GetNextBrotherNode(STATEMENT_NODE target_node)
+		static STATEMENT_NODE GetNextBrotherNode(STATEMENT_NODE target_node)
 		{
 			string curStepMark = target_node.StepMarkStr;
 			STATEMENT_NODE parentNode = target_node.ParentNode;
@@ -119,20 +157,17 @@ namespace Mr.Robot.CDeducer
 		/// <summary>
 		/// 还原Deducer上下文到指定节点位置
 		/// </summary>
-		void RestoreDeducerContext(DEDUCER_CONTEXT d_ctx, string step_mark)
+		static void RestoreDeducerContext(DEDUCER_CONTEXT d_ctx, string step_mark)
 		{
 			// TODO
 		}
 
-		STATEMENT_NODE GetLastForkNext()
+		static STATEMENT_NODE GetLastForkNext()
 		{
 			return null;
 		}
 
-		public static void StatementProc(	STATEMENT_NODE s_node,
-											FILE_PARSE_INFO parse_info,
-                                            FUNC_CONTEXT func_ctx,
-											DEDUCER_CONTEXT deducer_ctx)
+		public static void StatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx)
 		{
 			switch (s_node.Type)
 			{
@@ -154,11 +189,7 @@ namespace Mr.Robot.CDeducer
 		/// <summary>
 		/// 简单语句分析(函数内)
 		/// </summary>
-		public static void SimpleStatementProc(	string statement_str,
-												FILE_PARSE_INFO parse_info,
-												FUNC_CONTEXT func_ctx,
-												DEDUCER_CONTEXT deducer_ctx,
-												STATEMENT_NODE s_node)
+		public static void SimpleStatementProc(string statement_str, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx, STATEMENT_NODE s_node)
 		{
 			// 按顺序提取出语句各组成部分: 运算数(Operand)和运算符(Operator)
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statement_str, parse_info);
@@ -172,11 +203,7 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-        public static void ExpressionProc(	List<STATEMENT_COMPONENT> component_list,
-											FILE_PARSE_INFO parse_info,
-											FUNC_CONTEXT func_ctx,
-											DEDUCER_CONTEXT deducer_ctx,
-											STATEMENT_NODE s_node)
+        public static void ExpressionProc(List<STATEMENT_COMPONENT> component_list, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx, STATEMENT_NODE s_node)
         {
             // 提取含义分组
 			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(component_list, parse_info, func_ctx);
@@ -187,11 +214,7 @@ namespace Mr.Robot.CDeducer
 			//(a) = b = c + 3;
 		}
 
-        static void MeaningGroupsAnalysis(	List<MEANING_GROUP> mgList,
-											FILE_PARSE_INFO parse_info,
-											FUNC_CONTEXT func_ctx,
-											DEDUCER_CONTEXT deducer_ctx,
-											STATEMENT_NODE s_node)
+        static void MeaningGroupsAnalysis(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx, STATEMENT_NODE s_node)
         {
             // 先检查是否是新定义的局部变量
 			VAR_CTX varCtx = null;
@@ -234,7 +257,6 @@ namespace Mr.Robot.CDeducer
 			}
 			else
 			{
-
 			}
         }
 
@@ -302,14 +324,12 @@ namespace Mr.Robot.CDeducer
 	public class STATEMENT_COMPONENT
 	{
 		private StatementComponentType type = StatementComponentType.Invalid;
-
 		public StatementComponentType Type
 		{
 			get { return type; }
 			set { type = value; }
 		}
 		private string text = "";
-
 		public string Text
 		{
 			get { return text; }
@@ -355,11 +375,8 @@ namespace Mr.Robot.CDeducer
 	public class MEANING_GROUP
 	{
 		public MeaningGroupType Type = MeaningGroupType.Unknown;
-
 		public string Text = string.Empty;
-
 		public List<STATEMENT_COMPONENT> ComponentList = new List<STATEMENT_COMPONENT>();
-
 		public int PrefixCount = 0;														// 如果分组是类型的话, 还包括前后缀的个数
 		public int SuffixCount = 0;
 	}
