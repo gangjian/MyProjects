@@ -64,6 +64,14 @@ namespace Mr.Robot.CDeducer
 						// 还原岔路点处的上下文
 						RestoreDeducerContext(d_ctx, lastFork);
 						// 返回岔路点的下一条分支,并更新岔路点列表
+						STATEMENT_NODE lastForkNode = GetTargetNodeByStepMark(root_node, lastFork);
+						STATEMENT_NODE nextBrother = GetNextBrotherNode(lastForkNode);
+						STATEMENT_NODE nextNextBrother = GetNextBrotherNode(nextBrother);
+						if (null != nextNextBrother)
+						{
+							fork_list.Add(nextBrother.StepMarkStr);
+						}
+						return nextBrother;
 					}
 					else
 					{
@@ -160,11 +168,6 @@ namespace Mr.Robot.CDeducer
 		static void RestoreDeducerContext(DEDUCER_CONTEXT d_ctx, string step_mark)
 		{
 			// TODO
-		}
-
-		static STATEMENT_NODE GetLastForkNext()
-		{
-			return null;
 		}
 
 		public static void StatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx)
