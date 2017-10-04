@@ -25,6 +25,9 @@ namespace Mr.Robot
 
 		// 7.语句状态(for, if-else等条件判定状态等, 待定)
 		public string StatusStr = string.Empty;
+
+		// 8.该语句是否完成遍历
+		public bool IsPassed = false;
     }
 
     // 语句节点类型枚举

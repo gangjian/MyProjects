@@ -7,7 +7,7 @@ using Mr.Robot;
 
 namespace Mr.Robot.CDeducer
 {
-	public static partial class C_DEDUCER
+	public partial class C_DEDUCER
 	{
 		/// <summary>
 		/// 语句分析
@@ -24,101 +24,118 @@ namespace Mr.Robot.CDeducer
             return fCtx;
 		}
 
-		static bool DeducerRun(List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
+		DEDUCER_CONTEXT m_DeducerContext = new DEDUCER_CONTEXT();
+		STATEMENT_NODE m_LastStepNode = null;
+
+		public void DeducerStart2(STATEMENT_NODE func_root, FILE_PARSE_INFO parse_info)
 		{
-			string prevStep = string.Empty;
+			while (DeducerRun(func_root, parse_info))
+			{
+				// 每次遍历一条路径, 所有能走的路径都走完了, 结束遍历
+			}
+		}
+
+		bool DeducerRun(STATEMENT_NODE root_node, FILE_PARSE_INFO parse_info)
+		{
+			bool procFlag = false;
 			while (true)
 			{
-				STATEMENT_NODE nextStep = GetNextStep(prevStep, fork_list, root_node, d_ctx);
+				STATEMENT_NODE nextStep = GetNextStep(root_node);
 				if (null == nextStep)
 				{
-					// 如果本趟有过处理,就结束本趟; 如果本趟一条语句也没有处理,就是所有路径都跑完了
 					break;
 				}
 				else
 				{
 					// 处理语句
+					StatementProc(nextStep, parse_info, null, this.m_DeducerContext);
+					procFlag = true;
 				}
 			}
-			return false;
+			return procFlag;
 		}
 
-		static STATEMENT_NODE GetNextStep(string prev_step_mark, List<string> fork_list, STATEMENT_NODE root_node, DEDUCER_CONTEXT d_ctx)
+		const string FOR_ENTER = "ForEnter";
+		const string FOR_NOT_ENTER = "ForNotEnter";
+		const string FOR_OUT = "ForOut";
+		STATEMENT_NODE GetNextStep(STATEMENT_NODE root_node)
 		{
-			if (string.IsNullOrEmpty(prev_step_mark))
+			if (null == this.m_LastStepNode)
 			{
-				// 本趟头回跑
-				if (null == fork_list)
-				{
-					// 整个函数都是头回跑, 返回函数第一条语句
-					fork_list = new List<string>();
-					return root_node.ChildNodeList.First();
-				}
-				else
-				{
-					if (0 != fork_list.Count)
-					{
-						// 定位到最后一个岔路点
-						string lastFork = fork_list.Last();
-						fork_list.RemoveAt(fork_list.Count - 1);
-						// 还原岔路点处的上下文
-						RestoreDeducerContext(d_ctx, lastFork);
-						// 返回岔路点的下一条分支,并更新岔路点列表
-						STATEMENT_NODE lastForkNode = GetTargetNodeByStepMark(root_node, lastFork);
-						STATEMENT_NODE nextBrother = GetNextBrotherNode(lastForkNode);
-						STATEMENT_NODE nextNextBrother = GetNextBrotherNode(nextBrother);
-						if (null != nextNextBrother)
-						{
-							fork_list.Add(nextBrother.StepMarkStr);
-						}
-						return nextBrother;
-					}
-					else
-					{
-						// 说明所有能跑的支路都跑遍了,再没有可跑的了
-						return null;
-					}
-				}
+				return FindFirstUnreachedNode(root_node);
 			}
 			else
 			{
-				// 定位到本趟上回跑到的语句位置,根据上一条语句的状态决定下一步的位置
-				STATEMENT_NODE prevStep = GetTargetNodeByStepMark(root_node, prev_step_mark);
-				if (prevStep.Type == E_STATEMENT_TYPE.Simple)
+				switch (this.m_LastStepNode.Type)
 				{
-					STATEMENT_NODE nextBrother = GetNextBrotherNode(prevStep);
-					if (null != nextBrother)
-					{
-						return nextBrother;
-					}
-					else
-					{
-						// 如果后面没有兄弟节点要退回上一层
-						prevStep.ParentNode.StatusStr = "BranchOut";
-						return prevStep.ParentNode;
-					}
-				}
-				else if (prevStep.Type == E_STATEMENT_TYPE.Compound_For)
-				{
-					// 如果前一步是for语句,根据条件判定结果决定进入for循环or越过for循环
-					if (prevStep.StatusStr.Equals("Enter"))
-					{
-						return prevStep.ChildNodeList.First();
-						// 如果for语句循环体内没有子语句怎么办?
-					}
-					else
-					{
-						STATEMENT_NODE nextBrother = GetNextBrotherNode(prevStep);
-						if (null != nextBrother)
+					case E_STATEMENT_TYPE.Simple:
+						return GetNextBrotherOrParent(this.m_LastStepNode);
+					case E_STATEMENT_TYPE.Compound_IfElse:
+						// 根据if-else复合语句的状态,判定进入分支还是跳过,注意子语句为空的情况也算进入
+						if (FOR_ENTER == this.m_LastStepNode.StatusStr)
 						{
-							return nextBrother;
+							if (null != this.m_LastStepNode.ChildNodeList.First())
+							{
+								return this.m_LastStepNode.ChildNodeList.First();
+							}
+							else
+							{
+								this.m_LastStepNode.StatusStr = FOR_OUT;
+								return this.m_LastStepNode;
+							}
+						}
+						else if (FOR_NOT_ENTER == this.m_LastStepNode.StatusStr)
+						{
+							return GetNextBrotherOrParent(this.m_LastStepNode);
 						}
 						else
 						{
-							// 如果后面没有兄弟节点要退回上一层
-							prevStep.ParentNode.StatusStr = "BranchOut";
-							return prevStep.ParentNode;
+							System.Diagnostics.Trace.Assert(false);
 						}
+						break;
+					case E_STATEMENT_TYPE.Compound_SwitchCase:
+						break;
+					case E_STATEMENT_TYPE.Compound_While:
+						break;
+					case E_STATEMENT_TYPE.Compound_For:
+						break;
+					case E_STATEMENT_TYPE.Compound_DoWhile:
+						break;
+					case E_STATEMENT_TYPE.Compound_GoTo:
+						break;
+					case E_STATEMENT_TYPE.Compound_Block:
+						break;
+					case E_STATEMENT_TYPE.Branch_If:
+						break;
+					case E_STATEMENT_TYPE.Branch_ElseIf:
+						break;
+					case E_STATEMENT_TYPE.Branch_Else:
+						break;
+					case E_STATEMENT_TYPE.Branch_Case:
+						break;
+					case E_STATEMENT_TYPE.Branch_Default:
+						break;
+					default:
+						break;
+				}
+			}
+			return null;
+		}
+
+		STATEMENT_NODE FindFirstUnreachedNode(STATEMENT_NODE root_node)
+		{
+			foreach (var child in root_node.ChildNodeList)
+			{
+				if (!child.IsPassed)
+				{
+					STATEMENT_NODE subNode = FindFirstUnreachedNode(child);
+					if (null != subNode)
+					{
+						return subNode;
+					}
+					else
+					{
+						return child;
 					}
 				}
 			}
@@ -160,6 +177,19 @@ namespace Mr.Robot.CDeducer
 				}
 			}
 			return null;
+		}
+
+		static STATEMENT_NODE GetNextBrotherOrParent(STATEMENT_NODE target_node)
+		{
+			STATEMENT_NODE retNode = GetNextBrotherNode(target_node);
+			if (null != retNode)
+			{
+				return retNode;
+			}
+			else
+			{
+				return target_node.ParentNode;
+			}
 		}
 
 		/// <summary>
