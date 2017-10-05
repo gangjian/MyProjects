@@ -70,5 +70,17 @@ namespace UnitTestProject
 
 			return parseInfoList;
 		}
+
+		public static FILE_PARSE_INFO FindSrcParseInfoFromList(string src_name, List<FILE_PARSE_INFO> parse_info_list)
+		{
+			foreach (var item in parse_info_list)
+			{
+				if (item.SourceName.Equals(src_name))
+				{
+					return item;
+				}
+			}
+			return null;
+		}
 	}
 }

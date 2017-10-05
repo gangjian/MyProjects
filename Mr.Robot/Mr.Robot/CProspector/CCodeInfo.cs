@@ -151,18 +151,18 @@ namespace Mr.Robot
 		public FUNCTION_PARSE_INFO FindFuncParseInfo(string fun_name)
 		{
 			FUNCTION_PARSE_INFO retFuncInfo = null;
-			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, this.FuncDeclareList)))
+			if (null != (retFuncInfo = SearchFunctionInfoList(fun_name, this.FunDefineList)))
 			{
 				return retFuncInfo;
 			}
-			if (null != (retFuncInfo = SearchFuncStructInfoList(fun_name, this.FunDefineList)))
+			if (null != (retFuncInfo = SearchFunctionInfoList(fun_name, this.FuncDeclareList)))
 			{
 				return retFuncInfo;
 			}
 			return null;																// 没找到
 		}
 
-		static FUNCTION_PARSE_INFO SearchFuncStructInfoList(string fun_name, List<FUNCTION_PARSE_INFO> funInfoList)
+		public static FUNCTION_PARSE_INFO SearchFunctionInfoList(string fun_name, List<FUNCTION_PARSE_INFO> funInfoList)
 		{
 			foreach (FUNCTION_PARSE_INFO fsi in funInfoList)
 			{

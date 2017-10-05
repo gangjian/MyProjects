@@ -9,6 +9,15 @@ namespace Mr.Robot.CDeducer
 {
 	public partial class C_DEDUCER
 	{
+		FILE_PARSE_INFO m_SourceParseInfo = null;
+		string m_FunctionName = string.Empty;
+
+		public C_DEDUCER(FILE_PARSE_INFO src_parse_info, string func_name)
+		{
+			this.m_SourceParseInfo = src_parse_info;
+			this.m_FunctionName = func_name;
+		}
+
 		/// <summary>
 		/// 语句分析
 		/// </summary>
@@ -27,17 +36,37 @@ namespace Mr.Robot.CDeducer
 		DEDUCER_CONTEXT m_DeducerContext = new DEDUCER_CONTEXT();
 		STATEMENT_NODE m_LastStepNode = null;
 
-		public void DeducerStart2(STATEMENT_NODE func_root, FILE_PARSE_INFO parse_info)
+		public void DeducerStart2()
 		{
-			while (DeducerRun(func_root, parse_info))
+			// 函数根节点
+			STATEMENT_NODE func_root = C_FUNC_LOCATOR.FuncLocatorStart2(this.m_SourceParseInfo, this.m_FunctionName);
+			// 处理参数列表
+			FuncParaListProc();
+
+			while (DeducerRun(func_root, this.m_SourceParseInfo))
 			{
 				// 每次遍历一条路径, 所有能走的路径都走完了, 结束遍历
+			}
+		}
+
+		void FuncParaListProc()
+		{
+			FUNCTION_PARSE_INFO funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(this.m_FunctionName, this.m_SourceParseInfo.FunDefineList);
+			if (null == funcInfo
+				|| 0 == funcInfo.ParaList.Count)
+			{
+				return;
+			}
+			foreach (var item in funcInfo.ParaList)
+			{
+				
 			}
 		}
 
 		bool DeducerRun(STATEMENT_NODE root_node, FILE_PARSE_INFO parse_info)
 		{
 			bool procFlag = false;
+			this.m_LastStepNode = null;
 			while (true)
 			{
 				STATEMENT_NODE nextStep = GetNextStep(root_node);
@@ -49,6 +78,8 @@ namespace Mr.Robot.CDeducer
 				{
 					// 处理语句
 					StatementProc(nextStep, parse_info, null, this.m_DeducerContext);
+					nextStep.IsPassed = true;
+					this.m_LastStepNode = nextStep;
 					procFlag = true;
 				}
 			}

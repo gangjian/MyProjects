@@ -11,47 +11,48 @@ namespace Mr.Robot
         /// <summary>
         /// 函数解析
         /// </summary>
-		public static STATEMENT_NODE FuncLocatorStart(string fullPath, string funcName, List<FILE_PARSE_INFO> parsedInfoList, out FILE_PARSE_INFO source_parse_info)
+		public static STATEMENT_NODE FuncLocatorStart(string src_name, string func_name, List<FILE_PARSE_INFO> parse_info_list, out FILE_PARSE_INFO source_parse_info)
         {
             // 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
 			source_parse_info = null;
-			FUNCTION_PARSE_INFO funInfo = GetFuncInfoFromParseResult(fullPath, funcName, parsedInfoList, out source_parse_info);
+			FUNCTION_PARSE_INFO funcInfo = null;
+			foreach (var pi in parse_info_list)
+			{
+				if (pi.SourceName.Equals(src_name))
+				{
+					source_parse_info = pi;
+					funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, pi.FunDefineList);
+					break;
+				}
+			}
+			if (null == source_parse_info || null == funcInfo)
+			{
+				return null;
+			}
 
             // 函数语句树结构的分析提取
             STATEMENT_NODE root = new STATEMENT_NODE();
             root.Type = E_STATEMENT_TYPE.Root;
-            root.Scope = funInfo.Scope;
+            root.Scope = funcInfo.Scope;
 			GetFunctionStatmentsNodeTree(source_parse_info, ref root);
 			SetStatementNodeTreeStepMark(root);											// 设置语句标号
 			return root;
         }
 
-        public static FUNCTION_PARSE_INFO GetFuncInfoFromParseResult(	string fileName,
-																		string funcName,
-																		List<FILE_PARSE_INFO> parseInfoList,
-																		out FILE_PARSE_INFO parseInfo)
-        {
-            FUNCTION_PARSE_INFO funInfo = null;
-            parseInfo = null;
-            // 根据文件名, 函数名取得函数情报的引用
-            foreach (FILE_PARSE_INFO pi in parseInfoList)
-            {
-                if (pi.SourceName.Equals(fileName))
-                {                                                                       // 找到指定的文件(根据文件名)
-                    foreach (FUNCTION_PARSE_INFO fi in pi.FunDefineList)
-                    {
-                        if (fi.Name.Equals(funcName))
-                        {                                                               // 找到指定的函数(根据函数名)
-                            funInfo = fi;
-                            parseInfo = pi;
-                            break;
-                        }
-                    }
-                    break;
-                }
-            }
-            return funInfo;
-        }
+		public static STATEMENT_NODE FuncLocatorStart2(FILE_PARSE_INFO src_parse_info, string func_name)
+		{
+			FUNCTION_PARSE_INFO funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, src_parse_info.FunDefineList);
+			if (null == funcInfo)
+			{
+				return null;
+			}
+			STATEMENT_NODE root = new STATEMENT_NODE();
+			root.Type = E_STATEMENT_TYPE.Root;
+			root.Scope = funcInfo.Scope;
+			GetFunctionStatmentsNodeTree(src_parse_info, ref root);
+			SetStatementNodeTreeStepMark(root);											// 设置语句标号
+			return root;
+		}
 
 		/// <summary>
 		/// 解析一个代码块,提取语句树结构
