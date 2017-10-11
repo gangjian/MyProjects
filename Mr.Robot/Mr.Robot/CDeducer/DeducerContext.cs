@@ -14,13 +14,15 @@ namespace Mr.Robot.CDeducer
 	{
 		public string VarName = string.Empty;											// 变量名
 		public VAR_TYPE2 VarType = null;												// 变量类型
+		public VAR_CATEGORY VarCategory = VAR_CATEGORY.INVALID;							// 变量分类(函数参数, 全局变量, 局部变量)
 		public List<VAR_CTX2> MemberList = new List<VAR_CTX2>();						// 成员列表(非基本型时)
-		public List<VAR_VALUE> ValueEvolveList = new List<VAR_VALUE>();					// 变量值的Step演化列表(基本型时)
+		public List<VAR_RECORD> ValueEvolveList = new List<VAR_RECORD>();				// 变量值的Step演化列表
 
-		public VAR_CTX2(VAR_TYPE2 var_type, string var_name)
+		public VAR_CTX2(VAR_TYPE2 var_type, string var_name, VAR_CATEGORY category)
 		{
 			this.VarName = var_name;
 			this.VarType = var_type;
+			this.VarCategory = category;
 		}
 	}
 
@@ -38,15 +40,39 @@ namespace Mr.Robot.CDeducer
 		}
 	}
 
-	public class VAR_VALUE
+	public class VAR_RECORD
 	{
-		public object Value = null;														// 变量值(基本型)
-		public string StepMarkStr = string.Empty;										// Step标号
+		public VAR_BEHAVE VarBehave;
+		public object Value = null;														// 变量值(基本型的场合)
+		public string StepMarkStr;
 
-		public VAR_VALUE(object val, string step_mark)
+		public VAR_RECORD(VAR_BEHAVE var_behave, object val, string step_mark)
 		{
-			this.Value = val;
+			this.VarBehave = var_behave;
 			this.StepMarkStr = step_mark;
+			this.Value = val;
 		}
+	}
+
+	/// <summary>
+	/// 变量分类
+	/// </summary>
+	public enum VAR_CATEGORY
+	{
+		INVALID,
+		FUNC_PARA,
+		LOCAL,
+		GLOBAL,
+	}
+
+	/// <summary>
+	/// 变量行为
+	/// </summary>
+	public enum VAR_BEHAVE
+	{
+		DECLARE,					// 声明
+		EVALUATION,					// 赋值
+		READ_OUT,					// (读)出参
+		CONDITION_LIMIT,			// 条件(语句)限定
 	}
 }

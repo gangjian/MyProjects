@@ -7,13 +7,13 @@ namespace Mr.Robot.CDeducer
 {
 	class D_COMMON
 	{
-		public static VAR_CTX2 CreateVarCtx2(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, string step_mark)
+		public static VAR_CTX2 CreateVarCtx2(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, string step_mark, VAR_CATEGORY var_category, VAR_BEHAVE var_behave)
 		{
 			System.Diagnostics.Trace.Assert(mgList.Count > 1 && mgList[0].Type == MeaningGroupType.VariableType);
 			VAR_TYPE2 varType = GetVarTypeFromMeaningGroup(mgList[0], parse_info);
 			string typeName = varType.TypeName;
 			string varName = GetVarNameFromMeaningGroup(mgList[1], parse_info);
-			VAR_CTX2 retCtx = new VAR_CTX2(varType, varName);
+			VAR_CTX2 retCtx = new VAR_CTX2(varType, varName, var_category);
 			MEANING_GROUP initGroup = null;
 			if (mgList.Count > 3 && mgList[2].Type == MeaningGroupType.EqualMark)
 			{
@@ -27,7 +27,7 @@ namespace Mr.Robot.CDeducer
 					initStr = initGroup.Text;
 				}
 				object varVal = BasicTypeProc.GetBasicTypeInitVal(typeName, initStr);
-				retCtx.ValueEvolveList.Add(new VAR_VALUE(varVal, step_mark));
+				retCtx.ValueEvolveList.Add(new VAR_RECORD(var_behave, varVal, step_mark));
 			}
 			else
 			{

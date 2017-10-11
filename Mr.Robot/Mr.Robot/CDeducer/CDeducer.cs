@@ -313,7 +313,7 @@ namespace Mr.Robot.CDeducer
 				{
 					stepMarkStr = s_node.StepMarkStr;
 				}
-				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr);
+				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr, VAR_CATEGORY.LOCAL, VAR_BEHAVE.DECLARE);
 				if (null != deducer_ctx)
 				{
 					deducer_ctx.VarCtxList.Add(varCtx2);
