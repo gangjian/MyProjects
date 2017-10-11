@@ -41,7 +41,7 @@ namespace Mr.Robot.CDeducer
 			// 函数根节点
 			STATEMENT_NODE func_root = C_FUNC_LOCATOR.FuncLocatorStart2(this.m_SourceParseInfo, this.m_FunctionName);
 			// 处理参数列表
-			FuncParaListProc();
+			FuncParaListProc(this.m_FunctionName, this.m_SourceParseInfo, this.m_DeducerContext);
 
 			while (DeducerRun(func_root, this.m_SourceParseInfo))
 			{
@@ -49,9 +49,9 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		void FuncParaListProc()
+		void FuncParaListProc(string func_name, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			FUNCTION_PARSE_INFO funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(this.m_FunctionName, this.m_SourceParseInfo.FunDefineList);
+			FUNCTION_PARSE_INFO funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, parse_info.FunDefineList);
 			if (null == funcInfo
 				|| 0 == funcInfo.ParaList.Count)
 			{
@@ -59,7 +59,10 @@ namespace Mr.Robot.CDeducer
 			}
 			foreach (var item in funcInfo.ParaList)
 			{
-				
+				List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(item, parse_info);
+				List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, parse_info, null);
+				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(meaningGroupList, parse_info, string.Empty, VAR_CATEGORY.FUNC_PARA);
+				deducer_ctx.VarCtxList.Add(varCtx2);
 			}
 		}
 
@@ -86,9 +89,9 @@ namespace Mr.Robot.CDeducer
 			return procFlag;
 		}
 
-		const string FOR_ENTER = "ForEnter";
-		const string FOR_NOT_ENTER = "ForNotEnter";
-		const string FOR_OUT = "ForOut";
+		const string IF_ENTER = "IfEnter";
+		const string IF_NOT_ENTER = "IfNotEnter";
+		const string IF_OUT = "IfOut";
 		STATEMENT_NODE GetNextStep(STATEMENT_NODE root_node)
 		{
 			if (null == this.m_LastStepNode)
@@ -103,7 +106,7 @@ namespace Mr.Robot.CDeducer
 						return GetNextBrotherOrParent(this.m_LastStepNode);
 					case E_STATEMENT_TYPE.Compound_IfElse:
 						// 根据if-else复合语句的状态,判定进入分支还是跳过,注意子语句为空的情况也算进入
-						if (FOR_ENTER == this.m_LastStepNode.StatusStr)
+						if (IF_ENTER == this.m_LastStepNode.StatusStr)
 						{
 							if (null != this.m_LastStepNode.ChildNodeList.First())
 							{
@@ -111,11 +114,11 @@ namespace Mr.Robot.CDeducer
 							}
 							else
 							{
-								this.m_LastStepNode.StatusStr = FOR_OUT;
+								this.m_LastStepNode.StatusStr = IF_OUT;
 								return this.m_LastStepNode;
 							}
 						}
-						else if (FOR_NOT_ENTER == this.m_LastStepNode.StatusStr)
+						else if (IF_NOT_ENTER == this.m_LastStepNode.StatusStr)
 						{
 							return GetNextBrotherOrParent(this.m_LastStepNode);
 						}
@@ -241,6 +244,7 @@ namespace Mr.Robot.CDeducer
 					SimpleStatementProc(statementStr, parse_info, func_ctx, deducer_ctx, s_node);
 					break;
 				case E_STATEMENT_TYPE.Compound_IfElse:
+					CompoundIfElseStatementProc(s_node, parse_info, deducer_ctx);
 					break;
 				case E_STATEMENT_TYPE.Compound_For:
 					break;
@@ -264,6 +268,40 @@ namespace Mr.Robot.CDeducer
 			else
 			{
 				ExpressionProc(componentList, parse_info, func_ctx, deducer_ctx, s_node);
+			}
+		}
+
+		public static void CompoundIfElseStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			// 判断那个自分支(branch)没走过
+			foreach (var item in s_node.ChildNodeList)
+			{
+				if (!item.IsPassed)
+				{
+					if (item.Type == E_STATEMENT_TYPE.Branch_If)
+					{
+						if (ExpressionSpeculate.CanBeTrue(s_node.SNodeExprsn, parse_info, deducer_ctx))
+						{
+							// 进入分支
+						}
+						else
+						{
+							// 进不去?
+						}
+					}
+					else if (item.Type == E_STATEMENT_TYPE.Branch_ElseIf)
+					{
+						
+					}
+					else if (item.Type == E_STATEMENT_TYPE.Branch_Else)
+					{
+						
+					}
+					else
+					{
+						throw new MyException("CompoundIfElseStatementProc 内部矛盾!");
+					}
+				}
 			}
 		}
 
@@ -306,16 +344,13 @@ namespace Mr.Robot.CDeducer
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
 
 			/////////////////////// 以下是新方案 /////////////////////
-			if (IfNewDefVar(mgList, parse_info))
+			if (IfNewDefVar2(mgList, parse_info))
 			{
 				string stepMarkStr = string.Empty;
-				if (null != s_node)
+				if (null != s_node && null != deducer_ctx)
 				{
 					stepMarkStr = s_node.StepMarkStr;
-				}
-				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr, VAR_CATEGORY.LOCAL, VAR_BEHAVE.DECLARE);
-				if (null != deducer_ctx)
-				{
+					VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr, VAR_CATEGORY.LOCAL);
 					deducer_ctx.VarCtxList.Add(varCtx2);
 				}
 			}
@@ -363,7 +398,7 @@ namespace Mr.Robot.CDeducer
             return null;
         }
 
-		static bool IfNewDefVar(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info)
+		static bool IfNewDefVar2(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info)
 		{
 			if (mgList.Count < 2
 				|| MeaningGroupType.VariableType != mgList[0].Type)

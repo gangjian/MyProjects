@@ -7,7 +7,7 @@ namespace Mr.Robot.CDeducer
 {
 	class D_COMMON
 	{
-		public static VAR_CTX2 CreateVarCtx2(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, string step_mark, VAR_CATEGORY var_category, VAR_BEHAVE var_behave)
+		public static VAR_CTX2 CreateVarCtx2(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, string step_mark, VAR_CATEGORY var_category)
 		{
 			System.Diagnostics.Trace.Assert(mgList.Count > 1 && mgList[0].Type == MeaningGroupType.VariableType);
 			VAR_TYPE2 varType = GetVarTypeFromMeaningGroup(mgList[0], parse_info);
@@ -21,13 +21,11 @@ namespace Mr.Robot.CDeducer
 			}
 			if (BasicTypeProc.IsBasicTypeName(typeName))
 			{
-				string initStr = string.Empty;
+				retCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.DECLARE, step_mark));			// 声明
 				if (null != initGroup)
 				{
-					initStr = initGroup.Text;
+					retCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.EVALUATION, step_mark));	// 初始化赋值
 				}
-				object varVal = BasicTypeProc.GetBasicTypeInitVal(typeName, initStr);
-				retCtx.ValueEvolveList.Add(new VAR_RECORD(var_behave, varVal, step_mark));
 			}
 			else
 			{
@@ -41,7 +39,7 @@ namespace Mr.Robot.CDeducer
 				}
 				else
 				{
-					// Assert here!
+					System.Diagnostics.Trace.Assert(false);
 				}
 			}
 			return retCtx;

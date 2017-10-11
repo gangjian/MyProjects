@@ -43,14 +43,12 @@ namespace Mr.Robot.CDeducer
 	public class VAR_RECORD
 	{
 		public VAR_BEHAVE VarBehave;
-		public object Value = null;														// 变量值(基本型的场合)
 		public string StepMarkStr;
 
-		public VAR_RECORD(VAR_BEHAVE var_behave, object val, string step_mark)
+		public VAR_RECORD(VAR_BEHAVE var_behave, string step_mark)
 		{
 			this.VarBehave = var_behave;
 			this.StepMarkStr = step_mark;
-			this.Value = val;
 		}
 	}
 
