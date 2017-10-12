@@ -8,6 +8,18 @@ namespace Mr.Robot.CDeducer
 	public class DEDUCER_CONTEXT
 	{
 		public List<VAR_CTX2> VarCtxList = new List<VAR_CTX2>();
+
+		public VAR_CTX2 SearchByName(string name)
+		{
+			foreach (var item in this.VarCtxList)
+			{
+				if (item.VarName.Equals(name))
+				{
+					return item;
+				}
+			}
+			return null;
+		}
 	}
 
 	public class VAR_CTX2

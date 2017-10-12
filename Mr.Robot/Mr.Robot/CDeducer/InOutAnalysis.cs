@@ -58,7 +58,7 @@ namespace Mr.Robot
 		{
 			for (int i = 0; i < mgList.Count; i++)
 			{
-				if (mgList[i].Type == MeaningGroupType.EqualMark)						// "=", 等号赋值符
+				if (mgList[i].Type == MeaningGroupType.EvaluationMark)						// "=", 等号赋值符
 				{
 					return i;
 				}

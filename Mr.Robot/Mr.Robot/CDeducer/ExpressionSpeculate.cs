@@ -9,6 +9,8 @@ namespace Mr.Robot.CDeducer
 	{
 		public static bool CanBeTrue(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups2(expr_str, parse_info, deducer_ctx);
+
 			return false;
 		}
 	}

@@ -15,7 +15,7 @@ namespace Mr.Robot.CDeducer
 			string varName = GetVarNameFromMeaningGroup(mgList[1], parse_info);
 			VAR_CTX2 retCtx = new VAR_CTX2(varType, varName, var_category);
 			MEANING_GROUP initGroup = null;
-			if (mgList.Count > 3 && mgList[2].Type == MeaningGroupType.EqualMark)
+			if (mgList.Count > 3 && mgList[2].Type == MeaningGroupType.EvaluationMark)
 			{
 				initGroup = mgList[3];
 			}

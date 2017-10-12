@@ -59,8 +59,7 @@ namespace Mr.Robot.CDeducer
 			}
 			foreach (var item in funcInfo.ParaList)
 			{
-				List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(item, parse_info);
-				List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, parse_info, null);
+				List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups2(item, parse_info, deducer_ctx);
 				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(meaningGroupList, parse_info, string.Empty, VAR_CATEGORY.FUNC_PARA);
 				deducer_ctx.VarCtxList.Add(varCtx2);
 			}
@@ -236,17 +235,47 @@ namespace Mr.Robot.CDeducer
 
 		public static void StatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx)
 		{
+			if (s_node.Type == E_STATEMENT_TYPE.Simple)
+			{
+				// 简单语句
+				string statementStr = COMN_PROC.GetStatementStr(parse_info.CodeList, s_node.Scope);
+				SimpleStatementProc(statementStr, parse_info, func_ctx, deducer_ctx, s_node);
+			}
+			else
+			{
+				// 复合语句
+				CompoundStatementProc(s_node, parse_info, deducer_ctx);
+			}
+		}
+
+		public static void CompoundStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
 			switch (s_node.Type)
 			{
-				case E_STATEMENT_TYPE.Simple:
-					// 取得完整的语句内容
-					string statementStr = COMN_PROC.GetStatementStr(parse_info.CodeList, s_node.Scope);
-					SimpleStatementProc(statementStr, parse_info, func_ctx, deducer_ctx, s_node);
-					break;
 				case E_STATEMENT_TYPE.Compound_IfElse:
 					CompoundIfElseStatementProc(s_node, parse_info, deducer_ctx);
 					break;
+				case E_STATEMENT_TYPE.Compound_SwitchCase:
+					break;
+				case E_STATEMENT_TYPE.Compound_While:
+					break;
 				case E_STATEMENT_TYPE.Compound_For:
+					break;
+				case E_STATEMENT_TYPE.Compound_DoWhile:
+					break;
+				case E_STATEMENT_TYPE.Compound_GoTo:
+					break;
+				case E_STATEMENT_TYPE.Compound_Block:
+					break;
+				case E_STATEMENT_TYPE.Branch_If:
+					break;
+				case E_STATEMENT_TYPE.Branch_ElseIf:
+					break;
+				case E_STATEMENT_TYPE.Branch_Else:
+					break;
+				case E_STATEMENT_TYPE.Branch_Case:
+					break;
+				case E_STATEMENT_TYPE.Branch_Default:
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);
@@ -454,10 +483,11 @@ namespace Mr.Robot.CDeducer
 
 		VariableType,				// 类型名
 		LocalVariable,				// 局部变量
+		FuncPara,					// 函数参数
         GlobalVariable,				// 全局变量
         FunctionCalling,			// 函数调用
 		Expression,					// 表达式
-		EqualMark,					// 赋值符号
+		EvaluationMark,				// 赋值符号
 		TypeCasting,				// 强制类型转换
 		OtherOperator,				// 其它运算符
 		Constant,					// 常量
