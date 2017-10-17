@@ -67,6 +67,7 @@
     <Compile Include="CDeducer\DCommon.cs" />
     <Compile Include="CDeducer\DeducerContext.cs" />
     <Compile Include="CDeducer\ExpressionSpeculate.cs" />
+    <Compile Include="CDeducer\InputOutput.cs" />
     <Compile Include="CProspector\BasicTypeProc.cs" />
     <Compile Include="CProspector\CProspector.cs" />
     <Compile Include="CProspector\CCodeInfo.cs" />

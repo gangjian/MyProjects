@@ -516,13 +516,13 @@ namespace Mr.Robot
 			// 遍历查找宏名
 			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
 			if (null != mdi
-				&& !string.IsNullOrEmpty(mdi.Value))
+				&& !string.IsNullOrEmpty(mdi.ValStr))
 			{
 				string macroName = mdi.Name;
 				CODE_POSITION macroPos = new CODE_POSITION(foundPos);
 				CODE_POSITION removeEndPos = new CODE_POSITION(macroPos.RowNum, macroPos.ColNum + macroName.Length - 1);
 				int lineIdx = foundPos.RowNum;
-				string replaceStr = mdi.Value;
+				string replaceStr = mdi.ValStr;
 				// 判断有无带参数
 				if (0 != mdi.ParaList.Count)
 				{
@@ -1389,14 +1389,14 @@ namespace Mr.Robot
 			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
 			if (null != mdi)
 			{
-				if (string.IsNullOrEmpty(mdi.Value)
+				if (string.IsNullOrEmpty(mdi.ValStr)
 					&& false == replace_empty_macro_def)
 				{
 				}
 				else
 				{
 					string macroName = mdi.Name;
-					string replaceStr = mdi.Value;
+					string replaceStr = mdi.ValStr;
 					// 判断有无带参数
 					if (0 != mdi.ParaList.Count)
 					{
@@ -2403,6 +2403,60 @@ namespace Mr.Robot
 				{
 					parse_info.TypeDefineList.Add(tdi);
 				}
+			}
+		}
+
+		public static bool GetConstantNumberValue(string const_num_text, out int val)
+		{
+			string tmpStr = const_num_text.ToUpper();
+			int postfixCount = 0;
+			for (int i = tmpStr.Length - 1; i >= 0; i--)
+			{
+				char ch = tmpStr[i];
+				if (ch == 'U' || ch == 'L')
+				{
+					postfixCount += 1;
+				}
+				else
+				{
+					break;
+				}
+			}
+			if (0 != postfixCount)
+			{
+				tmpStr = tmpStr.Remove(tmpStr.Length - postfixCount);
+			}
+			if (tmpStr.StartsWith("0X"))
+			{
+				tmpStr = tmpStr.Remove(0, 2);
+				if (int.TryParse(tmpStr, System.Globalization.NumberStyles.HexNumber, null, out val))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else if (int.TryParse(tmpStr, out val))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		public static bool Int2Bool(int val)
+		{
+			if (0 != val)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
 			}
 		}
 	}

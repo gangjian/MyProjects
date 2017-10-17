@@ -80,7 +80,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
                     MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(cpnt.Text);
                     if (null != mdi)
                     {
-                        string valStr = mdi.Value;
+                        string valStr = mdi.ValStr;
                         // 宏值分析
                         MacroValueType mType = MacroValueStrAnalysis(ref valStr, parse_info);
                         // 立即数
@@ -158,7 +158,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(macro_value_str);
 				if (null != mdi)
 				{
-					macro_value_str = mdi.Value;
+					macro_value_str = mdi.ValStr;
 					return MacroValueStrAnalysis(ref macro_value_str, parse_info);
 				}
 			}

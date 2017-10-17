@@ -251,7 +251,7 @@ namespace Mr.Robot
 	{
 		public string Name = string.Empty;												// 宏名
 		public List<string> ParaList = new List<string>();							    // 参数列表
-		public string Value = string.Empty;												// 宏值
+		public string ValStr = string.Empty;											// 宏值
 
 		public string FileName = string.Empty;
 		public int LineNum = -1;

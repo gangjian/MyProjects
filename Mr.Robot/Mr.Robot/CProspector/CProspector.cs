@@ -915,7 +915,7 @@ namespace Mr.Robot
 					sPos.Move2HeadOfNextRow();
 					defineValStr += codeList[sPos.RowNum].Substring(sPos.ColNum);
 				}
-				mdi.Value = defineValStr.Trim();
+				mdi.ValStr = defineValStr.Trim();
 				cfi.MacroDefineList.Add(mdi);
 
 				sPos.Move2HeadOfNextRow();

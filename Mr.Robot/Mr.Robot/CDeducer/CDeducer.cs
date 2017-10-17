@@ -244,7 +244,7 @@ namespace Mr.Robot.CDeducer
 			else
 			{
 				// 复合语句
-				CompoundStatementProc(s_node, parse_info, deducer_ctx);
+				//CompoundStatementProc(s_node, parse_info, deducer_ctx);
 			}
 		}
 
@@ -309,7 +309,7 @@ namespace Mr.Robot.CDeducer
 				{
 					if (item.Type == E_STATEMENT_TYPE.Branch_If)
 					{
-						if (ExpressionSpeculate.CanBeTrue(s_node.SNodeExprsn, parse_info, deducer_ctx))
+						if (0 != EXPRESSION_SPECULATE.ExpressionSpeculate(s_node.SNodeExprsn, parse_info, deducer_ctx))
 						{
 							// 进入分支
 						}
@@ -373,19 +373,19 @@ namespace Mr.Robot.CDeducer
 			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
 
 			/////////////////////// 以下是新方案 /////////////////////
-			if (IfNewDefVar2(mgList, parse_info))
-			{
-				string stepMarkStr = string.Empty;
-				if (null != s_node && null != deducer_ctx)
-				{
-					stepMarkStr = s_node.StepMarkStr;
-					VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr, VAR_CATEGORY.LOCAL);
-					deducer_ctx.VarCtxList.Add(varCtx2);
-				}
-			}
-			else
-			{
-			}
+			//if (IfNewDefVar2(mgList, parse_info))
+			//{
+			//	string stepMarkStr = string.Empty;
+			//	if (null != s_node && null != deducer_ctx)
+			//	{
+			//		stepMarkStr = s_node.StepMarkStr;
+			//		VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr, VAR_CATEGORY.LOCAL);
+			//		deducer_ctx.VarCtxList.Add(varCtx2);
+			//	}
+			//}
+			//else
+			//{
+			//}
         }
 
 		static VAR_CTX IsNewDefineVarible(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx)

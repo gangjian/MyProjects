@@ -30,7 +30,7 @@ namespace Mr.Robot
 			int retVal = 0;
 			// 立即数
 			if (meaning_group.Type == MeaningGroupType.Constant
-				&& GetConstantNumberValue(meaning_group.Text, out retVal))
+				&& COMN_PROC.GetConstantNumberValue(meaning_group.Text, out retVal))
 			{
 				return retVal;
 			}
@@ -40,7 +40,7 @@ namespace Mr.Robot
 				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(meaning_group.Text);
 				if (null != mdi)
 				{
-					return GetLogicalExpressionValue(mdi.Value, parse_info);
+					return GetLogicalExpressionValue(mdi.ValStr, parse_info);
 				}
 				else
 				{
@@ -107,95 +107,6 @@ namespace Mr.Robot
 			}
 		}
 
-		static bool GetConstantNumberValue(string const_num_text, out int val)
-		{
-			string tmpStr = const_num_text.ToUpper();
-			int postfixCount = 0;
-			for (int i = tmpStr.Length - 1; i >= 0; i--)
-			{
-				char ch = tmpStr[i];
-				if (ch == 'U' || ch == 'L')
-				{
-					postfixCount += 1;
-				}
-				else
-				{
-					break;
-				}
-			}
-			if (0 != postfixCount)
-			{
-				tmpStr = tmpStr.Remove(tmpStr.Length - postfixCount);
-			}
-			if (tmpStr.StartsWith("0X"))
-			{
-				tmpStr = tmpStr.Remove(0, 2);
-				if (int.TryParse(tmpStr, System.Globalization.NumberStyles.HexNumber, null, out val))
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-			else if (int.TryParse(tmpStr, out val))
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-
-		enum OPERATOR_TYPE
-		{
-			OTHER,
-			TYPE_CASTING,
-		}
-
-		// 运算符
-		class OPERATOR
-		{
-			public string Text = string.Empty;
-			public int GroupIdx = -1;
-			public OPERATOR_TYPE Type = OPERATOR_TYPE.OTHER;
-		}
-
-		// 运算数
-		class OPERAND
-		{
-			public string Text = string.Empty;
-			public int GroupIdx = -1;
-		}
-
-		// 运算组
-		class OPERATION_GROUP
-		{
-			public OPERATOR _Operator = new OPERATOR();
-			public List<OPERAND> _OperandList = new List<OPERAND>();
-			public int StartIdx = -1;
-			public int EndIdx = -1;
-
-			public void GetStartEndIdx()
-			{
-				this.StartIdx = this._Operator.GroupIdx;
-				this.EndIdx = this._Operator.GroupIdx;
-				foreach (OPERAND oprd in this._OperandList)
-				{
-					if (oprd.GroupIdx < this.StartIdx)
-					{
-						this.StartIdx = oprd.GroupIdx;
-					}
-					if (oprd.GroupIdx > this.EndIdx)
-					{
-						this.EndIdx = oprd.GroupIdx;
-					}
-				}
-			}
-		}
-
 		/// <summary>
 		/// 取得表达式下一个运算组
 		/// </summary>
@@ -216,9 +127,7 @@ namespace Mr.Robot
 					}
 					retGroup._Operator.Text = meaningGroupList[i].Text;
 					retGroup._Operator.GroupIdx = i;
-					OPERAND oprnd = new OPERAND();
-					oprnd.Text = meaningGroupList[i + 1].Text;
-					oprnd.GroupIdx = i + 1;
+					OPERAND oprnd = new OPERAND(meaningGroupList[i + 1].Text, i + 1);
 					retGroup._OperandList.Add(oprnd);
 					retGroup.GetStartEndIdx();
 					return retGroup;
@@ -256,18 +165,14 @@ namespace Mr.Robot
 					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.OtherOperator
 					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.EvaluationMark)
 				{
-					OPERAND operand = new OPERAND();
-					operand.Text = meaningGroupList[operator_idx - 1].Text;
-					operand.GroupIdx = operator_idx - 1;
+					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].Text, operator_idx - 1);
 					retList.Add(operand);
 				}
 				else if (operator_idx < meaningGroupList.Count - 1
 						 && meaningGroupList[operator_idx + 1].Type != MeaningGroupType.OtherOperator
 						 && meaningGroupList[operator_idx + 1].Type != MeaningGroupType.EvaluationMark)
 				{
-					OPERAND operand = new OPERAND();
-					operand.Text = meaningGroupList[operator_idx + 1].Text;
-					operand.GroupIdx = operator_idx + 1;
+					OPERAND operand = new OPERAND(meaningGroupList[operator_idx + 1].Text, operator_idx + 1);
 					retList.Add(operand);
 				}
 				else
@@ -284,13 +189,9 @@ namespace Mr.Robot
 					&& meaningGroupList[operator_idx + 1].Type != MeaningGroupType.OtherOperator
 					&& meaningGroupList[operator_idx + 1].Type != MeaningGroupType.EvaluationMark)
 				{
-					OPERAND operand = new OPERAND();
-					operand.Text = meaningGroupList[operator_idx - 1].Text;
-					operand.GroupIdx = operator_idx - 1;
+					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].Text, operator_idx - 1);
 					retList.Add(operand);
-					operand = new OPERAND();
-					operand.Text = meaningGroupList[operator_idx + 1].Text;
-					operand.GroupIdx = operator_idx + 1;
+					operand = new OPERAND(meaningGroupList[operator_idx + 1].Text, operator_idx + 1);
 					retList.Add(operand);
 				}
 			}
@@ -658,6 +559,78 @@ namespace Mr.Robot
 				return typeStr;
 			}
 			return null;
+		}
+	}
+
+	enum OPERATOR_TYPE
+	{
+		OTHER,
+		TYPE_CASTING,
+	}
+
+	// 运算符
+	class OPERATOR
+	{
+		public string Text = string.Empty;
+		public int GroupIdx = -1;
+		public OPERATOR_TYPE Type = OPERATOR_TYPE.OTHER;
+
+		public OPERATOR()
+		{
+		}
+		public OPERATOR(string opt_str, int group_idx)
+		{
+			this.Text = opt_str;
+			this.GroupIdx = group_idx;
+		}
+	}
+
+	// 运算数
+	class OPERAND
+	{
+		public string Text = string.Empty;
+		public int GroupIdx = -1;
+
+		public OPERAND(string opd_str, int group_idx)
+		{
+			this.Text = opd_str;
+			this.GroupIdx = group_idx;
+		}
+	}
+
+	// 运算组
+	class OPERATION_GROUP
+	{
+		public OPERATOR _Operator = new OPERATOR();
+		public List<OPERAND> _OperandList = new List<OPERAND>();
+		public int StartIdx = -1;
+		public int EndIdx = -1;
+
+		public void GetStartEndIdx()
+		{
+			this.StartIdx = this._Operator.GroupIdx;
+			this.EndIdx = this._Operator.GroupIdx;
+			foreach (OPERAND oprd in this._OperandList)
+			{
+				if (oprd.GroupIdx < this.StartIdx)
+				{
+					this.StartIdx = oprd.GroupIdx;
+				}
+				if (oprd.GroupIdx > this.EndIdx)
+				{
+					this.EndIdx = oprd.GroupIdx;
+				}
+			}
+		}
+		public OPERATION_GROUP()
+		{
+		}
+		public OPERATION_GROUP(OPERATOR oprt, OPERAND operand_1, OPERAND operand_2)
+		{
+			this._Operator = oprt;
+			this._OperandList.Add(operand_1);
+			this._OperandList.Add(operand_2);
+			this.GetStartEndIdx();
 		}
 	}
 }

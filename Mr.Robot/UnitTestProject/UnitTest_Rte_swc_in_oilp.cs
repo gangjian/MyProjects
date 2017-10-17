@@ -127,7 +127,7 @@ namespace UnitTestProject
 		{
 			FILE_PARSE_INFO src_parse_info = Common.FindSrcParseInfoFromList(m_SourceName, m_ParseInfoList);
 			C_DEDUCER deducer = new C_DEDUCER(src_parse_info, "calcIgAdAvrgData");
-			deducer.DeducerStart2();
+			//deducer.DeducerStart2();
 		}
 	}
 }
