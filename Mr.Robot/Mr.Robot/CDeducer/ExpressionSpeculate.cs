@@ -81,9 +81,122 @@ namespace Mr.Robot.CDeducer
 			return 0;
 		}
 
-		static int GetOperationLimitCondition()
+		/// <summary>
+		/// 不等式化简(阶段1)
+		/// </summary>
+		static void ExpressionSimplify_Phase1(string exp_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			return 0;
+			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups2(exp_str, parse_info, deducer_ctx);
+			if (1 == meaningGroupList.Count)
+			{
+				if (meaningGroupList.First().Type == MeaningGroupType.Expression
+					&& meaningGroupList.First().Text.Trim().StartsWith("(")
+					&& meaningGroupList.First().Text.Trim().EndsWith(")"))
+				{																		// 表达式
+					string newExp = meaningGroupList.First().Text.Trim();
+					newExp = newExp.Remove(newExp.Length - 1);
+					newExp = newExp.Remove(0, 1);
+					ExpressionSimplify_Phase1(newExp, parse_info, deducer_ctx);
+				}
+				else if (meaningGroupList.First().Type == MeaningGroupType.Constant)
+				{																		// 常量
+					
+				}
+				else
+				{
+					System.Diagnostics.Trace.Assert(false);
+				}
+			}
+			else
+			{
+				// 判断关系运算符的位置
+				int oprtIdx = -1;
+				for (int i = 0; i < meaningGroupList.Count; i++)
+				{
+					if (meaningGroupList[i].Type == MeaningGroupType.OtherOperator)
+					{
+						oprtIdx = i;
+					}
+				}
+				if (-1 == oprtIdx)
+				{
+					System.Diagnostics.Trace.Assert(false);
+				}
+				int varGroupIdx = -1;
+				// 分别判断关系运算符左右两侧各个group, 包含变量的表达式放到运算符左侧, 不包含变量的表达式(常量表达式)放到右侧
+				for (int i = 0; i < oprtIdx; i++)
+				{
+					List<string> varList = FindVarsInGroup(meaningGroupList[i], parse_info, deducer_ctx);
+					if (0 != varList.Count)
+					{
+						if (-1 == varGroupIdx)
+						{
+							varGroupIdx = i;
+						}
+						else
+						{																// 多个group包含变量的场合
+							System.Diagnostics.Trace.Assert(false);
+						}
+					}
+				}
+				for (int i = oprtIdx + 1; i < meaningGroupList.Count; i++)
+				{
+					
+				}
+			}
+		}
+
+		/// <summary>
+		/// 找出一个MeaningGroup内的变量
+		/// </summary>
+		static List<string> FindVarsInGroup(MEANING_GROUP meaning_group, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			List<string> varList = new List<string>();
+			if (meaning_group.Type == MeaningGroupType.Expression
+				&& meaning_group.Text.Trim().StartsWith("(")
+				&& meaning_group.Text.Trim().EndsWith(")"))
+			{																			// 表达式
+				string newExp = meaning_group.Text.Trim();
+				newExp = newExp.Remove(newExp.Length - 1);
+				newExp = newExp.Remove(0, 1);
+				List<MEANING_GROUP> groupList = COMN_PROC.GetMeaningGroups2(newExp, parse_info, deducer_ctx);
+				foreach (var group in groupList)
+				{
+					List<string> tmpList = FindVarsInGroup(group, parse_info, deducer_ctx);
+					varList.AddRange(tmpList);
+				}
+			}
+			else if (meaning_group.Type == MeaningGroupType.Identifier)
+			{																			// 标识符
+				MACRO_DEFINE_INFO mdi = null;
+				if (null != deducer_ctx.SearchByName(meaning_group.Text))
+				{																		// 在上下文中查找
+					varList.Add(meaning_group.Text);
+				}
+				else if (null != parse_info.FindGlobalVarInfoByName(meaning_group.Text))
+				{																		// 全局量?
+					varList.Add(meaning_group.Text);
+				}
+				else if (null != (mdi = parse_info.FindMacroDefInfo(meaning_group.Text)))
+				{																		// 宏定义?
+					string newExp = mdi.ValStr;
+					List<MEANING_GROUP> groupList = COMN_PROC.GetMeaningGroups2(newExp, parse_info, deducer_ctx);
+					foreach (var group in groupList)
+					{
+						List<string> tmpList = FindVarsInGroup(group, parse_info, deducer_ctx);
+						varList.AddRange(tmpList);
+					}
+				}
+			}
+			else if (meaning_group.Type == MeaningGroupType.Constant
+					 || meaning_group.Type == MeaningGroupType.OtherOperator)
+			{
+			}
+			else
+			{
+				System.Diagnostics.Trace.Assert(false);
+			}
+			return varList;
 		}
 	}
 }
