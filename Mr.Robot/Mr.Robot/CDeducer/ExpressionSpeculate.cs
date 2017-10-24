@@ -9,15 +9,8 @@ namespace Mr.Robot.CDeducer
 	{
 		public static int ExpressionSpeculate(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups2(expr_str, parse_info, deducer_ctx);
-			if (1 == meaningGroupList.Count)
-			{
-				return SingleGroupExpressionSpeculate(meaningGroupList.First(), parse_info, deducer_ctx);
-			}
-			else
-			{
-				return CompoundGroupExpressionSpeculate(meaningGroupList, parse_info, deducer_ctx);
-			}
+			ExpressionSimplify_Phase1(expr_str, parse_info, deducer_ctx);
+			return 0;
 		}
 
 		static int SingleGroupExpressionSpeculate(MEANING_GROUP meaning_group, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
@@ -87,62 +80,19 @@ namespace Mr.Robot.CDeducer
 		static void ExpressionSimplify_Phase1(string exp_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups2(exp_str, parse_info, deducer_ctx);
-			if (1 == meaningGroupList.Count)
+			if (1 == meaningGroupList.Count
+				&& MeaningGroupType.Constant == meaningGroupList.First().Type)
+			{																			// 常量?
+			}
+			else if (3 == meaningGroupList.Count
+					 && MeaningGroupType.OtherOperator == meaningGroupList[1].Type)
 			{
-				if (meaningGroupList.First().Type == MeaningGroupType.Expression
-					&& meaningGroupList.First().Text.Trim().StartsWith("(")
-					&& meaningGroupList.First().Text.Trim().EndsWith(")"))
-				{																		// 表达式
-					string newExp = meaningGroupList.First().Text.Trim();
-					newExp = newExp.Remove(newExp.Length - 1);
-					newExp = newExp.Remove(0, 1);
-					ExpressionSimplify_Phase1(newExp, parse_info, deducer_ctx);
-				}
-				else if (meaningGroupList.First().Type == MeaningGroupType.Constant)
-				{																		// 常量
-					
-				}
-				else
-				{
-					System.Diagnostics.Trace.Assert(false);
-				}
+				List<string> leftVarList = FindVarsInGroup(meaningGroupList[0], parse_info, deducer_ctx);
+				List<string> rightVarList = FindVarsInGroup(meaningGroupList[2], parse_info, deducer_ctx);
 			}
 			else
 			{
-				// 判断关系运算符的位置
-				int oprtIdx = -1;
-				for (int i = 0; i < meaningGroupList.Count; i++)
-				{
-					if (meaningGroupList[i].Type == MeaningGroupType.OtherOperator)
-					{
-						oprtIdx = i;
-					}
-				}
-				if (-1 == oprtIdx)
-				{
-					System.Diagnostics.Trace.Assert(false);
-				}
-				int varGroupIdx = -1;
-				// 分别判断关系运算符左右两侧各个group, 包含变量的表达式放到运算符左侧, 不包含变量的表达式(常量表达式)放到右侧
-				for (int i = 0; i < oprtIdx; i++)
-				{
-					List<string> varList = FindVarsInGroup(meaningGroupList[i], parse_info, deducer_ctx);
-					if (0 != varList.Count)
-					{
-						if (-1 == varGroupIdx)
-						{
-							varGroupIdx = i;
-						}
-						else
-						{																// 多个group包含变量的场合
-							System.Diagnostics.Trace.Assert(false);
-						}
-					}
-				}
-				for (int i = oprtIdx + 1; i < meaningGroupList.Count; i++)
-				{
-					
-				}
+				System.Diagnostics.Trace.Assert(false);
 			}
 		}
 
@@ -152,13 +102,9 @@ namespace Mr.Robot.CDeducer
 		static List<string> FindVarsInGroup(MEANING_GROUP meaning_group, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			List<string> varList = new List<string>();
-			if (meaning_group.Type == MeaningGroupType.Expression
-				&& meaning_group.Text.Trim().StartsWith("(")
-				&& meaning_group.Text.Trim().EndsWith(")"))
+			if (meaning_group.Type == MeaningGroupType.Expression)
 			{																			// 表达式
 				string newExp = meaning_group.Text.Trim();
-				newExp = newExp.Remove(newExp.Length - 1);
-				newExp = newExp.Remove(0, 1);
 				List<MEANING_GROUP> groupList = COMN_PROC.GetMeaningGroups2(newExp, parse_info, deducer_ctx);
 				foreach (var group in groupList)
 				{

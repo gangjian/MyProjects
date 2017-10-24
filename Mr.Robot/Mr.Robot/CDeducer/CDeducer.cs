@@ -244,7 +244,7 @@ namespace Mr.Robot.CDeducer
 			else
 			{
 				// 复合语句
-				//CompoundStatementProc(s_node, parse_info, deducer_ctx);
+				CompoundStatementProc(s_node, parse_info, deducer_ctx);
 			}
 		}
 

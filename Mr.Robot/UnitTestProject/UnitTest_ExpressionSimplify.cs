@@ -26,7 +26,7 @@ namespace UnitTestProject
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);
 			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_1");
-			//deducer.DeducerStart2();
+			deducer.DeducerStart2();
 		}
 	}
 }
