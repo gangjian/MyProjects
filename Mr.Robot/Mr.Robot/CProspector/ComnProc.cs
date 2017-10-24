@@ -548,6 +548,11 @@ namespace Mr.Robot
 					nextIdtf.Text = LineStringCat(parse_info.CodeList, macroPos, foundPos);
 					macroName = nextIdtf.Text;
 					List<string> realParas = GetParaList(parse_info.CodeList, leftBracket, foundPos);
+					if (0 == realParas.Count)
+					{
+						// 如果宏定义后有括号但是没有参数,加一个空串用以在宏替换时替换掉括号部分
+						realParas.Add(string.Empty);
+					}
 					if (realParas.Count != mdi.ParaList.Count)
 					{
 						// TODO: 20170111
@@ -686,8 +691,6 @@ namespace Mr.Robot
 			catStr = catStr.Trim();
 			if ("" == catStr)
 			{
-				// 如果没有参数, 只有一对空的小括号, 那么要加入一个空字串""参数
-				retParaList.Add("");
 				return retParaList;
 			}
 			// 有一种古典写法, 把参数声明列表写在小括号外, 花括号(函数体开始)前

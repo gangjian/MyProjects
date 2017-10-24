@@ -904,6 +904,11 @@ namespace Mr.Robot
 						return;
 					}
 					mdi.ParaList = COMN_PROC.GetParaList(codeList, sPos, ePos);
+					if (0 == mdi.ParaList.Count)
+					{
+						// 如果宏定义后有括号但是没有参数,加一个空串用以在宏替换时替换掉括号
+						mdi.ParaList.Add(string.Empty);
+					}
 					sPos = ePos;
 					sPos.ColNum += 1;
 				}
