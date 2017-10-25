@@ -33,7 +33,7 @@ namespace Mr.Robot.CDeducer
 	class DI_FUNC_CALLED
 	{
 		public string FuncName = string.Empty;
-		DI_FC_CATEGORY Category;
+		//DI_FC_CATEGORY Category;
 		public VAR_TYPE2 VarType = null;
 		public string StepMakr = string.Empty;
 	}
