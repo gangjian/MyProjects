@@ -309,7 +309,7 @@ namespace Mr.Robot.CDeducer
 				{
 					if (item.Type == E_STATEMENT_TYPE.Branch_If)
 					{
-						if (0 != EXPRESSION_SPECULATE.ExpressionSpeculate(s_node.SNodeExprsn, parse_info, deducer_ctx))
+						if (0 != LOGIC_EXPRESSION_SIMPLIFY.ExpressionSpeculate(s_node.SNodeExprsn, parse_info, deducer_ctx))
 						{
 							// 进入分支
 						}

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Mr.Robot.CDeducer
 {
-	class EXPRESSION_SPECULATE
+	class LOGIC_EXPRESSION_SIMPLIFY
 	{
 		public static int ExpressionSpeculate(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
