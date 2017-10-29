@@ -21,7 +21,7 @@ namespace UnitTestProject
 			m_ParseInfoList = Common.UnitTest_SourceFileProcess2(m_SourceName);
 		}
 
-		[TestMethod, TestCategory("DummyTest.c")]
+		[TestMethod, TestCategory("ExpressionSimplify")]
 		public void TestMethod_1()
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);

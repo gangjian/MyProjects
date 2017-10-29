@@ -80,17 +80,18 @@ namespace Mr.Robot.CDeducer
 		static string ExpressionSimplify_Phase1(string exp_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups2(exp_str, parse_info, deducer_ctx);
-			if (1 == meaningGroupList.Count
-				&& MeaningGroupType.Constant == meaningGroupList.First().Type)
-			{																			// 常量?
-			}
-			else if (3 == meaningGroupList.Count
-					 && MeaningGroupType.OtherOperator == meaningGroupList[1].Type)
+			if (3 == meaningGroupList.Count
+				&& MeaningGroupType.OtherOperator == meaningGroupList[1].Type
+				&& IsCommonLogicOperator(meaningGroupList[1].Text))
 			{
+				// 简单逻辑表达式(一个逻辑关系运算符, 左右两个表达式)
 				List<string> leftVarList = FindVarsInGroup(meaningGroupList[0], parse_info, deducer_ctx);
 				List<string> rightVarList = FindVarsInGroup(meaningGroupList[2], parse_info, deducer_ctx);
-				// 现在暂时只考虑一元(一次)不等式, 即只有一个未知数的情况
+				// 暂时只考虑一元(一次)表达式, 即只有一个未知数的情况
 				System.Diagnostics.Trace.Assert(1 == CheckBothSideVarCount(leftVarList, rightVarList));
+				while (ExpressionSimplify_Phase2(meaningGroupList[0].Text, meaningGroupList[2].Text, parse_info, deducer_ctx))
+				{
+				}
 			}
 			else
 			{
@@ -99,40 +100,49 @@ namespace Mr.Robot.CDeducer
 			return string.Empty;
 		}
 
-		static bool ExpressionSimplify_Phase2(string original_exp, out string remain_exp, out string move_exp, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static bool ExpressionSimplify_Phase2(string left_exp, string right_exp, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			remain_exp = string.Empty;
-			move_exp = string.Empty;
 			// 将原来的表达式拆解为多个group, 包含变量的留在符号左边, 不包含变量的移到符号右边
-			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(original_exp, parse_info, deducer_ctx);
-			if (1 == meaningGroups.Count)
+			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(left_exp, parse_info, deducer_ctx);
+			if (3 == meaningGroups.Count
+				&& meaningGroups[1].Type == MeaningGroupType.OtherOperator
+				&& IsCommonArithmeticOperator(meaningGroups[1].Text))
 			{
-				if (0 == FindVarsInGroup(meaningGroups.First(), parse_info, deducer_ctx).Count)
+				if (1 == FindVarsInGroup(meaningGroups[0], parse_info, deducer_ctx).Count
+					&& 0 == FindVarsInGroup(meaningGroups[2], parse_info, deducer_ctx).Count)
 				{
-					// 移到右边(减)
-					move_exp += MoveOtherSideSub(meaningGroups.First().Text);
-					return true;
+				}
+				else if (0 == FindVarsInGroup(meaningGroups[0], parse_info, deducer_ctx).Count
+						 && 1 == FindVarsInGroup(meaningGroups[2], parse_info, deducer_ctx).Count)
+				{
 				}
 				else
 				{
-					// 继续留在左边
-					remain_exp += meaningGroups.First().Text;
-					return false;
+					// 多个Group包含变量? 需要合并同类项, 暂不考虑
+					System.Diagnostics.Trace.Assert(false);
 				}
 			}
-			else if (3 == meaningGroups.Count)
+			else if (1 == meaningGroups.Count)
 			{
-				if (meaningGroups[1].Type == MeaningGroupType.OtherOperator)
+				if (meaningGroups[0].Type == MeaningGroupType.Constant)
 				{
-					
+					// 常量
+				}
+				else if (meaningGroups[0].Type == MeaningGroupType.FuncPara
+						 || meaningGroups[0].Type == MeaningGroupType.GlobalVariable
+						 || meaningGroups[0].Type == MeaningGroupType.LocalVariable)
+				{
+					// 变量
 				}
 				else
 				{
+					// 不知道是啥
 					System.Diagnostics.Trace.Assert(false);
 				}
 			}
 			else
 			{
+				// 什么情况?
 				System.Diagnostics.Trace.Assert(false);
 			}
 			return false;
@@ -227,6 +237,38 @@ namespace Mr.Robot.CDeducer
 		static string MoveOtherSideSub(string exp_str)
 		{
 			return "-" + "(" + exp_str + ")";
+		}
+
+		static bool IsCommonLogicOperator(string opt)
+		{
+			if (opt.Equals(">")
+				|| opt.Equals("<")
+				|| opt.Equals(">=")
+				|| opt.Equals("<=")
+				|| opt.Equals("==")
+				|| opt.Equals("!="))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		static bool IsCommonArithmeticOperator(string opt)
+		{
+			if (opt.Equals("+")
+				|| opt.Equals("-")
+				|| opt.Equals("*")
+				|| opt.Equals("/"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}
 }
