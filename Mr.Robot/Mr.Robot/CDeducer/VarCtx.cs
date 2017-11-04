@@ -39,7 +39,7 @@ namespace Mr.Robot
 
 		public void InitValue(string init_str, FILE_PARSE_INFO parse_info)
 		{
-			this.Value = ExpCalc.GetLogicalExpressionValue(init_str, parse_info);
+			this.Value = ExpCalc.GetConstExpressionValue(init_str, parse_info);
 		}
 	}
 
@@ -298,7 +298,7 @@ namespace Mr.Robot
 			string sizeStr = var_name.Substring(startIdx + 1, var_name.Length - startIdx - 2);
 			if (!string.IsNullOrEmpty(sizeStr))
 			{
-				sizeVal = ExpCalc.GetLogicalExpressionValue(sizeStr, parse_info);
+				sizeVal = ExpCalc.GetConstExpressionValue(sizeStr, parse_info);
 				var_name = var_name.Remove(startIdx).Trim();
 			}
 			return sizeVal;

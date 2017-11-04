@@ -180,7 +180,7 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
-								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, parse_info))
+								if (0 != ExpCalc.GetConstExpressionValue(exprStr, parse_info))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;
@@ -293,7 +293,7 @@ namespace Mr.Robot
 								// 表达式可能占多行(连行符)
 								idx = searchPos.RowNum - 1;
 								// 判断表达式的值
-								if (0 != ExpCalc.GetLogicalExpressionValue(exprStr, parse_info))
+								if (0 != ExpCalc.GetConstExpressionValue(exprStr, parse_info))
 								{
 									cc_info.WriteFlag = false;
 									cc_info.WriteNextFlag = true;

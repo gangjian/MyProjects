@@ -26,6 +26,16 @@ namespace UnitTestProject
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);
 			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_1");
+			C_DEDUCER.RunUnitTestAll = false;
+			deducer.DeducerStart2();
+		}
+
+		[TestMethod, TestCategory("ExpressionSimplify")]
+		public void TestMethod_2()
+		{
+			Assert.AreNotEqual(0, m_ParseInfoList.Count);
+			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_2");
+			C_DEDUCER.RunUnitTestAll = false;
 			deducer.DeducerStart2();
 		}
 	}

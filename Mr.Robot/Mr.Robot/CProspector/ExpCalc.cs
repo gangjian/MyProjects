@@ -9,7 +9,7 @@ namespace Mr.Robot
 {
 	public class ExpCalc
 	{
-		public static int GetLogicalExpressionValue(string exp_str, FILE_PARSE_INFO parse_info)
+		public static int GetConstExpressionValue(string exp_str, FILE_PARSE_INFO parse_info)
 		{
 			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(exp_str, parse_info, false);	// 最后一个参数, 在解析逻辑表达式时, 因为涉及 #if define(XXX) 这样的表达式, 所以如果是空的宏定义, 原样不动不展开
 			List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups(componentList, parse_info, null);
@@ -40,7 +40,7 @@ namespace Mr.Robot
 				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(meaning_group.Text);
 				if (null != mdi)
 				{
-					return GetLogicalExpressionValue(mdi.ValStr, parse_info);
+					return GetConstExpressionValue(mdi.ValStr, parse_info);
 				}
 				else
 				{
@@ -55,7 +55,7 @@ namespace Mr.Robot
 				string newExp = meaning_group.Text.Trim();
 				newExp = newExp.Remove(newExp.Length - 1);
 				newExp = newExp.Remove(0, 1);
-				return GetLogicalExpressionValue(newExp, parse_info);
+				return GetConstExpressionValue(newExp, parse_info);
 			}
 			else if (meaning_group.Type == MeaningGroupType.Expression
 					 && meaning_group.ComponentList[0].Text == "defined")
@@ -99,7 +99,7 @@ namespace Mr.Robot
 				|| !string.IsNullOrEmpty(secondExpStr))
 			{
 				string nextExpStr = firstExpStr + retVal.ToString() + secondExpStr;
-				return GetLogicalExpressionValue(nextExpStr, parse_info);
+				return GetConstExpressionValue(nextExpStr, parse_info);
 			}
 			else
 			{
@@ -282,8 +282,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (operand1Value == operand2Value)
 			{
 				return 1;
@@ -299,8 +299,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (operand1Value == operand2Value)
 			{
 				return 0;
@@ -316,8 +316,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (0 != operand1Value
 				|| 0 != operand2Value)
 			{
@@ -334,8 +334,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (0 != operand1Value
 				&& 0 != operand2Value)
 			{
@@ -366,8 +366,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return (operand1Value % operand2Value);
 		}
 
@@ -375,7 +375,7 @@ namespace Mr.Robot
 		{
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 1);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
 			if (0 == operand1Value)
 			{
 				return 1;
@@ -391,8 +391,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (operand1Value >= operand2Value)
 			{
 				return 1;
@@ -408,8 +408,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (operand1Value <= operand2Value)
 			{
 				return 1;
@@ -425,8 +425,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (operand1Value > operand2Value)
 			{
 				return 1;
@@ -442,8 +442,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			if (operand1Value < operand2Value)
 			{
 				return 1;
@@ -459,8 +459,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return operand1Value + operand2Value;
 		}
 
@@ -471,15 +471,15 @@ namespace Mr.Robot
 				// 减号
 				System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 				System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-				int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-				int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+				int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+				int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 				return operand1Value - operand2Value;
 			}
 			else if (1 == oper_group._OperandList.Count)
 			{
 				// 负号
 				System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
-				int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+				int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
 				return -operand1Value;
 			}
 			else
@@ -494,8 +494,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return operand1Value * operand2Value;
 		}
 
@@ -504,8 +504,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return operand1Value / operand2Value;
 		}
 
@@ -514,8 +514,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return operand1Value & operand2Value;
 		}
 
@@ -524,8 +524,8 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 2);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[1].Text));
-			int operand1Value = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
-			int operand2Value = GetLogicalExpressionValue(oper_group._OperandList[1].Text, parse_info);
+			int operand1Value = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operand2Value = GetConstExpressionValue(oper_group._OperandList[1].Text, parse_info);
 			return operand1Value | operand2Value;
 		}
 
@@ -534,7 +534,7 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(oper_group._OperandList.Count == 1);
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oper_group._OperandList[0].Text));
 
-			int operandValue = GetLogicalExpressionValue(oper_group._OperandList[0].Text, parse_info);
+			int operandValue = GetConstExpressionValue(oper_group._OperandList[0].Text, parse_info);
 			string typeName = GetCastingTypeName(oper_group._Operator, parse_info);
 			if (BasicTypeProc.IsBasicTypeName(typeName))
 			{
