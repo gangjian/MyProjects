@@ -10,14 +10,14 @@ namespace Mr.Robot.CDeducer
 		public static int ExpressionSpeculate(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 表达式化简
-			string exp_str = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
+			SIMPLIFIED_EXPRESSION exp_str = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
 			return 0;
 		}
 
 		/// <summary>
 		/// 表达式化简(阶段1)
 		/// </summary>
-		static string LogicExpressionSimplify(string exp_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static SIMPLIFIED_EXPRESSION LogicExpressionSimplify(string exp_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(exp_str, parse_info, deducer_ctx);
 			if (IsSimpleRelationExprGroups(meaningGroups))
@@ -49,7 +49,7 @@ namespace Mr.Robot.CDeducer
 				while (ExpressionSimplify_Phase2(ref leftExpStr, ref rightExpStr, ref oprtStr, parse_info, deducer_ctx))
 				{
 				}
-				return leftExpStr + oprtStr + rightExpStr;
+				return new SIMPLIFIED_EXPRESSION(leftExpStr, oprtStr, rightExpStr);
 			}
 			else
 			{
@@ -451,6 +451,22 @@ namespace Mr.Robot.CDeducer
 				str += item.Text;
 			}
 			return str;
+		}
+	}
+
+	public class SIMPLIFIED_EXPRESSION
+	{
+		public string VarName = null;
+		public string OprtStr = null;
+		public string ValStr = null;
+		public SIMPLIFIED_EXPRESSION(string var, string oprt, string val)
+		{
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(var));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oprt));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(val));
+			this.VarName = var;
+			this.OprtStr = oprt;
+			this.ValStr = val;
 		}
 	}
 }

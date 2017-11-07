@@ -68,6 +68,7 @@
     <Compile Include="CDeducer\DeducerContext.cs" />
     <Compile Include="CDeducer\ExpressionSimplify.cs" />
     <Compile Include="CDeducer\InputOutput.cs" />
+    <Compile Include="CDeducer\VarInterval.cs" />
     <Compile Include="CProspector\BasicTypeProc.cs" />
     <Compile Include="CProspector\CProspector.cs" />
     <Compile Include="CProspector\CCodeInfo.cs" />
