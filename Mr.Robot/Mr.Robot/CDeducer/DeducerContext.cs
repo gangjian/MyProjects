@@ -8,8 +8,9 @@ namespace Mr.Robot.CDeducer
 	public class DEDUCER_CONTEXT
 	{
 		public List<VAR_CTX2> VarCtxList = new List<VAR_CTX2>();
+		public DEDUCER_INPUT_TBL InputTable = new DEDUCER_INPUT_TBL();
 
-		public VAR_CTX2 SearchByName(string name)
+		public VAR_CTX2 FindVarCtxByName(string name)
 		{
 			foreach (var item in this.VarCtxList)
 			{

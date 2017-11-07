@@ -1926,7 +1926,7 @@ namespace Mr.Robot
 			if (IsStandardIdentifier(cpnt_list[idx].Text))
 			{
 				// 首先在当前上下文中查找这个标识符
-				VAR_CTX2 varCtx = deducer_ctx.SearchByName(cpnt_list[idx].Text);
+				VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(cpnt_list[idx].Text);
 				if (null != varCtx)
 				{
 					MeaningGroupType type = MeaningGroupType.Unknown;

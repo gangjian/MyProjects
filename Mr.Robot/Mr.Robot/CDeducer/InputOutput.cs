@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Mr.Robot.CDeducer
 {
-	class D_INPUT
+	class DEDUCER_INPUT_TBL
 	{
 		public List<DI_FUNC_PARA> ParaList = new List<DI_FUNC_PARA>();
 		public List<DI_GLB_VAR> GlobalList = new List<DI_GLB_VAR>();
@@ -17,7 +17,7 @@ namespace Mr.Robot.CDeducer
 	{
 		public string Name = string.Empty;
 		public VAR_TYPE2 VarType = null;
-		public object VarValue = null;
+		public string IntervalStr = null;
 	}
 
 	// 全局量
@@ -25,17 +25,19 @@ namespace Mr.Robot.CDeducer
 	{
 		public List<VAR_LEVEL2> NameLevelList = new List<VAR_LEVEL2>();
 		public VAR_TYPE2 VarType = null;
-		public string StepMakr = string.Empty;
-		public object VarValue = null;
+		public string StepMaker = string.Empty;
+		public string IntervalStr = null;
 	}
 
 	// 函数调用
 	class DI_FUNC_CALLED
 	{
 		public string FuncName = string.Empty;
-		//DI_FC_CATEGORY Category;
+		public DI_FC_CATEGORY Category;
+		public int ReadOutIdx = -1;
 		public VAR_TYPE2 VarType = null;
-		public string StepMakr = string.Empty;
+		public string StepMaker = string.Empty;
+		public string IntervalStr = null;
 	}
 
 	class VAR_LEVEL2

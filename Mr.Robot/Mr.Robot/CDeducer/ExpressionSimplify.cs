@@ -9,73 +9,13 @@ namespace Mr.Robot.CDeducer
 	{
 		public static int ExpressionSpeculate(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
+			// 表达式化简
 			string exp_str = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
 			return 0;
 		}
 
-		static int SingleGroupExpressionSpeculate(MEANING_GROUP meaning_group, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
-		{
-			int retVal = 0;
-			// 立即数
-			if (meaning_group.Type == MeaningGroupType.Constant
-				&& COMN_PROC.GetConstantNumberValue(meaning_group.Text, out retVal))
-			{
-				return retVal;
-			}
-			// 宏定义
-			else if (meaning_group.Type == MeaningGroupType.Identifier)
-			{
-				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(meaning_group.Text);
-				if (null != mdi)
-				{
-					return ExpressionSpeculate(mdi.ValStr, parse_info, deducer_ctx);
-				}
-				else
-				{
-					return 0;
-				}
-			}
-			// 表达式
-			else if (meaning_group.Type == MeaningGroupType.Expression
-					 && meaning_group.Text.Trim().StartsWith("(")
-					 && meaning_group.Text.Trim().EndsWith(")"))
-			{
-				string newExp = meaning_group.Text.Trim();
-				newExp = newExp.Remove(newExp.Length - 1);
-				newExp = newExp.Remove(0, 1);
-				return ExpressionSpeculate(newExp, parse_info, deducer_ctx);
-			}
-			else if (meaning_group.Type == MeaningGroupType.Identifier)
-			{
-				
-			}
-			else
-			{
-				System.Diagnostics.Trace.Assert(false);
-			}
-			return 0;
-		}
-
-		static int CompoundGroupExpressionSpeculate(List<MEANING_GROUP> meaningGroupList, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
-		{
-			if (3 == meaningGroupList.Count
-				&& meaningGroupList[1].Type == MeaningGroupType.OtherOperator)
-			{
-				OPERATOR opr = new OPERATOR(meaningGroupList[1].Text, 1);
-				OPERAND opd_1 = new OPERAND(meaningGroupList.First().Text, 0);
-				OPERAND opd_2 = new OPERAND(meaningGroupList.Last().Text, 0);
-				OPERATION_GROUP opGroup = new OPERATION_GROUP(opr, opd_1, opd_2);
-			}
-			else
-			{
-				// 暂时先只考虑有一个操作符的简单情况
-				System.Diagnostics.Trace.Assert(false);
-			}
-			return 0;
-		}
-
 		/// <summary>
-		/// 不等式化简(阶段1)
+		/// 表达式化简(阶段1)
 		/// </summary>
 		static string LogicExpressionSimplify(string exp_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
@@ -106,7 +46,7 @@ namespace Mr.Robot.CDeducer
 					// 暂不考虑有多个变量, 或者一个变量多次出现(需要合并同类项)的情况
 					System.Diagnostics.Trace.Assert(false);
 				}
-				while (ExpressionSimplify_Phase2(ref leftExpStr, ref rightExpStr, parse_info, deducer_ctx))
+				while (ExpressionSimplify_Phase2(ref leftExpStr, ref rightExpStr, ref oprtStr, parse_info, deducer_ctx))
 				{
 				}
 				return leftExpStr + oprtStr + rightExpStr;
@@ -119,12 +59,19 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		static bool ExpressionSimplify_Phase2(ref string left_exp, ref string right_exp, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		/// <summary>
+		/// 表达式化简(阶段2)
+		/// </summary>
+		static bool ExpressionSimplify_Phase2(ref string left_exp, ref string right_exp, ref string oprt_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 将原来的表达式拆解为多个group, 包含变量的留在符号左边, 不包含变量的移到符号右边
 			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(left_exp, parse_info, deducer_ctx);
 			if (meaningGroups.Count > 1)
 			{
+				// 首先要把包含变量的group移到最左边
+				string tmpStr = MoveVarGroupToLeft(meaningGroups, ref right_exp, ref oprt_str, parse_info, deducer_ctx);
+				meaningGroups = COMN_PROC.GetMeaningGroups2(tmpStr, parse_info, deducer_ctx);
+				// 然后把不包含变量的group移到符号右边
 				for (int i = 0; i < meaningGroups.Count; i++)
 				{
 					if (meaningGroups[i].Type == MeaningGroupType.OtherOperator)
@@ -149,16 +96,13 @@ namespace Mr.Robot.CDeducer
 			}
 			else if (1 == meaningGroups.Count)
 			{
-				if (meaningGroups[0].Type == MeaningGroupType.Constant)
-				{
-					// 常量
-					return false;
-				}
-				else if (meaningGroups[0].Type == MeaningGroupType.FuncPara
-						 || meaningGroups[0].Type == MeaningGroupType.GlobalVariable
-						 || meaningGroups[0].Type == MeaningGroupType.LocalVariable)
+				if (meaningGroups[0].Type == MeaningGroupType.FuncPara
+					|| meaningGroups[0].Type == MeaningGroupType.GlobalVariable
+					|| meaningGroups[0].Type == MeaningGroupType.LocalVariable)
 				{
 					// 变量
+					// 计算右侧常量表达式的值
+					right_exp = ExpCalc.GetConstExpressionValue(right_exp, parse_info).ToString();
 					return false;
 				}
 				else
@@ -199,7 +143,8 @@ namespace Mr.Robot.CDeducer
 				}
 			}
 			else if (meaning_group.Type == MeaningGroupType.LocalVariable
-					 || meaning_group.Type == MeaningGroupType.GlobalVariable)
+					 || meaning_group.Type == MeaningGroupType.GlobalVariable
+					 || meaning_group.Type == MeaningGroupType.FuncPara)
 			{
 				if (!varList.Contains(meaning_group.Text))
 				{
@@ -209,7 +154,7 @@ namespace Mr.Robot.CDeducer
 			else if (meaning_group.Type == MeaningGroupType.Identifier)
 			{																			// 标识符
 				MACRO_DEFINE_INFO mdi = null;
-				if (null != deducer_ctx.SearchByName(meaning_group.Text)
+				if (null != deducer_ctx.FindVarCtxByName(meaning_group.Text)
 					&& !varList.Contains(meaning_group.Text))
 				{																		// 在上下文中查找
 					varList.Add(meaning_group.Text);
@@ -237,7 +182,8 @@ namespace Mr.Robot.CDeducer
 				}
 			}
 			else if (meaning_group.Type == MeaningGroupType.Constant
-					 || meaning_group.Type == MeaningGroupType.OtherOperator)
+					 || meaning_group.Type == MeaningGroupType.OtherOperator
+					 || meaning_group.Type == MeaningGroupType.TypeCasting)
 			{
 			}
 			else
@@ -250,7 +196,6 @@ namespace Mr.Robot.CDeducer
 		static bool IsSimpleRelationExprGroups(List<MEANING_GROUP> meaning_groups)
 		{
 			if (3 == meaning_groups.Count
-				&& meaning_groups[1].Type == MeaningGroupType.OtherOperator
 				&& IsRelationshipOperator(meaning_groups[1].Text))
 			{
 				return true;
@@ -440,6 +385,72 @@ namespace Mr.Robot.CDeducer
 				sb.Append(item.Text);
 			}
 			return sb.ToString();
+		}
+
+		static string MoveVarGroupToLeft(List<MEANING_GROUP> meaning_groups, ref string right_exp_str, ref string oprt_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			for (int i = 0; i < meaning_groups.Count; i++)
+			{
+				if (0 != FindVarsInGroup(meaning_groups[i], parse_info, deducer_ctx).Count)
+				{
+					if (0 != i)
+					{
+						string varGroupStr = meaning_groups[i].Text;
+						string oprtStr = meaning_groups[i - 1].Text;
+						System.Diagnostics.Trace.Assert(IsCommonArithmeticOperator(oprtStr));
+						if (oprtStr.Equals("+") || oprtStr.Equals("*"))
+						{
+							meaning_groups.RemoveAt(i);
+							meaning_groups.RemoveAt(i - 1);
+							string retStr = varGroupStr + oprtStr;
+							foreach (var item in meaning_groups)
+							{
+								retStr += item.Text;
+							}
+							return retStr;
+						}
+						else if (oprtStr.Equals("-"))
+						{
+							meaning_groups.RemoveAt(i);
+							meaning_groups.RemoveAt(i - 1);
+							oprt_str = GetReverseOperatorStr(oprt_str);
+							string tmpStr = string.Empty;
+							foreach (var item in meaning_groups)
+							{
+								tmpStr += item.Text;
+							}
+							tmpStr += ("-" + right_exp_str);
+							right_exp_str = tmpStr;
+							return varGroupStr;
+						}
+						else if (oprtStr.Equals("/"))
+						{
+							meaning_groups.RemoveAt(i);
+							meaning_groups.RemoveAt(i - 1);
+							oprt_str = GetReverseOperatorStr(oprt_str);
+							string tmpStr = string.Empty;
+							foreach (var item in meaning_groups)
+							{
+								tmpStr += item.Text;
+							}
+							tmpStr += "/" + right_exp_str;
+							right_exp_str = tmpStr;
+							return varGroupStr;
+						}
+						else
+						{
+							System.Diagnostics.Trace.Assert(false);
+						}
+					}
+					break;
+				}
+			}
+			string str = string.Empty;
+			foreach (var item in meaning_groups)
+			{
+				str += item.Text;
+			}
+			return str;
 		}
 	}
 }

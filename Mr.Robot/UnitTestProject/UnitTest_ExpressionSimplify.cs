@@ -38,5 +38,23 @@ namespace UnitTestProject
 			C_DEDUCER.RunUnitTestAll = false;
 			deducer.DeducerStart2();
 		}
+
+		[TestMethod, TestCategory("ExpressionSimplify")]
+		public void TestMethod_3()
+		{
+			Assert.AreNotEqual(0, m_ParseInfoList.Count);
+			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_3");
+			C_DEDUCER.RunUnitTestAll = false;
+			deducer.DeducerStart2();
+		}
+
+		[TestMethod, TestCategory("ExpressionSimplify")]
+		public void TestMethod_4()
+		{
+			Assert.AreNotEqual(0, m_ParseInfoList.Count);
+			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_4");
+			C_DEDUCER.RunUnitTestAll = false;
+			deducer.DeducerStart2();
+		}
 	}
 }
