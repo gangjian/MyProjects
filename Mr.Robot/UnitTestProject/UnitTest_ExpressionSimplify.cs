@@ -52,7 +52,7 @@ namespace UnitTestProject
 		public void TestMethod_4()
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);
-			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_4");
+			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_5");
 			C_DEDUCER.RunUnitTestAll = false;
 			deducer.DeducerStart2();
 		}

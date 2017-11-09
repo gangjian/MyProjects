@@ -56,7 +56,7 @@ void Test_Func_4()
 	}
 }
 
-void Test_Func_4(int a)
+void Test_Func_5(int a)
 {
 	int b;
 	b = a + 5;

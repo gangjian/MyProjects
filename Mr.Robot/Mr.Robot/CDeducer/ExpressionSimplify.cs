@@ -10,7 +10,8 @@ namespace Mr.Robot.CDeducer
 		public static int ExpressionSpeculate(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 表达式化简
-			SIMPLIFIED_EXPRESSION exp_str = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
+			SIMPLIFIED_EXPRESSION splfExp = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
+			List<VAR_INTERVAL> varItvList = VAR_INTERVAL_PROC.GetVarIntervalStr(splfExp.OprtStr, splfExp.ValStr);
 			return 0;
 		}
 
@@ -205,7 +206,7 @@ namespace Mr.Robot.CDeducer
 				return false;
 			}
 		}
-		static bool IsRelationshipOperator(string opt)
+		public static bool IsRelationshipOperator(string opt)
 		{
 			if (opt.Equals(">")
 				|| opt.Equals("<")
@@ -464,6 +465,7 @@ namespace Mr.Robot.CDeducer
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(var));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(oprt));
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(val));
+			System.Diagnostics.Trace.Assert(LOGIC_EXPRESSION_SIMPLIFY.IsRelationshipOperator(oprt));
 			this.VarName = var;
 			this.OprtStr = oprt;
 			this.ValStr = val;
