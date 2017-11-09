@@ -82,7 +82,7 @@ namespace Mr.Robot.CDeducer
 	public enum VAR_BEHAVE
 	{
 		DECLARE,					// 声明
-		EVALUATION,					// 赋值
+		ASSIGNMENT,					// 赋值
 		READ_OUT,					// (读)出参
 		CONDITION_LIMIT,			// 条件(语句)限定
 	}

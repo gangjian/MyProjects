@@ -60,7 +60,9 @@ namespace Mr.Robot.CDeducer
 			foreach (var item in funcInfo.ParaList)
 			{
 				List<MEANING_GROUP> meaningGroupList = COMN_PROC.GetMeaningGroups2(item, parse_info, deducer_ctx);
-				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(meaningGroupList, parse_info, string.Empty, VAR_CATEGORY.FUNC_PARA);
+				MEANING_GROUP typeGroup = meaningGroupList.First();
+				meaningGroupList.RemoveAt(0);
+				VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(typeGroup, meaningGroupList, parse_info, string.Empty, VAR_CATEGORY.FUNC_PARA);
 				deducer_ctx.VarCtxList.Add(varCtx2);
 			}
 		}
@@ -347,11 +349,11 @@ namespace Mr.Robot.CDeducer
 
 		public static bool RunUnitTestAll = true;
 
-        static void MeaningGroupsAnalysis(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx, STATEMENT_NODE s_node)
+        static void MeaningGroupsAnalysis(List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx, STATEMENT_NODE s_node)
         {
             // 先检查是否是新定义的局部变量
 			VAR_CTX varCtx = null;
-			if (null != (varCtx = IsNewDefineVarible(mgList, parse_info, func_ctx)))
+			if (null != (varCtx = IsNewDefineVarible(group_list, parse_info, func_ctx)))
 			{
 				// 如果是,为此新定义局部变量创建上下文记录项
 				if (null != func_ctx)
@@ -372,22 +374,32 @@ namespace Mr.Robot.CDeducer
 				}
 			}
 			// 分析左值/右值
-			InOutAnalysis.LeftRightValueAnalysis(mgList, parse_info, func_ctx);
+			//InOutAnalysis.LeftRightValueAnalysis(group_list, parse_info, func_ctx);
 
 			if (RunUnitTestAll)
 			{
 				return;
 			}
 			/////////////////////// 以下是新方案 /////////////////////
-			if (IfNewDefVar2(mgList, parse_info))
-			{
-				string stepMarkStr = string.Empty;
-				if (null != s_node && null != deducer_ctx)
+			MEANING_GROUP typeGroup = null;
+			List<List<MEANING_GROUP>> varGroupList = null;
+			if (IfNewDefVar2(group_list, parse_info, out typeGroup, out varGroupList)
+				&& null != typeGroup
+				&& null != varGroupList)
+			{																			// 变量声明
+				foreach (var varGroup in varGroupList)
 				{
-					stepMarkStr = s_node.StepMarkStr;
-					VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(mgList, parse_info, stepMarkStr, VAR_CATEGORY.LOCAL);
-					deducer_ctx.VarCtxList.Add(varCtx2);
+					string stepMarkStr = s_node.StepMarkStr;
+					if (null != s_node && null != deducer_ctx)
+					{
+						VAR_CTX2 varCtx2 = D_COMMON.CreateVarCtx2(typeGroup, varGroup, parse_info, stepMarkStr, VAR_CATEGORY.LOCAL);
+						deducer_ctx.VarCtxList.Add(varCtx2);
+					}
 				}
+			}
+			else if (IsVarAssignment(group_list, parse_info, deducer_ctx))
+			{																			// 赋值
+				
 			}
 			else
 			{
@@ -433,14 +445,42 @@ namespace Mr.Robot.CDeducer
             return null;
         }
 
-		static bool IfNewDefVar2(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info)
+		static bool IfNewDefVar2(	List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info,
+									out MEANING_GROUP var_type_group,
+									out List<List<MEANING_GROUP>> var_group_list)
 		{
+			var_type_group = null;
+			var_group_list = null;
 			if (mgList.Count < 2
 				|| MeaningGroupType.VariableType != mgList[0].Type)
 			{
 				return false;
 			}
-			return true;
+			else
+			{
+				var_type_group = mgList[0];
+				var_group_list = new List<List<MEANING_GROUP>>();
+				List<MEANING_GROUP> tmp_list = new List<MEANING_GROUP>();
+				for (int i = 1; i < mgList.Count; i++)
+				{
+					if (mgList[i].Text.Equals(","))
+					{
+						var_group_list.Add(tmp_list);
+						tmp_list = new List<MEANING_GROUP>();
+					}
+					else
+					{
+						tmp_list.Add(mgList[i]);
+					}
+				}
+				var_group_list.Add(tmp_list);
+				return true;
+			}
+		}
+
+		static bool IsVarAssignment(List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			return false;
 		}
 	}
 
@@ -493,7 +533,7 @@ namespace Mr.Robot.CDeducer
         GlobalVariable,				// 全局变量
         FunctionCalling,			// 函数调用
 		Expression,					// 表达式
-		EvaluationMark,				// 赋值符号
+		AssignmentMark,				// 赋值符号
 		TypeCasting,				// 强制类型转换
 		OtherOperator,				// 其它运算符
 		Constant,					// 常量

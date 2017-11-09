@@ -30,7 +30,8 @@ namespace Mr.Robot
 					&& MeaningGroupType.GlobalVariable == leftGroupList[0].Type)
 				{
 					VAR_DESCRIPTION varDescrp = GetVarDescriptionFromExpression(leftGroupList[0]);
-					if (null != varDescrp)
+					if (null != varDescrp
+						&& null != func_ctx)
 					{
 						func_ctx.OutputGlobalList.Add(varDescrp);
 					}
@@ -58,7 +59,7 @@ namespace Mr.Robot
 		{
 			for (int i = 0; i < mgList.Count; i++)
 			{
-				if (mgList[i].Type == MeaningGroupType.EvaluationMark)						// "=", 等号赋值符
+				if (mgList[i].Type == MeaningGroupType.AssignmentMark)						// "=", 等号赋值符
 				{
 					return i;
 				}

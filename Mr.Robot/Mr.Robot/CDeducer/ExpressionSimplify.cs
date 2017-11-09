@@ -11,7 +11,21 @@ namespace Mr.Robot.CDeducer
 		{
 			// 表达式化简
 			SIMPLIFIED_EXPRESSION splfExp = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
+			VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfExp.VarName);
+			if (varCtx.VarCategory == VAR_CATEGORY.FUNC_PARA
+				|| varCtx.VarCategory == VAR_CATEGORY.GLOBAL)
+			{
+				// 如果是入力(函数参数,全局量或者函数调用返回值/读出参数)
+				// 取得入力量相对当前表达式的约束条件,并判断跟既存约束条件是否兼容
+			}
+			else if (varCtx.VarCategory == VAR_CATEGORY.LOCAL)
+			{
+				// 如果是临时变量,要根据赋值记录进一步代入化简
+				VAR_RECORD record = varCtx.ValueEvolveList.Last();
+			}
+			// 取得变量的约束条件(取值区间)
 			List<VAR_INTERVAL> varItvList = VAR_INTERVAL_PROC.GetVarIntervalStr(splfExp.OprtStr, splfExp.ValStr);
+			// 根据变量的赋值履历向上回溯,一直向上回溯导出入力变量的约束条件
 			return 0;
 		}
 

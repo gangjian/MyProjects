@@ -1662,7 +1662,7 @@ namespace Mr.Robot
 				retGroup.Text = cpnt_list[idx].Text;
 				if ("=" == cpnt_list[idx].Text)
 				{
-					retGroup.Type = MeaningGroupType.EvaluationMark;
+					retGroup.Type = MeaningGroupType.AssignmentMark;
 				}
 				else
 				{
@@ -2153,7 +2153,7 @@ namespace Mr.Robot
 			for (int i = in_list.Count - 1; i >= 0; i--)
 			{
 				if (in_list[i].Type == MeaningGroupType.OtherOperator
-					|| in_list[i].Type == MeaningGroupType.EvaluationMark)
+					|| in_list[i].Type == MeaningGroupType.AssignmentMark)
 				{
 					if (in_list[i].ComponentList[0].Priority < highestPriority)
 					{
@@ -2272,7 +2272,7 @@ namespace Mr.Robot
 				return 1;
 			}
 			else if (mg_list[opr_idx - 1].Type == MeaningGroupType.OtherOperator
-					|| mg_list[opr_idx - 1].Type == MeaningGroupType.EvaluationMark)
+					|| mg_list[opr_idx - 1].Type == MeaningGroupType.AssignmentMark)
 			{
 				return 1;
 			}

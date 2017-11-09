@@ -7,24 +7,25 @@ namespace Mr.Robot.CDeducer
 {
 	class D_COMMON
 	{
-		public static VAR_CTX2 CreateVarCtx2(List<MEANING_GROUP> mgList, FILE_PARSE_INFO parse_info, string step_mark, VAR_CATEGORY var_category)
+		public static VAR_CTX2 CreateVarCtx2(	MEANING_GROUP type_group, List<MEANING_GROUP> var_group_list,
+												FILE_PARSE_INFO parse_info, string step_mark, VAR_CATEGORY var_category)
 		{
-			System.Diagnostics.Trace.Assert(mgList.Count > 1 && mgList[0].Type == MeaningGroupType.VariableType);
-			VAR_TYPE2 varType = GetVarTypeFromMeaningGroup(mgList[0], parse_info);
+			System.Diagnostics.Trace.Assert(var_group_list.Count > 0 && type_group.Type == MeaningGroupType.VariableType);
+			VAR_TYPE2 varType = GetVarTypeFromMeaningGroup(type_group, parse_info);
 			string typeName = varType.TypeName;
-			string varName = GetVarNameFromMeaningGroup(mgList[1], parse_info);
+			string varName = GetVarNameFromMeaningGroup(var_group_list[0], parse_info);
 			VAR_CTX2 retCtx = new VAR_CTX2(varType, varName, var_category);
 			MEANING_GROUP initGroup = null;
-			if (mgList.Count > 3 && mgList[2].Type == MeaningGroupType.EvaluationMark)
+			if (var_group_list.Count > 2 && var_group_list[1].Type == MeaningGroupType.AssignmentMark)
 			{
-				initGroup = mgList[3];
+				initGroup = var_group_list[2];
 			}
 			if (BasicTypeProc.IsBasicTypeName(typeName))
 			{
 				retCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.DECLARE, step_mark));			// 声明
 				if (null != initGroup)
 				{
-					retCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.EVALUATION, step_mark));	// 初始化赋值
+					retCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.ASSIGNMENT, step_mark));	// 初始化赋值
 				}
 			}
 			else

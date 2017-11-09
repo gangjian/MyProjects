@@ -75,7 +75,7 @@ namespace UnitTestProject
             Assert.AreEqual(3, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
             Assert.AreEqual("pvOut.dt", meaningGroupList[0].Text);
-            Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+            Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
             Assert.AreEqual(MeaningGroupType.Expression, meaningGroupList[2].Type);
             Assert.AreEqual("((uint8)0U)", meaningGroupList[2].Text);
         }
@@ -96,7 +96,7 @@ namespace UnitTestProject
             Assert.AreEqual(3, meaningGroupList.Count);
             Assert.AreEqual(MeaningGroupType.GlobalVariable, meaningGroupList[0].Type);
             Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igoff_pp_srIf_pv_PvRctasw_struct)->value", meaningGroupList[0].Text);
-            Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+            Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
             Assert.AreEqual(MeaningGroupType.Expression, meaningGroupList[2].Type);
             Assert.AreEqual("(*&pvOut)", meaningGroupList[2].Text);
         }
@@ -231,7 +231,7 @@ namespace UnitTestProject
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
 			Assert.AreEqual("varOutStep.pv", meaningGroupList[0].Text);
-			Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
 			Assert.AreEqual(MeaningGroupType.Expression, meaningGroupList[2].Type);
 			Assert.AreEqual("((uint8)0U)", meaningGroupList[2].Text);
 		}
@@ -254,7 +254,7 @@ namespace UnitTestProject
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
 			Assert.AreEqual("varInStep.inSig", meaningGroupList[0].Text);
-			Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
 			Assert.AreEqual(MeaningGroupType.Expression, meaningGroupList[2].Type);
 			Assert.AreEqual("((*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTA_val)).value)", meaningGroupList[2].Text);
 		}
@@ -277,7 +277,7 @@ namespace UnitTestProject
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
 			Assert.AreEqual("varInStep.msgSts", meaningGroupList[0].Text);
-			Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
 			Assert.AreEqual(MeaningGroupType.Expression, meaningGroupList[2].Type);
 			Assert.AreEqual("((*(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_rp_srIf_in_TRCTASts_val)).value)", meaningGroupList[2].Text);
 		}
@@ -300,7 +300,7 @@ namespace UnitTestProject
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
 			Assert.AreEqual("varInStep.powerSts", meaningGroupList[0].Text);
-			Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
 			Assert.AreEqual(MeaningGroupType.Expression, meaningGroupList[2].Type);
 			Assert.AreEqual("((uint8)0x01)", meaningGroupList[2].Text);
 		}
@@ -343,7 +343,7 @@ namespace UnitTestProject
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[0].Type);
 			Assert.AreEqual("pvOut.dt", meaningGroupList[0].Text);
-			Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
 			Assert.AreEqual(MeaningGroupType.LocalVariable, meaningGroupList[2].Type);
 			Assert.AreEqual("varOutStep.pv", meaningGroupList[2].Text);
 		}
@@ -366,7 +366,7 @@ namespace UnitTestProject
 			Assert.AreEqual(3, meaningGroupList.Count);
 			Assert.AreEqual(MeaningGroupType.GlobalVariable, meaningGroupList[0].Type);
 			Assert.AreEqual("(Rte_Inst_swc_in_trcta->rbl_in_trcta_igon_pp_srIf_pv_PvRctasw_struct)->value", meaningGroupList[0].Text);
-			Assert.AreEqual(MeaningGroupType.EvaluationMark, meaningGroupList[1].Type);
+			Assert.AreEqual(MeaningGroupType.AssignmentMark, meaningGroupList[1].Type);
 			Assert.AreEqual(MeaningGroupType.Expression, meaningGroupList[2].Type);
 			Assert.AreEqual("(*&pvOut)", meaningGroupList[2].Text);
 		}

@@ -133,7 +133,7 @@ namespace Mr.Robot
 					return retGroup;
 				}
 				else if (meaningGroupList[i].Type == MeaningGroupType.OtherOperator
-					|| meaningGroupList[i].Type == MeaningGroupType.EvaluationMark)
+					|| meaningGroupList[i].Type == MeaningGroupType.AssignmentMark)
 				{
 					if (null == operatorGroup
 						|| meaningGroupList[i].ComponentList[0].Priority < operatorGroup.ComponentList[0].Priority)
@@ -163,14 +163,14 @@ namespace Mr.Robot
 			{
 				if (operator_idx > 0
 					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.OtherOperator
-					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.EvaluationMark)
+					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.AssignmentMark)
 				{
 					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].Text, operator_idx - 1);
 					retList.Add(operand);
 				}
 				else if (operator_idx < meaningGroupList.Count - 1
 						 && meaningGroupList[operator_idx + 1].Type != MeaningGroupType.OtherOperator
-						 && meaningGroupList[operator_idx + 1].Type != MeaningGroupType.EvaluationMark)
+						 && meaningGroupList[operator_idx + 1].Type != MeaningGroupType.AssignmentMark)
 				{
 					OPERAND operand = new OPERAND(meaningGroupList[operator_idx + 1].Text, operator_idx + 1);
 					retList.Add(operand);
@@ -185,9 +185,9 @@ namespace Mr.Robot
 				if (operator_idx > 0
 					&& operator_idx < meaningGroupList.Count - 1
 					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.OtherOperator
-					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.EvaluationMark
+					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.AssignmentMark
 					&& meaningGroupList[operator_idx + 1].Type != MeaningGroupType.OtherOperator
-					&& meaningGroupList[operator_idx + 1].Type != MeaningGroupType.EvaluationMark)
+					&& meaningGroupList[operator_idx + 1].Type != MeaningGroupType.AssignmentMark)
 				{
 					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].Text, operator_idx - 1);
 					retList.Add(operand);

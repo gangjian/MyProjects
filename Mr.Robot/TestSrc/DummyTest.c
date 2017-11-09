@@ -58,15 +58,16 @@ void Test_Func_4()
 
 void Test_Func_5(int a)
 {
-	int b;
+	int b,c,d;
 	b = a + 5;
-	if (24 / (b - 1) >= 6))		// b <= 5
+	c = b - 2;
+	if (24 / (c - 1) >= 6))		// b <= 5
 	{
-		b = 100;
+		d = 100;
 	}
 	else
 	{
-		b = 20;
+		d = 20;
 	}
 }
 
