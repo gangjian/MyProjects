@@ -7,11 +7,11 @@ namespace Mr.Robot.CDeducer
 {
 	public class VAR_INTERVAL_PROC
 	{
-		public static List<VAR_INTERVAL> GetVarIntervalStr(string oprt_str, string val_str)
+		public static List<VAR_INTERVAL> GetVarInterval(string oprt_str, string const_value_str)
 		{
 			List<VAR_INTERVAL> retList = new List<VAR_INTERVAL>();
 			int val;
-			System.Diagnostics.Trace.Assert(int.TryParse(val_str, out val));
+			System.Diagnostics.Trace.Assert(int.TryParse(const_value_str, out val));
 			switch (oprt_str)
 			{
 				case ">":

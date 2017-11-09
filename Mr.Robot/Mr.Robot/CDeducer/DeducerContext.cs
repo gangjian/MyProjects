@@ -8,7 +8,7 @@ namespace Mr.Robot.CDeducer
 	public class DEDUCER_CONTEXT
 	{
 		public List<VAR_CTX2> VarCtxList = new List<VAR_CTX2>();
-		public DEDUCER_INPUT_TBL InputTable = new DEDUCER_INPUT_TBL();
+		//public DEDUCER_INPUT_TBL InputTable = new DEDUCER_INPUT_TBL();
 
 		public VAR_CTX2 FindVarCtxByName(string name)
 		{
@@ -36,6 +36,15 @@ namespace Mr.Robot.CDeducer
 			this.VarName = var_name;
 			this.VarType = var_type;
 			this.VarCategory = category;
+		}
+
+		public VAR_RECORD GetLastAssignmentRecord()
+		{
+			if (this.ValueEvolveList.Last().VarBehave != VAR_BEHAVE.DECLARE)
+			{
+				return this.ValueEvolveList.Last();
+			}
+			return null;
 		}
 	}
 

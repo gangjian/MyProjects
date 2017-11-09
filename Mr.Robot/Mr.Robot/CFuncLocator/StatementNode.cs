@@ -18,7 +18,7 @@ namespace Mr.Robot
 		public E_STATEMENT_TYPE Type = E_STATEMENT_TYPE.Invalid;
 
         // 5.条件表达式(可以为空,表示恒成立)
-        public string SNodeExprsn = string.Empty;
+        public string ExpressionStr = string.Empty;
 
 		// 6.语句标号
 		public string StepMarkStr = string.Empty;
@@ -28,6 +28,40 @@ namespace Mr.Robot
 
 		// 8.该语句是否完成遍历
 		public bool IsPassed = false;
+
+		/// <summary>
+		/// 从当前节点出发,找到指定的节点
+		/// </summary>
+		public STATEMENT_NODE GetOtherNode(string step_mark)
+		{
+			STATEMENT_NODE curNode = this;
+			while (null != curNode.ParentNode)
+			{
+				curNode = curNode.ParentNode;
+			}
+			string[] stepArr = step_mark.Split(',');
+			string stepStr = string.Empty;
+			foreach (var step in stepArr)
+			{
+				if (!string.IsNullOrEmpty(stepStr))
+				{
+					stepStr += ",";
+				}
+				stepStr += step;
+				bool findChild = false;
+				foreach (var child in curNode.ChildNodeList)
+				{
+					if (child.StepMarkStr.Equals(stepStr))
+					{
+						curNode = child;
+						findChild = true;
+						break;
+					}
+				}
+				System.Diagnostics.Trace.Assert(findChild);
+			}
+			return curNode;
+		}
     }
 
     // 语句节点类型枚举

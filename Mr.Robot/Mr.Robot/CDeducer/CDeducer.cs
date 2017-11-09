@@ -311,7 +311,7 @@ namespace Mr.Robot.CDeducer
 				{
 					if (item.Type == E_STATEMENT_TYPE.Branch_If)
 					{
-						if (0 != LOGIC_EXPRESSION_SIMPLIFY.ExpressionSpeculate(s_node.SNodeExprsn, parse_info, deducer_ctx))
+						if (0 != LOGIC_EXPRESSION_SIMPLIFY.ExpressionSpeculate(s_node, parse_info, deducer_ctx))
 						{
 							// 进入分支
 						}
@@ -397,9 +397,13 @@ namespace Mr.Robot.CDeducer
 					}
 				}
 			}
-			else if (IsVarAssignment(group_list, parse_info, deducer_ctx))
+			else if (IsVarAssignment(group_list))
 			{																			// 赋值
-				
+				VAR_CTX2 varCtx2 = deducer_ctx.FindVarCtxByName(group_list.First().Text);
+				if (null != varCtx2)
+				{
+					varCtx2.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.ASSIGNMENT, s_node.StepMarkStr));
+				}
 			}
 			else
 			{
@@ -478,9 +482,19 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		static bool IsVarAssignment(List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static bool IsVarAssignment(List<MEANING_GROUP> group_list)
 		{
-			return false;
+			if (null != group_list
+				&& group_list.Count > 2
+				&& COMN_PROC.IsStandardIdentifier(group_list.First().Text)
+				&& group_list[1].Type == MeaningGroupType.AssignmentMark)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}
 

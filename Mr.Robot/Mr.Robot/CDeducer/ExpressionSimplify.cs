@@ -7,11 +7,14 @@ namespace Mr.Robot.CDeducer
 {
 	class LOGIC_EXPRESSION_SIMPLIFY
 	{
-		public static int ExpressionSpeculate(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		public static int ExpressionSpeculate(STATEMENT_NODE statement_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
+			string expr_str = statement_node.ExpressionStr;
 			// 表达式化简
 			SIMPLIFIED_EXPRESSION splfExp = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
 			VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfExp.VarName);
+			// 取得变量的约束条件(取值区间)
+			List<VAR_INTERVAL> varItvList = VAR_INTERVAL_PROC.GetVarInterval(splfExp.OprtStr, splfExp.ValStr);
 			if (varCtx.VarCategory == VAR_CATEGORY.FUNC_PARA
 				|| varCtx.VarCategory == VAR_CATEGORY.GLOBAL)
 			{
@@ -21,11 +24,15 @@ namespace Mr.Robot.CDeducer
 			else if (varCtx.VarCategory == VAR_CATEGORY.LOCAL)
 			{
 				// 如果是临时变量,要根据赋值记录进一步代入化简
-				VAR_RECORD record = varCtx.ValueEvolveList.Last();
+				VAR_RECORD record = varCtx.GetLastAssignmentRecord();
+				if (null != record)
+				{
+					// 取得赋值节点
+					STATEMENT_NODE assignmentNode = statement_node.GetOtherNode(record.StepMarkStr);
+					System.Diagnostics.Trace.Assert(null != assignmentNode);
+					// 取得赋值表达式,用赋值表达式替换原变量继续化简 2017/11/09
+				}
 			}
-			// 取得变量的约束条件(取值区间)
-			List<VAR_INTERVAL> varItvList = VAR_INTERVAL_PROC.GetVarIntervalStr(splfExp.OprtStr, splfExp.ValStr);
-			// 根据变量的赋值履历向上回溯,一直向上回溯导出入力变量的约束条件
 			return 0;
 		}
 

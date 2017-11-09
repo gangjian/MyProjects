@@ -129,5 +129,17 @@ namespace UnitTestProject
 			C_DEDUCER deducer = new C_DEDUCER(src_parse_info, "calcIgAdAvrgData");
 			deducer.DeducerStart2();
 		}
+
+		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
+		public void TestGetStatementNode()
+		{
+			FILE_PARSE_INFO src_parse_info = Common.FindSrcParseInfoFromList(m_SourceName, m_ParseInfoList);
+			STATEMENT_NODE func_root = C_FUNC_LOCATOR.FuncLocatorStart2(src_parse_info, "calcIgAdAvrgData");
+			STATEMENT_NODE node = func_root.GetOtherNode("7,-2,2,-1,6,-1,1");
+			Assert.AreNotEqual(null, node);
+			node = node.GetOtherNode("7,-2,2,-1,2,1");
+			Assert.AreNotEqual(null, node);
+		}
+
 	}
 }
