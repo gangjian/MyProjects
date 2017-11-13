@@ -1920,7 +1920,7 @@ namespace Mr.Robot
 			return null;
 		}
 
-		static MEANING_GROUP GetVarNameGroup2(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static MEANING_GROUP GetVarNameGroup2(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			MEANING_GROUP retGroup = null;
 			if (IsStandardIdentifier(cpnt_list[idx].Text))
@@ -1973,7 +1973,7 @@ namespace Mr.Robot
 			{
 				return retGroup;
 			}
-			else if (null != (retGroup = GetOtherMeaningGroup(cpnt_list, ref idx, group_list, parse_info)))
+			else if (null != (retGroup = GetOtherMeaningGroup(cpnt_list, ref idx, parse_info)))
 			{
 				return retGroup;
 			}
@@ -2005,7 +2005,7 @@ namespace Mr.Robot
 					}
 				}
 				else if (idx < cpnt_list.Count
-						 && "[" == cpnt_list[idx].Text)								// 标识符后面跟着一个中括号(数组?)
+						 && "[" == cpnt_list[idx].Text)									// 标识符后面跟着一个中括号(数组?)
 				{
 					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
@@ -2024,15 +2024,15 @@ namespace Mr.Robot
 			}
 		}
 
-		public static MEANING_GROUP GetOneMeaningGroup2(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		public static MEANING_GROUP GetOneMeaningGroup2(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			MEANING_GROUP retGroup = null;
 			// 是变量名?
-			if (null != (retGroup = GetVarNameGroup2(cpnt_list, ref idx, group_list, parse_info, deducer_ctx)))
+			if (null != (retGroup = GetVarNameGroup2(cpnt_list, ref idx, parse_info, deducer_ctx)))
 			{
 				return retGroup;
 			}
-			else if (null != (retGroup = GetOtherMeaningGroup(cpnt_list, ref idx, group_list, parse_info)))
+			else if (null != (retGroup = GetOtherMeaningGroup(cpnt_list, ref idx, parse_info)))
 			{
 				return retGroup;
 			}
@@ -2052,7 +2052,7 @@ namespace Mr.Robot
 				idx += 1;
 				if ("defined" == retGroup.Text)
 				{
-					MEANING_GROUP nextGroup = GetOneMeaningGroup2(cpnt_list, ref idx, group_list, parse_info, deducer_ctx);
+					MEANING_GROUP nextGroup = GetOneMeaningGroup2(cpnt_list, ref idx, parse_info, deducer_ctx);
 					if (null != nextGroup)
 					{
 						MEANING_GROUP defGroup = new MEANING_GROUP();
@@ -2083,7 +2083,7 @@ namespace Mr.Robot
 			}
 		}
 
-		static MEANING_GROUP GetOtherMeaningGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, List<MEANING_GROUP> group_list, FILE_PARSE_INFO parse_info)
+		static MEANING_GROUP GetOtherMeaningGroup(List<STATEMENT_COMPONENT> cpnt_list, ref int idx, FILE_PARSE_INFO parse_info)
 		{
 			MEANING_GROUP retGroup = null;
 			// 是类型名?
@@ -2377,7 +2377,7 @@ namespace Mr.Robot
 				{
 					break;
 				}
-				MEANING_GROUP newGroup = GetOneMeaningGroup2(cpnt_list, ref idx, groupList, parse_info, deducer_ctx);
+				MEANING_GROUP newGroup = GetOneMeaningGroup2(cpnt_list, ref idx, parse_info, deducer_ctx);
 				if (0 != newGroup.ComponentList.Count)
 				{
 					groupList.Add(newGroup);
