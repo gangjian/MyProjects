@@ -237,7 +237,7 @@ namespace Mr.Robot
 				E_CHAR_TYPE cType = GetCharType(curChar);
 				switch (cType)
 				{
-					case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:                       // 空格
+					case E_CHAR_TYPE.E_CTYPE_WHITE_SPACE:								// 空格
 						if (-1 == s_pos)
 						{
 							// do nothing
@@ -248,9 +248,9 @@ namespace Mr.Robot
 							e_pos = offset - 1;
 						}
 						break;
-					case E_CHAR_TYPE.E_CTYPE_LETTER:                            // 字母
-					case E_CHAR_TYPE.E_CTYPE_UNDERLINE:                         // 下划线
-					case E_CHAR_TYPE.E_CTYPE_DIGIT:                             // 数字
+					case E_CHAR_TYPE.E_CTYPE_LETTER:									// 字母
+					case E_CHAR_TYPE.E_CTYPE_UNDERLINE:									// 下划线
+					case E_CHAR_TYPE.E_CTYPE_DIGIT:										// 数字
 						if (-1 == s_pos)
 						{
 							s_pos = offset;
@@ -260,8 +260,25 @@ namespace Mr.Robot
 							// do nothing
 						}
 						break;
-					case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:                       // 标点
-					case E_CHAR_TYPE.E_CTYPE_SYMBOL:                            // 运算符
+					case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:								// 标点
+						if (curChar.Equals('.'))
+						{
+							// 小数点?成员变量?
+						}
+						else
+						{
+							if (-1 == s_pos)
+							{
+								s_pos = offset;
+								e_pos = offset;
+							}
+							else
+							{
+								e_pos = offset - 1;
+							}
+						}
+						break;
+					case E_CHAR_TYPE.E_CTYPE_SYMBOL:									// 运算符
 						if (-1 == s_pos)
 						{
 							s_pos = offset;
@@ -1355,6 +1372,9 @@ namespace Mr.Robot
 					if (Char.IsLetter(idStr[i]) && (i > 0))
 					{
 					}
+					else if (idStr[i].Equals('.') && (i > 0))
+					{
+					}
 					else
 					{
 						retVal = false;
@@ -2363,7 +2383,7 @@ namespace Mr.Robot
 
 		public static List<MEANING_GROUP> GetMeaningGroups2(string statement_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			List<STATEMENT_COMPONENT> componentList = COMN_PROC.GetComponents(statement_str, parse_info);
+			List<STATEMENT_COMPONENT> componentList = GetComponents(statement_str, parse_info);
 			return GetMeaningGroups2(componentList, parse_info, deducer_ctx);
 		}
 
