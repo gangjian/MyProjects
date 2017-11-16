@@ -50,32 +50,19 @@ namespace Mr.Robot.CDeducer
 		/// <summary>
 		/// 取值限定是否可接受判断
 		/// </summary>
-		public bool CheckValueLimitPossible(EXPR_STR val_expr)
+		public bool CheckValueLimitPossible(VAL_LIMIT_EXPR val_expr)
 		{
 			// 1.首先判断跟既存的取值限定是否冲突
 			foreach (var item in this.ValueEvolveList)
 			{
 				if (item.VarBehave == VAR_BEHAVE.VALUE_LIMIT
-					&& !CheckValLimitExprCompatible(item.ValExpr, val_expr))
+					&& !D_COMMON.Check2ValLimitExprCompatible(item.ValExpr, val_expr))
 				{
 					return false;
 				}
 			}
 			// 2.再判断是否符合变量类型的限制条件
-			return false;
-		}
-
-		/// <summary>
-		/// 判断两个取值限定表达式是否兼容
-		/// </summary>
-		bool CheckValLimitExprCompatible(EXPR_STR val_expr_1, EXPR_STR val_exp_2)
-		{
-			return false;
-		}
-
-		bool CheckVarTypeValLimitCompatible(VAR_TYPE2 var_type, EXPR_STR val_exp)
-		{
-			return false;
+			return D_COMMON.CheckValueLimitTypeCompatible(this.VarType, val_expr);
 		}
 	}
 
@@ -91,13 +78,319 @@ namespace Mr.Robot.CDeducer
 			this.PrefixList = prefix_list;
 			this.SuffixList = suffix_list;
 		}
+
+		public void GetLimitsVal(out object max_val, out object min_val)
+		{
+			max_val = null;
+			min_val = null;
+			switch (this.TypeName)
+			{
+				case "int":
+				case "signed int":
+					max_val = int.MaxValue;
+					min_val = int.MinValue;
+					break;
+				case "unsigned int":
+					max_val = uint.MaxValue;
+					min_val = uint.MinValue;
+					break;
+				case "char":
+					max_val = char.MaxValue;
+					min_val = char.MinValue;
+					break;
+				case "unsigned char":
+					max_val = byte.MaxValue;
+					min_val = byte.MinValue;
+					break;
+				case "short":
+					max_val = short.MaxValue;
+					min_val = short.MinValue;
+					break;
+				case "unsigned short":
+					max_val = ushort.MaxValue;
+					min_val = ushort.MinValue;
+					break;
+				case "long":
+					max_val = long.MaxValue;
+					min_val = long.MinValue;
+					break;
+				case "unsigned long":
+					max_val = ulong.MaxValue;
+					min_val = ulong.MinValue;
+					break;
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+		}
+
+		public bool TryParse(string val_str, out object val)
+		{
+			val = null;
+			bool ret = false;
+			switch (this.TypeName)
+			{
+				case "int":
+				case "signed int":
+					int iVal;
+					ret = int.TryParse(val_str, out iVal);
+					val = iVal;
+					break;
+				case "unsigned int":
+					uint uiVal;
+					ret = uint.TryParse(val_str, out uiVal);
+					val = uiVal;
+					break;
+				case "char":
+					char cVal;
+					ret = char.TryParse(val_str, out cVal);
+					val = cVal;
+					break;
+				case "unsigned char":
+					byte bVal;
+					ret = byte.TryParse(val_str, out bVal);
+					val = bVal;
+					break;
+				case "short":
+					short sVal;
+					ret = short.TryParse(val_str, out sVal);
+					val = sVal;
+					break;
+				case "unsigned short":
+					ushort usVal;
+					ret = ushort.TryParse(val_str, out usVal);
+					val = usVal;
+					break;
+				case "long":
+					long lVal;
+					ret = long.TryParse(val_str, out lVal);
+					val = lVal;
+					break;
+				case "unsigned long":
+					ulong ulVal;
+					ret = ulong.TryParse(val_str, out ulVal);
+					val = ulVal;
+					break;
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+
+			return ret;
+		}
+
+		public bool LogicCompare(string oprt_str, object val1, object val2)
+		{
+			switch (this.TypeName)
+			{
+				case "int":
+				case "signed int":
+					return IntCompare(oprt_str, val1, val2);
+				case "unsigned int":
+					return UIntCompare(oprt_str, val1, val2);
+				case "char":
+					return CharCompare(oprt_str, val1, val2);
+				case "unsigned char":
+					return ByteCompare(oprt_str, val1, val2);
+				case "short":
+					return ShortCompare(oprt_str, val1, val2);
+				case "unsigned short":
+					return UShortCompare(oprt_str, val1, val2);
+				case "long":
+					return LongCompare(oprt_str, val1, val2);
+				case "unsigned long":
+					return ULongCompare(oprt_str, val1, val2);
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+
+		// TODO: 以后要用泛型方法替换
+		static bool IntCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToInt32(val1) > Convert.ToInt32(val2));
+				case ">=":
+					return (Convert.ToInt32(val1) >= Convert.ToInt32(val2));
+				case "<":
+					return (Convert.ToInt32(val1) < Convert.ToInt32(val2));
+				case "<=":
+					return (Convert.ToInt32(val1) <= Convert.ToInt32(val2));
+				case "==":
+					return (Convert.ToInt32(val1) == Convert.ToInt32(val2));
+				case "!=":
+					return (Convert.ToInt32(val1) != Convert.ToInt32(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+		static bool UIntCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToUInt32(val1) > Convert.ToUInt32(val2));
+				case ">=":
+					return (Convert.ToUInt32(val1) >= Convert.ToUInt32(val2));
+				case "<":
+					return (Convert.ToUInt32(val1) < Convert.ToUInt32(val2));
+				case "<=":
+					return (Convert.ToUInt32(val1) <= Convert.ToUInt32(val2));
+				case "==":
+					return (Convert.ToUInt32(val1) == Convert.ToUInt32(val2));
+				case "!=":
+					return (Convert.ToUInt32(val1) != Convert.ToUInt32(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+		static bool CharCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToChar(val1) > Convert.ToChar(val2));
+				case ">=":
+					return (Convert.ToChar(val1) >= Convert.ToChar(val2));
+				case "<":
+					return (Convert.ToChar(val1) < Convert.ToChar(val2));
+				case "<=":
+					return (Convert.ToChar(val1) <= Convert.ToChar(val2));
+				case "==":
+					return (Convert.ToChar(val1) == Convert.ToChar(val2));
+				case "!=":
+					return (Convert.ToChar(val1) != Convert.ToChar(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+		static bool ByteCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToByte(val1) > Convert.ToByte(val2));
+				case ">=":
+					return (Convert.ToByte(val1) >= Convert.ToByte(val2));
+				case "<":
+					return (Convert.ToByte(val1) < Convert.ToByte(val2));
+				case "<=":
+					return (Convert.ToByte(val1) <= Convert.ToByte(val2));
+				case "==":
+					return (Convert.ToByte(val1) == Convert.ToByte(val2));
+				case "!=":
+					return (Convert.ToByte(val1) != Convert.ToByte(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+		static bool ShortCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToInt16(val1) > Convert.ToInt16(val2));
+				case ">=":
+					return (Convert.ToInt16(val1) >= Convert.ToInt16(val2));
+				case "<":
+					return (Convert.ToInt16(val1) < Convert.ToInt16(val2));
+				case "<=":
+					return (Convert.ToInt16(val1) <= Convert.ToInt16(val2));
+				case "==":
+					return (Convert.ToInt16(val1) == Convert.ToInt16(val2));
+				case "!=":
+					return (Convert.ToInt16(val1) != Convert.ToInt16(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+		static bool UShortCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToUInt16(val1) > Convert.ToUInt16(val2));
+				case ">=":
+					return (Convert.ToUInt16(val1) >= Convert.ToUInt16(val2));
+				case "<":
+					return (Convert.ToUInt16(val1) < Convert.ToUInt16(val2));
+				case "<=":
+					return (Convert.ToUInt16(val1) <= Convert.ToUInt16(val2));
+				case "==":
+					return (Convert.ToUInt16(val1) == Convert.ToUInt16(val2));
+				case "!=":
+					return (Convert.ToUInt16(val1) != Convert.ToUInt16(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+		static bool LongCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToInt64(val1) > Convert.ToInt64(val2));
+				case ">=":
+					return (Convert.ToInt64(val1) >= Convert.ToInt64(val2));
+				case "<":
+					return (Convert.ToInt64(val1) < Convert.ToInt64(val2));
+				case "<=":
+					return (Convert.ToInt64(val1) <= Convert.ToInt64(val2));
+				case "==":
+					return (Convert.ToInt64(val1) == Convert.ToInt64(val2));
+				case "!=":
+					return (Convert.ToInt64(val1) != Convert.ToInt64(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
+		static bool ULongCompare(string oprt_str, object val1, object val2)
+		{
+			switch (oprt_str)
+			{
+				case ">":
+					return (Convert.ToUInt64(val1) > Convert.ToUInt64(val2));
+				case ">=":
+					return (Convert.ToUInt64(val1) >= Convert.ToUInt64(val2));
+				case "<":
+					return (Convert.ToUInt64(val1) < Convert.ToUInt64(val2));
+				case "<=":
+					return (Convert.ToUInt64(val1) <= Convert.ToUInt64(val2));
+				case "==":
+					return (Convert.ToUInt64(val1) == Convert.ToUInt64(val2));
+				case "!=":
+					return (Convert.ToUInt64(val1) != Convert.ToUInt64(val2));
+				default:
+					System.Diagnostics.Trace.Assert(false);
+					break;
+			}
+			return false;
+		}
 	}
 
 	public class VAR_RECORD
 	{
 		public VAR_BEHAVE VarBehave;
 		public string StepMarkStr;
-		public EXPR_STR ValExpr = null;													// 表达式(比如取值限制or赋值表达式)
+		public VAL_LIMIT_EXPR ValExpr = null;													// 表达式(比如取值限制or赋值表达式)
 
 		public VAR_RECORD(VAR_BEHAVE var_behave, string step_mark)
 		{
@@ -106,11 +399,11 @@ namespace Mr.Robot.CDeducer
 		}
 	}
 
-	public class EXPR_STR
+	public class VAL_LIMIT_EXPR
 	{
 		public string OprtStr = string.Empty;											// 运算符
 		public string ExprStr = string.Empty;											// 运算符右侧表达式语句
-		public EXPR_STR(string oprt_str, string expr_str)
+		public VAL_LIMIT_EXPR(string oprt_str, string expr_str)
 		{
 			this.OprtStr = oprt_str;
 			this.ExprStr = expr_str;

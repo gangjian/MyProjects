@@ -80,5 +80,36 @@ namespace Mr.Robot.CDeducer
 			}
 			return retName;
 		}
+
+		/// <summary>
+		/// 判断两个取值限定表达式是否兼容
+		/// </summary>
+		public static bool Check2ValLimitExprCompatible(VAL_LIMIT_EXPR val_expr_1, VAL_LIMIT_EXPR val_exp_2)
+		{
+			return false;
+		}
+
+		public static bool CheckValueLimitTypeCompatible(VAR_TYPE2 var_type, VAL_LIMIT_EXPR val_exp)
+		{
+			object maxVal, minVal, varVal;
+			var_type.GetLimitsVal(out maxVal, out minVal);
+			System.Diagnostics.Trace.Assert(var_type.TryParse(val_exp.ExprStr, out varVal));
+			switch (val_exp.OprtStr)
+			{
+				case ">":
+				case ">=":
+					return var_type.LogicCompare(val_exp.OprtStr, maxVal, varVal);
+				case "<":
+				case "<=":
+					return var_type.LogicCompare(val_exp.OprtStr, minVal, varVal);
+				case "==":
+					break;
+				case "!=":
+					break;
+				default:
+					break;
+			}
+			return false;
+		}
 	}
 }
