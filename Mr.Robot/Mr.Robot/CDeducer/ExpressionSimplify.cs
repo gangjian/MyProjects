@@ -10,41 +10,53 @@ namespace Mr.Robot.CDeducer
 		public static int ExpressionSpeculate(STATEMENT_NODE statement_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			string expr_str = statement_node.ExpressionStr;
-			// 表达式化简
-			SIMPLIFIED_EXPRESSION splfExp = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
-			VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfExp.VarName);
-			// 取得变量的约束条件(取值区间)
-			List<VAR_INTERVAL> varItvList = VAR_INTERVAL_PROC.GetVarInterval(splfExp.OprtStr, splfExp.ValStr);
-			if (varCtx.VarCategory == VAR_CATEGORY.FUNC_PARA
-				|| varCtx.VarCategory == VAR_CATEGORY.GLOBAL)
+			while (true)
 			{
-				// 如果是入力(函数参数,全局量或者函数调用返回值/读出参数)
-				// 取得入力量相对当前表达式的约束条件,并判断跟既存约束条件是否兼容
-			}
-			else if (varCtx.VarCategory == VAR_CATEGORY.LOCAL)
-			{
-				// 如果是临时变量,要根据赋值记录进一步代入化简
-				VAR_RECORD record = varCtx.GetLastAssignmentRecord();
-				if (null != record)
+				// 表达式化简
+				SIMPLIFIED_EXPRESSION splfExp = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
+				VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfExp.VarName);
+				if (varCtx.VarCategory == VAR_CATEGORY.FUNC_PARA
+					|| varCtx.VarCategory == VAR_CATEGORY.GLOBAL)
 				{
+					// 如果是入力(函数参数,全局量或者函数调用返回值/读出参数)
+					// 取得入力量相对当前表达式的约束条件,并判断跟既存约束条件是否兼容
+					break;
+				}
+				else if (varCtx.VarCategory == VAR_CATEGORY.LOCAL)
+				{
+					// 如果是临时变量,要根据赋值记录进一步代入化简
+					VAR_RECORD record = varCtx.GetLastAssignmentRecord();
+					System.Diagnostics.Trace.Assert(null != record);
 					// 取得赋值节点
 					STATEMENT_NODE assignmentNode = statement_node.GetOtherNode(record.StepMarkStr);
 					System.Diagnostics.Trace.Assert(null != assignmentNode);
-					// 取得赋值表达式,用赋值表达式替换原变量继续化简 2017/11/09
+					// 取得赋值表达式,用赋值表达式替换原变量继续化简
+					string assignmentStr = GetAssignmentStr(assignmentNode.ExpressionStr, parse_info, deducer_ctx);
+					expr_str = assignmentStr + splfExp.OprtStr + splfExp.ValStr;
 				}
 			}
 			return 0;
 		}
 
+		static string GetAssignmentStr(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(expr_str, parse_info, deducer_ctx);
+			// 注意:除了等号"="赋值运算符, 还有可能是"+=", "|="等其它赋值运算符
+			System.Diagnostics.Trace.Assert(3 == meaningGroups.Count && meaningGroups[1].TextStr.Equals("="));
+			return meaningGroups[2].TextStr;
+		}
+
+		//------------------------------------>>> 以下是表达式化简
+
 		/// <summary>
 		/// 表达式化简(阶段1)
 		/// </summary>
-		static SIMPLIFIED_EXPRESSION LogicExpressionSimplify(string exp_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static SIMPLIFIED_EXPRESSION LogicExpressionSimplify(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(exp_str, parse_info, deducer_ctx);
+			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(expr_str, parse_info, deducer_ctx);
 			if (IsSimpleRelationExprGroups(meaningGroups))
 			{
-				string oprtStr = meaningGroups[1].Text;
+				string oprtStr = meaningGroups[1].TextStr;
 				// 简单逻辑关系表达式(一个逻辑关系运算符, 左右两个表达式)
 				List<string> leftVarList = FindVarsInGroup(meaningGroups[0], parse_info, deducer_ctx);
 				List<string> rightVarList = FindVarsInGroup(meaningGroups[2], parse_info, deducer_ctx);
@@ -53,14 +65,14 @@ namespace Mr.Robot.CDeducer
 				if (1 == leftVarList.Count && 0 == rightVarList.Count)
 				{
 					// 变量在符号左边
-					leftExpStr = meaningGroups[0].Text;
-					rightExpStr = meaningGroups[2].Text;
+					leftExpStr = meaningGroups[0].TextStr;
+					rightExpStr = meaningGroups[2].TextStr;
 				}
 				else if (0 == leftVarList.Count && 1 == rightVarList.Count)
 				{
 					// 变量在符号右边->左右对调,符号取反
-					leftExpStr = meaningGroups[2].Text;
-					rightExpStr = meaningGroups[0].Text;
+					leftExpStr = meaningGroups[2].TextStr;
+					rightExpStr = meaningGroups[0].TextStr;
 					oprtStr = GetReverseOperatorStr(oprtStr);
 				}
 				else
@@ -84,14 +96,14 @@ namespace Mr.Robot.CDeducer
 		/// <summary>
 		/// 表达式化简(阶段2)
 		/// </summary>
-		static bool ExpressionSimplify_Phase2(ref string left_exp, ref string right_exp, ref string oprt_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static bool ExpressionSimplify_Phase2(ref string left_expr, ref string right_expr, ref string oprt_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 将原来的表达式拆解为多个group, 包含变量的留在符号左边, 不包含变量的移到符号右边
-			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(left_exp, parse_info, deducer_ctx);
+			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(left_expr, parse_info, deducer_ctx);
 			if (meaningGroups.Count > 1)
 			{
 				// 首先要把包含变量的group移到最左边
-				string tmpStr = MoveVarGroupToLeft(meaningGroups, ref right_exp, ref oprt_str, parse_info, deducer_ctx);
+				string tmpStr = MoveVarGroupToLeft(meaningGroups, ref right_expr, ref oprt_str, parse_info, deducer_ctx);
 				meaningGroups = COMN_PROC.GetMeaningGroups2(tmpStr, parse_info, deducer_ctx);
 				// 然后把不包含变量的group移到符号右边
 				for (int i = 0; i < meaningGroups.Count; i++)
@@ -105,7 +117,7 @@ namespace Mr.Robot.CDeducer
 						if (0 == FindVarsInGroup(meaningGroups[i], parse_info, deducer_ctx).Count)
 						{
 							// 不包含变量, 要移到符号右侧
-							left_exp = MoveToRightSide(meaningGroups, i, ref right_exp, parse_info);
+							left_expr = MoveToRightSide(meaningGroups, i, ref right_expr, parse_info);
 							return true;
 						}
 						else
@@ -124,7 +136,7 @@ namespace Mr.Robot.CDeducer
 				{
 					// 变量
 					// 计算右侧常量表达式的值
-					right_exp = ExpCalc.GetConstExpressionValue(right_exp, parse_info).ToString();
+					right_expr = ExpCalc.GetConstExpressionValue(right_expr, parse_info).ToString();
 					return false;
 				}
 				else
@@ -150,7 +162,7 @@ namespace Mr.Robot.CDeducer
 			List<string> varList = new List<string>();
 			if (meaning_group.Type == MeaningGroupType.Expression)
 			{																			// 表达式
-				string newExp = meaning_group.Text.Trim();
+				string newExp = meaning_group.TextStr.Trim();
 				List<MEANING_GROUP> groupList = COMN_PROC.GetMeaningGroups2(newExp, parse_info, deducer_ctx);
 				foreach (var group in groupList)
 				{
@@ -168,25 +180,25 @@ namespace Mr.Robot.CDeducer
 					 || meaning_group.Type == MeaningGroupType.GlobalVariable
 					 || meaning_group.Type == MeaningGroupType.FuncPara)
 			{
-				if (!varList.Contains(meaning_group.Text))
+				if (!varList.Contains(meaning_group.TextStr))
 				{
-					varList.Add(meaning_group.Text);
+					varList.Add(meaning_group.TextStr);
 				}
 			}
 			else if (meaning_group.Type == MeaningGroupType.Identifier)
 			{																			// 标识符
 				MACRO_DEFINE_INFO mdi = null;
-				if (null != deducer_ctx.FindVarCtxByName(meaning_group.Text)
-					&& !varList.Contains(meaning_group.Text))
+				if (null != deducer_ctx.FindVarCtxByName(meaning_group.TextStr)
+					&& !varList.Contains(meaning_group.TextStr))
 				{																		// 在上下文中查找
-					varList.Add(meaning_group.Text);
+					varList.Add(meaning_group.TextStr);
 				}
-				else if (null != parse_info.FindGlobalVarInfoByName(meaning_group.Text)
-						 && !varList.Contains(meaning_group.Text))
+				else if (null != parse_info.FindGlobalVarInfoByName(meaning_group.TextStr)
+						 && !varList.Contains(meaning_group.TextStr))
 				{																		// 全局量?
-					varList.Add(meaning_group.Text);
+					varList.Add(meaning_group.TextStr);
 				}
-				else if (null != (mdi = parse_info.FindMacroDefInfo(meaning_group.Text)))
+				else if (null != (mdi = parse_info.FindMacroDefInfo(meaning_group.TextStr)))
 				{																		// 宏定义?
 					string newExp = mdi.ValStr;
 					List<MEANING_GROUP> groupList = COMN_PROC.GetMeaningGroups2(newExp, parse_info, deducer_ctx);
@@ -218,7 +230,7 @@ namespace Mr.Robot.CDeducer
 		static bool IsSimpleRelationExprGroups(List<MEANING_GROUP> meaning_groups)
 		{
 			if (3 == meaning_groups.Count
-				&& IsRelationshipOperator(meaning_groups[1].Text))
+				&& IsRelationshipOperator(meaning_groups[1].TextStr))
 			{
 				return true;
 			}
@@ -227,14 +239,14 @@ namespace Mr.Robot.CDeducer
 				return false;
 			}
 		}
-		public static bool IsRelationshipOperator(string opt)
+		public static bool IsRelationshipOperator(string oprt_str)
 		{
-			if (opt.Equals(">")
-				|| opt.Equals("<")
-				|| opt.Equals(">=")
-				|| opt.Equals("<=")
-				|| opt.Equals("==")
-				|| opt.Equals("!="))
+			if (oprt_str.Equals(">")
+				|| oprt_str.Equals("<")
+				|| oprt_str.Equals(">=")
+				|| oprt_str.Equals("<=")
+				|| oprt_str.Equals("==")
+				|| oprt_str.Equals("!="))
 			{
 				return true;
 			}
@@ -244,12 +256,12 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		static bool IsCommonArithmeticOperator(string opt)
+		static bool IsCommonArithmeticOperator(string oprt_str)
 		{
-			if (opt.Equals("+")
-				|| opt.Equals("-")
-				|| opt.Equals("*")
-				|| opt.Equals("/"))
+			if (oprt_str.Equals("+")
+				|| oprt_str.Equals("-")
+				|| oprt_str.Equals("*")
+				|| oprt_str.Equals("/"))
 			{
 				return true;
 			}
@@ -305,11 +317,11 @@ namespace Mr.Robot.CDeducer
 			string rightOptStr = string.Empty;
 			if (0 != operand_idx)
 			{
-				leftOptStr = meaning_groups[operand_idx - 1].Text;
+				leftOptStr = meaning_groups[operand_idx - 1].TextStr;
 			}
 			if (meaning_groups.Count - 1 != operand_idx)
 			{
-				rightOptStr = meaning_groups[operand_idx + 1].Text;
+				rightOptStr = meaning_groups[operand_idx + 1].TextStr;
 			}
 			if (string.Empty == leftOptStr
 				&& string.Empty != rightOptStr)
@@ -365,14 +377,14 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		static int GetArithmeticOperatorWeight(string oprt)
+		static int GetArithmeticOperatorWeight(string oprt_str)
 		{
-			System.Diagnostics.Trace.Assert(IsCommonArithmeticOperator(oprt));
-			if (oprt.Equals("+") || oprt.Equals("-"))
+			System.Diagnostics.Trace.Assert(IsCommonArithmeticOperator(oprt_str));
+			if (oprt_str.Equals("+") || oprt_str.Equals("-"))
 			{
 				return 0;
 			}
-			else if (oprt.Equals("*") || oprt.Equals("/"))
+			else if (oprt_str.Equals("*") || oprt_str.Equals("/"))
 			{
 				return 1;
 			}
@@ -382,13 +394,13 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		static string MoveToRightSide(List<MEANING_GROUP> meaning_groups, int operand_idx, ref string right_exp_str, FILE_PARSE_INFO parse_info)
+		static string MoveToRightSide(List<MEANING_GROUP> meaning_groups, int operand_idx, ref string right_expr_str, FILE_PARSE_INFO parse_info)
 		{
 			// 取得运算符
 			int oprtIdx;
 			string oprtStr = GetOperatorInMeaningGroups(meaning_groups, operand_idx, out oprtIdx);
-			string removeExpStr = GetMoveRightOperator(oprtStr) + meaning_groups[operand_idx].Text;
-			right_exp_str = "(" + right_exp_str + ")" + removeExpStr;
+			string removeExpStr = GetMoveRightOperator(oprtStr) + meaning_groups[operand_idx].TextStr;
+			right_expr_str = "(" + right_expr_str + ")" + removeExpStr;
 			if (oprtIdx < operand_idx)
 			{
 				meaning_groups.RemoveAt(operand_idx);
@@ -400,16 +412,16 @@ namespace Mr.Robot.CDeducer
 				meaning_groups.RemoveAt(operand_idx);
 			}
 			// 计算右侧常量表达式的值
-			right_exp_str = ExpCalc.GetConstExpressionValue(right_exp_str, parse_info).ToString();
+			right_expr_str = ExpCalc.GetConstExpressionValue(right_expr_str, parse_info).ToString();
 			StringBuilder sb = new StringBuilder();
 			foreach (var item in meaning_groups)
 			{
-				sb.Append(item.Text);
+				sb.Append(item.TextStr);
 			}
 			return sb.ToString();
 		}
 
-		static string MoveVarGroupToLeft(List<MEANING_GROUP> meaning_groups, ref string right_exp_str, ref string oprt_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static string MoveVarGroupToLeft(List<MEANING_GROUP> meaning_groups, ref string right_expr_str, ref string oprt_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			for (int i = 0; i < meaning_groups.Count; i++)
 			{
@@ -417,8 +429,8 @@ namespace Mr.Robot.CDeducer
 				{
 					if (0 != i)
 					{
-						string varGroupStr = meaning_groups[i].Text;
-						string oprtStr = meaning_groups[i - 1].Text;
+						string varGroupStr = meaning_groups[i].TextStr;
+						string oprtStr = meaning_groups[i - 1].TextStr;
 						System.Diagnostics.Trace.Assert(IsCommonArithmeticOperator(oprtStr));
 						if (oprtStr.Equals("+") || oprtStr.Equals("*"))
 						{
@@ -427,7 +439,7 @@ namespace Mr.Robot.CDeducer
 							string retStr = varGroupStr + oprtStr;
 							foreach (var item in meaning_groups)
 							{
-								retStr += item.Text;
+								retStr += item.TextStr;
 							}
 							return retStr;
 						}
@@ -439,10 +451,10 @@ namespace Mr.Robot.CDeducer
 							string tmpStr = string.Empty;
 							foreach (var item in meaning_groups)
 							{
-								tmpStr += item.Text;
+								tmpStr += item.TextStr;
 							}
-							tmpStr += ("-" + right_exp_str);
-							right_exp_str = tmpStr;
+							tmpStr += ("-" + right_expr_str);
+							right_expr_str = tmpStr;
 							return varGroupStr;
 						}
 						else if (oprtStr.Equals("/"))
@@ -453,10 +465,10 @@ namespace Mr.Robot.CDeducer
 							string tmpStr = string.Empty;
 							foreach (var item in meaning_groups)
 							{
-								tmpStr += item.Text;
+								tmpStr += item.TextStr;
 							}
-							tmpStr += "/" + right_exp_str;
-							right_exp_str = tmpStr;
+							tmpStr += "/" + right_expr_str;
+							right_expr_str = tmpStr;
 							return varGroupStr;
 						}
 						else
@@ -470,7 +482,7 @@ namespace Mr.Robot.CDeducer
 			string str = string.Empty;
 			foreach (var item in meaning_groups)
 			{
-				str += item.Text;
+				str += item.TextStr;
 			}
 			return str;
 		}
@@ -478,6 +490,7 @@ namespace Mr.Robot.CDeducer
 
 	public class SIMPLIFIED_EXPRESSION
 	{
+		public string TextStr = string.Empty;
 		public string VarName = null;
 		public string OprtStr = null;
 		public string ValStr = null;
@@ -490,6 +503,7 @@ namespace Mr.Robot.CDeducer
 			this.VarName = var;
 			this.OprtStr = oprt;
 			this.ValStr = val;
+			this.TextStr = this.VarName + " " + this.OprtStr + " " + this.ValStr;
 		}
 	}
 }

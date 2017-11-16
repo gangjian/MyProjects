@@ -74,9 +74,9 @@ namespace Mr.Robot.CDeducer
 		static string GetVarNameFromMeaningGroup(MEANING_GROUP name_group, FILE_PARSE_INFO parse_info)
 		{
 			string retName = string.Empty;
-			if (COMN_PROC.IsStandardIdentifier(name_group.Text))
+			if (COMN_PROC.IsStandardIdentifier(name_group.TextStr))
 			{
-				retName = name_group.Text;
+				retName = name_group.TextStr;
 			}
 			return retName;
 		}

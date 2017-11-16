@@ -19,6 +19,7 @@ namespace UnitTestProject
 		public static void TestClassSetup(TestContext ctx)
 		{
 			m_ParseInfoList = Common.UnitTest_SourceFileProcess2(m_SourceName);
+			C_DEDUCER.RunUnitTestAll = false;
 		}
 
 		[TestMethod, TestCategory("ExpressionSimplify")]
@@ -26,7 +27,6 @@ namespace UnitTestProject
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);
 			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_1");
-			C_DEDUCER.RunUnitTestAll = false;
 			deducer.DeducerStart2();
 		}
 
@@ -35,7 +35,6 @@ namespace UnitTestProject
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);
 			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_2");
-			C_DEDUCER.RunUnitTestAll = false;
 			deducer.DeducerStart2();
 		}
 
@@ -44,7 +43,6 @@ namespace UnitTestProject
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);
 			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_3");
-			C_DEDUCER.RunUnitTestAll = false;
 			deducer.DeducerStart2();
 		}
 
@@ -53,7 +51,6 @@ namespace UnitTestProject
 		{
 			Assert.AreNotEqual(0, m_ParseInfoList.Count);
 			C_DEDUCER deducer = new C_DEDUCER(m_ParseInfoList[0], "Test_Func_5");
-			C_DEDUCER.RunUnitTestAll = false;
 			deducer.DeducerStart2();
 		}
 	}

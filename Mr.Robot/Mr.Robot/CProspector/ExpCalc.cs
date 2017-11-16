@@ -30,14 +30,14 @@ namespace Mr.Robot
 			int retVal = 0;
 			// 立即数
 			if (meaning_group.Type == MeaningGroupType.Constant
-				&& COMN_PROC.GetConstantNumberValue(meaning_group.Text, out retVal))
+				&& COMN_PROC.GetConstantNumberValue(meaning_group.TextStr, out retVal))
 			{
 				return retVal;
 			}
 			// 宏定义
 			else if (meaning_group.Type == MeaningGroupType.Identifier)
 			{
-				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(meaning_group.Text);
+				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(meaning_group.TextStr);
 				if (null != mdi)
 				{
 					return GetConstExpressionValue(mdi.ValStr, parse_info);
@@ -49,10 +49,10 @@ namespace Mr.Robot
 			}
 			// 表达式
 			else if (meaning_group.Type == MeaningGroupType.Expression
-					 && meaning_group.Text.Trim().StartsWith("(")
-					 && meaning_group.Text.Trim().EndsWith(")"))
+					 && meaning_group.TextStr.Trim().StartsWith("(")
+					 && meaning_group.TextStr.Trim().EndsWith(")"))
 			{
-				string newExp = meaning_group.Text.Trim();
+				string newExp = meaning_group.TextStr.Trim();
 				newExp = newExp.Remove(newExp.Length - 1);
 				newExp = newExp.Remove(0, 1);
 				return GetConstExpressionValue(newExp, parse_info);
@@ -60,7 +60,7 @@ namespace Mr.Robot
 			else if (meaning_group.Type == MeaningGroupType.Expression
 					 && meaning_group.ComponentList[0].Text == "defined")
 			{
-				string newExp = meaning_group.Text.Remove(0, "defined".Length).Trim();
+				string newExp = meaning_group.TextStr.Remove(0, "defined".Length).Trim();
 				if (COMN_PROC.JudgeExpressionDefined(newExp, parse_info))
 				{
 					return 1;
@@ -88,12 +88,12 @@ namespace Mr.Robot
 			string firstExpStr = string.Empty;
 			for (int i = 0; i < opt.StartIdx; i++)
 			{
-				firstExpStr += meaningGroupList[i].Text;
+				firstExpStr += meaningGroupList[i].TextStr;
 			}
 			string secondExpStr = string.Empty;
 			for (int i = opt.EndIdx + 1; i < meaningGroupList.Count; i++)
 			{
-				secondExpStr += meaningGroupList[i].Text;
+				secondExpStr += meaningGroupList[i].TextStr;
 			}
 			if (!string.IsNullOrEmpty(firstExpStr)
 				|| !string.IsNullOrEmpty(secondExpStr))
@@ -117,7 +117,7 @@ namespace Mr.Robot
 			int operatorIdx = -1;
 			for (int i = 0; i < meaningGroupList.Count; i++)
 			{
-				if ("defined" == meaningGroupList[i].Text								// 把"defined"关键字当作'特殊的'运算符处理
+				if ("defined" == meaningGroupList[i].TextStr								// 把"defined"关键字当作'特殊的'运算符处理
 					|| meaningGroupList[i].Type == MeaningGroupType.TypeCasting)		// 强制类型转换
 				{
 					retGroup = new OPERATION_GROUP();
@@ -125,9 +125,9 @@ namespace Mr.Robot
 					{
 						retGroup._Operator.Type = OPERATOR_TYPE.TYPE_CASTING;
 					}
-					retGroup._Operator.Text = meaningGroupList[i].Text;
+					retGroup._Operator.Text = meaningGroupList[i].TextStr;
 					retGroup._Operator.GroupIdx = i;
-					OPERAND oprnd = new OPERAND(meaningGroupList[i + 1].Text, i + 1);
+					OPERAND oprnd = new OPERAND(meaningGroupList[i + 1].TextStr, i + 1);
 					retGroup._OperandList.Add(oprnd);
 					retGroup.GetStartEndIdx();
 					return retGroup;
@@ -149,7 +149,7 @@ namespace Mr.Robot
 			}
 
 			retGroup = new OPERATION_GROUP();
-			retGroup._Operator.Text = operatorGroup.Text;
+			retGroup._Operator.Text = operatorGroup.TextStr;
 			retGroup._Operator.GroupIdx = operatorIdx;
 			retGroup._OperandList = GetOperandList(meaningGroupList, operatorIdx, operatorGroup.ComponentList[0].OperandCount);
 			retGroup.GetStartEndIdx();
@@ -165,14 +165,14 @@ namespace Mr.Robot
 					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.OtherOperator
 					&& meaningGroupList[operator_idx - 1].Type != MeaningGroupType.AssignmentMark)
 				{
-					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].Text, operator_idx - 1);
+					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].TextStr, operator_idx - 1);
 					retList.Add(operand);
 				}
 				else if (operator_idx < meaningGroupList.Count - 1
 						 && meaningGroupList[operator_idx + 1].Type != MeaningGroupType.OtherOperator
 						 && meaningGroupList[operator_idx + 1].Type != MeaningGroupType.AssignmentMark)
 				{
-					OPERAND operand = new OPERAND(meaningGroupList[operator_idx + 1].Text, operator_idx + 1);
+					OPERAND operand = new OPERAND(meaningGroupList[operator_idx + 1].TextStr, operator_idx + 1);
 					retList.Add(operand);
 				}
 				else
@@ -189,9 +189,9 @@ namespace Mr.Robot
 					&& meaningGroupList[operator_idx + 1].Type != MeaningGroupType.OtherOperator
 					&& meaningGroupList[operator_idx + 1].Type != MeaningGroupType.AssignmentMark)
 				{
-					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].Text, operator_idx - 1);
+					OPERAND operand = new OPERAND(meaningGroupList[operator_idx - 1].TextStr, operator_idx - 1);
 					retList.Add(operand);
-					operand = new OPERAND(meaningGroupList[operator_idx + 1].Text, operator_idx + 1);
+					operand = new OPERAND(meaningGroupList[operator_idx + 1].TextStr, operator_idx + 1);
 					retList.Add(operand);
 				}
 			}

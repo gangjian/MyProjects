@@ -46,6 +46,37 @@ namespace Mr.Robot.CDeducer
 			}
 			return null;
 		}
+
+		/// <summary>
+		/// 取值限定是否可接受判断
+		/// </summary>
+		public bool CheckValueLimitPossible(EXPR_STR val_expr)
+		{
+			// 1.首先判断跟既存的取值限定是否冲突
+			foreach (var item in this.ValueEvolveList)
+			{
+				if (item.VarBehave == VAR_BEHAVE.VALUE_LIMIT
+					&& !CheckValLimitExprCompatible(item.ValExpr, val_expr))
+				{
+					return false;
+				}
+			}
+			// 2.再判断是否符合变量类型的限制条件
+			return false;
+		}
+
+		/// <summary>
+		/// 判断两个取值限定表达式是否兼容
+		/// </summary>
+		bool CheckValLimitExprCompatible(EXPR_STR val_expr_1, EXPR_STR val_exp_2)
+		{
+			return false;
+		}
+
+		bool CheckVarTypeValLimitCompatible(VAR_TYPE2 var_type, EXPR_STR val_exp)
+		{
+			return false;
+		}
 	}
 
 	public class VAR_TYPE2
@@ -66,11 +97,23 @@ namespace Mr.Robot.CDeducer
 	{
 		public VAR_BEHAVE VarBehave;
 		public string StepMarkStr;
+		public EXPR_STR ValExpr = null;													// 表达式(比如取值限制or赋值表达式)
 
 		public VAR_RECORD(VAR_BEHAVE var_behave, string step_mark)
 		{
 			this.VarBehave = var_behave;
 			this.StepMarkStr = step_mark;
+		}
+	}
+
+	public class EXPR_STR
+	{
+		public string OprtStr = string.Empty;											// 运算符
+		public string ExprStr = string.Empty;											// 运算符右侧表达式语句
+		public EXPR_STR(string oprt_str, string expr_str)
+		{
+			this.OprtStr = oprt_str;
+			this.ExprStr = expr_str;
 		}
 	}
 
@@ -93,6 +136,6 @@ namespace Mr.Robot.CDeducer
 		DECLARE,					// 声明
 		ASSIGNMENT,					// 赋值
 		READ_OUT,					// (读)出参
-		CONDITION_LIMIT,			// 条件(语句)限定
+		VALUE_LIMIT,				// 取值限制
 	}
 }

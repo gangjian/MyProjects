@@ -193,7 +193,7 @@ namespace Mr.Robot
 					retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.POINTER;
 					if (null != init_group)
 					{
-						retVarCtx.Value = init_group.Text;
+						retVarCtx.Value = init_group.TextStr;
 					}
 				}
 				else
@@ -203,7 +203,7 @@ namespace Mr.Robot
 						retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.BASIC;
 						if (null != init_group)
 						{
-							retVarCtx.InitValue(init_group.Text, parse_info);
+							retVarCtx.InitValue(init_group.TextStr, parse_info);
 						}
 						else
 						{
@@ -279,7 +279,7 @@ namespace Mr.Robot
 					memberInitGroup = memberInitList[i];
 				}
 				VAR_CTX varCtx = null;
-				if (null != (varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, memberInitGroup, parse_info)))
+				if (null != (varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].TextStr, memberInitGroup, parse_info)))
 				{
 					retCtxList.Add(varCtx);
 				}
@@ -330,17 +330,17 @@ namespace Mr.Robot
 					addGroup.ComponentList.AddRange(tmpList[i].ComponentList);
 					foreach (var item in addGroup.ComponentList)
 					{
-						addGroup.Text += item.Text;
+						addGroup.TextStr += item.Text;
 					}
 					retList.Add(addGroup);
 				}
 				else
 				{
-					if (tmpList[i].Text.Equals(","))
+					if (tmpList[i].TextStr.Equals(","))
 					{
 						foreach (var item in addGroup.ComponentList)
 						{
-							addGroup.Text += item.Text;
+							addGroup.TextStr += item.Text;
 						}
 						retList.Add(addGroup);
 						addGroup = new MEANING_GROUP();

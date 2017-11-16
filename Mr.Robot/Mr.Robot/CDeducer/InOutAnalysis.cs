@@ -166,7 +166,7 @@ namespace Mr.Robot
 					else
 					{
 						act_para.ComponentList.Add(mg.ComponentList[i]);
-						act_para.Text += mg.ComponentList[i].Text;
+						act_para.TextStr += mg.ComponentList[i].Text;
 					}
 				}
 				if (0 != act_para.ComponentList.Count)

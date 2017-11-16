@@ -1619,7 +1619,7 @@ namespace Mr.Robot
 					MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.CodeBlock;
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text = GetComponentListStr(braceList);
+					retGroup.TextStr = GetComponentListStr(braceList);
 					idx += 1;
 					return retGroup;
 				}
@@ -1646,7 +1646,7 @@ namespace Mr.Robot
 						break;
 					}
 				}
-				retGroup.Text = sb.ToString();
+				retGroup.TextStr = sb.ToString();
 				return retGroup;
 			}
 			return null;
@@ -1661,11 +1661,11 @@ namespace Mr.Robot
 				MEANING_GROUP retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.CharBlock;
 				retGroup.ComponentList.Add(cpnt_list[idx]);
-				retGroup.Text += cpnt_list[idx].Text;
+				retGroup.TextStr += cpnt_list[idx].Text;
 				retGroup.ComponentList.Add(cpnt_list[idx + 1]);
-				retGroup.Text += cpnt_list[idx + 1].Text;
+				retGroup.TextStr += cpnt_list[idx + 1].Text;
 				retGroup.ComponentList.Add(cpnt_list[idx + 2]);
-				retGroup.Text += cpnt_list[idx + 2].Text;
+				retGroup.TextStr += cpnt_list[idx + 2].Text;
 				idx += 3;
 				return retGroup;
 			}
@@ -1679,7 +1679,7 @@ namespace Mr.Robot
 			{
 				retGroup = new MEANING_GROUP();
 				retGroup.ComponentList.Add(cpnt_list[idx]);
-				retGroup.Text = cpnt_list[idx].Text;
+				retGroup.TextStr = cpnt_list[idx].Text;
 				if ("=" == cpnt_list[idx].Text)
 				{
 					retGroup.Type = MeaningGroupType.AssignmentMark;
@@ -1713,22 +1713,22 @@ namespace Mr.Robot
 					for (int j = 0; j < prefixList.Count; j++)
 					{
 						retGroup.ComponentList.Add(prefixList[j]);
-						retGroup.Text += prefixList[j].Text + " ";
+						retGroup.TextStr += prefixList[j].Text + " ";
 					}
 					retGroup.PrefixCount = prefixList.Count;
 					for (int j = old_idx; j < idx; j++)
 					{
 						retGroup.ComponentList.Add(cpnt_list[j]);
-						retGroup.Text += cpnt_list[j].Text + " ";
+						retGroup.TextStr += cpnt_list[j].Text + " ";
 					}
 					i = idx - 1;
-					retGroup.Text = retGroup.Text.Trim();
+					retGroup.TextStr = retGroup.TextStr.Trim();
 				}
 				else if (null != retGroup
 						 && IsTypeSuffix(cpnt_list[i].Text))
 				{
 					retGroup.ComponentList.Add(cpnt_list[i]);
-					retGroup.Text += " " + cpnt_list[i].Text;
+					retGroup.TextStr += " " + cpnt_list[i].Text;
 					retGroup.SuffixCount++;
 					idx++;
 				}
@@ -1755,7 +1755,7 @@ namespace Mr.Robot
 				MEANING_GROUP retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.SingleKeyword;
 				retGroup.ComponentList.Add(cpnt_list[idx]);
-				retGroup.Text = cpnt_list[idx].Text;
+				retGroup.TextStr = cpnt_list[idx].Text;
 				idx += 1;
 				return retGroup;
 			}
@@ -1781,7 +1781,7 @@ namespace Mr.Robot
 						retGroup.Type = MeaningGroupType.Expression;
 					}
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text = GetComponentListStr(braceList);
+					retGroup.TextStr = GetComponentListStr(braceList);
 					idx += 1;
 					return retGroup;
 				}
@@ -1800,13 +1800,13 @@ namespace Mr.Robot
 					MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.FunctionCalling;
 					retGroup.ComponentList.Add(cpnt_list[idx]);
-					retGroup.Text += cpnt_list[idx].Text;
+					retGroup.TextStr += cpnt_list[idx].Text;
 					idx += 1;
 					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
 					if (null != braceList)
 					{
 						retGroup.ComponentList.AddRange(braceList);
-						retGroup.Text += GetComponentListStr(braceList);
+						retGroup.TextStr += GetComponentListStr(braceList);
 						idx += 1;
 						return retGroup;
 					}
@@ -1843,17 +1843,17 @@ namespace Mr.Robot
 					|| "->" == cpnt_list[i].Text)
 				{
 					ret_group.ComponentList.Add(cpnt_list[i]);
-					ret_group.Text += cpnt_list[i].Text;
+					ret_group.TextStr += cpnt_list[i].Text;
 					i += 1;
 					ret_group.ComponentList.Add(cpnt_list[i]);
-					ret_group.Text += cpnt_list[i].Text;
+					ret_group.TextStr += cpnt_list[i].Text;
 				}
 				else if ("[" == cpnt_list[i].Text)
 				{
 					idx = i;
 					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
 					ret_group.ComponentList.AddRange(braceList);
-					ret_group.Text += GetComponentListStr(braceList);
+					ret_group.TextStr += GetComponentListStr(braceList);
 					i = idx;
 				}
 				else
@@ -1877,7 +1877,7 @@ namespace Mr.Robot
 					retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.LocalVariable;
 					retGroup.ComponentList.Add(cpnt_list[idx]);
-					retGroup.Text = cpnt_list[idx].Text;
+					retGroup.TextStr = cpnt_list[idx].Text;
 					GetVarMemberGroup(cpnt_list, ref idx, ref retGroup);
 					return retGroup;
 				}
@@ -1887,7 +1887,7 @@ namespace Mr.Robot
 					retGroup = new MEANING_GROUP();
 					retGroup.Type = MeaningGroupType.GlobalVariable;
 					retGroup.ComponentList.Add(cpnt_list[idx]);
-					retGroup.Text = cpnt_list[idx].Text;
+					retGroup.TextStr = cpnt_list[idx].Text;
 					GetVarMemberGroup(cpnt_list, ref idx, ref retGroup);
 					return retGroup;
 				}
@@ -1905,7 +1905,7 @@ namespace Mr.Robot
 						retGroup.Type = MeaningGroupType.LocalVariable;
 					}
 					retGroup.ComponentList.Add(cpnt_list[idx]);
-					retGroup.Text = cpnt_list[idx].Text;
+					retGroup.TextStr = cpnt_list[idx].Text;
 					GetVarMemberGroup(cpnt_list, ref idx, ref retGroup);
 					return retGroup;
 				}
@@ -1931,7 +1931,7 @@ namespace Mr.Robot
 					MEANING_GROUP retGroup = new MEANING_GROUP();
 					retGroup.Type = GetVariableType(braceList, parse_info);
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text = GetComponentListStr(braceList);
+					retGroup.TextStr = GetComponentListStr(braceList);
 					GetVarMemberGroup(cpnt_list, ref tmp_idx, ref retGroup);
 					idx = tmp_idx;
 					return retGroup;
@@ -1969,7 +1969,7 @@ namespace Mr.Robot
 						retGroup = new MEANING_GROUP();
 						retGroup.Type = type;
 						retGroup.ComponentList.Add(cpnt_list[idx]);
-						retGroup.Text = cpnt_list[idx].Text;
+						retGroup.TextStr = cpnt_list[idx].Text;
 						GetVarMemberGroup(cpnt_list, ref idx, ref retGroup);
 						return retGroup;
 					}
@@ -2009,9 +2009,9 @@ namespace Mr.Robot
 					retGroup.Type = MeaningGroupType.Unknown;
 				}
 				retGroup.ComponentList.Add(cpnt_list[idx]);
-				retGroup.Text = cpnt_list[idx].Text;
+				retGroup.TextStr = cpnt_list[idx].Text;
 				idx += 1;
-				if ("defined" == retGroup.Text)
+				if ("defined" == retGroup.TextStr)
 				{
 					MEANING_GROUP nextGroup = GetOneMeaningGroup(cpnt_list, ref idx, group_list, parse_info, func_ctx);
 					if (null != nextGroup)
@@ -2019,7 +2019,7 @@ namespace Mr.Robot
 						MEANING_GROUP defGroup = new MEANING_GROUP();
 						defGroup.ComponentList.AddRange(retGroup.ComponentList);
 						defGroup.ComponentList.AddRange(nextGroup.ComponentList);
-						defGroup.Text = retGroup.Text + " " + nextGroup.Text;
+						defGroup.TextStr = retGroup.TextStr + " " + nextGroup.TextStr;
 						defGroup.Type = MeaningGroupType.Expression;
 						return defGroup;
 					}
@@ -2029,7 +2029,7 @@ namespace Mr.Robot
 				{
 					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text += GetComponentListStr(braceList);
+					retGroup.TextStr += GetComponentListStr(braceList);
 					retGroup.Type = MeaningGroupType.Expression;
 					idx += 1;
 				}
@@ -2068,9 +2068,9 @@ namespace Mr.Robot
 					retGroup.Type = MeaningGroupType.Unknown;
 				}
 				retGroup.ComponentList.Add(cpnt_list[idx]);
-				retGroup.Text = cpnt_list[idx].Text;
+				retGroup.TextStr = cpnt_list[idx].Text;
 				idx += 1;
-				if ("defined" == retGroup.Text)
+				if ("defined" == retGroup.TextStr)
 				{
 					MEANING_GROUP nextGroup = GetOneMeaningGroup2(cpnt_list, ref idx, parse_info, deducer_ctx);
 					if (null != nextGroup)
@@ -2078,7 +2078,7 @@ namespace Mr.Robot
 						MEANING_GROUP defGroup = new MEANING_GROUP();
 						defGroup.ComponentList.AddRange(retGroup.ComponentList);
 						defGroup.ComponentList.AddRange(nextGroup.ComponentList);
-						defGroup.Text = retGroup.Text + " " + nextGroup.Text;
+						defGroup.TextStr = retGroup.TextStr + " " + nextGroup.TextStr;
 						defGroup.Type = MeaningGroupType.Expression;
 						return defGroup;
 					}
@@ -2088,7 +2088,7 @@ namespace Mr.Robot
 				{
 					List<STATEMENT_COMPONENT> braceList = GetBraceComponents(cpnt_list, ref idx);
 					retGroup.ComponentList.AddRange(braceList);
-					retGroup.Text += GetComponentListStr(braceList);
+					retGroup.TextStr += GetComponentListStr(braceList);
 					retGroup.Type = MeaningGroupType.Expression;
 					idx += 1;
 				}
@@ -2151,7 +2151,7 @@ namespace Mr.Robot
 				retGroup = new MEANING_GROUP();
 				retGroup.Type = MeaningGroupType.Constant;
 				retGroup.ComponentList.Add(cpnt_list[idx]);
-				retGroup.Text = cpnt_list[idx].Text;
+				retGroup.TextStr = cpnt_list[idx].Text;
 				idx += 1;
 				return retGroup;
 			}
@@ -2184,33 +2184,33 @@ namespace Mr.Robot
 				}
 			}
 			if (operatorCount > 1
-				&& "," != in_list[idx].Text)
+				&& "," != in_list[idx].TextStr)
 			{
 				int operandCount = in_list[idx].ComponentList[0].OperandCount;
 				if (2 == operandCount)
 				{
 					List<STATEMENT_COMPONENT> newList = new List<STATEMENT_COMPONENT>();
-					string newText = in_list[idx - 1].Text + in_list[idx].Text + in_list[idx + 1].Text;
+					string newText = in_list[idx - 1].TextStr + in_list[idx].TextStr + in_list[idx + 1].TextStr;
 					newList.AddRange(in_list[idx - 1].ComponentList);
 					newList.AddRange(in_list[idx].ComponentList);
 					newList.AddRange(in_list[idx + 1].ComponentList);
 					in_list.RemoveRange(idx - 1, 3);
 					MEANING_GROUP newGroup = new MEANING_GROUP();
 					newGroup.ComponentList = newList;
-					newGroup.Text = newText;
+					newGroup.TextStr = newText;
 					newGroup.Type = MeaningGroupType.Expression;
 					in_list.Insert(idx - 1, newGroup);
 				}
 				else if (1 == operandCount)
 				{
 					List<STATEMENT_COMPONENT> newList = new List<STATEMENT_COMPONENT>();
-					string newText = in_list[idx].Text + in_list[idx + 1].Text;
+					string newText = in_list[idx].TextStr + in_list[idx + 1].TextStr;
 					newList.AddRange(in_list[idx].ComponentList);
 					newList.AddRange(in_list[idx + 1].ComponentList);
 					in_list.RemoveRange(idx, 2);
 					MEANING_GROUP newGroup = new MEANING_GROUP();
 					newGroup.ComponentList = newList;
-					newGroup.Text = newText;
+					newGroup.TextStr = newText;
 					newGroup.Type = MeaningGroupType.Expression;
 					in_list.Insert(idx, newGroup);
 				}
@@ -2233,7 +2233,7 @@ namespace Mr.Robot
 				if (mg_list[i].Type == MeaningGroupType.OtherOperator
 					&& mg_list[i].ComponentList[0].Priority == -1)
 				{
-					string oprStr = mg_list[i].Text;
+					string oprStr = mg_list[i].TextStr;
 					int oprCnt = ConfirmUnaryOrBinaryOperator(mg_list, i);
 					switch (oprStr)
 					{
@@ -2415,13 +2415,13 @@ namespace Mr.Robot
 			// 提取含义分组
 			List<MEANING_GROUP> meaningGroupList = GetMeaningGroups(cpnt_list, parse_info, func_ctx);
 			if (3 == meaningGroupList.Count
-				&& "typedef" == meaningGroupList[0].Text
+				&& "typedef" == meaningGroupList[0].TextStr
 				&& meaningGroupList[1].Type == MeaningGroupType.VariableType
 				&& meaningGroupList[2].Type == MeaningGroupType.Identifier)
 			{
 				TYPE_DEFINE_INFO tdi = new TYPE_DEFINE_INFO();
-				tdi.OldName = meaningGroupList[1].Text;
-				tdi.NewName = meaningGroupList[2].Text;
+				tdi.OldName = meaningGroupList[1].TextStr;
+				tdi.NewName = meaningGroupList[2].TextStr;
 				if (tdi.OldName != tdi.NewName)
 				{
 					parse_info.TypeDefineList.Add(tdi);

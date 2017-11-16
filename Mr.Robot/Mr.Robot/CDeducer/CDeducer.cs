@@ -399,7 +399,7 @@ namespace Mr.Robot.CDeducer
 			}
 			else if (IsVarAssignment(group_list))
 			{																			// 赋值
-				VAR_CTX2 varCtx2 = deducer_ctx.FindVarCtxByName(group_list.First().Text);
+				VAR_CTX2 varCtx2 = deducer_ctx.FindVarCtxByName(group_list.First().TextStr);
 				if (null != varCtx2)
 				{
 					varCtx2.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.ASSIGNMENT, s_node.StepMarkStr));
@@ -414,7 +414,7 @@ namespace Mr.Robot.CDeducer
         {
             if (mgList.Count >= 2 && mgList[0].Type == MeaningGroupType.VariableType)
             {
-				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].Text, parse_info, func_ctx);
+				VAR_CTX varCtx = InOutAnalysis.GetVarCtxByName(mgList[1].TextStr, parse_info, func_ctx);
 				if (null != varCtx)
 				{
 					// 在当前上下文中已存在! (作用域覆盖? 正常情况下不应该出现!)
@@ -424,15 +424,15 @@ namespace Mr.Robot.CDeducer
 				{
 					// 创建变量上下文
 					MEANING_GROUP initGroup = null;
-					if (mgList.Count >= 4 && mgList[2].Text.Equals("="))
+					if (mgList.Count >= 4 && mgList[2].TextStr.Equals("="))
 					{
 						initGroup = new MEANING_GROUP();
 						for (int i = 3; i < mgList.Count; i++)
 						{
 							initGroup.ComponentList.AddRange(mgList[i].ComponentList);
-							initGroup.Text += " " + mgList[i].Text;
+							initGroup.TextStr += " " + mgList[i].TextStr;
 						}
-						initGroup.Text = initGroup.Text.Trim();
+						initGroup.TextStr = initGroup.TextStr.Trim();
 						if (4 == mgList.Count)
 						{
 							initGroup.Type = mgList[3].Type;
@@ -442,7 +442,7 @@ namespace Mr.Robot.CDeducer
 							initGroup.Type = MeaningGroupType.Expression;
 						}
 					}
-					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].Text, initGroup, parse_info);
+					varCtx = InOutAnalysis.CreateVarCtx(mgList[0], mgList[1].TextStr, initGroup, parse_info);
 					return varCtx;
 				}
             }
@@ -467,7 +467,7 @@ namespace Mr.Robot.CDeducer
 				List<MEANING_GROUP> tmp_list = new List<MEANING_GROUP>();
 				for (int i = 1; i < mgList.Count; i++)
 				{
-					if (mgList[i].Text.Equals(","))
+					if (mgList[i].TextStr.Equals(","))
 					{
 						var_group_list.Add(tmp_list);
 						tmp_list = new List<MEANING_GROUP>();
@@ -486,7 +486,7 @@ namespace Mr.Robot.CDeducer
 		{
 			if (null != group_list
 				&& group_list.Count > 2
-				&& COMN_PROC.IsStandardIdentifier(group_list.First().Text)
+				&& COMN_PROC.IsStandardIdentifier(group_list.First().TextStr)
 				&& group_list[1].Type == MeaningGroupType.AssignmentMark)
 			{
 				return true;
@@ -564,7 +564,7 @@ namespace Mr.Robot.CDeducer
 	public class MEANING_GROUP
 	{
 		public MeaningGroupType Type = MeaningGroupType.Unknown;
-		public string Text = string.Empty;
+		public string TextStr = string.Empty;
 		public List<STATEMENT_COMPONENT> ComponentList = new List<STATEMENT_COMPONENT>();
 		public int PrefixCount = 0;														// 如果分组是类型的话, 还包括前后缀的个数
 		public int SuffixCount = 0;

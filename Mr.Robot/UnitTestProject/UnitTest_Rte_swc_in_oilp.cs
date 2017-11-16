@@ -85,9 +85,9 @@ namespace UnitTestProject
 
 			FUNC_CONTEXT func_ctx = C_DEDUCER.DeducerStart(m_Root, c_source_parse_info);
 			Assert.AreEqual(3, func_ctx.CalledFunctionList.Count);
-			Assert.AreEqual("makeEngOnOff3s()", func_ctx.CalledFunctionList[0].MeaningGroup.Text);
-			Assert.AreEqual("makeIgv()", func_ctx.CalledFunctionList[1].MeaningGroup.Text);
-			Assert.AreEqual("makeOilpAd()", func_ctx.CalledFunctionList[2].MeaningGroup.Text);
+			Assert.AreEqual("makeEngOnOff3s()", func_ctx.CalledFunctionList[0].MeaningGroup.TextStr);
+			Assert.AreEqual("makeIgv()", func_ctx.CalledFunctionList[1].MeaningGroup.TextStr);
+			Assert.AreEqual("makeOilpAd()", func_ctx.CalledFunctionList[2].MeaningGroup.TextStr);
 		}
 
 		[TestMethod, TestCategory("Rte_swc_in_oilp.c")]
@@ -100,7 +100,7 @@ namespace UnitTestProject
 			Assert.AreEqual(1, func_ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", func_ctx.InputGlobalList[0].VarLevelList[0].Name);
 			Assert.AreEqual(1, func_ctx.CalledFunctionList.Count);
-			Assert.AreEqual("initPvOilp()", func_ctx.CalledFunctionList[0].MeaningGroup.Text);
+			Assert.AreEqual("initPvOilp()", func_ctx.CalledFunctionList[0].MeaningGroup.TextStr);
 			Assert.AreEqual(2, func_ctx.OutputGlobalList.Count);
 			//Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvEngOnOff3s_struct)->value", func_ctx.OutputGlobalList[0].MeanningGroup.Text);
 			//Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initReset_pp_srIf_pv_PvOilpAd_struct)->value", func_ctx.OutputGlobalList[1].MeanningGroup.Text);
@@ -116,7 +116,7 @@ namespace UnitTestProject
 			Assert.AreEqual(1, func_ctx.InputGlobalList.Count);
 			Assert.AreEqual("pvEngOnOff3s", func_ctx.InputGlobalList[0].VarLevelList[0].Name);
 			Assert.AreEqual(1, func_ctx.CalledFunctionList.Count);
-			Assert.AreEqual("initPvOilp()", func_ctx.CalledFunctionList[0].MeaningGroup.Text);
+			Assert.AreEqual("initPvOilp()", func_ctx.CalledFunctionList[0].MeaningGroup.TextStr);
 			Assert.AreEqual(2, func_ctx.OutputGlobalList.Count);
 			//Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvEngOnOff3s_struct)->value", func_ctx.OutputGlobalList[0].MeanningGroup.Text);
 			//Assert.AreEqual("(Rte_Inst_swc_in_oilp->rbl_in_oilp_initWakeup_pp_srIf_pv_PvOilpAd_struct)->value", func_ctx.OutputGlobalList[1].MeanningGroup.Text);
