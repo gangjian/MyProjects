@@ -52,6 +52,11 @@ namespace Mr.Robot.CDeducer
 		/// </summary>
 		public bool CheckValueLimitPossible(VAL_LIMIT_EXPR val_expr)
 		{
+			// 1.先判断是否符合变量类型的限制条件
+			if (!D_COMMON.CheckValueLimitTypeCompatible(this.VarType, val_expr))
+			{
+				return false;
+			}
 			// 1.首先判断跟既存的取值限定是否冲突
 			foreach (var item in this.ValueEvolveList)
 			{
@@ -61,8 +66,7 @@ namespace Mr.Robot.CDeducer
 					return false;
 				}
 			}
-			// 2.再判断是否符合变量类型的限制条件
-			return D_COMMON.CheckValueLimitTypeCompatible(this.VarType, val_expr);
+			return true;
 		}
 	}
 

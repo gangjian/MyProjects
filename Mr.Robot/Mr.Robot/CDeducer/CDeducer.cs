@@ -90,9 +90,9 @@ namespace Mr.Robot.CDeducer
 			return procFlag;
 		}
 
-		const string IF_ENTER = "IfEnter";
+		const string IF_BRANCH_ENTER = "IfEnter";
 		const string IF_NOT_ENTER = "IfNotEnter";
-		const string IF_OUT = "IfOut";
+		const string IF_BRANCH_LEAVE = "IfLeave";
 		STATEMENT_NODE GetNextStep(STATEMENT_NODE root_node)
 		{
 			if (null == this.m_LastStepNode)
@@ -107,7 +107,7 @@ namespace Mr.Robot.CDeducer
 						return GetNextBrotherOrParent(this.m_LastStepNode);
 					case E_STATEMENT_TYPE.Compound_IfElse:
 						// 根据if-else复合语句的状态,判定进入分支还是跳过,注意子语句为空的情况也算进入
-						if (IF_ENTER == this.m_LastStepNode.StatusStr)
+						if (IF_BRANCH_ENTER == this.m_LastStepNode.StatusStr)
 						{
 							if (null != this.m_LastStepNode.ChildNodeList.First())
 							{
@@ -115,7 +115,7 @@ namespace Mr.Robot.CDeducer
 							}
 							else
 							{
-								this.m_LastStepNode.StatusStr = IF_OUT;
+								this.m_LastStepNode.StatusStr = IF_BRANCH_LEAVE;
 								return this.m_LastStepNode;
 							}
 						}
@@ -305,26 +305,32 @@ namespace Mr.Robot.CDeducer
 		public static void CompoundIfElseStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 判断那个自分支(branch)没走过
-			foreach (var item in s_node.ChildNodeList)
+			foreach (var branch in s_node.ChildNodeList)
 			{
-				if (!item.IsPassed)
+				if (!branch.IsPassed)
 				{
-					if (item.Type == E_STATEMENT_TYPE.Branch_If)
+					if (branch.Type == E_STATEMENT_TYPE.Branch_If)
 					{
-						if (0 != LOGIC_EXPRESSION_SIMPLIFY.ExpressionSpeculate(s_node, parse_info, deducer_ctx))
+						SIMPLIFIED_EXPRESSION splfdExpr = LOGIC_EXPRESSION_SIMPLIFY.ExpressionSpeculate(s_node, parse_info, deducer_ctx);
+						if (null != splfdExpr)
 						{
 							// 进入分支
+							branch.EnterLock = splfdExpr;								// 在Branch入口处标记EnterLock
+							VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfdExpr.VarName);
+							System.Diagnostics.Trace.Assert(null != varCtx);			// 在入力值的上下文中标记取值限定的分支号
+							varCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.VALUE_LIMIT, branch.StepMarkStr));
+							branch.StatusStr = IF_BRANCH_ENTER;
 						}
 						else
 						{
 							// 进不去?
 						}
 					}
-					else if (item.Type == E_STATEMENT_TYPE.Branch_ElseIf)
+					else if (branch.Type == E_STATEMENT_TYPE.Branch_ElseIf)
 					{
 						
 					}
-					else if (item.Type == E_STATEMENT_TYPE.Branch_Else)
+					else if (branch.Type == E_STATEMENT_TYPE.Branch_Else)
 					{
 						
 					}

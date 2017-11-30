@@ -103,10 +103,19 @@ namespace Mr.Robot.CDeducer
 				case "<=":
 					return var_type.LogicCompare(val_exp.OprtStr, minVal, varVal);
 				case "==":
-					break;
+					if (var_type.LogicCompare(">=", varVal, minVal)
+						&& var_type.LogicCompare("<=", varVal, maxVal))
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
 				case "!=":
-					break;
+					return true;
 				default:
+					System.Diagnostics.Trace.Assert(false);
 					break;
 			}
 			return false;

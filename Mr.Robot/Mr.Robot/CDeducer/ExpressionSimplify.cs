@@ -7,7 +7,7 @@ namespace Mr.Robot.CDeducer
 {
 	class LOGIC_EXPRESSION_SIMPLIFY
 	{
-		public static int ExpressionSpeculate(STATEMENT_NODE statement_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		public static SIMPLIFIED_EXPRESSION ExpressionSpeculate(STATEMENT_NODE statement_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			string expr_str = statement_node.ExpressionStr;
 			while (true)
@@ -20,7 +20,14 @@ namespace Mr.Robot.CDeducer
 				{
 					// 如果是入力(函数参数,全局量或者函数调用返回值/读出参数)
 					// 取得入力量相对当前表达式的约束条件,并判断跟既存约束条件是否兼容
-					break;
+					if (varCtx.CheckValueLimitPossible(new VAL_LIMIT_EXPR(splfExp.OprtStr, splfExp.ValStr)))
+					{
+						return splfExp;
+					}
+					else
+					{
+						return null;
+					}
 				}
 				else if (varCtx.VarCategory == VAR_CATEGORY.LOCAL)
 				{
@@ -35,7 +42,6 @@ namespace Mr.Robot.CDeducer
 					expr_str = assignmentStr + splfExp.OprtStr + splfExp.ValStr;
 				}
 			}
-			return 0;
 		}
 
 		static string GetAssignmentStr(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)

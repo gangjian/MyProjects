@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Mr.Robot.CDeducer;
+
 namespace Mr.Robot
 {
     public class STATEMENT_NODE
@@ -28,6 +30,9 @@ namespace Mr.Robot
 
 		// 8.该语句是否完成遍历
 		public bool IsPassed = false;
+
+		// 9.进入该Branch的入力取值限制条件表达式
+		public SIMPLIFIED_EXPRESSION EnterLock = null;
 
 		/// <summary>
 		/// 从当前节点出发,找到指定的节点

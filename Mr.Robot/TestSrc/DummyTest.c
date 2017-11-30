@@ -61,7 +61,7 @@ void Test_Func_5(int a)
 	int b,c,d;
 	b = a + 5;
 	c = b - 2;
-	if (24 / (c - 1) >= 6))		// c <= 5
+	if (24 / (c - 1) >= 6))		// c <= 5 --> a <= 2
 	{
 		d = 100;
 	}
