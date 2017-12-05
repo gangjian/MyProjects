@@ -34,7 +34,6 @@ namespace Mr.Robot.CDeducer
 		}
 
 		DEDUCER_CONTEXT m_DeducerContext = new DEDUCER_CONTEXT();
-		STATEMENT_NODE m_LastStepNode = null;
 
 		public void DeducerStart2()
 		{
@@ -70,10 +69,9 @@ namespace Mr.Robot.CDeducer
 		bool DeducerRun(STATEMENT_NODE root_node, FILE_PARSE_INFO parse_info)
 		{
 			bool procFlag = false;
-			this.m_LastStepNode = null;
 			while (true)
 			{
-				STATEMENT_NODE nextStep = GetNextStep(root_node);
+				STATEMENT_NODE nextStep = GetNextStep(root_node, this.m_DeducerContext);
 				if (null == nextStep)
 				{
 					break;
@@ -82,8 +80,6 @@ namespace Mr.Robot.CDeducer
 				{
 					// 处理语句
 					StatementProc(nextStep, parse_info, null, this.m_DeducerContext);
-					nextStep.BranchStatus = BRANCH_STATUS.PASSED;
-					this.m_LastStepNode = nextStep;
 					procFlag = true;
 				}
 			}
@@ -93,35 +89,35 @@ namespace Mr.Robot.CDeducer
 		const string IF_BRANCH_ENTER = "IfEnter";
 		const string IF_NOT_ENTER = "IfNotEnter";
 		const string IF_BRANCH_LEAVE = "IfLeave";
-		STATEMENT_NODE GetNextStep(STATEMENT_NODE root_node)
+		STATEMENT_NODE GetNextStep(STATEMENT_NODE root_node, DEDUCER_CONTEXT deducer_ctx)
 		{
-			if (null == this.m_LastStepNode)
+			if (null == deducer_ctx.LastStepNode)
 			{
 				return FindFirstUnreachedNode(root_node);
 			}
 			else
 			{
-				switch (this.m_LastStepNode.Type)
+				switch (deducer_ctx.LastStepNode.Type)
 				{
 					case E_STATEMENT_TYPE.Simple:
-						return GetNextBrotherOrParent(this.m_LastStepNode);
+						return GetNextBrotherOrParent(deducer_ctx.LastStepNode);
 					case E_STATEMENT_TYPE.Compound_IfElse:
 						// 根据if-else复合语句的状态,判定进入分支还是跳过,注意子语句为空的情况也算进入
-						if (this.m_LastStepNode.BranchStatus == BRANCH_STATUS.PASSING)
+						if (deducer_ctx.LastStepNode.BranchStatus == BRANCH_STATUS.PASSING)
 						{
-							if (null != this.m_LastStepNode.ChildNodeList.First())
+							if (null != deducer_ctx.LastStepNode.ChildNodeList.First())
 							{
-								return this.m_LastStepNode.ChildNodeList.First();
+								return deducer_ctx.LastStepNode.ChildNodeList.First();
 							}
 							else
 							{
-								this.m_LastStepNode.BranchStatus = BRANCH_STATUS.PASSED;
-								return this.m_LastStepNode;
+								deducer_ctx.LastStepNode.BranchStatus = BRANCH_STATUS.PASSED;
+								return deducer_ctx.LastStepNode;
 							}
 						}
-						else if (this.m_LastStepNode.BranchStatus == BRANCH_STATUS.CAN_NOT_ENTER)
+						else if (deducer_ctx.LastStepNode.BranchStatus == BRANCH_STATUS.CAN_NOT_ENTER)
 						{
-							return GetNextBrotherOrParent(this.m_LastStepNode);
+							return GetNextBrotherOrParent(deducer_ctx.LastStepNode);
 						}
 						else
 						{
@@ -304,40 +300,35 @@ namespace Mr.Robot.CDeducer
 
 		public static void CompoundIfElseStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			// 判断那个自分支(branch)没走过
+			// 取得第一条没走过的branch
 			foreach (var branch in s_node.ChildNodeList)
 			{
 				if (branch.BranchStatus == BRANCH_STATUS.NOT_PASSED)
 				{
-					if (branch.Type == E_STATEMENT_TYPE.Branch_If)
+					SIMPLIFIED_EXPRESSION enterExpr = branch.GetBranchEnterExpression(parse_info, deducer_ctx);
+					if (null != enterExpr)
 					{
-						SIMPLIFIED_EXPRESSION splfdExpr = s_node.GetBranchEnterKey(parse_info, deducer_ctx);
-						if (null != splfdExpr)
+						// 进入分支
+						branch.EnterExpression = enterExpr;
+						VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(enterExpr.VarName);
+						System.Diagnostics.Trace.Assert(null != varCtx);				// 在入力值的上下文中标记取值限定的分支号
+						varCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.VALUE_LIMIT, branch.StepMarkStr));
+						if (0 != branch.ChildNodeList.Count)
 						{
-							// 进入分支
-							branch.EnterLock = splfdExpr;								// 在Branch入口处标记EnterLock
-							VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfdExpr.VarName);
-							System.Diagnostics.Trace.Assert(null != varCtx);			// 在入力值的上下文中标记取值限定的分支号
-							varCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.VALUE_LIMIT, branch.StepMarkStr));
 							branch.BranchStatus = BRANCH_STATUS.PASSING;
+							StatementProc(branch.ChildNodeList.First(), parse_info, null, deducer_ctx);
 						}
 						else
 						{
-							// 进不去?
+							branch.BranchStatus = BRANCH_STATUS.PASSED;
 						}
-					}
-					else if (branch.Type == E_STATEMENT_TYPE.Branch_ElseIf)
-					{
-						
-					}
-					else if (branch.Type == E_STATEMENT_TYPE.Branch_Else)
-					{
-						
 					}
 					else
 					{
-						throw new MyException("CompoundIfElseStatementProc 内部矛盾!");
+						// 进不去?
+						branch.BranchStatus = BRANCH_STATUS.CAN_NOT_ENTER;
 					}
+					break;
 				}
 			}
 		}

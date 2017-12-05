@@ -29,7 +29,7 @@ namespace Mr.Robot
 		public BRANCH_STATUS BranchStatus = BRANCH_STATUS.NOT_PASSED;
 
 		// 8.进入该Branch的入力取值限制条件表达式
-		public SIMPLIFIED_EXPRESSION EnterLock = null;
+		public SIMPLIFIED_EXPRESSION EnterExpression = null;
 
 		/// <summary>
 		/// 从当前节点出发,找到指定的节点
@@ -65,10 +65,10 @@ namespace Mr.Robot
 			return curNode;
 		}
 
-		public SIMPLIFIED_EXPRESSION GetBranchEnterKey(FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		public SIMPLIFIED_EXPRESSION GetBranchEnterExpression(FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 取得分支条件表达式
-			string expr_str = this.ExpressionStr;
+			string expr_str = this.GetBranchExprStr();
 			while (true)
 			{
 				// 表达式化简
@@ -101,6 +101,14 @@ namespace Mr.Robot
 					expr_str = assignmentStr + splfExp.OprtStr + splfExp.ValStr;
 				}
 			}
+		}
+
+		/// <summary>
+		/// 取得进入分支的表达式
+		/// </summary>
+		string GetBranchExprStr()
+		{
+			return this.ExpressionStr;
 		}
 
 		string GetAssignmentStr(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
