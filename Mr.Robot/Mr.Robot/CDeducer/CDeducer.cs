@@ -82,7 +82,7 @@ namespace Mr.Robot.CDeducer
 				{
 					// 处理语句
 					StatementProc(nextStep, parse_info, null, this.m_DeducerContext);
-					nextStep.IsPassed = true;
+					nextStep.BranchStatus = BRANCH_STATUS.PASSED;
 					this.m_LastStepNode = nextStep;
 					procFlag = true;
 				}
@@ -107,7 +107,7 @@ namespace Mr.Robot.CDeducer
 						return GetNextBrotherOrParent(this.m_LastStepNode);
 					case E_STATEMENT_TYPE.Compound_IfElse:
 						// 根据if-else复合语句的状态,判定进入分支还是跳过,注意子语句为空的情况也算进入
-						if (IF_BRANCH_ENTER == this.m_LastStepNode.StatusStr)
+						if (this.m_LastStepNode.BranchStatus == BRANCH_STATUS.PASSING)
 						{
 							if (null != this.m_LastStepNode.ChildNodeList.First())
 							{
@@ -115,11 +115,11 @@ namespace Mr.Robot.CDeducer
 							}
 							else
 							{
-								this.m_LastStepNode.StatusStr = IF_BRANCH_LEAVE;
+								this.m_LastStepNode.BranchStatus = BRANCH_STATUS.PASSED;
 								return this.m_LastStepNode;
 							}
 						}
-						else if (IF_NOT_ENTER == this.m_LastStepNode.StatusStr)
+						else if (this.m_LastStepNode.BranchStatus == BRANCH_STATUS.CAN_NOT_ENTER)
 						{
 							return GetNextBrotherOrParent(this.m_LastStepNode);
 						}
@@ -161,7 +161,7 @@ namespace Mr.Robot.CDeducer
 		{
 			foreach (var child in root_node.ChildNodeList)
 			{
-				if (!child.IsPassed)
+				if (child.BranchStatus == BRANCH_STATUS.NOT_PASSED)
 				{
 					STATEMENT_NODE subNode = FindFirstUnreachedNode(child);
 					if (null != subNode)
@@ -307,11 +307,11 @@ namespace Mr.Robot.CDeducer
 			// 判断那个自分支(branch)没走过
 			foreach (var branch in s_node.ChildNodeList)
 			{
-				if (!branch.IsPassed)
+				if (branch.BranchStatus == BRANCH_STATUS.NOT_PASSED)
 				{
 					if (branch.Type == E_STATEMENT_TYPE.Branch_If)
 					{
-						SIMPLIFIED_EXPRESSION splfdExpr = LOGIC_EXPRESSION_SIMPLIFY.ExpressionSpeculate(s_node, parse_info, deducer_ctx);
+						SIMPLIFIED_EXPRESSION splfdExpr = s_node.GetBranchEnterKey(parse_info, deducer_ctx);
 						if (null != splfdExpr)
 						{
 							// 进入分支
@@ -319,7 +319,7 @@ namespace Mr.Robot.CDeducer
 							VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfdExpr.VarName);
 							System.Diagnostics.Trace.Assert(null != varCtx);			// 在入力值的上下文中标记取值限定的分支号
 							varCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.VALUE_LIMIT, branch.StepMarkStr));
-							branch.StatusStr = IF_BRANCH_ENTER;
+							branch.BranchStatus = BRANCH_STATUS.PASSING;
 						}
 						else
 						{

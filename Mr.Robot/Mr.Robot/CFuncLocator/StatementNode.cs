@@ -25,13 +25,10 @@ namespace Mr.Robot
 		// 6.语句标号
 		public string StepMarkStr = string.Empty;
 
-		// 7.语句状态(for, if-else等条件判定状态等, 待定)
-		public string StatusStr = string.Empty;
+		// 7.分支状态
+		public BRANCH_STATUS BranchStatus = BRANCH_STATUS.NOT_PASSED;
 
-		// 8.该语句是否完成遍历
-		public bool IsPassed = false;
-
-		// 9.进入该Branch的入力取值限制条件表达式
+		// 8.进入该Branch的入力取值限制条件表达式
 		public SIMPLIFIED_EXPRESSION EnterLock = null;
 
 		/// <summary>
@@ -67,6 +64,52 @@ namespace Mr.Robot
 			}
 			return curNode;
 		}
+
+		public SIMPLIFIED_EXPRESSION GetBranchEnterKey(FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			// 取得分支条件表达式
+			string expr_str = this.ExpressionStr;
+			while (true)
+			{
+				// 表达式化简
+				SIMPLIFIED_EXPRESSION splfExp = LOGIC_EXPRESSION_SIMPLIFY.ExpressionSimplify_Phase1(expr_str, parse_info, deducer_ctx);
+				VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfExp.VarName);
+				if (varCtx.VarCategory == VAR_CATEGORY.FUNC_PARA
+					|| varCtx.VarCategory == VAR_CATEGORY.GLOBAL)
+				{
+					// 如果是入力(函数参数,全局量或者函数调用返回值/读出参数)
+					// 取得入力量相对当前表达式的约束条件,并判断跟既存约束条件是否兼容
+					if (varCtx.CheckValueLimitPossible(new VAL_LIMIT_EXPR(splfExp.OprtStr, splfExp.ValStr)))
+					{
+						return splfExp;
+					}
+					else
+					{
+						return null;
+					}
+				}
+				else if (varCtx.VarCategory == VAR_CATEGORY.LOCAL)
+				{
+					// 如果是临时变量,要根据赋值记录进一步代入化简
+					VAR_RECORD record = varCtx.GetLastAssignmentRecord();
+					System.Diagnostics.Trace.Assert(null != record);
+					// 取得赋值节点
+					STATEMENT_NODE assignmentNode = this.GetOtherNode(record.StepMarkStr);
+					System.Diagnostics.Trace.Assert(null != assignmentNode);
+					// 取得赋值表达式,用赋值表达式替换原变量继续化简
+					string assignmentStr = GetAssignmentStr(assignmentNode.ExpressionStr, parse_info, deducer_ctx);
+					expr_str = assignmentStr + splfExp.OprtStr + splfExp.ValStr;
+				}
+			}
+		}
+
+		string GetAssignmentStr(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(expr_str, parse_info, deducer_ctx);
+			// 注意:除了等号"="赋值运算符, 还有可能是"+=", "|="等其它赋值运算符
+			System.Diagnostics.Trace.Assert(3 == meaningGroups.Count && meaningGroups[1].TextStr.Equals("="));
+			return meaningGroups[2].TextStr;
+		}
     }
 
     // 语句节点类型枚举
@@ -92,4 +135,12 @@ namespace Mr.Robot
         Branch_Case,          // case分支
         Branch_Default,       // default分支
     }
+
+	public enum BRANCH_STATUS
+	{
+		NOT_PASSED,
+		PASSED,
+		PASSING,
+		CAN_NOT_ENTER,
+	}
 }

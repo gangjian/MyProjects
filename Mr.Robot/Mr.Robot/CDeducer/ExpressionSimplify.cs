@@ -7,57 +7,10 @@ namespace Mr.Robot.CDeducer
 {
 	class LOGIC_EXPRESSION_SIMPLIFY
 	{
-		public static SIMPLIFIED_EXPRESSION ExpressionSpeculate(STATEMENT_NODE statement_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
-		{
-			string expr_str = statement_node.ExpressionStr;
-			while (true)
-			{
-				// 表达式化简
-				SIMPLIFIED_EXPRESSION splfExp = LogicExpressionSimplify(expr_str, parse_info, deducer_ctx);
-				VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(splfExp.VarName);
-				if (varCtx.VarCategory == VAR_CATEGORY.FUNC_PARA
-					|| varCtx.VarCategory == VAR_CATEGORY.GLOBAL)
-				{
-					// 如果是入力(函数参数,全局量或者函数调用返回值/读出参数)
-					// 取得入力量相对当前表达式的约束条件,并判断跟既存约束条件是否兼容
-					if (varCtx.CheckValueLimitPossible(new VAL_LIMIT_EXPR(splfExp.OprtStr, splfExp.ValStr)))
-					{
-						return splfExp;
-					}
-					else
-					{
-						return null;
-					}
-				}
-				else if (varCtx.VarCategory == VAR_CATEGORY.LOCAL)
-				{
-					// 如果是临时变量,要根据赋值记录进一步代入化简
-					VAR_RECORD record = varCtx.GetLastAssignmentRecord();
-					System.Diagnostics.Trace.Assert(null != record);
-					// 取得赋值节点
-					STATEMENT_NODE assignmentNode = statement_node.GetOtherNode(record.StepMarkStr);
-					System.Diagnostics.Trace.Assert(null != assignmentNode);
-					// 取得赋值表达式,用赋值表达式替换原变量继续化简
-					string assignmentStr = GetAssignmentStr(assignmentNode.ExpressionStr, parse_info, deducer_ctx);
-					expr_str = assignmentStr + splfExp.OprtStr + splfExp.ValStr;
-				}
-			}
-		}
-
-		static string GetAssignmentStr(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
-		{
-			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(expr_str, parse_info, deducer_ctx);
-			// 注意:除了等号"="赋值运算符, 还有可能是"+=", "|="等其它赋值运算符
-			System.Diagnostics.Trace.Assert(3 == meaningGroups.Count && meaningGroups[1].TextStr.Equals("="));
-			return meaningGroups[2].TextStr;
-		}
-
-		//------------------------------------>>> 以下是表达式化简
-
 		/// <summary>
 		/// 表达式化简(阶段1)
 		/// </summary>
-		static SIMPLIFIED_EXPRESSION LogicExpressionSimplify(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		public static SIMPLIFIED_EXPRESSION ExpressionSimplify_Phase1(string expr_str, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			List<MEANING_GROUP> meaningGroups = COMN_PROC.GetMeaningGroups2(expr_str, parse_info, deducer_ctx);
 			if (IsSimpleRelationExprGroups(meaningGroups))
