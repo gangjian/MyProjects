@@ -24,12 +24,20 @@ namespace Mr.Robot.CDeducer
 		{
 			// 函数根节点
 			STATEMENT_NODE func_root = C_FUNC_LOCATOR.FuncLocatorStart2(this.m_SourceParseInfo, this.m_FunctionName);
+
+			this.m_DeducerContext = new DEDUCER_CONTEXT();
 			// 处理参数列表
 			FuncParaListProc(this.m_FunctionName, this.m_SourceParseInfo, this.m_DeducerContext);
 
-			while (DeducerRun(func_root, this.m_SourceParseInfo))
+			List<string> forkPointList = new List<string>();							// 歧路点List
+			while (true)
 			{
 				// 每次遍历一条路径, 所有能走的路径都走完了, 结束遍历
+				DeducerRun(func_root, this.m_SourceParseInfo);
+				if (0 == forkPointList.Count)
+				{
+					break;
+				}
 			}
 		}
 
@@ -51,9 +59,8 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		bool DeducerRun(STATEMENT_NODE root_node, FILE_PARSE_INFO parse_info)
+		void DeducerRun(STATEMENT_NODE root_node, FILE_PARSE_INFO parse_info)
 		{
-			bool procFlag = false;
 			while (true)
 			{
 				STATEMENT_NODE nextStep = GetNextStep(root_node, this.m_DeducerContext);
@@ -65,10 +72,8 @@ namespace Mr.Robot.CDeducer
 				{
 					// 处理语句
 					StatementProc(nextStep, parse_info, null, this.m_DeducerContext);
-					procFlag = true;
 				}
 			}
-			return procFlag;
 		}
 
 		const string IF_BRANCH_ENTER = "IfEnter";
@@ -109,36 +114,15 @@ namespace Mr.Robot.CDeducer
 							}
 						}
 					case STATEMENT_TYPE.Compound_IfElse:
-						// 根据if-else复合语句的状态,判定进入分支还是跳过,注意子语句为空的情况也算进入
-						if (deducer_ctx.LastStepNode.BranchStatus == BRANCH_STATUS.PASSING)
+						retNode = deducer_ctx.LastStepNode.GetNextBrother();
+						if (null != retNode)
 						{
-							if (null != deducer_ctx.LastStepNode.ChildNodeList.First())
-							{
-								return deducer_ctx.LastStepNode.ChildNodeList.First();
-							}
-							else
-							{
-								deducer_ctx.LastStepNode.BranchStatus = BRANCH_STATUS.PASSED;
-								return deducer_ctx.LastStepNode;
-							}
-						}
-						else if (deducer_ctx.LastStepNode.BranchStatus == BRANCH_STATUS.CAN_NOT_ENTER)
-						{
-							retNode = deducer_ctx.LastStepNode.GetNextBrother();
-							if (null != retNode)
-							{
-								return retNode;
-							}
-							else
-							{
-								return deducer_ctx.LastStepNode.ParentNode;
-							}
+							return retNode;
 						}
 						else
 						{
-							System.Diagnostics.Trace.Assert(false);
+							return deducer_ctx.LastStepNode.ParentNode;
 						}
-						break;
 					case STATEMENT_TYPE.Compound_SwitchCase:
 						break;
 					case STATEMENT_TYPE.Compound_While:
@@ -217,6 +201,7 @@ namespace Mr.Robot.CDeducer
 
 		public static void CompoundStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
+			deducer_ctx.LastStepNode = s_node;
 			switch (s_node.Type)
 			{
 				case STATEMENT_TYPE.Compound_IfElse:
