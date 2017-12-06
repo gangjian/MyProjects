@@ -25,16 +25,17 @@ namespace Mr.Robot.CDeducer
 			// 函数根节点
 			STATEMENT_NODE func_root = C_FUNC_LOCATOR.FuncLocatorStart2(this.m_SourceParseInfo, this.m_FunctionName);
 
+			// 创建上下文
 			this.m_DeducerContext = new DEDUCER_CONTEXT();
+
 			// 处理参数列表
 			FuncParaListProc(this.m_FunctionName, this.m_SourceParseInfo, this.m_DeducerContext);
 
-			List<string> forkPointList = new List<string>();							// 歧路点List
 			while (true)
 			{
 				// 每次遍历一条路径, 所有能走的路径都走完了, 结束遍历
 				DeducerRun(func_root, this.m_SourceParseInfo);
-				if (0 == forkPointList.Count)
+				if (0 == this.m_DeducerContext.ForkPointList.Count)
 				{
 					break;
 				}
@@ -61,115 +62,65 @@ namespace Mr.Robot.CDeducer
 
 		void DeducerRun(STATEMENT_NODE root_node, FILE_PARSE_INFO parse_info)
 		{
+			STATEMENT_NODE nextStep = null;
+			if (0 == this.m_DeducerContext.ForkPointList.Count)
+			{
+				// 歧路点列表为空,说明是首次跑,返回第一条语句节点
+				nextStep = root_node.ChildNodeList.First();
+			}
+			else
+			{
+				// TODO:取得列表里最后一个歧路点的下一个分支
+				throw new NotImplementedException();
+			}
 			while (true)
 			{
-				STATEMENT_NODE nextStep = GetNextStep(root_node, this.m_DeducerContext);
+				// 处理语句
+				StatementProc(nextStep, parse_info, null, this.m_DeducerContext);
+				nextStep = GetNextStep(this.m_DeducerContext);
 				if (null == nextStep)
 				{
 					break;
 				}
-				else
-				{
-					// 处理语句
-					StatementProc(nextStep, parse_info, null, this.m_DeducerContext);
-				}
 			}
 		}
 
-		const string IF_BRANCH_ENTER = "IfEnter";
-		const string IF_NOT_ENTER = "IfNotEnter";
-		const string IF_BRANCH_LEAVE = "IfLeave";
-		STATEMENT_NODE GetNextStep(STATEMENT_NODE root_node, DEDUCER_CONTEXT deducer_ctx)
+		STATEMENT_NODE GetNextStep(DEDUCER_CONTEXT deducer_ctx)
 		{
-			if (null == deducer_ctx.LastStepNode)
+			System.Diagnostics.Trace.Assert(null != deducer_ctx.LastStepNode);
+			STATEMENT_NODE retNode = null;
+			retNode = deducer_ctx.LastStepNode.GetNextBrother();
+			if (null != retNode)
 			{
-				return FindFirstUnreachedNode(root_node);
+				return retNode;
 			}
 			else
 			{
-				STATEMENT_NODE retNode = null;
-				switch (deducer_ctx.LastStepNode.Type)
-				{
-					case STATEMENT_TYPE.Simple:
-						retNode = deducer_ctx.LastStepNode.GetNextBrother();
-						if (null != retNode)
-						{
-							return retNode;
-						}
-						else
-						{
-							if (deducer_ctx.LastStepNode.ParentNode.GetCategory() == STATEMENT_CATEGORY.ROOT)
-							{
-								return null;
-							}
-							else if (deducer_ctx.LastStepNode.ParentNode.GetCategory() == STATEMENT_CATEGORY.BRANCH
-									 && deducer_ctx.LastStepNode.ParentNode.ParentNode.GetCategory() == STATEMENT_CATEGORY.COMPOUND)
-							{
-								return deducer_ctx.LastStepNode.ParentNode.ParentNode.GetNextBrother();
-							}
-							else
-							{
-								System.Diagnostics.Trace.Assert(false);
-								return null;
-							}
-						}
-					case STATEMENT_TYPE.Compound_IfElse:
-						retNode = deducer_ctx.LastStepNode.GetNextBrother();
-						if (null != retNode)
-						{
-							return retNode;
-						}
-						else
-						{
-							return deducer_ctx.LastStepNode.ParentNode;
-						}
-					case STATEMENT_TYPE.Compound_SwitchCase:
-						break;
-					case STATEMENT_TYPE.Compound_While:
-						break;
-					case STATEMENT_TYPE.Compound_For:
-						break;
-					case STATEMENT_TYPE.Compound_DoWhile:
-						break;
-					case STATEMENT_TYPE.Compound_GoTo:
-						break;
-					case STATEMENT_TYPE.Compound_Block:
-						break;
-					case STATEMENT_TYPE.Branch_If:
-						break;
-					case STATEMENT_TYPE.Branch_ElseIf:
-						break;
-					case STATEMENT_TYPE.Branch_Else:
-						break;
-					case STATEMENT_TYPE.Branch_Case:
-						break;
-					case STATEMENT_TYPE.Branch_Default:
-						break;
-					default:
-						break;
-				}
+				// 没有下一个兄弟节点,说明走到了分支尽头,要回到上层节点继续向下走
+				return GetUpperNext(deducer_ctx.LastStepNode);
 			}
-			return null;
 		}
 
-		STATEMENT_NODE FindFirstUnreachedNode(STATEMENT_NODE root_node)
+		STATEMENT_NODE GetUpperNext(STATEMENT_NODE cur_node)
 		{
-			foreach (var child in root_node.ChildNodeList)
+			while (true)
 			{
-				if (child.BranchStatus == BRANCH_STATUS.NOT_PASSED)
+				STATEMENT_NODE parentNode = cur_node.ParentNode;
+				switch (parentNode.GetCategory())
 				{
-					STATEMENT_NODE subNode = FindFirstUnreachedNode(child);
-					if (null != subNode)
-					{
-						return subNode;
-					}
-					else
-					{
-						return child;
-					}
+					case STATEMENT_CATEGORY.ROOT:
+						return null;
+					case STATEMENT_CATEGORY.SIMPLE:
+					case STATEMENT_CATEGORY.COMPOUND:
+						return parentNode.GetNextBrother();
+					case STATEMENT_CATEGORY.BRANCH:
+						cur_node = parentNode;
+						break;
+					default:
+						System.Diagnostics.Trace.Assert(false);
+						break;
 				}
 			}
-			return null;
 		}
 
 		/// <summary>
@@ -182,6 +133,7 @@ namespace Mr.Robot.CDeducer
 
 		public static void StatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx)
 		{
+			System.Diagnostics.Trace.WriteLine("StatementProc ---> " + s_node.StepMarkStr);		// 打印语句节点编号
 			if (s_node.Type == STATEMENT_TYPE.Simple)
 			{
 				// 简单语句

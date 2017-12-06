@@ -9,6 +9,7 @@ namespace Mr.Robot.CDeducer
 	{
 		public List<VAR_CTX2> VarCtxList = new List<VAR_CTX2>();
 		public STATEMENT_NODE LastStepNode = null;
+		public List<string> ForkPointList = new List<string>();							// 歧路点List
 		//public DEDUCER_INPUT_TBL InputTable = new DEDUCER_INPUT_TBL();
 
 		public VAR_CTX2 FindVarCtxByName(string name)
