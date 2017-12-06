@@ -17,7 +17,7 @@ namespace Mr.Robot
         // 3.子语句节点列表
         public List<STATEMENT_NODE> ChildNodeList = new List<STATEMENT_NODE>();
         // 4.语句类型
-		public E_STATEMENT_TYPE Type = E_STATEMENT_TYPE.Invalid;
+		public STATEMENT_TYPE Type = STATEMENT_TYPE.Invalid;
 
         // 5.条件表达式(可以为空,表示恒成立)
         public string ExpressionStr = string.Empty;
@@ -63,6 +63,25 @@ namespace Mr.Robot
 				System.Diagnostics.Trace.Assert(findChild);
 			}
 			return curNode;
+		}
+
+		public STATEMENT_NODE GetNextBrother()
+		{
+			string curStepMark = this.StepMarkStr;
+			STATEMENT_NODE parentNode = this.ParentNode;
+			if (null == parentNode)
+			{
+				return null;
+			}
+			for (int i = 0; i < parentNode.ChildNodeList.Count; i++)
+			{
+				if (parentNode.ChildNodeList[i].StepMarkStr.Equals(curStepMark)
+					&& i < parentNode.ChildNodeList.Count - 1)
+				{
+					return parentNode.ChildNodeList[i + 1];
+				}
+			}
+			return null;
 		}
 
 		public SIMPLIFIED_EXPRESSION GetBranchEnterExpression(FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
@@ -118,10 +137,37 @@ namespace Mr.Robot
 			System.Diagnostics.Trace.Assert(3 == meaningGroups.Count && meaningGroups[1].TextStr.Equals("="));
 			return meaningGroups[2].TextStr;
 		}
+
+		public STATEMENT_CATEGORY GetCategory()
+		{
+			switch (this.Type)
+			{
+				case STATEMENT_TYPE.Root:
+					return STATEMENT_CATEGORY.ROOT;
+				case STATEMENT_TYPE.Simple:
+					return STATEMENT_CATEGORY.SIMPLE;
+				case STATEMENT_TYPE.Compound_IfElse:
+				case STATEMENT_TYPE.Compound_SwitchCase:
+				case STATEMENT_TYPE.Compound_While:
+				case STATEMENT_TYPE.Compound_For:
+				case STATEMENT_TYPE.Compound_DoWhile:
+				case STATEMENT_TYPE.Compound_GoTo:
+				case STATEMENT_TYPE.Compound_Block:
+					return STATEMENT_CATEGORY.COMPOUND;
+				case STATEMENT_TYPE.Branch_If:
+				case STATEMENT_TYPE.Branch_ElseIf:
+				case STATEMENT_TYPE.Branch_Else:
+				case STATEMENT_TYPE.Branch_Case:
+				case STATEMENT_TYPE.Branch_Default:
+					return STATEMENT_CATEGORY.BRANCH;
+				default:
+					return STATEMENT_CATEGORY.INVALID;
+			}
+		}
     }
 
     // 语句节点类型枚举
-    public enum E_STATEMENT_TYPE
+    public enum STATEMENT_TYPE
     {
         Invalid,
         Root,                 // 根节点(函数体)
@@ -143,6 +189,15 @@ namespace Mr.Robot
         Branch_Case,          // case分支
         Branch_Default,       // default分支
     }
+
+	public enum STATEMENT_CATEGORY
+	{
+		INVALID,
+		ROOT,
+		SIMPLE,
+		COMPOUND,
+		BRANCH,
+	}
 
 	public enum BRANCH_STATUS
 	{

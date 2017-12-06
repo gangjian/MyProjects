@@ -18,22 +18,7 @@ namespace Mr.Robot.CDeducer
 			this.m_FunctionName = func_name;
 		}
 
-		/// <summary>
-		/// 语句分析
-		/// </summary>
-        public static FUNC_CONTEXT DeducerStart(STATEMENT_NODE root, FILE_PARSE_INFO parse_info)
-		{
-            FUNC_CONTEXT fCtx = new FUNC_CONTEXT();
-			DEDUCER_CONTEXT dCtx = new DEDUCER_CONTEXT();
-			// 顺次解析各条语句
-			foreach (STATEMENT_NODE childNode in root.ChildNodeList)
-			{
-				StatementProc(childNode, parse_info, fCtx, dCtx);
-			}
-            return fCtx;
-		}
-
-		DEDUCER_CONTEXT m_DeducerContext = new DEDUCER_CONTEXT();
+		DEDUCER_CONTEXT m_DeducerContext = null;
 
 		public void DeducerStart2()
 		{
@@ -97,11 +82,33 @@ namespace Mr.Robot.CDeducer
 			}
 			else
 			{
+				STATEMENT_NODE retNode = null;
 				switch (deducer_ctx.LastStepNode.Type)
 				{
-					case E_STATEMENT_TYPE.Simple:
-						return GetNextBrotherOrParent(deducer_ctx.LastStepNode);
-					case E_STATEMENT_TYPE.Compound_IfElse:
+					case STATEMENT_TYPE.Simple:
+						retNode = deducer_ctx.LastStepNode.GetNextBrother();
+						if (null != retNode)
+						{
+							return retNode;
+						}
+						else
+						{
+							if (deducer_ctx.LastStepNode.ParentNode.GetCategory() == STATEMENT_CATEGORY.ROOT)
+							{
+								return null;
+							}
+							else if (deducer_ctx.LastStepNode.ParentNode.GetCategory() == STATEMENT_CATEGORY.BRANCH
+									 && deducer_ctx.LastStepNode.ParentNode.ParentNode.GetCategory() == STATEMENT_CATEGORY.COMPOUND)
+							{
+								return deducer_ctx.LastStepNode.ParentNode.ParentNode.GetNextBrother();
+							}
+							else
+							{
+								System.Diagnostics.Trace.Assert(false);
+								return null;
+							}
+						}
+					case STATEMENT_TYPE.Compound_IfElse:
 						// 根据if-else复合语句的状态,判定进入分支还是跳过,注意子语句为空的情况也算进入
 						if (deducer_ctx.LastStepNode.BranchStatus == BRANCH_STATUS.PASSING)
 						{
@@ -117,34 +124,42 @@ namespace Mr.Robot.CDeducer
 						}
 						else if (deducer_ctx.LastStepNode.BranchStatus == BRANCH_STATUS.CAN_NOT_ENTER)
 						{
-							return GetNextBrotherOrParent(deducer_ctx.LastStepNode);
+							retNode = deducer_ctx.LastStepNode.GetNextBrother();
+							if (null != retNode)
+							{
+								return retNode;
+							}
+							else
+							{
+								return deducer_ctx.LastStepNode.ParentNode;
+							}
 						}
 						else
 						{
 							System.Diagnostics.Trace.Assert(false);
 						}
 						break;
-					case E_STATEMENT_TYPE.Compound_SwitchCase:
+					case STATEMENT_TYPE.Compound_SwitchCase:
 						break;
-					case E_STATEMENT_TYPE.Compound_While:
+					case STATEMENT_TYPE.Compound_While:
 						break;
-					case E_STATEMENT_TYPE.Compound_For:
+					case STATEMENT_TYPE.Compound_For:
 						break;
-					case E_STATEMENT_TYPE.Compound_DoWhile:
+					case STATEMENT_TYPE.Compound_DoWhile:
 						break;
-					case E_STATEMENT_TYPE.Compound_GoTo:
+					case STATEMENT_TYPE.Compound_GoTo:
 						break;
-					case E_STATEMENT_TYPE.Compound_Block:
+					case STATEMENT_TYPE.Compound_Block:
 						break;
-					case E_STATEMENT_TYPE.Branch_If:
+					case STATEMENT_TYPE.Branch_If:
 						break;
-					case E_STATEMENT_TYPE.Branch_ElseIf:
+					case STATEMENT_TYPE.Branch_ElseIf:
 						break;
-					case E_STATEMENT_TYPE.Branch_Else:
+					case STATEMENT_TYPE.Branch_Else:
 						break;
-					case E_STATEMENT_TYPE.Branch_Case:
+					case STATEMENT_TYPE.Branch_Case:
 						break;
-					case E_STATEMENT_TYPE.Branch_Default:
+					case STATEMENT_TYPE.Branch_Default:
 						break;
 					default:
 						break;
@@ -174,56 +189,6 @@ namespace Mr.Robot.CDeducer
 		}
 
 		/// <summary>
-		/// 根据语句标号找到指定的语句节点
-		/// </summary>
-		static STATEMENT_NODE GetTargetNodeByStepMark(STATEMENT_NODE root_node, string step_mark)
-		{
-			foreach (var item in root_node.ChildNodeList)
-			{
-				if (item.StepMarkStr.Equals(step_mark))
-				{
-					return item;
-				}
-				if (step_mark.StartsWith(item.StepMarkStr))
-				{
-					return GetTargetNodeByStepMark(item, step_mark);
-				}
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// 找到指定节点的下一个兄弟节点
-		/// </summary>
-		static STATEMENT_NODE GetNextBrotherNode(STATEMENT_NODE target_node)
-		{
-			string curStepMark = target_node.StepMarkStr;
-			STATEMENT_NODE parentNode = target_node.ParentNode;
-			for (int i = 0; i < parentNode.ChildNodeList.Count; i++)
-			{
-				if (parentNode.ChildNodeList[i].StepMarkStr.Equals(curStepMark)
-					&& i < parentNode.ChildNodeList.Count - 1)
-				{
-					return parentNode.ChildNodeList[i + 1];
-				}
-			}
-			return null;
-		}
-
-		static STATEMENT_NODE GetNextBrotherOrParent(STATEMENT_NODE target_node)
-		{
-			STATEMENT_NODE retNode = GetNextBrotherNode(target_node);
-			if (null != retNode)
-			{
-				return retNode;
-			}
-			else
-			{
-				return target_node.ParentNode;
-			}
-		}
-
-		/// <summary>
 		/// 还原Deducer上下文到指定节点位置
 		/// </summary>
 		static void RestoreDeducerContext(DEDUCER_CONTEXT d_ctx, string step_mark)
@@ -233,11 +198,15 @@ namespace Mr.Robot.CDeducer
 
 		public static void StatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx)
 		{
-			if (s_node.Type == E_STATEMENT_TYPE.Simple)
+			if (s_node.Type == STATEMENT_TYPE.Simple)
 			{
 				// 简单语句
 				string statementStr = COMN_PROC.GetStatementStr(parse_info.CodeList, s_node.Scope);
 				SimpleStatementProc(statementStr, parse_info, func_ctx, deducer_ctx, s_node);
+				if (null != deducer_ctx)
+				{
+					deducer_ctx.LastStepNode = s_node;
+				}
 			}
 			else
 			{
@@ -250,30 +219,30 @@ namespace Mr.Robot.CDeducer
 		{
 			switch (s_node.Type)
 			{
-				case E_STATEMENT_TYPE.Compound_IfElse:
+				case STATEMENT_TYPE.Compound_IfElse:
 					CompoundIfElseStatementProc(s_node, parse_info, deducer_ctx);
 					break;
-				case E_STATEMENT_TYPE.Compound_SwitchCase:
+				case STATEMENT_TYPE.Compound_SwitchCase:
 					break;
-				case E_STATEMENT_TYPE.Compound_While:
+				case STATEMENT_TYPE.Compound_While:
 					break;
-				case E_STATEMENT_TYPE.Compound_For:
+				case STATEMENT_TYPE.Compound_For:
 					break;
-				case E_STATEMENT_TYPE.Compound_DoWhile:
+				case STATEMENT_TYPE.Compound_DoWhile:
 					break;
-				case E_STATEMENT_TYPE.Compound_GoTo:
+				case STATEMENT_TYPE.Compound_GoTo:
 					break;
-				case E_STATEMENT_TYPE.Compound_Block:
+				case STATEMENT_TYPE.Compound_Block:
 					break;
-				case E_STATEMENT_TYPE.Branch_If:
+				case STATEMENT_TYPE.Branch_If:
 					break;
-				case E_STATEMENT_TYPE.Branch_ElseIf:
+				case STATEMENT_TYPE.Branch_ElseIf:
 					break;
-				case E_STATEMENT_TYPE.Branch_Else:
+				case STATEMENT_TYPE.Branch_Else:
 					break;
-				case E_STATEMENT_TYPE.Branch_Case:
+				case STATEMENT_TYPE.Branch_Case:
 					break;
-				case E_STATEMENT_TYPE.Branch_Default:
+				case STATEMENT_TYPE.Branch_Default:
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);

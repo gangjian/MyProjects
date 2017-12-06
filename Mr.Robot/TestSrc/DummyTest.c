@@ -64,10 +64,12 @@ void Test_Func_5(int a)
 	if (24 / (c - 1) >= 6)		// c <= 5 --> a <= 2
 	{
 		d = 100;
+		c = a + 30;
 	}
 	else						// a > 2
 	{
 		d = 20;
 	}
+	d = c * 2;
 }
 

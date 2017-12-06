@@ -8,37 +8,6 @@ namespace Mr.Robot
 {
 	public partial class C_FUNC_LOCATOR
 	{
-        /// <summary>
-        /// 函数解析
-        /// </summary>
-		public static STATEMENT_NODE FuncLocatorStart(string src_name, string func_name, List<FILE_PARSE_INFO> parse_info_list, out FILE_PARSE_INFO source_parse_info)
-        {
-            // 从全部解析结果列表中根据指定文件名和函数名找到相应的文件和函数解析结果
-			source_parse_info = null;
-			FUNCTION_PARSE_INFO funcInfo = null;
-			foreach (var pi in parse_info_list)
-			{
-				if (pi.SourceName.Equals(src_name))
-				{
-					source_parse_info = pi;
-					funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, pi.FunDefineList);
-					break;
-				}
-			}
-			if (null == source_parse_info || null == funcInfo)
-			{
-				return null;
-			}
-
-            // 函数语句树结构的分析提取
-            STATEMENT_NODE root = new STATEMENT_NODE();
-            root.Type = E_STATEMENT_TYPE.Root;
-            root.Scope = funcInfo.Scope;
-			GetFunctionStatmentsNodeTree(source_parse_info, ref root);
-			SetStatementNodeTreeStepMark(root);											// 设置语句标号
-			return root;
-        }
-
 		public static STATEMENT_NODE FuncLocatorStart2(FILE_PARSE_INFO src_parse_info, string func_name)
 		{
 			FUNCTION_PARSE_INFO funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, src_parse_info.FunDefineList);
@@ -47,7 +16,7 @@ namespace Mr.Robot
 				return null;
 			}
 			STATEMENT_NODE root = new STATEMENT_NODE();
-			root.Type = E_STATEMENT_TYPE.Root;
+			root.Type = STATEMENT_TYPE.Root;
 			root.Scope = funcInfo.Scope;
 			GetFunctionStatmentsNodeTree(src_parse_info, ref root);
 			SetStatementNodeTreeStepMark(root);											// 设置语句标号
@@ -100,7 +69,7 @@ namespace Mr.Robot
 				return null;
 			}
 			// 复合语句
-			if (E_STATEMENT_TYPE.Invalid != GetNodeType(nextIdtf.Text))
+			if (STATEMENT_TYPE.Invalid != GetNodeType(nextIdtf.Text))
 			{
 				// 取得复合语句节点
 				retNode = GetCompondStatementNode(nextIdtf.Text, parse_info, ref searchPos);
@@ -123,32 +92,32 @@ namespace Mr.Robot
         static STATEMENT_NODE GetCompondStatementNode(string keyWord, FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = null;
-			E_STATEMENT_TYPE type = GetNodeType(keyWord);
+			STATEMENT_TYPE type = GetNodeType(keyWord);
 			CODE_POSITION searchPos = new CODE_POSITION(startPos);
 
 			switch (type)
 			{
-				case E_STATEMENT_TYPE.Compound_IfElse:									// if else
+				case STATEMENT_TYPE.Compound_IfElse:									// if else
 					retNode = GetIfElseStatementNode(parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case E_STATEMENT_TYPE.Compound_SwitchCase:								// switch case
+				case STATEMENT_TYPE.Compound_SwitchCase:								// switch case
 					retNode = GetSwitchCaseStatementNode(parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case E_STATEMENT_TYPE.Compound_While:									// while
-				case E_STATEMENT_TYPE.Compound_For:										// for
+				case STATEMENT_TYPE.Compound_While:									// while
+				case STATEMENT_TYPE.Compound_For:										// for
 					retNode = GetForOrWhileStatementNode(type, parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case E_STATEMENT_TYPE.Compound_DoWhile:									// do while
+				case STATEMENT_TYPE.Compound_DoWhile:									// do while
 					retNode = GetDoWhileStatementNode(parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case E_STATEMENT_TYPE.Compound_GoTo:									// go to(未对应)
+				case STATEMENT_TYPE.Compound_GoTo:									// go to(未对应)
 					System.Diagnostics.Trace.Assert(false);
 					break;
-				case E_STATEMENT_TYPE.Compound_Block:									// "{"和"}"括起来的语句块
+				case STATEMENT_TYPE.Compound_Block:									// "{"和"}"括起来的语句块
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);								// 异常情况
@@ -171,7 +140,7 @@ namespace Mr.Robot
 			{
 				string statementStr = COMN_PROC.LineStringCat(parse_info.CodeList, oldPos, foundPos);
 				retNode.Scope = new CODE_SCOPE(oldPos, foundPos);
-				retNode.Type = E_STATEMENT_TYPE.Simple;
+				retNode.Type = STATEMENT_TYPE.Simple;
 				retNode.ExpressionStr = statementStr;
 				startPos = searchPos;
 				return retNode;
@@ -182,7 +151,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得for/while循环语句的语句节点对象
 		/// </summary>
-		static STATEMENT_NODE GetForOrWhileStatementNode(E_STATEMENT_TYPE type, FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static STATEMENT_NODE GetForOrWhileStatementNode(STATEMENT_TYPE type, FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
 			retNode.Type = type;
@@ -212,7 +181,7 @@ namespace Mr.Robot
 		static STATEMENT_NODE GetDoWhileStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
         {
             STATEMENT_NODE retNode = new STATEMENT_NODE();
-            retNode.Type = E_STATEMENT_TYPE.Compound_DoWhile;
+            retNode.Type = STATEMENT_TYPE.Compound_DoWhile;
             CODE_POSITION searchPos = new CODE_POSITION(startPos);
             // 取得分支范围
 			CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
@@ -246,7 +215,7 @@ namespace Mr.Robot
 		static STATEMENT_NODE GetIfElseStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
-			retNode.Type = E_STATEMENT_TYPE.Compound_IfElse;
+			retNode.Type = STATEMENT_TYPE.Compound_IfElse;
 			CODE_POSITION searchPos = new CODE_POSITION(startPos);
 			// 取得if条件表达式
 			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
@@ -260,7 +229,7 @@ namespace Mr.Robot
 					STATEMENT_NODE ifBranch = new STATEMENT_NODE();
 					ifBranch.ParentNode = retNode;
 					ifBranch.ExpressionStr = expression;
-					ifBranch.Type = E_STATEMENT_TYPE.Branch_If;
+					ifBranch.Type = STATEMENT_TYPE.Branch_If;
 					ifBranch.Scope = scope;
 					// 递归解析分支语句块
 					GetFunctionStatmentsNodeTree(parse_info, ref ifBranch);
@@ -278,7 +247,7 @@ namespace Mr.Robot
 						GetFunctionStatmentsNodeTree(parse_info, ref elseBranch);
 
 						retNode.ChildNodeList.Add(elseBranch);
-						if (E_STATEMENT_TYPE.Branch_Else == elseBranch.Type)
+						if (STATEMENT_TYPE.Branch_Else == elseBranch.Type)
 						{
 							// 如果是"else"分支, 代表整个if复合语句结束
 							break;
@@ -299,7 +268,7 @@ namespace Mr.Robot
 		static STATEMENT_NODE GetSwitchCaseStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
-			retNode.Type = E_STATEMENT_TYPE.Compound_SwitchCase;
+			retNode.Type = STATEMENT_TYPE.Compound_SwitchCase;
 			CODE_POSITION searchPos = new CODE_POSITION(startPos);
 			// 取得switch条件表达式
 			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
@@ -323,7 +292,7 @@ namespace Mr.Robot
 						GetFunctionStatmentsNodeTree(parse_info, ref caseBranch);
 
 						retNode.ChildNodeList.Add(caseBranch);
-						if (E_STATEMENT_TYPE.Branch_Default == caseBranch.Type)
+						if (STATEMENT_TYPE.Branch_Default == caseBranch.Type)
 						{
 							// 如果是"default"分支, 代表整个switch case复合语句结束
 							break;
@@ -362,7 +331,7 @@ namespace Mr.Robot
 						CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
 						if (null != scope)
 						{
-							retNode.Type = E_STATEMENT_TYPE.Branch_ElseIf;
+							retNode.Type = STATEMENT_TYPE.Branch_ElseIf;
 							retNode.Scope = scope;
 							startPos = searchPos;
 							return retNode;
@@ -377,7 +346,7 @@ namespace Mr.Robot
 					CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
 					if (null != scope)
 					{
-						retNode.Type = E_STATEMENT_TYPE.Branch_Else;
+						retNode.Type = STATEMENT_TYPE.Branch_Else;
 						retNode.Scope = scope;
 						startPos = searchPos;
 						return retNode;
@@ -407,7 +376,7 @@ namespace Mr.Robot
 				string caseStr = COMN_PROC.LineStringCat(parse_info.CodeList, oldPos, foundPos);
                 retNode.ExpressionStr = caseStr;
 				retNode.Type = GetNodeType(nextIdtf.Text);
-                if (E_STATEMENT_TYPE.Invalid == retNode.Type)
+                if (STATEMENT_TYPE.Invalid == retNode.Type)
                 {
                     return null;
                 }
@@ -509,38 +478,38 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据关键字取得复合语句节点类型
 		/// </summary>
-		static E_STATEMENT_TYPE GetNodeType(string keyWord)
+		static STATEMENT_TYPE GetNodeType(string keyWord)
 		{
-			E_STATEMENT_TYPE retType = E_STATEMENT_TYPE.Invalid;
+			STATEMENT_TYPE retType = STATEMENT_TYPE.Invalid;
 			switch (keyWord)
 			{
 				case "if":
-					retType = E_STATEMENT_TYPE.Compound_IfElse;
+					retType = STATEMENT_TYPE.Compound_IfElse;
 					break;
 				case "{":
-					retType = E_STATEMENT_TYPE.Compound_Block;
+					retType = STATEMENT_TYPE.Compound_Block;
 					break;
 				case "do":
-					retType = E_STATEMENT_TYPE.Compound_DoWhile;
+					retType = STATEMENT_TYPE.Compound_DoWhile;
 					break;
 				case "for":
-					retType = E_STATEMENT_TYPE.Compound_For;
+					retType = STATEMENT_TYPE.Compound_For;
 					break;
 				case "goto":
-					retType = E_STATEMENT_TYPE.Compound_GoTo;
+					retType = STATEMENT_TYPE.Compound_GoTo;
 					break;
 				case "switch":
-					retType = E_STATEMENT_TYPE.Compound_SwitchCase;
+					retType = STATEMENT_TYPE.Compound_SwitchCase;
 					break;
 				case "while":
-					retType = E_STATEMENT_TYPE.Compound_While;
+					retType = STATEMENT_TYPE.Compound_While;
 					break;
 
                 case "case":
-                    retType = E_STATEMENT_TYPE.Branch_Case;
+                    retType = STATEMENT_TYPE.Branch_Case;
                     break;
                 case "default":
-                    retType = E_STATEMENT_TYPE.Branch_Default;
+                    retType = STATEMENT_TYPE.Branch_Default;
                     break;
 				default:
 					break;
@@ -563,22 +532,22 @@ namespace Mr.Robot
 				string childMarkStr = string.Empty;
 				switch (root_node.ChildNodeList[i].Type)
 				{
-					case E_STATEMENT_TYPE.Root:
-					case E_STATEMENT_TYPE.Simple:
-					case E_STATEMENT_TYPE.Compound_IfElse:
-					case E_STATEMENT_TYPE.Compound_SwitchCase:
-					case E_STATEMENT_TYPE.Compound_While:
-					case E_STATEMENT_TYPE.Compound_For:
-					case E_STATEMENT_TYPE.Compound_DoWhile:
-					case E_STATEMENT_TYPE.Compound_GoTo:
-					case E_STATEMENT_TYPE.Compound_Block:
+					case STATEMENT_TYPE.Root:
+					case STATEMENT_TYPE.Simple:
+					case STATEMENT_TYPE.Compound_IfElse:
+					case STATEMENT_TYPE.Compound_SwitchCase:
+					case STATEMENT_TYPE.Compound_While:
+					case STATEMENT_TYPE.Compound_For:
+					case STATEMENT_TYPE.Compound_DoWhile:
+					case STATEMENT_TYPE.Compound_GoTo:
+					case STATEMENT_TYPE.Compound_Block:
 						childMarkStr = (i + 1).ToString();
 						break;
-					case E_STATEMENT_TYPE.Branch_If:
-					case E_STATEMENT_TYPE.Branch_ElseIf:
-					case E_STATEMENT_TYPE.Branch_Else:
-					case E_STATEMENT_TYPE.Branch_Case:
-					case E_STATEMENT_TYPE.Branch_Default:
+					case STATEMENT_TYPE.Branch_If:
+					case STATEMENT_TYPE.Branch_ElseIf:
+					case STATEMENT_TYPE.Branch_Else:
+					case STATEMENT_TYPE.Branch_Case:
+					case STATEMENT_TYPE.Branch_Default:
 						childMarkStr = "-" + (i + 1).ToString();
 						break;
 					default:
