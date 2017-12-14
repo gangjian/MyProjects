@@ -9,7 +9,7 @@ namespace Mr.Robot.CDeducer
 	{
 		public List<VAR_CTX2> VarCtxList = new List<VAR_CTX2>();
 		public STATEMENT_NODE LastStepNode = null;
-		public List<string> ForkPointList = new List<string>();							// 歧路点List
+		public List<STATEMENT_NODE> ForkPointList = new List<STATEMENT_NODE>();			// 歧路点List
 		//public DEDUCER_INPUT_TBL InputTable = new DEDUCER_INPUT_TBL();
 
 		public VAR_CTX2 FindVarCtxByName(string name)
@@ -22,6 +22,91 @@ namespace Mr.Robot.CDeducer
 				}
 			}
 			return null;
+		}
+
+		/// <summary>
+		/// 恢复上下文状态到指定节点位置
+		/// </summary>
+		public void RestoreStatus(string step_mark_str)
+		{
+			for (int i = 0; i < this.VarCtxList.Count; i++)
+			{
+				VAR_CTX2 varCtx = this.VarCtxList[i];
+				int count = varCtx.ValueEvolveList.Count;
+				for (int j = count - 1; j >= 0 ; j--)
+				{
+					VAR_RECORD varRecord = varCtx.ValueEvolveList[j];
+					if (!string.IsNullOrEmpty(varRecord.StepMarkStr)
+						&& StepMarkStringCompare(varRecord.StepMarkStr, step_mark_str) > 0)
+					{
+						varCtx.ValueEvolveList.RemoveAt(j);
+					}
+				}
+			}
+		}
+
+		int StepMarkStringCompare(string step_mark_1, string step_mark_2)
+		{
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(step_mark_1));
+			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(step_mark_2));
+			if (step_mark_1.Equals(step_mark_2))
+			{
+				return 0;
+			}
+			else
+			{
+				string[] arr1 = step_mark_1.Split(',');
+				string[] arr2 = step_mark_2.Split(',');
+				System.Diagnostics.Trace.Assert(0 != arr1.Count());
+				System.Diagnostics.Trace.Assert(0 != arr2.Count());
+				int count = arr1.Count();
+				int retVal = -1;
+				if (arr2.Count() < count)
+				{
+					count = arr2.Count();
+					retVal = 1;
+				}
+				for (int i = 0; i < count; i++)
+				{
+					if (!arr1[i].Equals(arr2[i]))
+					{
+						if (arr1[i].StartsWith("-") || arr2[i].StartsWith("-"))
+						{
+							// 包含分支(Branch)且不同, 说明不在同一条路径上
+							return CompareValStr(arr1[i].Substring(1), arr2[i].Substring(1));
+						}
+						else
+						{
+							return CompareValStr(arr1[i], arr2[i]);
+						}
+					}
+				}
+				// 比到这还没有分出前后, 那长的就靠后,短的靠前
+				return retVal;
+			}
+		}
+
+		int CompareValStr(string val_str1, string val_str2)
+		{
+			int val1, val2;
+			if (!int.TryParse(val_str1, out val1)
+				|| !int.TryParse(val_str2, out val2))
+			{
+				System.Diagnostics.Trace.Assert(false);
+				return 0;
+			}
+			if (val1 > val2)
+			{
+				return 1;
+			}
+			else if (val1 < val2)
+			{
+				return -1;
+			}
+			else
+			{
+				return 0;
+			}
 		}
 	}
 
@@ -396,7 +481,7 @@ namespace Mr.Robot.CDeducer
 	{
 		public VAR_BEHAVE VarBehave;
 		public string StepMarkStr;
-		public VAL_LIMIT_EXPR ValExpr = null;													// 表达式(比如取值限制or赋值表达式)
+		public VAL_LIMIT_EXPR ValExpr = null;											// 表达式(比如取值限制or赋值表达式)
 
 		public VAR_RECORD(VAR_BEHAVE var_behave, string step_mark)
 		{

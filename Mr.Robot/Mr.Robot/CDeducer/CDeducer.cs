@@ -33,10 +33,11 @@ namespace Mr.Robot.CDeducer
 
 			while (true)
 			{
-				// 每次遍历一条路径, 所有能走的路径都走完了, 结束遍历
+				// 每次遍历一条路径
 				DeducerRun(func_root, this.m_SourceParseInfo);
 				if (0 == this.m_DeducerContext.ForkPointList.Count)
 				{
+					// 跑完一趟后发现没有分歧点了,说明所有能走的路径都走完了, 结束遍历
 					break;
 				}
 			}
@@ -71,7 +72,20 @@ namespace Mr.Robot.CDeducer
 			else
 			{
 				// TODO:取得列表里最后一个歧路点的下一个分支
-				throw new NotImplementedException();
+				STATEMENT_NODE lastFork = this.m_DeducerContext.ForkPointList.Last();
+				nextStep = lastFork.GetNextBrother();
+				this.m_DeducerContext.ForkPointList.RemoveAt(this.m_DeducerContext.ForkPointList.Count - 1);
+				if (null == nextStep.GetNextBrother())
+				{
+					// 如果该分支是该歧路点的最后一条分支, 要删掉该歧路点
+				}
+				else
+				{
+					// 否则将该分支记入歧路点List
+					this.m_DeducerContext.ForkPointList.Add(nextStep);
+				}
+				// 恢复上下文状态到歧路点位置的状态
+				this.m_DeducerContext.RestoreStatus(nextStep.ParentNode.StepMarkStr);
 			}
 			while (true)
 			{
@@ -121,14 +135,6 @@ namespace Mr.Robot.CDeducer
 						break;
 				}
 			}
-		}
-
-		/// <summary>
-		/// 还原Deducer上下文到指定节点位置
-		/// </summary>
-		static void RestoreDeducerContext(DEDUCER_CONTEXT d_ctx, string step_mark)
-		{
-			// TODO
 		}
 
 		public static void StatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, FUNC_CONTEXT func_ctx, DEDUCER_CONTEXT deducer_ctx)
@@ -214,6 +220,8 @@ namespace Mr.Robot.CDeducer
 					SIMPLIFIED_EXPRESSION enterExpr = branch.GetBranchEnterExpression(parse_info, deducer_ctx);
 					if (null != enterExpr)
 					{
+						// 记录分歧点
+						deducer_ctx.ForkPointList.Add(branch);
 						// 进入分支
 						branch.EnterExpression = enterExpr;
 						VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(enterExpr.VarName);
