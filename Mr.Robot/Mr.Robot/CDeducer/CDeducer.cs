@@ -182,6 +182,7 @@ namespace Mr.Robot.CDeducer
 				case STATEMENT_TYPE.Branch_ElseIf:
 					break;
 				case STATEMENT_TYPE.Branch_Else:
+					ElseBranchProc(s_node, parse_info, deducer_ctx);
 					break;
 				case STATEMENT_TYPE.Branch_Case:
 					break;
@@ -210,39 +211,57 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		public static void CompoundIfElseStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static void CompoundIfElseStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 取得第一条没走过的branch
-			foreach (var branch in s_node.ChildNodeList)
+			STATEMENT_NODE ifBanch = s_node.ChildNodeList.First();
+			IfBranchProc(ifBanch, parse_info, deducer_ctx);
+		}
+
+		static void IfBranchProc(STATEMENT_NODE branch, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			SIMPLIFIED_EXPRESSION enterExpr = branch.GetIfBranchExpression(parse_info, deducer_ctx);
+			if (null != enterExpr)
 			{
-				if (branch.BranchStatus == BRANCH_STATUS.NOT_PASSED)
+				// 记录分歧点
+				deducer_ctx.ForkPointList.Add(branch);
+				// 进入分支
+				branch.EnterExpression = enterExpr;
+				VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(enterExpr.VarName);
+				System.Diagnostics.Trace.Assert(null != varCtx);				// 在入力值的上下文中标记取值限定的分支号
+				varCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.VALUE_LIMIT, branch.StepMarkStr));
+				if (0 != branch.ChildNodeList.Count)
 				{
-					SIMPLIFIED_EXPRESSION enterExpr = branch.GetBranchEnterExpression(parse_info, deducer_ctx);
-					if (null != enterExpr)
-					{
-						// 记录分歧点
-						deducer_ctx.ForkPointList.Add(branch);
-						// 进入分支
-						branch.EnterExpression = enterExpr;
-						VAR_CTX2 varCtx = deducer_ctx.FindVarCtxByName(enterExpr.VarName);
-						System.Diagnostics.Trace.Assert(null != varCtx);				// 在入力值的上下文中标记取值限定的分支号
-						varCtx.ValueEvolveList.Add(new VAR_RECORD(VAR_BEHAVE.VALUE_LIMIT, branch.StepMarkStr));
-						if (0 != branch.ChildNodeList.Count)
-						{
-							branch.BranchStatus = BRANCH_STATUS.PASSING;
-							StatementProc(branch.ChildNodeList.First(), parse_info, null, deducer_ctx);
-						}
-						else
-						{
-							branch.BranchStatus = BRANCH_STATUS.PASSED;
-						}
-					}
-					else
-					{
-						// 进不去?
-						branch.BranchStatus = BRANCH_STATUS.CAN_NOT_ENTER;
-					}
-					break;
+					branch.BranchStatus = BRANCH_STATUS.PASSING;
+					StatementProc(branch.ChildNodeList.First(), parse_info, null, deducer_ctx);
+				}
+				else
+				{
+					branch.BranchStatus = BRANCH_STATUS.PASSED;
+				}
+			}
+			else
+			{
+				// 进不去?
+				branch.BranchStatus = BRANCH_STATUS.CAN_NOT_ENTER;
+			}
+		}
+
+		/// <summary>
+		/// else分支处理
+		/// </summary>
+		static void ElseBranchProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		{
+			// 取得前面if, else if各分支的表达式方程组
+			STATEMENT_NODE parentNode = s_node.ParentNode;
+			System.Diagnostics.Trace.Assert(parentNode.Type == STATEMENT_TYPE.Compound_IfElse);
+			List<SIMPLIFIED_EXPRESSION> ifBranchExpStrList = new List<SIMPLIFIED_EXPRESSION>();
+			for (int i = 0; i < parentNode.ChildNodeList.Count - 1; i++)
+			{
+				SIMPLIFIED_EXPRESSION expStr = parentNode.ChildNodeList[i].GetIfBranchExpression(parse_info, deducer_ctx);
+				if (null != expStr)
+				{
+					ifBranchExpStrList.Add(expStr);
 				}
 			}
 		}

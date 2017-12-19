@@ -84,8 +84,9 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public SIMPLIFIED_EXPRESSION GetBranchEnterExpression(FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		public SIMPLIFIED_EXPRESSION GetIfBranchExpression(FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
+			System.Diagnostics.Trace.Assert(this.Type == STATEMENT_TYPE.Branch_If || this.Type == STATEMENT_TYPE.Branch_ElseIf);
 			// 取得分支条件表达式
 			string expr_str = this.GetBranchExprStr();
 			while (true)
