@@ -238,7 +238,8 @@ namespace Mr.Robot
 			}
 			ClearAllLastResults();														// 清除所有上一次的解析结果
 			SetUICtrlEnabled(false);													// 设置GUI控件无效化
-			StartMacroSwitchAnalyzer();													// 启动MacroSwitchAnalyzer开始解析
+			StartMacroSwitchAnalyzer(	this.SourceList, this.HeaderList,
+										this.MtpjFileList, this.MkFileList, 1);			// 启动MacroSwitchAnalyzer开始解析
 		}
 
 		void ClearAllLastResults()
@@ -253,9 +254,12 @@ namespace Mr.Robot
 			this.ProcessedSoureList.Clear();
 		}
 
-		void StartMacroSwitchAnalyzer()
+		void StartMacroSwitchAnalyzer(	List<string> src_list, List<string> hd_list,
+										List<string> mtpj_list, List<string> mk_list,
+										int thread_cnt)
 		{
-			this.MacroSwitchAnalyzer = new MACRO_SWITCH_ANALYSER(new MSA_INPUT_PARA(this.SourceList, this.HeaderList, this.MtpjFileList, this.MkFileList, 4));
+			MSA_INPUT_PARA para = new MSA_INPUT_PARA(src_list, hd_list, mtpj_list, mk_list, thread_cnt);
+			this.MacroSwitchAnalyzer = new MACRO_SWITCH_ANALYSER(para);
 			this.MacroSwitchAnalyzer.MSA_ReportProgressHandler += new EventHandler(UpdateProgressHandler);
 			this.MacroSwitchAnalyzer.ProcStart();
 			this.StopWatch.Restart();
