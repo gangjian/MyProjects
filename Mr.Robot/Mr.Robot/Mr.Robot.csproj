@@ -95,6 +95,7 @@
     <Compile Include="IOProcess\IOProcess.cs" />
     <Compile Include="MacroSwitchAnalyser\CommonProc.cs" />
     <Compile Include="MacroSwitchAnalyser\MacroSwitchAnalyser.cs" />
+    <Compile Include="MacroSwitchAnalyser\ResultCompare.cs" />
     <Compile Include="MyException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
