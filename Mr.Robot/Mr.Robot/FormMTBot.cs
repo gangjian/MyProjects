@@ -71,7 +71,7 @@ namespace Mr.Robot
 					this.MtpjFileList.Clear();
 					this.MkFileList.Clear();
 					// 取得所有源文件和头文件列表
-					IOProcess.GetAllCCodeFiles(root_path, ref this.SourceList, ref this.HeaderList, ref this.MtpjFileList, ref this.MkFileList);
+					IOProcess.GetAllCCodeFiles(root_path, this.SourceList, this.HeaderList, this.MtpjFileList, this.MkFileList);
 					UpdateSourceTreeView(root_path);
 				}
 			}
@@ -90,7 +90,7 @@ namespace Mr.Robot
 					List<string> tmpMkList = new List<string>();
 					// 取得所有源文件
 					this.SourceList.Clear();
-					IOProcess.GetAllCCodeFiles(source_path, ref this.SourceList, ref tmpHdList, ref tmpMtptList, ref tmpMkList);
+					IOProcess.GetAllCCodeFiles(source_path, this.SourceList, tmpHdList, tmpMtptList, tmpMkList);
 					UpdateSourceTreeView(source_path);
 				}
 			}

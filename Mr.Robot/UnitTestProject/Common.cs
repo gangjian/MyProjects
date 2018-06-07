@@ -31,7 +31,7 @@ namespace UnitTestProject
 			List<string> mtpj_file_list = new List<string>();
 			List<string> mk_file_list = new List<string>();
 			// 取得所有源文件和头文件列表
-			IOProcess.GetAllCCodeFiles(folder_path, ref source_list, ref header_list, ref mtpj_file_list, ref mk_file_list);
+			IOProcess.GetAllCCodeFiles(folder_path, source_list, header_list, mtpj_file_list, mk_file_list);
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);
@@ -61,7 +61,7 @@ namespace UnitTestProject
 			List<string> mtpj_file_list = new List<string>();
 			List<string> mk_file_list = new List<string>();
 			// 取得所有源文件和头文件列表
-			IOProcess.GetAllCCodeFiles(folder_path, ref source_list, ref header_list, ref mtpj_file_list, ref mk_file_list);
+			IOProcess.GetAllCCodeFiles(folder_path, source_list, header_list, mtpj_file_list, mk_file_list);
 			// 解析指定的源文件,并取得解析结果
 			List<string> csfList = new List<string>();
 			csfList.Add(full_path);

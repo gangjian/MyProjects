@@ -83,7 +83,7 @@ namespace Mr.Robot
 			this.m_CSourceFileList = new List<string>();
 			this.m_CHeaderFileList = new List<string>();
             // 遍历文件夹, 取得所有.c源文件和.h头文件
-			IOProcess.GetAllCCodeFiles(path_name, ref this.m_CSourceFileList, ref m_CHeaderFileList, ref this.m_MtpjFileList, ref this.m_MkFileList);
+			IOProcess.GetAllCCodeFiles(path_name, this.m_CSourceFileList, m_CHeaderFileList, this.m_MtpjFileList, this.m_MkFileList);
 
             UpdateFileListViewCtrl(this.m_CSourceFileList);
 		}

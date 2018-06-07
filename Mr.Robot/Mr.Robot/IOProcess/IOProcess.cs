@@ -14,17 +14,17 @@ namespace Mr.Robot
 		/// 遍历文件夹
 		/// </summary>
 		public static void GetAllCCodeFiles(string root_path,
-											ref List<string> source_file_list,
-											ref List<string> header_file_list,
-											ref List<string> mtpj_file_list,
-											ref List<string> mk_file_list)
+											List<string> source_file_list,
+											List<string> header_file_list,
+											List<string> mtpj_file_list,
+											List<string> mk_file_list)
 		{
 			DirectoryInfo di = new DirectoryInfo(root_path);
 			try
 			{
 				foreach (DirectoryInfo subDir in di.GetDirectories())
 				{
-					GetAllCCodeFiles(subDir.FullName, ref source_file_list, ref header_file_list, ref mtpj_file_list, ref mk_file_list);
+					GetAllCCodeFiles(subDir.FullName, source_file_list, header_file_list, mtpj_file_list, mk_file_list);
 				}
 				foreach (FileInfo fi in di.GetFiles())
 				{

@@ -11,7 +11,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// <summary>
 	/// 入力参数
 	/// </summary>
-	class MSA_INPUT_PARA
+	public class MSA_INPUT_PARA
 	{
 		public List<string> SrcList = null;												// 源文件列表
 		public List<string> HdList = null;												// 头文件列表
@@ -54,7 +54,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		}
 	}
 
-	class MSA_SOURCE_RESULT
+	public class MSA_SOURCE_RESULT
 	{
 		public string SourceFileName = string.Empty;
 		public List<MSA_MACRO_SWITCH_RESULT> MacroSwitchResultList = null;
@@ -68,7 +68,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// <summary>
 	/// 出力结果
 	/// </summary>
-	class MSA_OUTPUT_RESULT
+	public class MSA_OUTPUT_RESULT
 	{
 		public List<MSA_SOURCE_RESULT> SourceResultList = new List<MSA_SOURCE_RESULT>();
 		public MSA_PROGRESS Progress = new MSA_PROGRESS();
@@ -83,7 +83,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		}
 	}
 
-	class MSA_PROGRESS
+	public class MSA_PROGRESS
 	{
 		public string CurrentSourceName = string.Empty;
 		public MSA_SOURCE_PROC_RESULT ProcResult = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
@@ -158,7 +158,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// <summary>
 	/// 源代码中的宏开关(On/Off,有效/无效,定义/未定义,define/undefine)分析
 	/// </summary>
-    class MACRO_SWITCH_ANALYSER
+    public class MACRO_SWITCH_ANALYSER
     {
 		MSA_INPUT_PARA m_inputPara = null;
 		MSA_INPUT_PARA InputPara
