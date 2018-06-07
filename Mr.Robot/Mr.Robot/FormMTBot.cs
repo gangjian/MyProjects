@@ -25,6 +25,7 @@ namespace Mr.Robot
 			UpdateRootPath(root_path);
 			string source_path = IniFileProcess.IniReadValue("MTbot", "source_path");
 			UpdateSourcePath(source_path);
+			this.cmbbxThCnt.SelectedIndex = 3;
 		}
 
 		private void btnOpenRoot_Click(object sender, EventArgs e)
@@ -238,8 +239,9 @@ namespace Mr.Robot
 			}
 			ClearAllLastResults();														// 清除所有上一次的解析结果
 			SetUICtrlEnabled(false);													// 设置GUI控件无效化
+			int thread_cnt = this.cmbbxThCnt.SelectedIndex + 1;
 			StartMacroSwitchAnalyzer(	this.SourceList, this.HeaderList,
-										this.MtpjFileList, this.MkFileList, 1);			// 启动MacroSwitchAnalyzer开始解析
+										this.MtpjFileList, this.MkFileList, thread_cnt);// 启动MacroSwitchAnalyzer开始解析
 		}
 
 		void ClearAllLastResults()

@@ -51,6 +51,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Common.cs" />
+    <Compile Include="UnitTestResultCompare.cs" />
     <Compile Include="UnitTest_CommonProcess.cs" />
     <Compile Include="UnitTest_ExpressionSimplify.cs" />
     <Compile Include="UnitTest_Rte_swc_in_oilp.cs" />

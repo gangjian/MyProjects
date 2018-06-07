@@ -59,12 +59,14 @@
 			this.treeViewSrcFile = new System.Windows.Forms.TreeView();
 			this.imageList1 = new System.Windows.Forms.ImageList(this.components);
 			this.tbxOutputLog = new System.Windows.Forms.TextBox();
+			this.cmbbxThCnt = new System.Windows.Forms.ComboBox();
+			this.label3 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label1.Location = new System.Drawing.Point(12, 9);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(86, 21);
@@ -82,7 +84,7 @@
 			// 
 			// btnOpenRoot
 			// 
-			this.btnOpenRoot.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenRoot.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenRoot.Location = new System.Drawing.Point(758, 33);
 			this.btnOpenRoot.Name = "btnOpenRoot";
 			this.btnOpenRoot.Size = new System.Drawing.Size(75, 23);
@@ -94,7 +96,7 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.label2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.label2.Location = new System.Drawing.Point(12, 59);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(99, 21);
@@ -112,7 +114,7 @@
 			// 
 			// btnOpenSource
 			// 
-			this.btnOpenSource.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.btnOpenSource.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.btnOpenSource.Location = new System.Drawing.Point(758, 83);
 			this.btnOpenSource.Name = "btnOpenSource";
 			this.btnOpenSource.Size = new System.Drawing.Size(75, 23);
@@ -124,7 +126,7 @@
 			// btnStart
 			// 
 			this.btnStart.Font = new System.Drawing.Font("Consolas", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.btnStart.Location = new System.Drawing.Point(851, 33);
+			this.btnStart.Location = new System.Drawing.Point(851, 43);
 			this.btnStart.Name = "btnStart";
 			this.btnStart.Size = new System.Drawing.Size(103, 54);
 			this.btnStart.TabIndex = 3;
@@ -151,7 +153,7 @@
             this.columnHeader8,
             this.columnHeader6,
             this.columnHeader7});
-			this.lvDetailList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvDetailList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvDetailList.FullRowSelect = true;
 			this.lvDetailList.GridLines = true;
 			this.lvDetailList.Location = new System.Drawing.Point(456, 374);
@@ -227,7 +229,7 @@
             this.columnHeaderDefined,
             this.columnHeaderValue,
             this.columnHeaderDefFile});
-			this.lvSummaryList.Font = new System.Drawing.Font("SimSun", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+			this.lvSummaryList.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
 			this.lvSummaryList.FullRowSelect = true;
 			this.lvSummaryList.GridLines = true;
 			this.lvSummaryList.Location = new System.Drawing.Point(16, 374);
@@ -314,11 +316,47 @@
 			this.tbxOutputLog.Size = new System.Drawing.Size(427, 67);
 			this.tbxOutputLog.TabIndex = 6;
 			// 
+			// cmbbxThCnt
+			// 
+			this.cmbbxThCnt.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.cmbbxThCnt.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.cmbbxThCnt.FormattingEnabled = true;
+			this.cmbbxThCnt.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12"});
+			this.cmbbxThCnt.Location = new System.Drawing.Point(899, 9);
+			this.cmbbxThCnt.Name = "cmbbxThCnt";
+			this.cmbbxThCnt.Size = new System.Drawing.Size(55, 22);
+			this.cmbbxThCnt.TabIndex = 9;
+			this.cmbbxThCnt.TabStop = false;
+			// 
+			// label3
+			// 
+			this.label3.AutoSize = true;
+			this.label3.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.label3.Location = new System.Drawing.Point(802, 12);
+			this.label3.Name = "label3";
+			this.label3.Size = new System.Drawing.Size(91, 14);
+			this.label3.TabIndex = 10;
+			this.label3.Text = "Thread Count";
+			// 
 			// FormMTBot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(966, 722);
+			this.Controls.Add(this.label3);
+			this.Controls.Add(this.cmbbxThCnt);
 			this.Controls.Add(this.treeViewSrcFile);
 			this.Controls.Add(this.btnSaveSummary2CSV);
 			this.Controls.Add(this.btnSaveDetail2CSV);
@@ -379,5 +417,7 @@
 		private System.Windows.Forms.ImageList imageList1;
 		private System.Windows.Forms.TextBox tbxOutputLog;
 		private System.Windows.Forms.ColumnHeader columnHeaderDefined;
+		private System.Windows.Forms.ComboBox cmbbxThCnt;
+		private System.Windows.Forms.Label label3;
 	}
 }
