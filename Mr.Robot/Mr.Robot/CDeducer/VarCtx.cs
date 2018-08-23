@@ -21,10 +21,6 @@ namespace Mr.Robot
 
 		public object Value = null;
 
-		//public MeaningGroup MeanningGroup = null;										// 构成该变量的成分组合
-																						// TODO: 这个成员在VAR_CTX类改造完成后要删掉!
-																						// 即函数出入力列表与变量上下文分离, 20161206
-
 		public string CalledFunctionReadOut = string.Empty;								// 可能被函数调用的读出值赋值(函数名)
 
 		public List<VAR_CTX> MemberList = new List<VAR_CTX>();							// 成员列表(下一层级)

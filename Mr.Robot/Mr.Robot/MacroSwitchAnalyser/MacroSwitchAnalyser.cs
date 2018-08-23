@@ -52,6 +52,27 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			this.ValueStr = val_str;
 			this.MacroDefFileName = macro_def_file_name;
 		}
+
+		public string ToCsvLineStr()
+		{
+			string csv_line = this.SrcName + "," + this.LineNumber.ToString() + "," + this.ExpressionStr + "," + this.MacroName;
+			if (string.Empty == this.ValueStr)
+			{
+				if (this.IsDefined)
+				{
+					csv_line += "," + @"○";
+				}
+				else
+				{
+					csv_line += "," + @"×";
+				}
+			}
+			else
+			{
+				csv_line += "," + this.ValueStr;
+			}
+			return csv_line;
+		}
 	}
 
 	public class MSA_SOURCE_RESULT
@@ -76,10 +97,47 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		public void Add(MSA_SOURCE_RESULT result)
 		{
-			lock (obj_lock)
+			lock (this.obj_lock)
 			{
 				this.SourceResultList.Add(result);
 			}
+		}
+
+		public void Save2Csv(string path)
+		{
+			List<string> wt_list = new List<string>();
+			string column_title = "idx,file,line,expression,macro,value,";
+			wt_list.Add(column_title);
+			lock (this.obj_lock)
+			{
+				foreach (var src_rslt in this.SourceResultList)
+				{
+					if (null != src_rslt.MacroSwitchResultList)
+					{
+						for (int i = 0; i < src_rslt.MacroSwitchResultList.Count; i++)
+						{
+							wt_list.Add((i + 1).ToString() + "," + src_rslt.MacroSwitchResultList[i].ToCsvLineStr() + ",");
+						}
+					}
+				}
+				File.WriteAllLines(path, wt_list);
+			}
+		}
+
+		public int GetTotalMacroSwitchResultCount()
+		{
+			int ret_cnt = 0;
+			lock (this.obj_lock)
+			{
+				foreach (var src_rslt in this.SourceResultList)
+				{
+					if (null != src_rslt.MacroSwitchResultList)
+					{
+						ret_cnt += src_rslt.MacroSwitchResultList.Count;
+					}
+				}
+			}
+			return ret_cnt;
 		}
 	}
 

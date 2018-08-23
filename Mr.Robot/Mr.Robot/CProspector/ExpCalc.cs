@@ -268,6 +268,10 @@ namespace Mr.Robot
 						retVal = Calculate_BitOr(oper_group, parse_info);				// 位或
 						break;
 					default:
+						// TODO: LowDA_三回目\ALL\gerdaC_dd\zlib\zconf.h 443行
+						//		#if defined(_LARGEFILE64_SOURCE) && -_LARGEFILE64_SOURCE - -1 == 1
+						//		"- -1"被当成了"--"
+						//		重构自动测试后要改正
 						throw new System.NotImplementedException();
 				}
 			}
