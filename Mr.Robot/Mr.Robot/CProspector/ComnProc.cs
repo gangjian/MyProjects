@@ -1026,12 +1026,20 @@ namespace Mr.Robot
 			return componentList;
 		}
 
-		public static string GetComponentListStr(List<STATEMENT_COMPONENT> componentList)
+		public static string GetComponentListStr(List<STATEMENT_COMPONENT> component_list)
 		{
 			StringBuilder sb = new StringBuilder();
-			foreach (var item in componentList)
+			for (int i = 0; i < component_list.Count; i++)
 			{
-				sb.Append(item.Text);
+				if (0 != i
+					&& component_list[i].Type == StatementComponentType.Operator
+					&& component_list[i - 1].Type == StatementComponentType.Operator)
+				{
+					// 连续两个符号之间加一个空格防止解析错误, 比如下面的"- -"变成了"--"
+					// #if defined(_LARGEFILE64_SOURCE) && -_LARGEFILE64_SOURCE - -1 == 1
+					sb.Append(" ");
+				}
+				sb.Append(component_list[i].Text);
 			}
 			return sb.ToString();
 		}
@@ -2190,7 +2198,7 @@ namespace Mr.Robot
 				if (2 == operandCount)
 				{
 					List<STATEMENT_COMPONENT> newList = new List<STATEMENT_COMPONENT>();
-					string newText = in_list[idx - 1].TextStr + in_list[idx].TextStr + in_list[idx + 1].TextStr;
+					string newText = in_list[idx - 1].TextStr + " " + in_list[idx].TextStr + " " + in_list[idx + 1].TextStr;
 					newList.AddRange(in_list[idx - 1].ComponentList);
 					newList.AddRange(in_list[idx].ComponentList);
 					newList.AddRange(in_list[idx + 1].ComponentList);
