@@ -60,14 +60,15 @@ namespace MSAAutoRunner
 				this._StopWatch.Stop();
 				this._MacroSwitchAnalyser.OutputResult.Save2Csv(TEMP_CSV_FILE);
 				ResultCompare.DetailCompareResult cmp_rslt
-									= ResultCompare.DetailCsvCompare(this._TestData.CompareCsvFile, TEMP_CSV_FILE);
+					= ResultCompare.DetailCsvCompare(this._TestData.CompareCsvFile, TEMP_CSV_FILE);
 				File.Delete(TEMP_CSV_FILE);
-				TEST_RESULT test_result = new TEST_RESULT(this._TestData, cmp_rslt, this._MacroSwitchAnalyser.OutputResult.GetTotalMacroSwitchResultCount());
+				TEST_RESULT test_result = new TEST_RESULT(	this._TestData, cmp_rslt,
+															this._StopWatch.Elapsed,
+					this._MacroSwitchAnalyser.OutputResult.GetTotalMacroSwitchResultCount());
 				this._TestResultList.Add(test_result);
 
 				ShowSingleTestReport(test_result);
 
-				System.Threading.Thread.Sleep(3000);
 				bool ret = StartNextTest();
 				if (!ret)
 				{
@@ -77,37 +78,43 @@ namespace MSAAutoRunner
 			}
 		}
 
-		void ShowSingleTestReport(TEST_RESULT test_result)
+		string ShowSingleTestReport(TEST_RESULT test_result)
 		{
-			TEST_RESULT.E_RESULT result = test_result.GetCompareResult();
-			string result_str = "NG";
-			Console.ForegroundColor = ConsoleColor.Red;
-			if (result == TEST_RESULT.E_RESULT.OK)
-			{
-				result_str = "OK";
-				Console.ForegroundColor = ConsoleColor.Green;
-			}
-			string report_str = string.Format(	"{5} Total:{0} Equal:{1} Unequal:{2} Lack:{3} Surplus:{4} {6}",
+			string result_str = test_result.GetResultString();
+			Console.ForegroundColor = test_result.GetResultColor();
+			string report_str = string.Format("{0} Total:{1} Equal:{2}",
+												result_str,
 												test_result.TotalCount,
-												test_result.CompareResult.EqualList.Count,
+												test_result.CompareResult.EqualList.Count);
+			if (test_result.GetCompareResult() != TEST_RESULT.E_RESULT.OK)
+			{
+				report_str += string.Format(" Unequal:{0} Lack:{1} Surplus:{2}",
 												test_result.CompareResult.UnequalList.Count,
 												test_result.CompareResult.LackList.Count,
-												test_result.CompareResult.SurplusList.Count,
-												result_str,
-												test_result.GetTargetFolderName());
+												test_result.CompareResult.SurplusList.Count);
+			}
+			report_str += string.Format(" {0} {1}", test_result.GetTargetFolderName(),
+													test_result.ElapsedTime.ToString());
 			Console.WriteLine(report_str);
 			Console.ResetColor();
+			return report_str;
 		}
 
 		void ShowFinalTestReport()
 		{
-			Console.WriteLine(	System.Environment.NewLine
-								+ "===================================================="
-								+ System.Environment.NewLine);
+			List<string> wt_list = new List<string>();
+			string title_str = System.Environment.NewLine
+					+ "=========================" + DateTime.Now.ToString() + "==========================="
+					+ System.Environment.NewLine;
+			Console.WriteLine(title_str);
+			wt_list.Add(title_str);
 			foreach (var item in this._TestResultList)
 			{
-				ShowSingleTestReport(item);
+				string str = ShowSingleTestReport(item);
+				wt_list.Add(str);
 			}
+			string path = System.AppDomain.CurrentDomain.BaseDirectory + "testlog.txt";
+			File.AppendAllLines(path, wt_list, Encoding.UTF8);
 		}
 
 		public bool StartNextTest()
@@ -195,14 +202,18 @@ namespace MSAAutoRunner
 	{
 		public MSA_TEST_DATA TestData = null;
 		public ResultCompare.DetailCompareResult CompareResult = null;
+		public TimeSpan ElapsedTime = TimeSpan.Zero;
 		public int TotalCount = 0;
 
-		public TEST_RESULT(MSA_TEST_DATA test_data, ResultCompare.DetailCompareResult compare_result, int total_count)
+		public TEST_RESULT(	MSA_TEST_DATA test_data,
+							ResultCompare.DetailCompareResult compare_result,
+							TimeSpan elapsed_time, int total_count)
 		{
 			Trace.Assert(null != test_data);
 			Trace.Assert(null != compare_result);
 			this.TestData = test_data;
 			this.CompareResult = compare_result;
+			this.ElapsedTime = elapsed_time;
 			this.TotalCount = total_count;
 		}
 
@@ -224,6 +235,30 @@ namespace MSAAutoRunner
 			else
 			{
 				return E_RESULT.NG;
+			}
+		}
+
+		public string GetResultString()
+		{
+			if (this.GetCompareResult() == E_RESULT.OK)
+			{
+				return "OK";
+			}
+			else
+			{
+				return "NG";
+			}
+		}
+
+		public ConsoleColor GetResultColor()
+		{
+			if (this.GetCompareResult() == E_RESULT.OK)
+			{
+				return ConsoleColor.Green;
+			}
+			else
+			{
+				return ConsoleColor.Red;
 			}
 		}
 
