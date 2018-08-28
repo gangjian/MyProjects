@@ -8,7 +8,7 @@ namespace UnitTestProject
 	public class UnitTestResultCompare
 	{
 		[TestMethod]
-		public void TestMethod1()
+		public void TestCsvCompare()
 		{
 			ResultCompare.DetailCompareResult cmp_rslt
 									= ResultCompare.DetailCsvCompare("c:\\1.csv", "c:\\2.csv");

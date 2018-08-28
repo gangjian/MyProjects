@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace MSAAutoRunner
 {
-	class TestRunner
+	public class TestRunner
 	{
 		MACRO_SWITCH_ANALYSER _MacroSwitchAnalyser = null;
 		Stopwatch _StopWatch = null;
@@ -38,7 +38,7 @@ namespace MSAAutoRunner
 			this._MacroSwitchAnalyser.ProcStart();
 		}
 
-		MSA_INPUT_PARA GetMsaPara(string root_path, string target_path)
+		public static MSA_INPUT_PARA GetMsaPara(string root_path, string target_path)
 		{
 			List<string> src_list = new List<string>(), hd_list = new List<string>(),
 						 mtpj_list = new List<string>(), mk_list = new List<string>();

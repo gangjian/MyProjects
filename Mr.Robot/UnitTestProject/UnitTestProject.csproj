@@ -64,6 +64,10 @@
       <Project>{5a01c8f1-bd2b-4022-a959-90a4d81a1d08}</Project>
       <Name>Mr.Robot</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MSAAutoRunner\MSAAutoRunner.csproj">
+      <Project>{76bef691-eca8-499b-8999-cc39fbdd54b4}</Project>
+      <Name>MSAAutoRunner</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
