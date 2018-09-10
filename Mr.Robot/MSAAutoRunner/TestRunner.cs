@@ -78,16 +78,19 @@ namespace MSAAutoRunner
 			}
 		}
 
-		string ShowSingleTestReport(TEST_RESULT test_result)
+		List<string> ShowSingleTestReport(TEST_RESULT test_result)
 		{
+			List<string> ret_list = new List<string>();
 			string result_str = test_result.GetResultString();
 			Console.ForegroundColor = test_result.GetResultColor();
-			string report_str = string.Format("{0} Total:{1} Equal:{2}",
+			string report_str = string.Format(	"{0} Total:{1} Equal:{2}",
 												result_str,
 												test_result.TotalCount,
 												test_result.CompareResult.EqualList.Count);
+			bool print_ng_detail = false;
 			if (test_result.GetCompareResult() != TEST_RESULT.E_RESULT.OK)
 			{
+				print_ng_detail = true;
 				report_str += string.Format(" Unequal:{0} Lack:{1} Surplus:{2}",
 												test_result.CompareResult.UnequalList.Count,
 												test_result.CompareResult.LackList.Count,
@@ -96,8 +99,18 @@ namespace MSAAutoRunner
 			report_str += string.Format(" {0} {1}", test_result.GetTargetFolderName(),
 													test_result.ElapsedTime.ToString());
 			Console.WriteLine(report_str);
+			ret_list.Add(report_str);
+			if (print_ng_detail)
+			{
+				List<string> ng_detail_list = test_result.CompareResult.GetNgDetailPrintList();
+				foreach (var item in ng_detail_list)
+				{
+					Console.WriteLine(item);
+				}
+				ret_list.AddRange(ng_detail_list);
+			}
 			Console.ResetColor();
-			return report_str;
+			return ret_list;
 		}
 
 		void ShowFinalTestReport()
@@ -110,8 +123,8 @@ namespace MSAAutoRunner
 			wt_list.Add(title_str);
 			foreach (var item in this._TestResultList)
 			{
-				string str = ShowSingleTestReport(item);
-				wt_list.Add(str);
+				List<string> ret_list = ShowSingleTestReport(item);
+				wt_list.AddRange(ret_list);
 			}
 			string path = System.AppDomain.CurrentDomain.BaseDirectory + "testlog.txt";
 			File.AppendAllLines(path, wt_list, Encoding.UTF8);

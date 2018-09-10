@@ -82,6 +82,24 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			public List<ComparePair> UnequalList = new List<ComparePair>();				// 比对不一致的记录列表
 			public List<MacroDetail> LackList = new List<MacroDetail>();				// 第一个csv文件里比第二个少的记录列表
 			public List<MacroDetail> SurplusList = new List<MacroDetail>();				// 第一个csv文件里比第二个多的记录列表
+
+			List<string> GetUnequalPrintList()
+			{
+				List<string> ret_list = new List<string>();
+				foreach (var item in this.UnequalList)
+				{
+					ret_list.Add(item.FirstObj.ToString() + " <==> " + item.SecondObj.ToString());
+				}
+				return ret_list;
+			}
+
+			public List<string> GetNgDetailPrintList()
+			{
+				List<string> ret_list = new List<string>();
+				List<string> unequal_detail_list = this.GetUnequalPrintList();
+				ret_list.AddRange(unequal_detail_list);
+				return ret_list;
+			}
 		}
 
 		public class ComparePair
@@ -123,6 +141,12 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				{
 					return false;
 				}
+			}
+
+			public string ToString()
+			{
+				return this.SrcName + " : " + this.LineNum.ToString() + ", " + this.ExpStr
+											+ ", " + this.MacroName + ", " + this.DefStr;
 			}
 
 			public CmpResult Compare(MacroDetail another)
