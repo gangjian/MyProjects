@@ -147,14 +147,14 @@ namespace Mr.Robot
 					return STATEMENT_CATEGORY.ROOT;
 				case STATEMENT_TYPE.Simple:
 					return STATEMENT_CATEGORY.SIMPLE;
-				case STATEMENT_TYPE.Compound_IfElse:
-				case STATEMENT_TYPE.Compound_SwitchCase:
-				case STATEMENT_TYPE.Compound_While:
-				case STATEMENT_TYPE.Compound_For:
-				case STATEMENT_TYPE.Compound_DoWhile:
-				case STATEMENT_TYPE.Compound_GoTo:
-				case STATEMENT_TYPE.Compound_Block:
-					return STATEMENT_CATEGORY.COMPOUND;
+				case STATEMENT_TYPE.Complex_IfElse:
+				case STATEMENT_TYPE.Complex_SwitchCase:
+				case STATEMENT_TYPE.Complex_While:
+				case STATEMENT_TYPE.Complex_For:
+				case STATEMENT_TYPE.Complex_DoWhile:
+				case STATEMENT_TYPE.Complex_GoTo:
+				case STATEMENT_TYPE.Complex_Block:
+					return STATEMENT_CATEGORY.COMPLEX;
 				case STATEMENT_TYPE.Branch_If:
 				case STATEMENT_TYPE.Branch_ElseIf:
 				case STATEMENT_TYPE.Branch_Else:
@@ -175,13 +175,13 @@ namespace Mr.Robot
         Simple,               // 简单句
 
         // 以下是复合语句
-        Compound_IfElse,      // if-else分支语句
-        Compound_SwitchCase,  // switch-case分支语句
-        Compound_While,       // while循环语句
-        Compound_For,         // for循环语句
-        Compound_DoWhile,     // do-while循环语句
-        Compound_GoTo,        // goto跳转语句
-        Compound_Block,       // {}括起来的语句块
+        Complex_IfElse,      // if-else分支语句
+        Complex_SwitchCase,  // switch-case分支语句
+        Complex_While,       // while循环语句
+        Complex_For,         // for循环语句
+        Complex_DoWhile,     // do-while循环语句
+        Complex_GoTo,        // goto跳转语句
+        Complex_Block,       // {}括起来的语句块
 
         // 以下是复合语句的分支语句
         Branch_If,            // if分支
@@ -196,7 +196,7 @@ namespace Mr.Robot
 		INVALID,
 		ROOT,
 		SIMPLE,
-		COMPOUND,
+		COMPLEX,
 		BRANCH,
 	}
 

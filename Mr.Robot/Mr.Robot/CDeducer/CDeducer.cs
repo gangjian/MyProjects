@@ -125,7 +125,7 @@ namespace Mr.Robot.CDeducer
 					case STATEMENT_CATEGORY.ROOT:
 						return null;
 					case STATEMENT_CATEGORY.SIMPLE:
-					case STATEMENT_CATEGORY.COMPOUND:
+					case STATEMENT_CATEGORY.COMPLEX:
 						return parentNode.GetNextBrother();
 					case STATEMENT_CATEGORY.BRANCH:
 						cur_node = parentNode;
@@ -153,29 +153,29 @@ namespace Mr.Robot.CDeducer
 			else
 			{
 				// 复合语句
-				CompoundStatementProc(s_node, parse_info, deducer_ctx);
+				ComplexStatementProc(s_node, parse_info, deducer_ctx);
 			}
 		}
 
-		public static void CompoundStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		public static void ComplexStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			deducer_ctx.LastStepNode = s_node;
 			switch (s_node.Type)
 			{
-				case STATEMENT_TYPE.Compound_IfElse:
-					CompoundIfElseStatementProc(s_node, parse_info, deducer_ctx);
+				case STATEMENT_TYPE.Complex_IfElse:
+					ComplexIfElseStatementProc(s_node, parse_info, deducer_ctx);
 					break;
-				case STATEMENT_TYPE.Compound_SwitchCase:
+				case STATEMENT_TYPE.Complex_SwitchCase:
 					break;
-				case STATEMENT_TYPE.Compound_While:
+				case STATEMENT_TYPE.Complex_While:
 					break;
-				case STATEMENT_TYPE.Compound_For:
+				case STATEMENT_TYPE.Complex_For:
 					break;
-				case STATEMENT_TYPE.Compound_DoWhile:
+				case STATEMENT_TYPE.Complex_DoWhile:
 					break;
-				case STATEMENT_TYPE.Compound_GoTo:
+				case STATEMENT_TYPE.Complex_GoTo:
 					break;
-				case STATEMENT_TYPE.Compound_Block:
+				case STATEMENT_TYPE.Complex_Block:
 					break;
 				case STATEMENT_TYPE.Branch_If:
 					break;
@@ -211,7 +211,7 @@ namespace Mr.Robot.CDeducer
 			}
 		}
 
-		static void CompoundIfElseStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
+		static void ComplexIfElseStatementProc(STATEMENT_NODE s_node, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
 			// 取得第一条没走过的branch
 			STATEMENT_NODE ifBanch = s_node.ChildNodeList.First();
@@ -254,7 +254,7 @@ namespace Mr.Robot.CDeducer
 		{
 			// 取得前面if, else if各分支的表达式方程组
 			STATEMENT_NODE parentNode = s_node.ParentNode;
-			System.Diagnostics.Trace.Assert(parentNode.Type == STATEMENT_TYPE.Compound_IfElse);
+			System.Diagnostics.Trace.Assert(parentNode.Type == STATEMENT_TYPE.Complex_IfElse);
 			List<SIMPLIFIED_EXPRESSION> ifBranchExpStrList = new List<SIMPLIFIED_EXPRESSION>();
 			for (int i = 0; i < parentNode.ChildNodeList.Count - 1; i++)
 			{

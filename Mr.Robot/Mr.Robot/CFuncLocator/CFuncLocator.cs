@@ -97,27 +97,27 @@ namespace Mr.Robot
 
 			switch (type)
 			{
-				case STATEMENT_TYPE.Compound_IfElse:									// if else
+				case STATEMENT_TYPE.Complex_IfElse:									// if else
 					retNode = GetIfElseStatementNode(parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case STATEMENT_TYPE.Compound_SwitchCase:								// switch case
+				case STATEMENT_TYPE.Complex_SwitchCase:								// switch case
 					retNode = GetSwitchCaseStatementNode(parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case STATEMENT_TYPE.Compound_While:									// while
-				case STATEMENT_TYPE.Compound_For:										// for
+				case STATEMENT_TYPE.Complex_While:									// while
+				case STATEMENT_TYPE.Complex_For:										// for
 					retNode = GetForOrWhileStatementNode(type, parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case STATEMENT_TYPE.Compound_DoWhile:									// do while
+				case STATEMENT_TYPE.Complex_DoWhile:									// do while
 					retNode = GetDoWhileStatementNode(parse_info, ref searchPos);
 					startPos = searchPos;
 					break;
-				case STATEMENT_TYPE.Compound_GoTo:									// go to(未对应)
+				case STATEMENT_TYPE.Complex_GoTo:									// go to(未对应)
 					System.Diagnostics.Trace.Assert(false);
 					break;
-				case STATEMENT_TYPE.Compound_Block:									// "{"和"}"括起来的语句块
+				case STATEMENT_TYPE.Complex_Block:									// "{"和"}"括起来的语句块
 					break;
 				default:
 					System.Diagnostics.Trace.Assert(false);								// 异常情况
@@ -157,7 +157,7 @@ namespace Mr.Robot
 			retNode.Type = type;
 			CODE_POSITION searchPos = new CODE_POSITION(startPos);
 			// 取得循环表达式
-			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
+			string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
 				retNode.ExpressionStr = expression;
@@ -181,7 +181,7 @@ namespace Mr.Robot
 		static STATEMENT_NODE GetDoWhileStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
         {
             STATEMENT_NODE retNode = new STATEMENT_NODE();
-            retNode.Type = STATEMENT_TYPE.Compound_DoWhile;
+            retNode.Type = STATEMENT_TYPE.Complex_DoWhile;
             CODE_POSITION searchPos = new CODE_POSITION(startPos);
             // 取得分支范围
 			CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
@@ -193,7 +193,7 @@ namespace Mr.Robot
 				CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 				if ("while" == nextIdtf.Text)
                 {
-					string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
+					string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 					nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
                     if (string.Empty != expression
 						&& ";" == nextIdtf.Text)
@@ -215,10 +215,10 @@ namespace Mr.Robot
 		static STATEMENT_NODE GetIfElseStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
-			retNode.Type = STATEMENT_TYPE.Compound_IfElse;
+			retNode.Type = STATEMENT_TYPE.Complex_IfElse;
 			CODE_POSITION searchPos = new CODE_POSITION(startPos);
 			// 取得if条件表达式
-			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
+			string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
 				retNode.ExpressionStr = expression;
@@ -268,10 +268,10 @@ namespace Mr.Robot
 		static STATEMENT_NODE GetSwitchCaseStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
-			retNode.Type = STATEMENT_TYPE.Compound_SwitchCase;
+			retNode.Type = STATEMENT_TYPE.Complex_SwitchCase;
 			CODE_POSITION searchPos = new CODE_POSITION(startPos);
 			// 取得switch条件表达式
-			string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
+			string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
 				retNode.ExpressionStr = expression;
@@ -323,7 +323,7 @@ namespace Mr.Robot
 				{
 					// 表示这是一个"else if"分支
 					// 取得分支表达式
-					string expression = GetCompoundStatementExpression(parse_info, ref searchPos);
+					string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 					if (string.Empty != expression)
 					{
 						retNode.ExpressionStr = expression;
@@ -418,7 +418,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得复合语句表达式
 		/// </summary>
-		static string GetCompoundStatementExpression(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static string GetComplexStatementExpression(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
 		{
 			CODE_POSITION searchPos = new CODE_POSITION(startPos);
 			CODE_POSITION foundPos = new CODE_POSITION(searchPos);
@@ -484,25 +484,25 @@ namespace Mr.Robot
 			switch (keyWord)
 			{
 				case "if":
-					retType = STATEMENT_TYPE.Compound_IfElse;
+					retType = STATEMENT_TYPE.Complex_IfElse;
 					break;
 				case "{":
-					retType = STATEMENT_TYPE.Compound_Block;
+					retType = STATEMENT_TYPE.Complex_Block;
 					break;
 				case "do":
-					retType = STATEMENT_TYPE.Compound_DoWhile;
+					retType = STATEMENT_TYPE.Complex_DoWhile;
 					break;
 				case "for":
-					retType = STATEMENT_TYPE.Compound_For;
+					retType = STATEMENT_TYPE.Complex_For;
 					break;
 				case "goto":
-					retType = STATEMENT_TYPE.Compound_GoTo;
+					retType = STATEMENT_TYPE.Complex_GoTo;
 					break;
 				case "switch":
-					retType = STATEMENT_TYPE.Compound_SwitchCase;
+					retType = STATEMENT_TYPE.Complex_SwitchCase;
 					break;
 				case "while":
-					retType = STATEMENT_TYPE.Compound_While;
+					retType = STATEMENT_TYPE.Complex_While;
 					break;
 
                 case "case":
@@ -534,13 +534,13 @@ namespace Mr.Robot
 				{
 					case STATEMENT_TYPE.Root:
 					case STATEMENT_TYPE.Simple:
-					case STATEMENT_TYPE.Compound_IfElse:
-					case STATEMENT_TYPE.Compound_SwitchCase:
-					case STATEMENT_TYPE.Compound_While:
-					case STATEMENT_TYPE.Compound_For:
-					case STATEMENT_TYPE.Compound_DoWhile:
-					case STATEMENT_TYPE.Compound_GoTo:
-					case STATEMENT_TYPE.Compound_Block:
+					case STATEMENT_TYPE.Complex_IfElse:
+					case STATEMENT_TYPE.Complex_SwitchCase:
+					case STATEMENT_TYPE.Complex_While:
+					case STATEMENT_TYPE.Complex_For:
+					case STATEMENT_TYPE.Complex_DoWhile:
+					case STATEMENT_TYPE.Complex_GoTo:
+					case STATEMENT_TYPE.Complex_Block:
 						childMarkStr = (i + 1).ToString();
 						break;
 					case STATEMENT_TYPE.Branch_If:
