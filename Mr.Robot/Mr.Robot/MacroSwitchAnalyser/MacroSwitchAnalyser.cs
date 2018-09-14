@@ -75,12 +75,12 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		}
 	}
 
-	public class MSA_SOURCE_RESULT
+	public class MSA_SOURCE_INFO
 	{
 		public string SourceFileName = string.Empty;
 		public List<MSA_MACRO_SWITCH_RESULT> MacroSwitchResultList = null;
 
-		public MSA_SOURCE_RESULT(string src_name, List<MSA_MACRO_SWITCH_RESULT> macro_switch_result_list)
+		public MSA_SOURCE_INFO(string src_name, List<MSA_MACRO_SWITCH_RESULT> macro_switch_result_list)
 		{
 			this.SourceFileName = src_name;
 			this.MacroSwitchResultList = macro_switch_result_list;
@@ -91,11 +91,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 	/// </summary>
 	public class MSA_OUTPUT_RESULT
 	{
-		public List<MSA_SOURCE_RESULT> SourceResultList = new List<MSA_SOURCE_RESULT>();
+		public List<MSA_SOURCE_INFO> SourceResultList = new List<MSA_SOURCE_INFO>();
 		public MSA_PROGRESS Progress = new MSA_PROGRESS();
 		object obj_lock = new object();
 
-		public void Add(MSA_SOURCE_RESULT result)
+		public void Add(MSA_SOURCE_INFO result)
 		{
 			lock (this.obj_lock)
 			{
@@ -326,28 +326,45 @@ namespace Mr.Robot.MacroSwitchAnalyser
 		{
 			while (true)
 			{
-				string srcName = string.Empty;
-				lock (this.m_ProcInfo)
+				string src_name = GetNextProcSourceFile();
+				if (string.IsNullOrEmpty(src_name))
 				{
-					if (0 == this.m_ProcInfo.SourceFileQueue.Count)
-					{
-						break;
-					}
-					srcName = this.m_ProcInfo.SourceFileQueue.Dequeue();
+					break;
 				}
-				MSA_SOURCE_PROC_RESULT procResult;
-				MSA_SOURCE_RESULT result = SrcProc(srcName, this.InputPara.HdList, out procResult, this.m_ProcInfo.mtpjInfoList, this.m_ProcInfo.mkInfoList);
-				int count = 0;
-				lock (this.m_ProcInfo)
+				MSA_SOURCE_PROC_RESULT proc_result;
+				MSA_SOURCE_INFO src_proc_info = SrcProc(src_name, this.InputPara.HdList,
+														out proc_result,
+														this.m_ProcInfo.mtpjInfoList,
+														this.m_ProcInfo.mkInfoList);
+
+				UpdateProgress(src_name, proc_result, src_proc_info);
+			}
+		}
+
+		string GetNextProcSourceFile()
+		{
+			lock (this.m_ProcInfo)
+			{
+				if (0 == this.m_ProcInfo.SourceFileQueue.Count)
 				{
-					count = (this.m_ProcInfo.count += 1);
+					return null;
 				}
-				lock (this.OutputResult)
-				{
-					this.OutputResult.Add(result);
-					this.OutputResult.Progress = new MSA_PROGRESS(srcName, procResult, count, this.StatisticsInfo.TotalCount);
-					ReportProgress2Caller();
-				}
+				return this.m_ProcInfo.SourceFileQueue.Dequeue();
+			}
+		}
+
+		void UpdateProgress(string src_name, MSA_SOURCE_PROC_RESULT proc_result, MSA_SOURCE_INFO src_proc_info)
+		{
+			int count = 0;
+			lock (this.m_ProcInfo)
+			{
+				count = (this.m_ProcInfo.count += 1);
+			}
+			lock (this.OutputResult)
+			{
+				this.OutputResult.Add(src_proc_info);
+				this.OutputResult.Progress = new MSA_PROGRESS(src_name, proc_result, count, this.StatisticsInfo.TotalCount);
+				ReportProgress2Caller();
 			}
 		}
 
@@ -386,47 +403,69 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			return mkInfoList;
 		}
 
-		MSA_SOURCE_RESULT SrcProc(	string src_name,
-									List<string> header_list,
-									out MSA_SOURCE_PROC_RESULT proc_result,
-									List<MTPJ_FILE_INFO> mtpj_info_list,
-									List<MK_FILE_INFO> mk_info_list)
+		MSA_SOURCE_INFO SrcProc(string src_name,
+								List<string> header_list,
+								out MSA_SOURCE_PROC_RESULT proc_result,
+								List<MTPJ_FILE_INFO> mtpj_info_list,
+								List<MK_FILE_INFO> mk_info_list)
         {
 			proc_result = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
-            List<string> codeList = COMN_PROC.RemoveComments(src_name);
-			List<MacroSwitchExpInfo> expInfoList = GetMacroExpList(codeList);
-            if (0 == expInfoList.Count)
+            List<string> code_list = COMN_PROC.RemoveComments(src_name);
+			List<MacroSwitchExpInfo> exp_info_list = GetMacroExpList(code_list);
+            if (0 == exp_info_list.Count)
             {
 				proc_result = MSA_SOURCE_PROC_RESULT.NOT_FOUND;
 				this.StatisticsInfo.NotFoundCount += 1;
-				return new MSA_SOURCE_RESULT(src_name, null);
+				return new MSA_SOURCE_INFO(src_name, null);
             }
-			List<string> srcList = new List<string>();
-			srcList.Add(src_name);
-
-			// ==============================
-			C_PROSPECTOR cProspector = new C_PROSPECTOR(srcList, header_list);			// <--- 这里调用C_PROSPECTOR取得代码文件宏定义解析结果
-			cProspector.MacroSwichAnalyserFlag = true;
-			List<FILE_PARSE_INFO> parseInfoList = cProspector.SyncStart();
-			// ==============================
-
-			if (null == parseInfoList || 0 == parseInfoList.Count)
+			else
 			{
-				proc_result = MSA_SOURCE_PROC_RESULT.FAIL;
-				this.StatisticsInfo.FailedCount += 1;
-				return new MSA_SOURCE_RESULT(src_name, null);
+				FILE_PARSE_INFO src_parse_info = GetSrcParseInfo(src_name, header_list);
+				if (null == src_parse_info)
+				{
+					proc_result = MSA_SOURCE_PROC_RESULT.FAIL;
+					this.StatisticsInfo.FailedCount += 1;
+					return new MSA_SOURCE_INFO(src_name, null);
+				}
+				else
+				{
+					List<MSA_MACRO_SWITCH_RESULT> result_list = new List<MSA_MACRO_SWITCH_RESULT>();
+					FileInfo fi = new FileInfo(src_name);
+					foreach (MacroSwitchExpInfo exp_info in exp_info_list)
+					{
+						MacroPrintInfo print_info = new MacroPrintInfo(fi.Name, exp_info.LineNum, exp_info.CodeLine);
+						CommonProc.MacroSwitchExpressionAnalysis(	exp_info.ExpStr,
+																	print_info,
+																	src_parse_info,
+																	ref result_list,
+																	mtpj_info_list,
+																	mk_info_list);
+					}
+					proc_result = MSA_SOURCE_PROC_RESULT.SUCCESS;
+					this.StatisticsInfo.SuccessCount += 1;
+					return new MSA_SOURCE_INFO(src_name, result_list);
+				}
 			}
-			List<MSA_MACRO_SWITCH_RESULT> resultList = new List<MSA_MACRO_SWITCH_RESULT>();
-			FileInfo fi = new FileInfo(src_name);
-			foreach (MacroSwitchExpInfo expInfo in expInfoList)
-			{
-				MacroPrintInfo printInfo = new MacroPrintInfo(fi.Name, expInfo.LineNum, expInfo.CodeLine);
-				CommonProc.MacroSwitchExpressionAnalysis(expInfo.ExpStr, printInfo, parseInfoList[0], ref resultList, mtpj_info_list, mk_info_list);
-			}
-			proc_result = MSA_SOURCE_PROC_RESULT.SUCCESS;
-			this.StatisticsInfo.SuccessCount += 1;
-			return new MSA_SOURCE_RESULT(src_name, resultList);
         }
+
+		FILE_PARSE_INFO GetSrcParseInfo(string src_name, List<string> header_list)
+		{
+			List<string> src_list = new List<string>();
+			src_list.Add(src_name);
+			// ==============================
+			C_PROSPECTOR csrc_prospector = new C_PROSPECTOR(src_list, header_list);		// <--- 这里调用C_PROSPECTOR取得代码文件宏定义解析结果
+			csrc_prospector.MacroSwichAnalyserFlag = true;
+			List<FILE_PARSE_INFO> parse_info_list = csrc_prospector.SyncStart();
+			// ==============================
+			if (null == parse_info_list || 0 == parse_info_list.Count)
+			{
+				return null;
+			}
+			else
+			{
+				return parse_info_list.First();
+			}
+		}
 
 		class MacroSwitchExpInfo
 		{

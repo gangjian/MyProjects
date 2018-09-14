@@ -82,7 +82,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
                     {
                         string valStr = mdi.ValStr;
                         // 宏值分析
-                        MacroValueType mType = MacroValueStrAnalysis(ref valStr, parse_info);
+                        MacroValueType mType = GetMacroValueType(ref valStr, parse_info);
                         // 立即数
                         if (mType == MacroValueType.ConstNumber)
                         {
@@ -104,39 +104,14 @@ namespace Mr.Robot.MacroSwitchAnalyser
                     else
                     {
                         // 未定义
-						bool bFindInPrjDef = false;
-						if (null != mtpj_info_list)
+						MSA_MACRO_SWITCH_RESULT ms_result = null;
+						if (	null != (ms_result = FindDefInMtpjList(cpnt.Text, mtpj_info_list, print_info))
+							||	null != (ms_result = FindDefInMkList(cpnt.Text, mk_info_list, print_info))
+							)
 						{
-							foreach (MTPJ_FILE_INFO prj_info in mtpj_info_list)
-							{
-								string valStr;
-								if (prj_info.DefListContains(cpnt.Text, out valStr))
-								{
-									if (string.IsNullOrEmpty(valStr))
-									{
-										valStr = @".mtpj def";
-									}
-									MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, true, valStr, prj_info.FileName);
-									result_list.Add(msResult);
-									bFindInPrjDef = true;
-									break;
-								}
-							}
+							result_list.Add(ms_result);
 						}
-						if (null != mk_info_list)
-						{
-							foreach (var item in mk_info_list)
-							{
-								if (item.DefList.Contains(cpnt.Text))
-								{
-									MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, true, @".mk def", item.FileName);
-									result_list.Add(msResult);
-									bFindInPrjDef = true;
-									break;
-								}
-							}
-						}
-						if (!bFindInPrjDef)
+						else
 						{
 							MSA_MACRO_SWITCH_RESULT msResult = new MSA_MACRO_SWITCH_RESULT(print_info.SourceName, print_info.LineNum, print_info.CodeText, cpnt.Text, false, string.Empty, string.Empty);
 							result_list.Add(msResult);
@@ -146,7 +121,54 @@ namespace Mr.Robot.MacroSwitchAnalyser
             }
         }
 
-        static MacroValueType MacroValueStrAnalysis(ref string macro_value_str, FILE_PARSE_INFO parse_info)
+		static MSA_MACRO_SWITCH_RESULT FindDefInMtpjList(string macro_str, List<MTPJ_FILE_INFO> mtpj_info_list, MacroPrintInfo print_info)
+		{
+			if (null != mtpj_info_list)
+			{
+				foreach (MTPJ_FILE_INFO mtpj_info in mtpj_info_list)
+				{
+					string valStr;
+					if (mtpj_info.DefListContains(macro_str, out valStr))
+					{
+						if (string.IsNullOrEmpty(valStr))
+						{
+							valStr = @".mtpj def";
+						}
+						return new MSA_MACRO_SWITCH_RESULT(	print_info.SourceName,
+															print_info.LineNum,
+															print_info.CodeText,
+															macro_str,
+															true,
+															valStr,
+															mtpj_info.FileName);
+					}
+				}
+			}
+			return null;
+		}
+
+		static MSA_MACRO_SWITCH_RESULT FindDefInMkList(string macro_str, List<MK_FILE_INFO> mk_info_list, MacroPrintInfo print_info)
+		{
+			if (null != mk_info_list)
+			{
+				foreach (var mk_info in mk_info_list)
+				{
+					if (mk_info.DefList.Contains(macro_str))
+					{
+						return new MSA_MACRO_SWITCH_RESULT(	print_info.SourceName,
+															print_info.LineNum,
+															print_info.CodeText,
+															macro_str,
+															true,
+															@".mk def",
+															mk_info.FileName);
+					}
+				}
+			}
+			return null;
+		}
+
+        static MacroValueType GetMacroValueType(ref string macro_value_str, FILE_PARSE_INFO parse_info)
         {
             if (string.IsNullOrEmpty(macro_value_str.Trim()))
             {
@@ -159,7 +181,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				if (null != mdi)
 				{
 					macro_value_str = mdi.ValStr;
-					return MacroValueStrAnalysis(ref macro_value_str, parse_info);
+					return GetMacroValueType(ref macro_value_str, parse_info);
 				}
 			}
             List<STATEMENT_COMPONENT> cpntList = COMN_PROC.GetComponents(macro_value_str, null);
