@@ -9,11 +9,9 @@ namespace Mr.Robot.Creeper
 {
 	public class CCommentsMarker
 	{
-		public static List<CommentsInfo> MarkCSourceComments(string c_src_path)
+		public static List<CommentsInfo> MarkCSourceComments(List<string> code_list)
 		{
-			Trace.Assert(!string.IsNullOrEmpty(c_src_path) && File.Exists(c_src_path));
 			List<CommentsInfo> ret_list = new List<CommentsInfo>();
-			List<string> code_list = File.ReadAllLines(c_src_path).ToList();
 			int line_idx = 0;
 			int column_idx = 0;
 			while (true)
@@ -53,7 +51,7 @@ namespace Mr.Robot.Creeper
 							break;
 						}
 						code_line = code_list[line_idx];
-						idx_e = code_list.IndexOf("*/");
+						idx_e = code_line.IndexOf("*/");
 					}
 					Trace.Assert(-1 != idx_e);
 					CODE_POSITION end_pos = new CODE_POSITION(line_idx, idx_e);
@@ -77,6 +75,52 @@ namespace Mr.Robot.Creeper
 				}
 			}
 			return ret_list;
+		}
+
+		public static List<string> RemoveComments2(List<string> code_list)
+		{
+			List<string> ret_list = new List<string>(code_list);
+			// 取得注释位置标记列表
+			List<CommentsInfo> comments_info_list = MarkCSourceComments(code_list);
+			// 根据标记删除注释
+			for (int i = comments_info_list.Count - 1; i >= 0; i--)
+			{
+				RemoveComment(ret_list, comments_info_list[i]);
+			}
+			for (int i = 0; i < ret_list.Count; i++)
+			{
+				ret_list[i] = ret_list[i].TrimEnd();
+			}
+			return ret_list;
+		}
+
+		static void RemoveComment(List<string> code_list, CommentsInfo cmt_info)
+		{
+			if (cmt_info.CateGory == CommentsCategory.LINE)
+			{
+				int r = cmt_info.StartPosition.RowNum;
+				int c = cmt_info.StartPosition.ColNum;
+				code_list[r] = code_list[r].Remove(c).TrimEnd();
+			}
+			else if (cmt_info.CateGory == CommentsCategory.BLOCK)
+			{
+				CODE_POSITION s_pos = cmt_info.StartPosition;
+				CODE_POSITION e_pos = cmt_info.EndPosition;
+				for (int r = s_pos.RowNum; r <= e_pos.RowNum; r++)
+				{
+					int s_col = 0;
+					if (r == s_pos.RowNum)
+					{
+						s_col = s_pos.ColNum;
+					}
+					int e_col = code_list[r].Length - 1;
+					if (r == e_pos.RowNum)
+					{
+						e_col = e_pos.ColNum + 1;
+					}
+					code_list[r] = code_list[r].Remove(s_col, e_col - s_col + 1).TrimEnd();
+				}
+			}
 		}
 
 		// 注释类别

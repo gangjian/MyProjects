@@ -52,6 +52,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Common.cs" />
+    <Compile Include="UnitTestCCommentsMarker.cs" />
     <Compile Include="UnitTestResultCompare.cs" />
     <Compile Include="UnitTest_CommonProcess.cs" />
     <Compile Include="UnitTest_ExpressionSimplify.cs" />
