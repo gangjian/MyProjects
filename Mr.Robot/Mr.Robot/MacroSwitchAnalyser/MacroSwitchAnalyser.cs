@@ -241,6 +241,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
 
 		public EventHandler MSA_ReportProgressHandler = null;
 
+		CodeBufferManager m_CodeBufferManager = null;
+
 		public MACRO_SWITCH_ANALYSER(MSA_INPUT_PARA input_para)
         {
 			this.InputPara = input_para;
@@ -263,6 +265,11 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			//System.Diagnostics.Trace.WriteLine(this.StatisticsInfo.PrintOut());
 		}
 
+		public void ProcStop()
+		{
+			this.m_CodeBufferManager.Clear();
+		}
+
 		void InitParas()
 		{
 			this.OutputResult = new MSA_OUTPUT_RESULT();
@@ -274,6 +281,8 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			// 处理.mk文件
 			this.m_ProcInfo.mkInfoList = GetMkInfoList();
 			this.m_ProcInfo.count = 0;
+
+			this.m_CodeBufferManager = new CodeBufferManager();
 		}
 
 		void PrepareSourceFileQueue()
@@ -453,7 +462,9 @@ namespace Mr.Robot.MacroSwitchAnalyser
 			List<string> src_list = new List<string>();
 			src_list.Add(src_name);
 			// ==============================
-			C_PROSPECTOR csrc_prospector = new C_PROSPECTOR(src_list, header_list);		// <--- 这里调用C_PROSPECTOR取得代码文件宏定义解析结果
+			C_PROSPECTOR csrc_prospector = new C_PROSPECTOR(src_list,
+															header_list,
+															this.m_CodeBufferManager);	// <--- 这里调用C_PROSPECTOR取得代码文件宏定义解析结果
 			csrc_prospector.MacroSwichAnalyserFlag = true;
 			List<FILE_PARSE_INFO> parse_info_list = csrc_prospector.SyncStart();
 			// ==============================

@@ -23,12 +23,15 @@ namespace Mr.Robot
 		public bool MacroSwichAnalyserFlag = false;										// 这个标志是给宏开关分析工具设的, 做宏开关分析时, 为了提高速度, 只分析头文件宏定义等..
 																						// 不做语句分析
 		public List<string> ErrorLogList = new List<string>();
+
+		CodeBufferManager _CodeBufferManagerRef = null;
 		#endregion
 
-		public C_PROSPECTOR(List<string> source_list, List<string> header_list)
+		public C_PROSPECTOR(List<string> source_list, List<string> header_list, CodeBufferManager code_buffer_mamager_ref = null)
 		{
 			this.SourceList = source_list;
 			this.HeaderList = header_list;
+			this._CodeBufferManagerRef = code_buffer_mamager_ref;
 		}
 
 		#region 向外提供的接口方法
@@ -101,60 +104,50 @@ namespace Mr.Robot
 		public List<string> PrecompileProcess(	string file_name,
 												FILE_PARSE_INFO parse_info)
 		{
-			List<string> codeList = COMN_PROC.RemoveComments(file_name);
-			List<string> retList = new List<string>();
-			Stack<CONDITIONAL_COMPILATION_INFO> ccStack = new Stack<CONDITIONAL_COMPILATION_INFO>(); // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
+			List<string> code_list = GetCodeList(file_name);
+			List<string> ret_list = new List<string>();
+			Stack<CONDITIONAL_COMPILATION_INFO> cc_stack = new Stack<CONDITIONAL_COMPILATION_INFO>(); // 条件编译嵌套时, 用堆栈来保存嵌套的条件编译情报参数
 			CONDITIONAL_COMPILATION_INFO cc_info = new CONDITIONAL_COMPILATION_INFO();
 
-			string rdLine = "";
-			for (int idx = 0; idx < codeList.Count; idx++)
+			string code_line = "";
+			for (int idx = 0; idx < code_list.Count; idx++)
 			{
-				rdLine = codeList[idx].Trim();
-				if (rdLine.StartsWith("#"))
+				code_line = code_list[idx].Trim();
+				if (code_line.StartsWith("#"))
 				{
-					CODE_POSITION searchPos = new CODE_POSITION(idx, codeList[idx].IndexOf("#") + 1);
-					CODE_POSITION foundPos = null;
-                    CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-					if ("include" == nextIdtf.Text.ToLower())
+					CODE_POSITION search_pos = new CODE_POSITION(idx, code_list[idx].IndexOf("#") + 1);
+					CODE_POSITION found_pos = null;
+                    CODE_IDENTIFIER next_identifier
+										= COMN_PROC.GetNextIdentifier(	code_list,
+																		ref search_pos,
+																		out found_pos);
+					if ("include" == next_identifier.Text.ToLower()
+						&& cc_info.WriteFlag)
 					{
-						if (false != cc_info.WriteFlag)
-						{
-							// 取得include文件名
-							string incFileName = GetIncludeFileName(codeList, ref searchPos, file_name);
-							if (!string.IsNullOrEmpty(incFileName))
-							{
-								if (!parse_info.IncFileList.Contains(incFileName))
-								{
-									parse_info.IncFileList.Add(incFileName);
-								}
-								CFileProcess(incFileName, parse_info);
-							}
-						}
+						IncludeHeaderProc(code_list, file_name, ref search_pos, parse_info);
 					}
-					else if ("define" == nextIdtf.Text.ToLower())
+					else if ("define" == next_identifier.Text.ToLower()
+							 && cc_info.WriteFlag)
 					{
-						if (false != cc_info.WriteFlag)
-						{
-							DefineProcess(file_name, codeList, ref searchPos, parse_info);
-						}
+						DefineProcess(file_name, code_list, ref search_pos, parse_info);
 					}
-					else if ("pragma" == nextIdtf.Text.ToLower())
+					else if ("pragma" == next_identifier.Text.ToLower())
 					{
-						nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
-						if ("asm" == nextIdtf.Text.ToLower())
+						next_identifier = COMN_PROC.GetNextIdentifier(code_list, ref search_pos, out found_pos);
+						if ("asm" == next_identifier.Text.ToLower())
 						{
 							// C代码中嵌入了汇编命令(暂不处理)
 							while (true)
 							{
-								rdLine = codeList[idx].Trim();
-								if (-1 != rdLine.ToLower().IndexOf("#pragma endasm"))
+								code_line = code_list[idx].Trim();
+								if (-1 != code_line.ToLower().IndexOf("#pragma endasm"))
 								{
-									retList.Add("");
+									ret_list.Add("");
 									break;
 								}
 								else
 								{
-									retList.Add("");
+									ret_list.Add("");
 									idx++;
 								}
 							}
@@ -164,10 +157,10 @@ namespace Mr.Robot
 					else
 					{
 						string exprStr = "";            // 表达式字符串
-						if ("if" == nextIdtf.Text.ToLower())
+						if ("if" == next_identifier.Text.ToLower())
 						{
 							bool lastFlag = cc_info.WriteFlag;
-							ccStack.Push(cc_info);
+							cc_stack.Push(cc_info);
 							cc_info = new CONDITIONAL_COMPILATION_INFO();
 							if (false == lastFlag)
 							{
@@ -176,9 +169,9 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(code_list, ref search_pos);
 								// 表达式可能占多行(连行符)
-								idx = searchPos.RowNum - 1;
+								idx = search_pos.RowNum - 1;
 								// 判断表达式的值
 								if (0 != ExpCalc.GetConstExpressionValue(exprStr, parse_info))
 								{
@@ -192,10 +185,10 @@ namespace Mr.Robot
 								}
 							}
 						}
-						else if ("ifdef" == nextIdtf.Text.ToLower())
+						else if ("ifdef" == next_identifier.Text.ToLower())
 						{
 							bool lastFlag = cc_info.WriteFlag;
-							ccStack.Push(cc_info);
+							cc_stack.Push(cc_info);
 							cc_info = new CONDITIONAL_COMPILATION_INFO();
 							if (false == lastFlag)
 							{
@@ -204,9 +197,9 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(code_list, ref search_pos);
 								// 表达式可能占多行(连行符)
-								idx = searchPos.RowNum - 1;
+								idx = search_pos.RowNum - 1;
 								// 判断表达式是否已定义
                                 if (COMN_PROC.JudgeExpressionDefined(exprStr, parse_info))
 								{
@@ -220,10 +213,10 @@ namespace Mr.Robot
 								}
 							}
 						}
-						else if ("ifndef" == nextIdtf.Text.ToLower())
+						else if ("ifndef" == next_identifier.Text.ToLower())
 						{
 							bool lastFlag = cc_info.WriteFlag;
-							ccStack.Push(cc_info);
+							cc_stack.Push(cc_info);
 							cc_info = new CONDITIONAL_COMPILATION_INFO();
 							if (false == lastFlag)
 							{
@@ -232,9 +225,9 @@ namespace Mr.Robot
 							}
 							else
 							{
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(code_list, ref search_pos);
 								// 表达式可能占多行(连行符)
-								idx = searchPos.RowNum - 1;
+								idx = search_pos.RowNum - 1;
 								// 判断表达式是否已定义
                                 if (COMN_PROC.JudgeExpressionDefined(exprStr, parse_info))
 								{
@@ -248,12 +241,12 @@ namespace Mr.Robot
 								}
 							}
 						}
-						else if ("else" == nextIdtf.Text.ToLower())
+						else if ("else" == next_identifier.Text.ToLower())
 						{
 							bool lastFlag = true;
-							if (ccStack.Count > 0)
+							if (cc_stack.Count > 0)
 							{
-								lastFlag = ccStack.Peek().WriteFlag;
+								lastFlag = cc_stack.Peek().WriteFlag;
 							}
 							if (false == lastFlag)
 							{
@@ -274,12 +267,12 @@ namespace Mr.Robot
 								}
 							}
 						}
-						else if ("elif" == nextIdtf.Text.ToLower())
+						else if ("elif" == next_identifier.Text.ToLower())
 						{
 							bool lastFlag = true;
-							if (ccStack.Count > 0)
+							if (cc_stack.Count > 0)
 							{
-								lastFlag = ccStack.Peek().WriteFlag;
+								lastFlag = cc_stack.Peek().WriteFlag;
 							}
 							if (false == lastFlag)
 							{
@@ -289,9 +282,9 @@ namespace Mr.Robot
 							else
 							{
 								// 跟"if"一样, 但是因为不是嵌套所以不用压栈
-                                exprStr = COMN_PROC.GetPrecompileExpressionStr(codeList, ref searchPos);
+                                exprStr = COMN_PROC.GetPrecompileExpressionStr(code_list, ref search_pos);
 								// 表达式可能占多行(连行符)
-								idx = searchPos.RowNum - 1;
+								idx = search_pos.RowNum - 1;
 								// 判断表达式的值
 								if (0 != ExpCalc.GetConstExpressionValue(exprStr, parse_info))
 								{
@@ -305,12 +298,12 @@ namespace Mr.Robot
 								}
 							}
 						}
-						else if ("endif" == nextIdtf.Text.ToLower())
+						else if ("endif" == next_identifier.Text.ToLower())
 						{
 							bool lastFlag = true;
-							if (ccStack.Count > 0)
+							if (cc_stack.Count > 0)
 							{
-								lastFlag = ccStack.Peek().WriteFlag;
+								lastFlag = cc_stack.Peek().WriteFlag;
 							}
 							if (false == lastFlag)
 							{
@@ -333,11 +326,11 @@ namespace Mr.Robot
 
 				if (cc_info.WriteFlag)
 				{
-					retList.Add(codeList[idx]);
+					ret_list.Add(code_list[idx]);
 				}
 				else
 				{
-					retList.Add("");
+					ret_list.Add("");
 				}
 				if (true == cc_info.WriteNextFlag)
 				{
@@ -348,11 +341,40 @@ namespace Mr.Robot
 				// 嵌套时弹出堆栈, 恢复之前的情报
 				if (true == cc_info.PopUpStack)
 				{
-					cc_info = ccStack.Pop();
+					cc_info = cc_stack.Pop();
 				}
 			}
 
-			return retList;
+			return ret_list;
+		}
+
+		List<string> GetCodeList(string file_name)
+		{
+			if (null != this._CodeBufferManagerRef)
+			{
+				return this._CodeBufferManagerRef.GetCodeList(file_name);
+			}
+			else
+			{
+				return COMN_PROC.RemoveComments(file_name);
+			}
+		}
+
+		void IncludeHeaderProc(	List<string> code_list,
+								string file_name,
+								ref CODE_POSITION search_pos,
+								FILE_PARSE_INFO parse_info)
+		{
+			// 取得include文件名
+			string header_name = GetIncludeHeaderName(code_list, ref search_pos, file_name);
+			if (!string.IsNullOrEmpty(header_name))
+			{
+				if (!parse_info.IncFileList.Contains(header_name))
+				{
+					parse_info.IncFileList.Add(header_name);
+				}
+				CFileProcess(header_name, parse_info);
+			}
 		}
 
 		/// <summary>
@@ -729,7 +751,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得包含头文件名
 		/// </summary>
-		string GetIncludeFileName(List<string> codeList, ref CODE_POSITION searchPos, string file_name)
+		string GetIncludeHeaderName(List<string> codeList, ref CODE_POSITION searchPos, string file_name)
 		{
 			CODE_POSITION foundPos = null;
             CODE_IDENTIFIER quotIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);

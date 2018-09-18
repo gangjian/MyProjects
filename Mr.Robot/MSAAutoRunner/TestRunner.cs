@@ -72,6 +72,7 @@ namespace MSAAutoRunner
 				bool ret = StartNextTest();
 				if (!ret)
 				{
+					this._MacroSwitchAnalyser.ProcStop();
 					ShowFinalTestReport();
 					Console.ReadLine();
 				}
