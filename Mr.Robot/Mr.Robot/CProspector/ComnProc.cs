@@ -94,11 +94,11 @@ namespace Mr.Robot
 		/// <summary>
         /// 从(多行字符)当前位置取得下一个标识符
 		/// </summary>
-        public static CODE_IDENTIFIER GetNextIdentifier(List<string> codeList, ref CODE_POSITION searchPos, out CODE_POSITION foundPos)
+        public static CODE_IDENTIFIER GetNextIdentifier(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
 		{
 			int lineIdx = searchPos.RowNum;
 			int startIdx = searchPos.ColNum;
-			foundPos = new CODE_POSITION(searchPos);
+			foundPos = new CodePosition(searchPos);
 			System.Diagnostics.Trace.Assert(lineIdx >= 0);
 			if (lineIdx >= codeList.Count)
 			{
@@ -206,7 +206,7 @@ namespace Mr.Robot
 		RET_IDF:
 			if (-1 != s_pos && -1 != e_pos)
 			{
-				foundPos = new CODE_POSITION(lineIdx, s_pos);
+				foundPos = new CodePosition(lineIdx, s_pos);
 				if (curIdx >= curLine.Length)
 				{
 					lineIdx++;
@@ -371,7 +371,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 从当前位置开始, 找到下一个指定符号出现的位置
 		/// </summary>
-        public static CODE_POSITION FindNextSymbol(List<string> codeList, CODE_POSITION searchPos, Char symbol)
+        public static CodePosition FindNextSymbol(List<string> codeList, CodePosition searchPos, Char symbol)
 		{
 			string curLine = "";
 			int lineIdx = searchPos.RowNum;
@@ -424,7 +424,7 @@ namespace Mr.Robot
 					if (symbol == curChar && !quoteStart)
 					{
 						// 找到了
-						CODE_POSITION fpos = new CODE_POSITION(lineIdx, curIdx);
+						CodePosition fpos = new CodePosition(lineIdx, curIdx);
 						return fpos;
 					}
 				}
@@ -440,7 +440,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 找到下一个配对的符号
 		/// </summary>
-		public static CODE_POSITION FindNextMatchSymbol(FILE_PARSE_INFO parse_info, ref CODE_POSITION searchPos, Char rightSymbol)
+		public static CodePosition FindNextMatchSymbol(FILE_PARSE_INFO parse_info, ref CodePosition searchPos, Char rightSymbol)
 		{
 			Char leftSymbol;
 			if ('}' == rightSymbol)
@@ -458,7 +458,7 @@ namespace Mr.Robot
 			}
 
 			int matchCount = 1;
-			CODE_POSITION foundPos = null;
+			CodePosition foundPos = null;
             bool quoteStart = false;
             string quoteStr = string.Empty;
             while (true)
@@ -474,7 +474,7 @@ namespace Mr.Robot
 					{
 						// 判断是否是已定义的宏, 是的话进行宏展开
 						// 展开后要返回到原处(展开前的位置), 重新解析展开后的宏
-						searchPos = new CODE_POSITION(foundPos);
+						searchPos = new CodePosition(foundPos);
 						continue;
 					}
 				}
@@ -527,7 +527,7 @@ namespace Mr.Robot
 		/// 宏检测与宏展开
 		/// </summary>
 		public static bool MacroDetectAndExpand_File(string idStr,
-													 CODE_POSITION foundPos,
+													 CodePosition foundPos,
 													 FILE_PARSE_INFO parse_info)
 		{
 			// 遍历查找宏名
@@ -536,15 +536,15 @@ namespace Mr.Robot
 				&& !string.IsNullOrEmpty(mdi.ValStr))
 			{
 				string macroName = mdi.Name;
-				CODE_POSITION macroPos = new CODE_POSITION(foundPos);
-				CODE_POSITION removeEndPos = new CODE_POSITION(macroPos.RowNum, macroPos.ColNum + macroName.Length - 1);
+				CodePosition macroPos = new CodePosition(foundPos);
+				CodePosition removeEndPos = new CodePosition(macroPos.RowNum, macroPos.ColNum + macroName.Length - 1);
 				int lineIdx = foundPos.RowNum;
 				string replaceStr = mdi.ValStr;
 				// 判断有无带参数
 				if (0 != mdi.ParaList.Count)
 				{
 					// 取得实参
-					CODE_POSITION sPos = new CODE_POSITION(foundPos.RowNum, foundPos.ColNum + idStr.Length);
+					CodePosition sPos = new CodePosition(foundPos.RowNum, foundPos.ColNum + idStr.Length);
 					CODE_IDENTIFIER nextIdtf = GetNextIdentifier(parse_info.CodeList, ref sPos, out foundPos);
 					if ("(" != nextIdtf.Text)
 					{
@@ -554,14 +554,14 @@ namespace Mr.Robot
 						// ?: 宏与结构体成员重名, 如何处理...
 						return false;
 					}
-					CODE_POSITION leftBracket = foundPos;
+					CodePosition leftBracket = foundPos;
 					foundPos = FindNextMatchSymbol(parse_info, ref sPos, ')');
 					if (null == foundPos)
 					{
 						ErrReport();
 						return false;
 					}
-					removeEndPos = new CODE_POSITION(foundPos);
+					removeEndPos = new CodePosition(foundPos);
 					nextIdtf.Text = LineStringCat(parse_info.CodeList, macroPos, foundPos);
 					macroName = nextIdtf.Text;
 					List<string> realParas = GetParaList(parse_info.CodeList, leftBracket, foundPos);
@@ -659,7 +659,7 @@ namespace Mr.Robot
 			return input_str;
 		}
 
-		static void RemoveCodeContents(List<string> code_list, CODE_POSITION start_pos, CODE_POSITION end_pos)
+		static void RemoveCodeContents(List<string> code_list, CodePosition start_pos, CodePosition end_pos)
 		{
 			for (int i = start_pos.RowNum; i <= end_pos.RowNum; i++)
 			{
@@ -692,7 +692,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得参数列表
 		/// </summary>
-		public static List<string> GetParaList(List<string> codeList, CODE_POSITION bracketLeft, CODE_POSITION bracketRight)
+		public static List<string> GetParaList(List<string> codeList, CodePosition bracketLeft, CodePosition bracketRight)
 		{
 			List<string> retParaList = new List<string>();
 			string catStr = LineStringCat(codeList, bracketLeft, bracketRight);
@@ -726,7 +726,7 @@ namespace Mr.Robot
         /// <summary>
         /// 将起止位置之间的内容连接成一个字符串(去掉换行)
         /// </summary>
-		public static string LineStringCat(List<string> codeList, CODE_POSITION startPos, CODE_POSITION endPos)
+		public static string LineStringCat(List<string> codeList, CodePosition startPos, CodePosition endPos)
 		{
 			int startRow = startPos.RowNum;
 			int startCol = startPos.ColNum;
@@ -746,7 +746,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得一个表达式
 		/// </summary>
-		public static string GetPrecompileExpressionStr(List<string> codeList, ref CODE_POSITION searchPos)
+		public static string GetPrecompileExpressionStr(List<string> codeList, ref CodePosition searchPos)
 		{
 			string lineStr = codeList[searchPos.RowNum];
 			string exprStr = lineStr.Substring(searchPos.ColNum);
@@ -789,9 +789,9 @@ namespace Mr.Robot
         /// <summary>
         /// 查找下一个指定的标识符
         /// </summary>
-        public static CODE_POSITION FindNextSpecIdentifier(string idStr, List<string> codeList, CODE_POSITION searchPos)
+        public static CodePosition FindNextSpecIdentifier(string idStr, List<string> codeList, CodePosition searchPos)
 		{
-			CODE_POSITION foundPos = null;
+			CodePosition foundPos = null;
 			while (true)
 			{
 				CODE_IDENTIFIER nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
@@ -810,9 +810,9 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的下一位置
         /// </summary>
-        public static CODE_POSITION PositionMoveNext(List<string> codeList, CODE_POSITION thisPos)
+        public static CodePosition PositionMoveNext(List<string> codeList, CodePosition thisPos)
 		{
-			CODE_POSITION nextPos = new CODE_POSITION(thisPos);
+			CodePosition nextPos = new CodePosition(thisPos);
             if (thisPos.ColNum == codeList[thisPos.RowNum].Length - 1)
 			{
 				// 已经是最后一列了, 就移到下一行开头
@@ -832,9 +832,9 @@ namespace Mr.Robot
         /// <summary>
         /// 移动到指定位置的前一位置
         /// </summary>
-        public static CODE_POSITION PositionMovePrevious(List<string> codeList, CODE_POSITION thisPos)
+        public static CodePosition PositionMovePrevious(List<string> codeList, CodePosition thisPos)
         {
-            CODE_POSITION prevPos = new CODE_POSITION(thisPos);
+            CodePosition prevPos = new CodePosition(thisPos);
             if (0 == thisPos.ColNum)
             {
                 // 已经是第一列了, 就移到上一行末尾
@@ -855,7 +855,7 @@ namespace Mr.Robot
 		/// <summary>
 		/// 比较两个位置 0:一致; 1:前者大(靠后); -1:后者大(靠后);
 		/// </summary>
-        public static int PositionCompare(CODE_POSITION p1, CODE_POSITION p2)
+        public static int PositionCompare(CodePosition p1, CodePosition p2)
 		{
 			if (p1.RowNum > p2.RowNum)
 			{
@@ -1525,7 +1525,7 @@ namespace Mr.Robot
 			return memberStr.Trim();
 		}
 
-		public static string GetStatementStr(List<string> code_list, CODE_SCOPE code_scope)
+		public static string GetStatementStr(List<string> code_list, CodeScope code_scope)
 		{
 			return LineStringCat(code_list, code_scope.Start, code_scope.End).Trim();
 		}
@@ -2495,12 +2495,12 @@ namespace Mr.Robot
 	public class CODE_IDENTIFIER
 	{
 		public string Text = string.Empty;
-		public CODE_POSITION Position = null;
+		public CodePosition Position = null;
 
-		public CODE_IDENTIFIER(string text, CODE_POSITION pos)
+		public CODE_IDENTIFIER(string text, CodePosition pos)
 		{
 			this.Text = text;
-			this.Position = new CODE_POSITION(pos);
+			this.Position = new CodePosition(pos);
 		}
 	}
 }

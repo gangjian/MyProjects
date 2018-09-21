@@ -28,7 +28,7 @@ namespace Mr.Robot
 		/// </summary>
 		public static void GetFunctionStatmentsNodeTree(FILE_PARSE_INFO parse_info, ref STATEMENT_NODE root)
 		{
-			CODE_POSITION searchPos = new CODE_POSITION(root.Scope.Start);
+			CodePosition searchPos = new CodePosition(root.Scope.Start);
 			// 如果开头第一个字符是左花括号"{", 先要移到下一个位置开始检索
 			if ('{' == parse_info.CodeList[searchPos.RowNum][searchPos.ColNum])
 			{
@@ -53,14 +53,14 @@ namespace Mr.Robot
 		/// 从当前位置提取一条语句(简单语句或者是复合语句)
 		/// </summary>
 		static STATEMENT_NODE GetNextStatement(	FILE_PARSE_INFO parse_info,
-											    ref CODE_POSITION startPos,
-												CODE_POSITION endPos)
+											    ref CodePosition startPos,
+												CodePosition endPos)
 		{
             STATEMENT_NODE retNode = new STATEMENT_NODE();
-			CODE_POSITION foundPos = null;
+			CodePosition foundPos = null;
 			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref startPos, out foundPos);
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
-			startPos = new CODE_POSITION(foundPos);
+			CodePosition searchPos = new CodePosition(startPos);
+			startPos = new CodePosition(foundPos);
 
             if (null != endPos
                 && COMN_PROC.PositionCompare(searchPos, endPos) >= 0)
@@ -89,11 +89,11 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得复合语句情报
 		/// </summary>
-        static STATEMENT_NODE GetCompondStatementNode(string keyWord, FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+        static STATEMENT_NODE GetCompondStatementNode(string keyWord, FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
 			STATEMENT_NODE retNode = null;
 			STATEMENT_TYPE type = GetNodeType(keyWord);
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
+			CodePosition searchPos = new CodePosition(startPos);
 
 			switch (type)
 			{
@@ -129,17 +129,17 @@ namespace Mr.Robot
         /// <summary>
         /// 取得简单语句的语句节点对象
         /// </summary>
-		static STATEMENT_NODE GetSimpleStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos, CODE_POSITION foundPos)
+		static STATEMENT_NODE GetSimpleStatementNode(FILE_PARSE_INFO parse_info, ref CodePosition startPos, CodePosition foundPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
-			CODE_POSITION searchPos = new CODE_POSITION(foundPos);
-			CODE_POSITION oldPos = new CODE_POSITION(foundPos);
+			CodePosition searchPos = new CodePosition(foundPos);
+			CodePosition oldPos = new CodePosition(foundPos);
 			// 找到语句结束,也就是分号的位置
 			foundPos = COMN_PROC.FindNextSpecIdentifier(";", parse_info.CodeList, searchPos);
 			if (null != foundPos)
 			{
 				string statementStr = COMN_PROC.LineStringCat(parse_info.CodeList, oldPos, foundPos);
-				retNode.Scope = new CODE_SCOPE(oldPos, foundPos);
+				retNode.Scope = new CodeScope(oldPos, foundPos);
 				retNode.Type = STATEMENT_TYPE.Simple;
 				retNode.ExpressionStr = statementStr;
 				startPos = searchPos;
@@ -151,18 +151,18 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得for/while循环语句的语句节点对象
 		/// </summary>
-		static STATEMENT_NODE GetForOrWhileStatementNode(STATEMENT_TYPE type, FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static STATEMENT_NODE GetForOrWhileStatementNode(STATEMENT_TYPE type, FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
 			retNode.Type = type;
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
+			CodePosition searchPos = new CodePosition(startPos);
 			// 取得循环表达式
 			string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
 				retNode.ExpressionStr = expression;
 				// 取得分支范围
-				CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
+				CodeScope scope = GetBranchScope(parse_info, ref searchPos);
 				if (null != scope)
 				{
 					startPos = searchPos;
@@ -178,18 +178,18 @@ namespace Mr.Robot
         /// <summary>
         /// 取得do-while循环语句的语句节点对象
         /// </summary>
-		static STATEMENT_NODE GetDoWhileStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static STATEMENT_NODE GetDoWhileStatementNode(FILE_PARSE_INFO parse_info, ref CodePosition startPos)
         {
             STATEMENT_NODE retNode = new STATEMENT_NODE();
             retNode.Type = STATEMENT_TYPE.Complex_DoWhile;
-            CODE_POSITION searchPos = new CODE_POSITION(startPos);
+            CodePosition searchPos = new CodePosition(startPos);
             // 取得分支范围
-			CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
+			CodeScope scope = GetBranchScope(parse_info, ref searchPos);
             if (null != scope)
             {
                 retNode.Scope = scope;
 				searchPos = COMN_PROC.PositionMoveNext(parse_info.CodeList, scope.End);
-                CODE_POSITION foundPos;
+                CodePosition foundPos;
 				CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 				if ("while" == nextIdtf.Text)
                 {
@@ -212,18 +212,18 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得if else复合语句节点
 		/// </summary>
-		static STATEMENT_NODE GetIfElseStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static STATEMENT_NODE GetIfElseStatementNode(FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
 			retNode.Type = STATEMENT_TYPE.Complex_IfElse;
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
+			CodePosition searchPos = new CodePosition(startPos);
 			// 取得if条件表达式
 			string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
 				retNode.ExpressionStr = expression;
 				// 取得if分支范围
-				CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
+				CodeScope scope = GetBranchScope(parse_info, ref searchPos);
 				if (null != scope)
 				{
 					STATEMENT_NODE ifBranch = new STATEMENT_NODE();
@@ -234,10 +234,10 @@ namespace Mr.Robot
 					// 递归解析分支语句块
 					GetFunctionStatmentsNodeTree(parse_info, ref ifBranch);
 
-					CODE_POSITION firstIfStart = scope.Start;							// if分支的开始位置, 作为整个if else复合语句的起始位置
+					CodePosition firstIfStart = scope.Start;							// if分支的开始位置, 作为整个if else复合语句的起始位置
 					retNode.ChildNodeList.Add(ifBranch);
 
-					CODE_POSITION lastElseEnd = ifBranch.Scope.End;						// 最后一个else分支的结束位置, 作为整个if else复合语句的结束位置
+					CodePosition lastElseEnd = ifBranch.Scope.End;						// 最后一个else分支的结束位置, 作为整个if else复合语句的结束位置
 					STATEMENT_NODE elseBranch = GetNextElseBrachNode(parse_info, ref searchPos);
 					while (null != elseBranch)
 					{
@@ -255,7 +255,7 @@ namespace Mr.Robot
 						elseBranch = GetNextElseBrachNode(parse_info, ref searchPos);
 					}
 					startPos = searchPos;
-					retNode.Scope = new CODE_SCOPE(firstIfStart, lastElseEnd);
+					retNode.Scope = new CodeScope(firstIfStart, lastElseEnd);
 					return retNode;
 				}
 			}
@@ -265,19 +265,19 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得switch case语句节点
 		/// </summary>
-		static STATEMENT_NODE GetSwitchCaseStatementNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static STATEMENT_NODE GetSwitchCaseStatementNode(FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
 			retNode.Type = STATEMENT_TYPE.Complex_SwitchCase;
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
+			CodePosition searchPos = new CodePosition(startPos);
 			// 取得switch条件表达式
 			string expression = GetComplexStatementExpression(parse_info, ref searchPos);
 			if (string.Empty != expression)
 			{
 				retNode.ExpressionStr = expression;
 				// 取得switch分支范围
-				CODE_POSITION oldPos = COMN_PROC.PositionMoveNext(parse_info.CodeList, searchPos);	// 移到左{的位置
-				CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
+				CodePosition oldPos = COMN_PROC.PositionMoveNext(parse_info.CodeList, searchPos);	// 移到左{的位置
+				CodeScope scope = GetBranchScope(parse_info, ref searchPos);
                 searchPos = oldPos;
 				if (null != scope)
 				{
@@ -309,15 +309,15 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得下一个else/else if分支节点
 		/// </summary>
-		static STATEMENT_NODE GetNextElseBrachNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static STATEMENT_NODE GetNextElseBrachNode(FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
-			CODE_POSITION foundPos = new CODE_POSITION(searchPos);
+			CodePosition searchPos = new CodePosition(startPos);
+			CodePosition foundPos = new CodePosition(searchPos);
 			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if ("else" == nextIdtf.Text)
 			{
-				CODE_POSITION oldPos = new CODE_POSITION(searchPos);
+				CodePosition oldPos = new CodePosition(searchPos);
 				nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 				if ("if" == nextIdtf.Text)
 				{
@@ -328,7 +328,7 @@ namespace Mr.Robot
 					{
 						retNode.ExpressionStr = expression;
 						// 确定分支范围
-						CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
+						CodeScope scope = GetBranchScope(parse_info, ref searchPos);
 						if (null != scope)
 						{
 							retNode.Type = STATEMENT_TYPE.Branch_ElseIf;
@@ -343,7 +343,7 @@ namespace Mr.Robot
 					searchPos = oldPos;
 					// 否则是"else"分支
 					// 确定分支范围
-					CODE_SCOPE scope = GetBranchScope(parse_info, ref searchPos);
+					CodeScope scope = GetBranchScope(parse_info, ref searchPos);
 					if (null != scope)
 					{
 						retNode.Type = STATEMENT_TYPE.Branch_Else;
@@ -359,17 +359,17 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得下一个case/default分支节点
 		/// </summary>
-		static STATEMENT_NODE GetNextCaseBranchNode(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static STATEMENT_NODE GetNextCaseBranchNode(FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
-			CODE_POSITION foundPos = new CODE_POSITION(searchPos);
-            CODE_POSITION oldPos = null;
+			CodePosition searchPos = new CodePosition(startPos);
+			CodePosition foundPos = new CodePosition(searchPos);
+            CodePosition oldPos = null;
 			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 
             // 定位"case"或"default"关键字的位置
             // 定位分号":"的位置
-            oldPos = new CODE_POSITION(foundPos);
+            oldPos = new CodePosition(foundPos);
 			foundPos = COMN_PROC.FindNextSpecIdentifier(":", parse_info.CodeList, searchPos);
             if (null != foundPos)
             {
@@ -391,7 +391,7 @@ namespace Mr.Robot
                     {
                         //retNode.childList.Add(sn);
                         retNode.Scope.End = sn.Scope.End;
-                        oldPos = new CODE_POSITION(searchPos);
+                        oldPos = new CodePosition(searchPos);
 						nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
                         searchPos = oldPos;
                         // 分支结束的判断
@@ -418,16 +418,16 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得复合语句表达式
 		/// </summary>
-		static string GetComplexStatementExpression(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static string GetComplexStatementExpression(FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
-			CODE_POSITION foundPos = new CODE_POSITION(searchPos);
+			CodePosition searchPos = new CodePosition(startPos);
+			CodePosition foundPos = new CodePosition(searchPos);
 			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if ("(" == nextIdtf.Text)
 			{
-				CODE_POSITION leftBracePos = new CODE_POSITION(foundPos);
+				CodePosition leftBracePos = new CodePosition(foundPos);
 				searchPos = COMN_PROC.PositionMoveNext(parse_info.CodeList, leftBracePos);
-				CODE_POSITION rightBracePos = COMN_PROC.FindNextMatchSymbol(parse_info, ref searchPos, ')');
+				CodePosition rightBracePos = COMN_PROC.FindNextMatchSymbol(parse_info, ref searchPos, ')');
 				if (null != rightBracePos)
 				{
 					startPos = searchPos;
@@ -441,21 +441,21 @@ namespace Mr.Robot
 		/// <summary>
 		/// 取得下一个语句块的范围(起止位置)
 		/// </summary>
-		static CODE_SCOPE GetBranchScope(FILE_PARSE_INFO parse_info, ref CODE_POSITION startPos)
+		static CodeScope GetBranchScope(FILE_PARSE_INFO parse_info, ref CodePosition startPos)
 		{
-			CODE_POSITION searchPos = new CODE_POSITION(startPos);
-			CODE_POSITION foundPos = new CODE_POSITION(searchPos);
+			CodePosition searchPos = new CodePosition(startPos);
+			CodePosition foundPos = new CodePosition(searchPos);
 			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if ("{" == nextIdtf.Text)
 			{
 				// 通常语句块会以花括号括起来
-				CODE_POSITION leftBrace = new CODE_POSITION(foundPos);
+				CodePosition leftBrace = new CodePosition(foundPos);
 				// 找到配对的花括号
-				CODE_POSITION rightBrace = COMN_PROC.FindNextMatchSymbol(parse_info, ref searchPos, '}');
+				CodePosition rightBrace = COMN_PROC.FindNextMatchSymbol(parse_info, ref searchPos, '}');
 				if (null != rightBrace)
 				{
 					startPos = searchPos;
-					CODE_SCOPE scope = new CODE_SCOPE(leftBrace, rightBrace);
+					CodeScope scope = new CodeScope(leftBrace, rightBrace);
 					scope.Start = leftBrace;
 					scope.End = rightBrace;
 					return scope;
@@ -468,7 +468,7 @@ namespace Mr.Robot
 				STATEMENT_NODE sn = GetNextStatement(parse_info, ref startPos, null);
                 if (null != sn)
                 {
-					CODE_SCOPE scope = sn.Scope;
+					CodeScope scope = sn.Scope;
                     return scope;
                 }
 			}

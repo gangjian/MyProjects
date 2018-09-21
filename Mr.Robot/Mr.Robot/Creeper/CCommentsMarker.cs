@@ -26,7 +26,7 @@ namespace Mr.Robot.Creeper
 				{
 					// 行注释在前
 					ret_list.Add(	new CommentsInfo(CommentsCategory.LINE,
-									new CODE_POSITION(line_idx, line_cmts_idx),
+									new CodePosition(line_idx, line_cmts_idx),
 									null));
 				}
 				else if ((-1 != line_cmts_idx)
@@ -34,14 +34,14 @@ namespace Mr.Robot.Creeper
 				{
 					// 只包含行注释
 					ret_list.Add(	new CommentsInfo(CommentsCategory.LINE,
-									new CODE_POSITION(line_idx, line_cmts_idx),
+									new CodePosition(line_idx, line_cmts_idx),
 									null));
 				}
 				else if (-1 != block_cmts_idx)
 				{
 					// 块注释在前
 					int idx_s = block_cmts_idx;
-					CODE_POSITION start_pos = new CODE_POSITION(line_idx, idx_s);
+					CodePosition start_pos = new CodePosition(line_idx, idx_s);
 					int idx_e = code_line.IndexOf("*/", idx_s + 2);
 					while (-1 == idx_e)
 					{
@@ -54,7 +54,7 @@ namespace Mr.Robot.Creeper
 						idx_e = code_line.IndexOf("*/");
 					}
 					Trace.Assert(-1 != idx_e);
-					CODE_POSITION end_pos = new CODE_POSITION(line_idx, idx_e);
+					CodePosition end_pos = new CodePosition(line_idx, idx_e);
 					ret_list.Add(	new CommentsInfo(CommentsCategory.BLOCK,
 									start_pos,
 									end_pos));
@@ -104,8 +104,8 @@ namespace Mr.Robot.Creeper
 			}
 			else if (cmt_info.CateGory == CommentsCategory.BLOCK)
 			{
-				CODE_POSITION s_pos = cmt_info.StartPosition;
-				CODE_POSITION e_pos = cmt_info.EndPosition;
+				CodePosition s_pos = cmt_info.StartPosition;
+				CodePosition e_pos = cmt_info.EndPosition;
 				for (int r = s_pos.RowNum; r <= e_pos.RowNum; r++)
 				{
 					int s_col = 0;
@@ -133,12 +133,12 @@ namespace Mr.Robot.Creeper
 		public class CommentsInfo
 		{
 			public CommentsCategory CateGory;
-			public CODE_POSITION StartPosition;
-			public CODE_POSITION EndPosition;
+			public CodePosition StartPosition;
+			public CodePosition EndPosition;
 
 			public CommentsInfo(CommentsCategory category,
-								CODE_POSITION start_position,
-								CODE_POSITION end_position)
+								CodePosition start_position,
+								CodePosition end_position)
 			{
 				this.CateGory = category;
 				this.StartPosition = start_position;

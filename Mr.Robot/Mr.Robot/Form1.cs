@@ -213,7 +213,7 @@ namespace Mr.Robot
                 }
             }
 			this.m_CProspector = new C_PROSPECTOR(srcList, this.m_CHeaderFileList);
-			this.m_CProspector.CProspectorUpdateProgressHandler += new EventHandler(UpdateAnalyserProgress);
+			this.m_CProspector.UpdateProgressHandler += new EventHandler(UpdateAnalyserProgress);
 			this.m_CProspector.AsyncStart();
         }
 

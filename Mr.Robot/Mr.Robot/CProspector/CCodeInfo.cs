@@ -18,18 +18,18 @@ namespace Mr.Robot
 	}
 
 	// 文件当中某个内容的位置(行列号)
-	public class CODE_POSITION
+	public class CodePosition
 	{
 		public int RowNum = 0;    // 行号
 		public int ColNum = 0;    // 列号
 
-		public CODE_POSITION(int r, int c)
+		public CodePosition(int r, int c)
 		{
 			this.RowNum = r;
 			this.ColNum = c;
 		}
 
-		public CODE_POSITION(CODE_POSITION nfp)
+		public CodePosition(CodePosition nfp)
 		{
 			if (null != nfp)
 			{
@@ -45,15 +45,15 @@ namespace Mr.Robot
 		}
 	}
 
-	public class CODE_SCOPE
+	public class CodeScope
 	{
-		public CODE_POSITION Start = new CODE_POSITION(-1, -1);
-		public CODE_POSITION End = new CODE_POSITION(-1, -1);
+		public CodePosition Start = new CodePosition(-1, -1);
+		public CodePosition End = new CodePosition(-1, -1);
 
-		public CODE_SCOPE(CODE_POSITION start_pos, CODE_POSITION end_pos)
+		public CodeScope(CodePosition start_pos, CodePosition end_pos)
 		{
-			this.Start = new CODE_POSITION(start_pos);
-			this.End = new CODE_POSITION(end_pos);
+			this.Start = new CodePosition(start_pos);
+			this.End = new CodePosition(end_pos);
 		}
 	}
 
@@ -232,7 +232,7 @@ namespace Mr.Robot
 		public List<CODE_IDENTIFIER> Qualifiers = new List<CODE_IDENTIFIER>();	        // 修饰符列表
 		public List<string> ParaList = new List<string>();						        // 参数列表
 
-		public CODE_SCOPE Scope = null;													// 函数起止范围
+		public CodeScope Scope = null;													// 函数起止范围
 	}
 
 	/// <summary>
@@ -244,7 +244,7 @@ namespace Mr.Robot
 		public List<CODE_IDENTIFIER> NameList = new List<CODE_IDENTIFIER>();		    // 可能有多个名(逗号分割)
 		public List<string> MemberList = new List<string>();
 
-		public CODE_SCOPE Scope = null;
+		public CodeScope Scope = null;
 	}
 
 	public class MACRO_DEFINE_INFO
