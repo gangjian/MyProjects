@@ -94,40 +94,40 @@ namespace Mr.Robot
 		/// <summary>
         /// 从(多行字符)当前位置取得下一个标识符
 		/// </summary>
-        public static CODE_IDENTIFIER GetNextIdentifier(List<string> codeList, ref CodePosition searchPos, out CodePosition foundPos)
+        public static CODE_IDENTIFIER GetNextIdentifier(List<string> code_list, ref CodePosition search_pos, out CodePosition found_pos)
 		{
-			int lineIdx = searchPos.RowNum;
-			int startIdx = searchPos.ColNum;
-			foundPos = new CodePosition(searchPos);
-			System.Diagnostics.Trace.Assert(lineIdx >= 0);
-			if (lineIdx >= codeList.Count)
+			int line_idx = search_pos.RowNum;
+			int start_idx = search_pos.ColNum;
+			found_pos = new CodePosition(search_pos);
+			System.Diagnostics.Trace.Assert(line_idx >= 0);
+			if (line_idx >= code_list.Count)
 			{
 				return null;
 			}
 
-			string curLine = "";
-			int curIdx = startIdx;
+			string cur_line = "";
+			int cur_idx = start_idx;
 			int s_pos = -1, e_pos = -1;     // 标识符的起止位置
 			while (true)
 			{
 				// 到list末尾结束跳出
-				if (lineIdx >= codeList.Count)
+				if (line_idx >= code_list.Count)
 				{
 					break;
 				}
-				curLine = codeList[lineIdx];
+				cur_line = code_list[line_idx];
 				// 如果当前行是空行, 跳到下一行
-				if (string.Empty == curLine)
+				if (string.Empty == cur_line)
 				{
-					lineIdx++;
+					line_idx++;
 					continue;
 				}
 
 				// 从这里开始逐字符进行判断
 				bool startFlag = false;
-				for (; curIdx < curLine.Length; curIdx++)
+				for (; cur_idx < cur_line.Length; cur_idx++)
 				{
-					char curChar = curLine[curIdx];
+					char curChar = cur_line[cur_idx];
 					E_CHAR_TYPE cType = GetCharType(curChar);
 					switch (cType)
 					{
@@ -147,29 +147,29 @@ namespace Mr.Robot
 							{
 								// 标识符开始
 								startFlag = true;
-								s_pos = curIdx;
-								e_pos = curIdx;
+								s_pos = cur_idx;
+								e_pos = cur_idx;
 							}
 							else
 							{
 								// 标识符继续
-								e_pos = curIdx;
+								e_pos = cur_idx;
 							}
 							break;
 						case E_CHAR_TYPE.E_CTYPE_DIGIT:
 							if (false == startFlag)
 							{
 								// 标识符结束, 返回该数字
-								s_pos = curIdx;
-								e_pos = curIdx;
-								curIdx++;
+								s_pos = cur_idx;
+								e_pos = cur_idx;
+								cur_idx++;
                                 // TODO: 这里有疑问, 现在看如果遇到是连续的两位以上数字,不应该返回
 								goto RET_IDF;
 							}
 							else
 							{
 								// 标识符继续
-								e_pos = curIdx;
+								e_pos = cur_idx;
 							}
 							break;
 						case E_CHAR_TYPE.E_CTYPE_PUNCTUATION:
@@ -178,9 +178,9 @@ namespace Mr.Robot
 							if (false == startFlag)
 							{
 								// 标识符结束, 返回该符号
-								s_pos = curIdx;
-								e_pos = curIdx;
-								curIdx++;
+								s_pos = cur_idx;
+								e_pos = cur_idx;
+								cur_idx++;
 								goto RET_IDF;
 							}
 							else
@@ -199,23 +199,23 @@ namespace Mr.Robot
 					goto RET_IDF;
 				}
 				// 转到下一行开头
-				lineIdx++;
-				curIdx = 0;
+				line_idx++;
+				cur_idx = 0;
 			}
 			return null;
 		RET_IDF:
 			if (-1 != s_pos && -1 != e_pos)
 			{
-				foundPos = new CodePosition(lineIdx, s_pos);
-				if (curIdx >= curLine.Length)
+				found_pos = new CodePosition(line_idx, s_pos);
+				if (cur_idx >= cur_line.Length)
 				{
-					lineIdx++;
-					curIdx = 0;
+					line_idx++;
+					cur_idx = 0;
 				}
-				startIdx = curIdx;
-				searchPos.RowNum = lineIdx;
-				searchPos.ColNum = startIdx;
-				CODE_IDENTIFIER retId = new CODE_IDENTIFIER(curLine.Substring(s_pos, e_pos - s_pos + 1), foundPos);
+				start_idx = cur_idx;
+				search_pos.RowNum = line_idx;
+				search_pos.ColNum = start_idx;
+				CODE_IDENTIFIER retId = new CODE_IDENTIFIER(cur_line.Substring(s_pos, e_pos - s_pos + 1), found_pos);
 				return retId;
 			}
 			else

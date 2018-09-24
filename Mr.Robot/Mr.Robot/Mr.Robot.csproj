@@ -80,6 +80,7 @@
     <Compile Include="CFuncLocator\StatementNode.cs" />
     <Compile Include="CDeducer\VarCtx.cs" />
     <Compile Include="Creeper\CCodeProbe.cs" />
+    <Compile Include="Creeper\Common.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

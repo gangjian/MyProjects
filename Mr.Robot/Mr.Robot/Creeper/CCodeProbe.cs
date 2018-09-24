@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
+using System.IO;
 
 namespace Mr.Robot.Creeper
 {
@@ -14,41 +16,62 @@ namespace Mr.Robot.Creeper
 		//public EventHandler UpdateProgressHandler = null;
 
 		// 源文件解析结果(处理)
-		List<CodeProbeInfo> HeaderProbeResultList = new List<CodeProbeInfo>();
-		List<CodeProbeInfo> SourceProbeResultList = new List<CodeProbeInfo>();
+		List<CodeFileProbeInfo> HeaderProbeResultList = new List<CodeFileProbeInfo>();
+		List<CodeFileProbeInfo> SourceProbeResultList = new List<CodeFileProbeInfo>();
 
 		public CCodeProbe(List<string> source_list, List<string> header_list)
 		{
+			Trace.Assert(null != source_list && null != header_list);
 			this.SourceList = source_list;
 			this.HeaderList = header_list;
 		}
 
 		public void ProbeStart()
 		{
-			foreach (string srcName in this.SourceList)
+			ClearResults();
+			foreach (string src_name in this.SourceList)
 			{
+				CodeFileProbeInfo probe_info = new CodeFileProbeInfo(src_name);
+				probe_info.GoProbe();
+			}
+		}
+
+		void ClearResults()
+		{
+			this.HeaderProbeResultList.Clear();
+			this.SourceProbeResultList.Clear();
+		}
+	}
+
+	class CodeFileProbeInfo
+	{
+		string FileName = null;
+		List<string> CodeLineList = null;
+		List<CodeLineProbeInfo> LineProbeInfoList = null;
+		public CodeFileProbeInfo(string file_name)
+		{
+			this.FileName = file_name;
+			this.CodeLineList = File.ReadAllLines(file_name).ToList();
+			this.LineProbeInfoList = new List<CodeLineProbeInfo>(this.CodeLineList.Count);
+		}
+
+		public void GoProbe()
+		{
+			CodePosition probe_pos = new CodePosition(0, 0);
+			while (true)
+			{
+				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref probe_pos);
+				if (string.IsNullOrEmpty(symbol.SymbolStr))
+				{
+					break;
+				}
 			}
 		}
 	}
 
-	class CodeProbeInfo
+	class CodeLineProbeInfo
 	{
-		string FileName = null;
-		List<CodeLineInfo> LineInfoList = new List<CodeLineInfo>();
-		public CodeProbeInfo(string file_name)
-		{
-			this.FileName = file_name;
-		}
-	}
-
-	class CodeLineInfo
-	{
-		public string LineStr = string.Empty;						// 原文
-		List<CodeElement> ElementsList = new List<CodeElement>();	// 元素列表
-		public CodeLineInfo(string code_line)
-		{
-			this.LineStr = code_line;
-		}
+		List<CodeElement> ElementsList = new List<CodeElement>();						// 元素列表
 	}
 
 	class CodeElement
