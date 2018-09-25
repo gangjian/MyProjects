@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Mr.Robot.Creeper
 {
-	class CCodeProbe
+	public class CCodeProbe
 	{
 		// 源文件列表(入力)
 		List<string> HeaderList = new List<string>();
@@ -24,6 +24,12 @@ namespace Mr.Robot.Creeper
 			Trace.Assert(null != source_list && null != header_list);
 			this.SourceList = source_list;
 			this.HeaderList = header_list;
+		}
+
+		public CCodeProbe(string path)
+		{
+			Trace.Assert(!string.IsNullOrEmpty(path) && Directory.Exists(path));
+			Common.GetCodeFileList(path, this.SourceList, this.HeaderList);
 		}
 
 		public void ProbeStart()
@@ -52,7 +58,11 @@ namespace Mr.Robot.Creeper
 		{
 			this.FileName = file_name;
 			this.CodeLineList = File.ReadAllLines(file_name).ToList();
-			this.LineProbeInfoList = new List<CodeLineProbeInfo>(this.CodeLineList.Count);
+			this.LineProbeInfoList = new List<CodeLineProbeInfo>();
+			for (int i = 0; i < this.CodeLineList.Count; i++)
+			{
+				this.LineProbeInfoList.Add(new CodeLineProbeInfo());
+			}
 		}
 
 		public void GoProbe()
@@ -65,25 +75,91 @@ namespace Mr.Robot.Creeper
 				{
 					break;
 				}
+				if (Common.IsCommentStart(symbol.SymbolStr))
+				{
+					probe_pos = CommentProc(symbol);									// 注释
+				}
+			}
+		}
+
+		CodePosition CommentProc(CodeSymbol symbol)
+		{
+			Trace.Assert(Common.IsCommentStart(symbol.SymbolStr));
+			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList, symbol.StartPosition, 2);
+			if (symbol.SymbolStr.Equals("/*"))
+			{
+				CodePosition end_pos = Common.FindStrPosition(this.CodeLineList, search_pos, "*/");
+				Trace.Assert(null != end_pos);
+				for (int row = symbol.StartPosition.RowNum; row <= end_pos.RowNum; row++)
+				{
+					int start_col, end_col;
+					if (row == symbol.StartPosition.RowNum)
+					{
+						start_col = symbol.StartPosition.ColNum;
+					}
+					else
+					{
+						start_col = 0;
+					}
+					if (row == end_pos.RowNum)
+					{
+						end_col = end_pos.ColNum;
+					}
+					else
+					{
+						end_col = this.CodeLineList[row].Length - 1;
+					}
+					CodeElement comment_element	= new CodeElement(
+														CodeElementType.BlockComments,
+														new CodePosition(row, start_col),
+														new CodePosition(row, end_col));
+					this.LineProbeInfoList[row].AddElement(comment_element);
+				}
+				return Common.GetNextPosN(this.CodeLineList, end_pos, 2);
+			}
+			else if (symbol.SymbolStr.Equals("//"))
+			{
+				int row = symbol.StartPosition.RowNum;
+				int col = this.CodeLineList[row].Length - 1;
+				CodePosition end_pos = new CodePosition(row, col);
+				CodeElement comment_element = new CodeElement(CodeElementType.LineComments,
+																search_pos, end_pos);
+				this.LineProbeInfoList[row].AddElement(comment_element);
+				return Common.GetNextPosN(this.CodeLineList, end_pos, 1);
+			}
+			else
+			{
+				return null;
 			}
 		}
 	}
 
 	class CodeLineProbeInfo
 	{
-		List<CodeElement> ElementsList = new List<CodeElement>();						// 元素列表
+		public List<CodeElement> ElementsList = new List<CodeElement>();				// 元素列表
+		public void AddElement(CodeElement element)
+		{
+			this.ElementsList.Add(element);
+		}
 	}
 
 	class CodeElement
 	{
 		CodeScope Scope = null;
 		CodeElementType Type = CodeElementType.None;
+		public CodeElement(CodeElementType type, CodePosition start_pos, CodePosition end_pos)
+		{
+			this.Type = type;
+			this.Scope = new CodeScope(start_pos, end_pos);
+		}
 	}
 
 	enum CodeElementType
 	{
 		None,
-		Comments,				// 注释
+		Invalid,				// 被编译开关注掉的无效内容
+		BlockComments,			// 块注释
+		LineComments,			// 行注释
 		ReservedWord,			// 保留字
 		String,					// 字符串
 		Charactor,				// 字符

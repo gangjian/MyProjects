@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.IO;
 
 namespace Mr.Robot.Creeper
 {
@@ -23,7 +24,7 @@ namespace Mr.Robot.Creeper
 						 || line_str.StartsWith("/*"))
 				{
 					// 注释
-					start_pos = GetNextPos(in_list, cur_pos, 2);
+					start_pos = GetNextPosN(in_list, cur_pos, 2);
 					return new CodeSymbol(line_str.Substring(0, 2), cur_pos);
 				}
 				else if (ch.Equals('#'))
@@ -33,14 +34,14 @@ namespace Mr.Robot.Creeper
 					{
 						// 头文件包含
 						int len = "#include".Length;
-						start_pos = GetNextPos(in_list, cur_pos, len);
+						start_pos = GetNextPosN(in_list, cur_pos, len);
 						return new CodeSymbol(line_str.Substring(0, len), cur_pos);
 					}
 					else if (line_str.StartsWith("#define"))
 					{
 						// 宏定义
 						int len = "#define".Length;
-						start_pos = GetNextPos(in_list, cur_pos, len);
+						start_pos = GetNextPosN(in_list, cur_pos, len);
 						return new CodeSymbol(line_str.Substring(0, len), cur_pos);
 					}
 					else if (line_str.StartsWith("#if"))
@@ -62,7 +63,7 @@ namespace Mr.Robot.Creeper
 			return null;
 		}
 
-		static CodePosition GetNextPos(List<string> in_list, CodePosition in_pos)
+		public static CodePosition GetNextPos(List<string> in_list, CodePosition in_pos)
 		{
 			if (   null == in_list
 				|| null == in_pos
@@ -95,13 +96,79 @@ namespace Mr.Robot.Creeper
 			}
 		}
 
-		static CodePosition GetNextPos(List<string> in_list, CodePosition in_pos, int count)
+		public static CodePosition GetNextPosN(List<string> in_list, CodePosition in_pos, int count)
 		{
 			for (int i = 0; i < count; i++)
 			{
 				in_pos = GetNextPos(in_list, in_pos);
 			}
 			return in_pos;
+		}
+
+		public static CodePosition FindStrPosition(List<string> in_list, CodePosition start_pos, string find_str)
+		{
+			Trace.Assert(null != in_list && null != start_pos && !string.IsNullOrEmpty(find_str));
+			CodePosition cur_pos = start_pos;
+			while (true)
+			{
+				if (null == cur_pos)
+				{
+					break;
+				}
+				if (in_list[cur_pos.RowNum].Substring(cur_pos.ColNum).StartsWith(find_str))
+				{
+					return cur_pos;
+				}
+				cur_pos = GetNextPos(in_list, cur_pos);
+			}
+			return null;
+		}
+
+		public static void GetCodeFileList(string path, List<string> source_list, List<string> header_list)
+		{
+			Trace.Assert(!string.IsNullOrEmpty(path) && Directory.Exists(path));
+			Trace.Assert(null != source_list && null != header_list);
+			string[] files = Directory.GetFiles(path);
+			foreach (var item in files)
+			{
+				FileInfo fi = new FileInfo(item);
+				if (fi.Extension.ToLower().Equals(".c"))
+				{
+					source_list.Add(item);
+				}
+				else if (fi.Extension.ToLower().Equals(".h"))
+				{
+					header_list.Add(item);
+				}
+			}
+			string[] dirs = Directory.GetDirectories(path);
+			foreach (var item in dirs)
+			{
+				GetCodeFileList(item, source_list, header_list);
+			}
+		}
+
+		public static bool IsCommentStart(string symbol_str)
+		{
+			if (symbol_str.Equals("/*")
+				|| symbol_str.Equals("//"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		public static bool IsDefineStart(string symbol_str)
+		{
+			return false;
+		}
+
+		public static bool IsIncludeStart(string symbol_str)
+		{
+			return false;
 		}
 	}
 

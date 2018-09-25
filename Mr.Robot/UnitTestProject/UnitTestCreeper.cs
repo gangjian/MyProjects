@@ -16,18 +16,9 @@ namespace UnitTestProject
 		[TestCategory("Creeper")]
 		public void TestMethod1()
 		{
-			string path = "..\\..\\..\\TestSrc\\swc_in_oilp\\Rte_swc_in_oilp.c";
-			Assert.IsTrue(File.Exists(path));
-			List<string> code_list = File.ReadAllLines(path).ToList();
-			CodePosition pos = new CodePosition(0, 0);
-			while (true)
-			{
-				Mr.Robot.Creeper.CodeSymbol symbol = Mr.Robot.Creeper.Common.GetNextSymbol(code_list, ref pos);
-				if (string.IsNullOrEmpty(symbol.SymbolStr))
-				{
-					break;
-				}
-			}
+			string path = "..\\..\\..\\TestSrc\\swc_in_oilp";
+			CCodeProbe probe_obj = new CCodeProbe(path);
+			probe_obj.ProbeStart();
 		}
 	}
 }
