@@ -10,7 +10,7 @@ namespace Mr.Robot
 	{
 		public static STATEMENT_NODE FuncLocatorStart2(FILE_PARSE_INFO src_parse_info, string func_name)
 		{
-			FUNCTION_PARSE_INFO funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, src_parse_info.FunDefineList);
+			FunctionParseInfo funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, src_parse_info.FunDefineList);
 			if (null == funcInfo)
 			{
 				return null;
@@ -58,7 +58,7 @@ namespace Mr.Robot
 		{
             STATEMENT_NODE retNode = new STATEMENT_NODE();
 			CodePosition foundPos = null;
-			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref startPos, out foundPos);
+			CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref startPos, out foundPos);
 			CodePosition searchPos = new CodePosition(startPos);
 			startPos = new CodePosition(foundPos);
 
@@ -190,7 +190,7 @@ namespace Mr.Robot
                 retNode.Scope = scope;
 				searchPos = COMN_PROC.PositionMoveNext(parse_info.CodeList, scope.End);
                 CodePosition foundPos;
-				CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+				CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 				if ("while" == nextIdtf.Text)
                 {
 					string expression = GetComplexStatementExpression(parse_info, ref searchPos);
@@ -314,7 +314,7 @@ namespace Mr.Robot
 			STATEMENT_NODE retNode = new STATEMENT_NODE();
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
-			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+			CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if ("else" == nextIdtf.Text)
 			{
 				CodePosition oldPos = new CodePosition(searchPos);
@@ -365,7 +365,7 @@ namespace Mr.Robot
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
             CodePosition oldPos = null;
-			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+			CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 
             // 定位"case"或"default"关键字的位置
             // 定位分号":"的位置
@@ -422,7 +422,7 @@ namespace Mr.Robot
 		{
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
-			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+			CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if ("(" == nextIdtf.Text)
 			{
 				CodePosition leftBracePos = new CodePosition(foundPos);
@@ -445,7 +445,7 @@ namespace Mr.Robot
 		{
 			CodePosition searchPos = new CodePosition(startPos);
 			CodePosition foundPos = new CodePosition(searchPos);
-			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+			CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if ("{" == nextIdtf.Text)
 			{
 				// 通常语句块会以花括号括起来

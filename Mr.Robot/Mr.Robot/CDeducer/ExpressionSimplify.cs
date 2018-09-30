@@ -146,7 +146,7 @@ namespace Mr.Robot.CDeducer
 			}
 			else if (meaning_group.Type == MeaningGroupType.Identifier)
 			{																			// 标识符
-				MACRO_DEFINE_INFO mdi = null;
+				MacroDefineInfo mdi = null;
 				if (null != deducer_ctx.FindVarCtxByName(meaning_group.TextStr)
 					&& !varList.Contains(meaning_group.TextStr))
 				{																		// 在上下文中查找

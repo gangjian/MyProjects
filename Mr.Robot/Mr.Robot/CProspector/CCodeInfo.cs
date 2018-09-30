@@ -75,13 +75,13 @@ namespace Mr.Robot
 	{
 		public string SourceName = string.Empty;
 		public List<string> IncFileList = new List<string>();									// "include"头文件名列表
-		public List<FUNCTION_PARSE_INFO> FuncDeclareList = new List<FUNCTION_PARSE_INFO>();		// 函数声明列表
-		public List<FUNCTION_PARSE_INFO> FunDefineList = new List<FUNCTION_PARSE_INFO>();		// 函数定义列表
-		public List<USER_DEFINE_TYPE_INFO> UsrDefTypeList = new List<USER_DEFINE_TYPE_INFO>();	// 用户定义类型列表
+		public List<FunctionParseInfo> FuncDeclareList = new List<FunctionParseInfo>();		// 函数声明列表
+		public List<FunctionParseInfo> FunDefineList = new List<FunctionParseInfo>();		// 函数定义列表
+		public List<UserDefineTypeInfo> UsrDefTypeList = new List<UserDefineTypeInfo>();	// 用户定义类型列表
 		public List<VAR_CTX> GlobalDeclareList = new List<VAR_CTX>();					// 全局量声明列表
 		public List<VAR_CTX> GlobalDefineList = new List<VAR_CTX>();					// 全局量定义列表
-		public List<MACRO_DEFINE_INFO> MacroDefineList = new List<MACRO_DEFINE_INFO>();			// 宏定义列表
-		public List<TYPE_DEFINE_INFO> TypeDefineList = new List<TYPE_DEFINE_INFO>();			// typedef类型定义列表
+		public List<MacroDefineInfo> MacroDefineList = new List<MacroDefineInfo>();			// 宏定义列表
+		public List<TypeDefineInfo> TypeDefineList = new List<TypeDefineInfo>();			// typedef类型定义列表
 
 		public List<string> CodeList = new List<string>();										// 解析后(去除注释, 宏展开等)的代码行内容列表
 
@@ -94,11 +94,11 @@ namespace Mr.Robot
 			this.SourceName = fileName;
 		}
 
-		public USER_DEFINE_TYPE_INFO FindUsrDefTypeInfo(string type_name, string category_name = null)
+		public UserDefineTypeInfo FindUsrDefTypeInfo(string type_name, string category_name = null)
 		{
-			foreach (USER_DEFINE_TYPE_INFO udti in this.UsrDefTypeList)
+			foreach (UserDefineTypeInfo udti in this.UsrDefTypeList)
 			{
-				foreach (CODE_IDENTIFIER nameIdtf in udti.NameList)
+				foreach (CodeIdentifier nameIdtf in udti.NameList)
 				{
 					if (nameIdtf.Text.Equals(type_name))
 					{
@@ -119,9 +119,9 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public TYPE_DEFINE_INFO FindTypeDefInfo(string type_name)
+		public TypeDefineInfo FindTypeDefInfo(string type_name)
 		{
-			foreach (TYPE_DEFINE_INFO tdi in this.TypeDefineList)
+			foreach (TypeDefineInfo tdi in this.TypeDefineList)
 			{
 				if (tdi.NewName.Equals(type_name))
 				{
@@ -136,7 +136,7 @@ namespace Mr.Robot
 		/// </summary>
 		public string GetOriginalTypeName(string type_name)
 		{
-			TYPE_DEFINE_INFO tdi = null;												// 如果经过typedef重命名的话, 找出原来的类型名
+			TypeDefineInfo tdi = null;												// 如果经过typedef重命名的话, 找出原来的类型名
 			while (null != (tdi = this.FindTypeDefInfo(type_name)))
 			{
 				type_name = tdi.OldName;
@@ -148,9 +148,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 根据函数名查找函数的解析结果
 		/// </summary>
-		public FUNCTION_PARSE_INFO FindFuncParseInfo(string fun_name)
+		public FunctionParseInfo FindFuncParseInfo(string fun_name)
 		{
-			FUNCTION_PARSE_INFO retFuncInfo = null;
+			FunctionParseInfo retFuncInfo = null;
 			if (null != (retFuncInfo = SearchFunctionInfoList(fun_name, this.FunDefineList)))
 			{
 				return retFuncInfo;
@@ -162,9 +162,9 @@ namespace Mr.Robot
 			return null;																// 没找到
 		}
 
-		public static FUNCTION_PARSE_INFO SearchFunctionInfoList(string fun_name, List<FUNCTION_PARSE_INFO> funInfoList)
+		public static FunctionParseInfo SearchFunctionInfoList(string fun_name, List<FunctionParseInfo> funInfoList)
 		{
-			foreach (FUNCTION_PARSE_INFO fsi in funInfoList)
+			foreach (FunctionParseInfo fsi in funInfoList)
 			{
 				if (fsi.Name.Equals(fun_name))
 				{
@@ -207,10 +207,10 @@ namespace Mr.Robot
 			return null;
 		}
 
-		public MACRO_DEFINE_INFO FindMacroDefInfo(string macro_name)
+		public MacroDefineInfo FindMacroDefInfo(string macro_name)
 		{
 			System.Diagnostics.Trace.Assert(!string.IsNullOrEmpty(macro_name));
-			foreach (MACRO_DEFINE_INFO mdi in this.MacroDefineList)
+			foreach (MacroDefineInfo mdi in this.MacroDefineList)
 			{
 				if (mdi.Name == macro_name)
 				{
@@ -226,10 +226,10 @@ namespace Mr.Robot
 	/// <summary>
 	/// C函数的结构情报
 	/// </summary>
-	public class FUNCTION_PARSE_INFO
+	public class FunctionParseInfo
 	{
 		public string Name = string.Empty;												// 函数名称
-		public List<CODE_IDENTIFIER> Qualifiers = new List<CODE_IDENTIFIER>();	        // 修饰符列表
+		public List<CodeIdentifier> Qualifiers = new List<CodeIdentifier>();	        // 修饰符列表
 		public List<string> ParaList = new List<string>();						        // 参数列表
 
 		public CodeScope Scope = null;													// 函数起止范围
@@ -238,16 +238,16 @@ namespace Mr.Robot
 	/// <summary>
 	/// 用户定义类型情报
 	/// </summary>
-	public class USER_DEFINE_TYPE_INFO
+	public class UserDefineTypeInfo
 	{
 		public string Category = string.Empty;											// "struct, enum, union"
-		public List<CODE_IDENTIFIER> NameList = new List<CODE_IDENTIFIER>();		    // 可能有多个名(逗号分割)
+		public List<CodeIdentifier> NameList = new List<CodeIdentifier>();		    // 可能有多个名(逗号分割)
 		public List<string> MemberList = new List<string>();
 
 		public CodeScope Scope = null;
 	}
 
-	public class MACRO_DEFINE_INFO
+	public class MacroDefineInfo
 	{
 		public string Name = string.Empty;												// 宏名
 		public List<string> ParaList = new List<string>();							    // 参数列表
@@ -256,14 +256,14 @@ namespace Mr.Robot
 		public string FileName = string.Empty;
 		public int LineNum = -1;
 
-		public MACRO_DEFINE_INFO(string file_name, int line_num)
+		public MacroDefineInfo(string file_name, int line_num)
 		{
 			this.FileName = file_name;
 			this.LineNum = line_num;
 		}
 	}
 
-	public class TYPE_DEFINE_INFO
+	public class TypeDefineInfo
 	{
 		public string OldName = string.Empty;
 		public string NewName = string.Empty;

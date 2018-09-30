@@ -117,7 +117,7 @@ namespace Mr.Robot
 				{
 					CodePosition search_pos = new CodePosition(idx, code_list[idx].IndexOf("#") + 1);
 					CodePosition found_pos = null;
-                    CODE_IDENTIFIER next_identifier
+                    CodeIdentifier next_identifier
 										= COMN_PROC.GetNextIdentifier(	code_list,
 																		ref search_pos,
 																		out found_pos);
@@ -489,8 +489,8 @@ namespace Mr.Robot
 			}
 			// 从文件开头开始解析
 			CodePosition search_pos = new CodePosition(0, 0);
-			List<CODE_IDENTIFIER> qualifierList = new List<CODE_IDENTIFIER>();			// 修饰符暂存列表
-			CODE_IDENTIFIER nextIdtf = null;
+			List<CodeIdentifier> qualifierList = new List<CodeIdentifier>();			// 修饰符暂存列表
+			CodeIdentifier nextIdtf = null;
 			CodePosition foundPos = null;
 			while (null != (nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref search_pos, out foundPos)))
 			{
@@ -514,7 +514,7 @@ namespace Mr.Robot
 					if (COMN_PROC.IsUsrDefTypeKWD(nextIdtf.Text))
 					{
 						// 用户定义类型处理
-						USER_DEFINE_TYPE_INFO udti = UsrDefTypeProc(parse_info, qualifierList, ref search_pos);
+						UserDefineTypeInfo udti = UsrDefTypeProc(parse_info, qualifierList, ref search_pos);
 						if (null != udti)
 						{
 							parse_info.UsrDefTypeList.Add(udti);
@@ -527,7 +527,7 @@ namespace Mr.Robot
 					// 遇到小括号了, 可能是碰上函数声明或定义了
 					if (("(" == nextIdtf.Text) && (0 != qualifierList.Count))
 					{
-						FUNCTION_PARSE_INFO cfi = FunctionDetectProcess(src_name, parse_info, qualifierList, ref search_pos, foundPos);
+						FunctionParseInfo cfi = FunctionDetectProcess(src_name, parse_info, qualifierList, ref search_pos, foundPos);
 						if (null != cfi)
 						{
 							if (null != cfi.Scope)
@@ -564,7 +564,7 @@ namespace Mr.Robot
 						if (null != fp)
 						{
 							string arraySizeStr = COMN_PROC.LineStringCat(parse_info.CodeList, foundPos, fp);
-							CODE_IDENTIFIER arraySizeIdtf = new CODE_IDENTIFIER(arraySizeStr, foundPos);
+							CodeIdentifier arraySizeIdtf = new CodeIdentifier(arraySizeStr, foundPos);
 							qualifierList.Add(arraySizeIdtf);
 							fp.ColNum += 1;
 							search_pos = fp;
@@ -584,7 +584,7 @@ namespace Mr.Robot
 						{
 							foundPos.ColNum += 1;
 							string initialStr = COMN_PROC.LineStringCat(parse_info.CodeList, foundPos, fp);
-							CODE_IDENTIFIER initIdtf = new CODE_IDENTIFIER(initialStr, foundPos);
+							CodeIdentifier initIdtf = new CodeIdentifier(initialStr, foundPos);
 							qualifierList.Add(initIdtf);
 							search_pos = fp;
 							continue;
@@ -630,9 +630,9 @@ namespace Mr.Robot
 		/// <summary>
 		/// 函数检测(声明, 定义)
 		/// </summary>
-		static FUNCTION_PARSE_INFO FunctionDetectProcess(	string src_name,
+		static FunctionParseInfo FunctionDetectProcess(	string src_name,
 															FILE_PARSE_INFO parse_info,
-															List<CODE_IDENTIFIER> qualifierList,
+															List<CodeIdentifier> qualifierList,
 															ref CodePosition searchPos,
 															CodePosition bracketLeft)
 		{
@@ -641,7 +641,7 @@ namespace Mr.Robot
 			{
 				return null;
 			}
-			FUNCTION_PARSE_INFO cfi = new FUNCTION_PARSE_INFO();
+			FunctionParseInfo cfi = new FunctionParseInfo();
 
 			// 先找匹配的小括号
 			CodePosition bracketRight = COMN_PROC.FindNextMatchSymbol(parse_info, ref searchPos, ')');
@@ -677,7 +677,7 @@ namespace Mr.Robot
 			// 然后确认小括号后面是否跟着配对的大括号
 			searchPos = new CodePosition(bracketRight.RowNum, bracketRight.ColNum + 1);
 			CodePosition foundPos = null;
-			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+			CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if (";" == nextIdtf.Text)
 			{
 				// 小括号后面跟着分号说明这是函数声明
@@ -688,7 +688,7 @@ namespace Mr.Robot
 					// 函数修饰符
 					qualifierList.RemoveAt(qualifierList.Count - 1);
 				}
-				cfi.Qualifiers = new List<CODE_IDENTIFIER>(qualifierList);
+				cfi.Qualifiers = new List<CodeIdentifier>(qualifierList);
 				// 参数列表
 				cfi.ParaList = paraList;
 			}
@@ -754,7 +754,7 @@ namespace Mr.Robot
 		string GetIncludeHeaderName(List<string> codeList, ref CodePosition searchPos, string file_name)
 		{
 			CodePosition foundPos = null;
-            CODE_IDENTIFIER quotIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            CodeIdentifier quotIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			string inc_name = quotIdtf.Text;
 			if ("\"" == quotIdtf.Text)
 			{
@@ -768,7 +768,7 @@ namespace Mr.Robot
                 COMN_PROC.ErrReport();
 				return null;
 			}
-            CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
+            CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref searchPos, out foundPos);
 			while (quotIdtf.Text != nextIdtf.Text)
 			{
 				inc_name += nextIdtf.Text;
@@ -794,8 +794,8 @@ namespace Mr.Robot
 		/// <summary>
 		/// 用户定义类型处理
 		/// </summary>
-		static USER_DEFINE_TYPE_INFO UsrDefTypeProc(FILE_PARSE_INFO parse_info,
-													List<CODE_IDENTIFIER> qualifier_list,
+		static UserDefineTypeInfo UsrDefTypeProc(FILE_PARSE_INFO parse_info,
+													List<CodeIdentifier> qualifier_list,
 													ref CodePosition start_pos)
 		{
 			if (0 == qualifier_list.Count)
@@ -805,10 +805,10 @@ namespace Mr.Robot
 			}
 			string keyStr = qualifier_list.Last().Text;
 
-			USER_DEFINE_TYPE_INFO retUsrTypeInfo = new USER_DEFINE_TYPE_INFO();
+			UserDefineTypeInfo retUsrTypeInfo = new UserDefineTypeInfo();
 			CodePosition searchPos = new CodePosition(start_pos);
 			CodePosition foundPos = null;
-			CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+			CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 			if ("{" != nextIdtf.Text)
 			{
 				if (COMN_PROC.IsStandardIdentifier(nextIdtf.Text))
@@ -874,7 +874,7 @@ namespace Mr.Robot
 			if (0 == retUsrTypeInfo.NameList.Count)
 			{
 				// 取得匿名类型的名字
-				CODE_IDENTIFIER idtf = new CODE_IDENTIFIER(GetAnonymousTypeName(parse_info), null);
+				CodeIdentifier idtf = new CodeIdentifier(GetAnonymousTypeName(parse_info), null);
 				retUsrTypeInfo.NameList.Add(idtf);
 			}
 			qualifier_list.Add(retUsrTypeInfo.NameList[0]);
@@ -903,12 +903,12 @@ namespace Mr.Robot
 		{
 			CodePosition sPos, fPos;
 			sPos = new CodePosition(searchPos);
-            CODE_IDENTIFIER nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref sPos, out fPos);
+            CodeIdentifier nextIdtf = COMN_PROC.GetNextIdentifier(codeList, ref sPos, out fPos);
 			if (!COMN_PROC.IsStandardIdentifier(nextIdtf.Text))
 			{
 				return;
 			}
-			MACRO_DEFINE_INFO mdi = new MACRO_DEFINE_INFO(file_name, nextIdtf.Position.RowNum);
+			MacroDefineInfo mdi = new MacroDefineInfo(file_name, nextIdtf.Position.RowNum);
 			mdi.Name = nextIdtf.Text;
 			if (sPos.RowNum > nextIdtf.Position.RowNum)
 			{
@@ -953,7 +953,7 @@ namespace Mr.Robot
 		static bool UserDefTypeExpand(	string idStr,
 										CodePosition foundPos,
 										FILE_PARSE_INFO parse_info,
-										List<CODE_IDENTIFIER> qualifierList)
+										List<CodeIdentifier> qualifierList)
 		{
 			if (0 != qualifierList.Count && COMN_PROC.IsUsrDefTypeKWD(qualifierList.Last().Text))
 			{
@@ -962,7 +962,7 @@ namespace Mr.Robot
 				return false;
 			}
 			// typedef 用户自定义类型
-			foreach (TYPE_DEFINE_INFO tdi in parse_info.TypeDefineList)
+			foreach (TypeDefineInfo tdi in parse_info.TypeDefineList)
 			{
 				if (idStr == tdi.NewName)
 				{

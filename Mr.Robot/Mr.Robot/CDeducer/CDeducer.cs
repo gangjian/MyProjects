@@ -45,7 +45,7 @@ namespace Mr.Robot.CDeducer
 
 		void FuncParaListProc(string func_name, FILE_PARSE_INFO parse_info, DEDUCER_CONTEXT deducer_ctx)
 		{
-			FUNCTION_PARSE_INFO funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, parse_info.FunDefineList);
+			FunctionParseInfo funcInfo = FILE_PARSE_INFO.SearchFunctionInfoList(func_name, parse_info.FunDefineList);
 			if (null == funcInfo
 				|| 0 == funcInfo.ParaList.Count)
 			{

@@ -79,6 +79,10 @@ namespace Mr.Robot.Creeper
 				{
 					probe_pos = CommentProc(symbol);									// 注释
 				}
+				else if (Common.IsDefineStart(symbol.SymbolStr))
+				{
+					
+				}
 			}
 		}
 
@@ -131,6 +135,23 @@ namespace Mr.Robot.Creeper
 			{
 				return null;
 			}
+		}
+
+		CodePosition DefineProc(CodeSymbol def_symbol)
+		{
+			Trace.Assert(Common.IsDefineStart(def_symbol.SymbolStr));
+			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList,
+											def_symbol.StartPosition, "#define".Length);
+			int row = def_symbol.StartPosition.RowNum;
+			while (true)
+			{
+				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref search_pos);
+				if (symbol.StartPosition.RowNum != row)
+				{
+					break;
+				}
+			}
+			return null;
 		}
 	}
 

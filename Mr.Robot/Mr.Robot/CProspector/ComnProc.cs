@@ -94,7 +94,7 @@ namespace Mr.Robot
 		/// <summary>
         /// 从(多行字符)当前位置取得下一个标识符
 		/// </summary>
-        public static CODE_IDENTIFIER GetNextIdentifier(List<string> code_list, ref CodePosition search_pos, out CodePosition found_pos)
+        public static CodeIdentifier GetNextIdentifier(List<string> code_list, ref CodePosition search_pos, out CodePosition found_pos)
 		{
 			int line_idx = search_pos.RowNum;
 			int start_idx = search_pos.ColNum;
@@ -215,7 +215,7 @@ namespace Mr.Robot
 				start_idx = cur_idx;
 				search_pos.RowNum = line_idx;
 				search_pos.ColNum = start_idx;
-				CODE_IDENTIFIER retId = new CODE_IDENTIFIER(cur_line.Substring(s_pos, e_pos - s_pos + 1), found_pos);
+				CodeIdentifier retId = new CodeIdentifier(cur_line.Substring(s_pos, e_pos - s_pos + 1), found_pos);
 				return retId;
 			}
 			else
@@ -463,7 +463,7 @@ namespace Mr.Robot
             string quoteStr = string.Empty;
             while (true)
 			{
-				CODE_IDENTIFIER nextIdtf = GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
+				CodeIdentifier nextIdtf = GetNextIdentifier(parse_info.CodeList, ref searchPos, out foundPos);
 				if (null == nextIdtf)
 				{
 					break;
@@ -531,7 +531,7 @@ namespace Mr.Robot
 													 FILE_PARSE_INFO parse_info)
 		{
 			// 遍历查找宏名
-			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
+			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
 			if (null != mdi
 				&& !string.IsNullOrEmpty(mdi.ValStr))
 			{
@@ -545,7 +545,7 @@ namespace Mr.Robot
 				{
 					// 取得实参
 					CodePosition sPos = new CodePosition(foundPos.RowNum, foundPos.ColNum + idStr.Length);
-					CODE_IDENTIFIER nextIdtf = GetNextIdentifier(parse_info.CodeList, ref sPos, out foundPos);
+					CodeIdentifier nextIdtf = GetNextIdentifier(parse_info.CodeList, ref sPos, out foundPos);
 					if ("(" != nextIdtf.Text)
 					{
 						//ErrReport();
@@ -794,7 +794,7 @@ namespace Mr.Robot
 			CodePosition foundPos = null;
 			while (true)
 			{
-				CODE_IDENTIFIER nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
+				CodeIdentifier nextIdtf = GetNextIdentifier(codeList, ref searchPos, out foundPos);
 				if (null == nextIdtf)
 				{
 					break;
@@ -918,7 +918,7 @@ namespace Mr.Robot
             System.Diagnostics.Trace.Assert(false);
         }
 
-		public static bool IsUsrDefTypeName(string type_name, FILE_PARSE_INFO parse_info, out USER_DEFINE_TYPE_INFO usr_def_type_info)
+		public static bool IsUsrDefTypeName(string type_name, FILE_PARSE_INFO parse_info, out UserDefineTypeInfo usr_def_type_info)
 		{
 			char[] sep = new char[] {' ', '\t'};
 			string[] arr = type_name.Split(sep);
@@ -1417,7 +1417,7 @@ namespace Mr.Robot
 		static bool MacroDetectAndExpand_Statement(string idStr, ref string statementStr, int offset, FILE_PARSE_INFO parse_info, bool replace_empty_macro_def)
 		{
 			// 遍历查找宏名
-			MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(idStr);
+			MacroDefineInfo mdi = parse_info.FindMacroDefInfo(idStr);
 			if (null != mdi)
 			{
 				if (string.IsNullOrEmpty(mdi.ValStr)
@@ -2427,7 +2427,7 @@ namespace Mr.Robot
 				&& meaningGroupList[1].Type == MeaningGroupType.VariableType
 				&& meaningGroupList[2].Type == MeaningGroupType.Identifier)
 			{
-				TYPE_DEFINE_INFO tdi = new TYPE_DEFINE_INFO();
+				TypeDefineInfo tdi = new TypeDefineInfo();
 				tdi.OldName = meaningGroupList[1].TextStr;
 				tdi.NewName = meaningGroupList[2].TextStr;
 				if (tdi.OldName != tdi.NewName)
@@ -2492,12 +2492,12 @@ namespace Mr.Robot
 		}
 	}
 
-	public class CODE_IDENTIFIER
+	public class CodeIdentifier
 	{
 		public string Text = string.Empty;
 		public CodePosition Position = null;
 
-		public CODE_IDENTIFIER(string text, CodePosition pos)
+		public CodeIdentifier(string text, CodePosition pos)
 		{
 			this.Text = text;
 			this.Position = new CodePosition(pos);

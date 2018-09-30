@@ -37,7 +37,7 @@ namespace Mr.Robot
 			// 宏定义
 			else if (meaning_group.Type == MeaningGroupType.Identifier)
 			{
-				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(meaning_group.TextStr);
+				MacroDefineInfo mdi = parse_info.FindMacroDefInfo(meaning_group.TextStr);
 				if (null != mdi)
 				{
 					return GetConstExpressionValue(mdi.ValStr, parse_info);

@@ -77,7 +77,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
             {
                 if (cpnt.Type == StatementComponentType.Identifier && "defined" != cpnt.Text)
                 {
-                    MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(cpnt.Text);
+                    MacroDefineInfo mdi = parse_info.FindMacroDefInfo(cpnt.Text);
                     if (null != mdi)
                     {
                         string valStr = mdi.ValStr;
@@ -177,7 +177,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
             macro_value_str = RemoveExpressionBrackets(macro_value_str);
 			if (COMN_PROC.IsStandardIdentifier(macro_value_str))
 			{
-				MACRO_DEFINE_INFO mdi = parse_info.FindMacroDefInfo(macro_value_str);
+				MacroDefineInfo mdi = parse_info.FindMacroDefInfo(macro_value_str);
 				if (null != mdi)
 				{
 					macro_value_str = mdi.ValStr;

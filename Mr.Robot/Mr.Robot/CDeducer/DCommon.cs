@@ -30,7 +30,7 @@ namespace Mr.Robot.CDeducer
 			}
 			else
 			{
-				USER_DEFINE_TYPE_INFO udti = parse_info.FindUsrDefTypeInfo(typeName);
+				UserDefineTypeInfo udti = parse_info.FindUsrDefTypeInfo(typeName);
 				if (null != udti)
 				{
 					foreach (var item in udti.MemberList)

@@ -208,7 +208,7 @@ namespace Mr.Robot
 					}
 					else
 					{
-						USER_DEFINE_TYPE_INFO udti = null;
+						UserDefineTypeInfo udti = null;
 						if (COMN_PROC.IsUsrDefTypeName(typeCoreName, parse_info, out udti))
 						{
 							retVarCtx.VarTypeCategory = VAR_TYPE_CATEGORY.USR_DEF_TYPE;
@@ -249,7 +249,7 @@ namespace Mr.Robot
 			return typeName;
 		}
 
-		static List<VAR_CTX> GetUsrDefTypeVarCtxMemberList(	USER_DEFINE_TYPE_INFO usr_def_type_var,
+		static List<VAR_CTX> GetUsrDefTypeVarCtxMemberList(	UserDefineTypeInfo usr_def_type_var,
 															FILE_PARSE_INFO parse_info,
 															MEANING_GROUP init_group)
 		{
