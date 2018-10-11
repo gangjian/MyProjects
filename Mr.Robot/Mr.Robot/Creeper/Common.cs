@@ -15,20 +15,24 @@ namespace Mr.Robot.Creeper
 			while (true)
 			{
 				char ch = in_list[cur_pos.RowNum][cur_pos.ColNum];
-				string line_str = in_list[cur_pos.RowNum].Substring(cur_pos.ColNum);
 				if (char.IsWhiteSpace(ch))
 				{
 					// 白空格
 				}
-				else if (line_str.StartsWith("//")
-						 || line_str.StartsWith("/*"))
+				else if (ch.Equals('/'))
 				{
-					// 注释
-					start_pos = GetNextPosN(in_list, cur_pos, 2);
-					return new CodeSymbol(line_str.Substring(0, 2), cur_pos);
+					string line_str = in_list[cur_pos.RowNum].Substring(cur_pos.ColNum);
+					if (line_str.StartsWith("//")
+						 || line_str.StartsWith("/*"))
+					{
+						// 注释开头
+						start_pos = GetNextPosN(in_list, cur_pos, 2);
+						return new CodeSymbol(line_str.Substring(0, 2), cur_pos);
+					}
 				}
 				else if (ch.Equals('#'))
 				{
+					string line_str = in_list[cur_pos.RowNum].Substring(cur_pos.ColNum);
 					// 预编译命令
 					if (line_str.StartsWith("#include"))
 					{
@@ -44,12 +48,18 @@ namespace Mr.Robot.Creeper
 						start_pos = GetNextPosN(in_list, cur_pos, len);
 						return new CodeSymbol(line_str.Substring(0, len), cur_pos);
 					}
-					else if (line_str.StartsWith("#if"))
+					else if (IsConditionalComilationStart(line_str))
 					{
-						// 条件编译开关
+						// 条件编译
 					}
 				}
 				// 标识符
+				else if (Char.IsLetter(ch) || ch.Equals('_'))
+				{
+					int len = GetIdentifierLength(in_list[cur_pos.RowNum], cur_pos.ColNum);
+					start_pos = GetNextPosN(in_list, cur_pos, len);
+					return new CodeSymbol(in_list[cur_pos.RowNum].Substring(cur_pos.ColNum, len), cur_pos);
+				}
 				// 字符串,字符
 				// 数字
 				// 运算符
@@ -163,23 +173,119 @@ namespace Mr.Robot.Creeper
 
 		public static bool IsDefineStart(string symbol_str)
 		{
-			return false;
+			if (symbol_str.Equals("#define"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		public static bool IsIncludeStart(string symbol_str)
 		{
-			return false;
+			if (symbol_str.Equals("#include"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		static int GetIdentifierLength(string line_str, int start_offet)
+		{
+			Trace.Assert(	!string.IsNullOrEmpty(line_str)
+							&& start_offet >=0
+							&& start_offet < line_str.Length);
+			int ret_len = 0;
+			for (int i = start_offet; i < line_str.Length; i++)
+			{
+				char ch = line_str[i];
+				if (Char.IsLetter(ch) || ch.Equals('_'))
+				{
+				}
+				else if (Char.IsDigit(ch) && i != start_offet)
+				{
+				}
+				else
+				{
+					break;
+				}
+				ret_len += 1;
+			}
+			return ret_len;
+		}
+
+		public static bool IsStandardIdentifier(string str)
+		{
+			if (string.IsNullOrEmpty(str))
+			{
+				return false;
+			}
+			if (0 != GetIdentifierLength(str, 0))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		static bool IsConditionalComilationStart(string line_str)
+		{
+			if (string.IsNullOrEmpty(line_str))
+			{
+				return false;
+			}
+			// 注意还有"defined"
+			if (line_str.StartsWith("#if"))
+			{
+				
+			}
+			else if (line_str.StartsWith("#ifdef"))
+			{
+				
+			}
+			else if (line_str.StartsWith("#ifndef"))
+			{
+
+			}
+			else if (line_str.StartsWith("#elif"))
+			{
+
+			}
+			else if (line_str.StartsWith("#else"))
+			{
+
+			}
+			else if (line_str.StartsWith("#endif"))
+			{
+
+			}
+			else if (line_str.StartsWith("#pragma"))
+			{
+				
+			}
+			else
+			{
+				return false;
+			}
+			return true;
 		}
 	}
 
 	public class CodeSymbol
 	{
-		public string SymbolStr = null;
+		public string TextStr = null;
 		public CodePosition StartPosition = null;
 
 		public CodeSymbol(string symbol_str, CodePosition start_pos)
 		{
-			this.SymbolStr = symbol_str;
+			this.TextStr = symbol_str;
 			this.StartPosition = start_pos;
 		}
 	}

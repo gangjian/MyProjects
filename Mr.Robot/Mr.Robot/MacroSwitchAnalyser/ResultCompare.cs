@@ -143,7 +143,7 @@ namespace Mr.Robot.MacroSwitchAnalyser
 				}
 			}
 
-			public string ToString()
+			public override string ToString()
 			{
 				return this.SrcName + " : " + this.LineNum.ToString() + ", " + this.ExpStr
 											+ ", " + this.MacroName + ", " + this.DefStr;

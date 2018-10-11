@@ -71,26 +71,26 @@ namespace Mr.Robot.Creeper
 			while (true)
 			{
 				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref probe_pos);
-				if (string.IsNullOrEmpty(symbol.SymbolStr))
+				if (null == symbol)
 				{
 					break;
 				}
-				if (Common.IsCommentStart(symbol.SymbolStr))
+				if (Common.IsCommentStart(symbol.TextStr))
 				{
 					probe_pos = CommentProc(symbol);									// 注释
 				}
-				else if (Common.IsDefineStart(symbol.SymbolStr))
+				else if (Common.IsDefineStart(symbol.TextStr))
 				{
-					
+					probe_pos = DefineProc(symbol);										// 宏定义
 				}
 			}
 		}
 
 		CodePosition CommentProc(CodeSymbol symbol)
 		{
-			Trace.Assert(Common.IsCommentStart(symbol.SymbolStr));
+			Trace.Assert(Common.IsCommentStart(symbol.TextStr));
 			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList, symbol.StartPosition, 2);
-			if (symbol.SymbolStr.Equals("/*"))
+			if (symbol.TextStr.Equals("/*"))
 			{
 				CodePosition end_pos = Common.FindStrPosition(this.CodeLineList, search_pos, "*/");
 				Trace.Assert(null != end_pos);
@@ -121,7 +121,7 @@ namespace Mr.Robot.Creeper
 				}
 				return Common.GetNextPosN(this.CodeLineList, end_pos, 2);
 			}
-			else if (symbol.SymbolStr.Equals("//"))
+			else if (symbol.TextStr.Equals("//"))
 			{
 				int row = symbol.StartPosition.RowNum;
 				int col = this.CodeLineList[row].Length - 1;
@@ -139,19 +139,34 @@ namespace Mr.Robot.Creeper
 
 		CodePosition DefineProc(CodeSymbol def_symbol)
 		{
-			Trace.Assert(Common.IsDefineStart(def_symbol.SymbolStr));
+			Trace.Assert(Common.IsDefineStart(def_symbol.TextStr));
 			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList,
 											def_symbol.StartPosition, "#define".Length);
 			int row = def_symbol.StartPosition.RowNum;
+			string macro_name = null;
 			while (true)
 			{
 				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref search_pos);
-				if (symbol.StartPosition.RowNum != row)
+				if (null == symbol
+					|| symbol.StartPosition.RowNum != row)
 				{
 					break;
 				}
+				else if (Common.IsCommentStart(symbol.TextStr))
+				{
+					search_pos = CommentProc(symbol);									// 注释
+				}
+				else if (Common.IsStandardIdentifier(symbol.TextStr))
+				{
+					if (string.IsNullOrEmpty(macro_name))
+					{
+						macro_name = symbol.TextStr;
+					}
+				}
 			}
-			return null;
+			CodePosition line_end = new CodePosition(row,
+													this.CodeLineList[row].Length - 1);	// 行末尾
+			return Common.GetNextPosN(this.CodeLineList, line_end, 1);					// 下一行开头
 		}
 	}
 
