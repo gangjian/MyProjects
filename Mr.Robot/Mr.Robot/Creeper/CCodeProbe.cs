@@ -70,6 +70,10 @@ namespace Mr.Robot.Creeper
 			CodePosition probe_pos = new CodePosition(0, 0);
 			while (true)
 			{
+				if (null == probe_pos)
+				{
+					break;
+				}
 				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref probe_pos);
 				if (null == symbol)
 				{
@@ -140,33 +144,53 @@ namespace Mr.Robot.Creeper
 		CodePosition DefineProc(CodeSymbol def_symbol)
 		{
 			Trace.Assert(Common.IsDefineStart(def_symbol.TextStr));
+			// 定位到"#define"后
 			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList,
 											def_symbol.StartPosition, "#define".Length);
 			int row = def_symbol.StartPosition.RowNum;
-			string macro_name = null;
+			List<CodeSymbol> symbol_list = GetDefineSymbolList(ref search_pos);
+			return search_pos;
+		}
+
+		List<CodeSymbol> GetDefineSymbolList(ref CodePosition start_position)
+		{
+			List<CodeSymbol> ret_list = new List<CodeSymbol>();
+			int row = start_position.RowNum;
+			CodePosition comment_pos = null;
 			while (true)
 			{
-				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref search_pos);
-				if (null == symbol
-					|| symbol.StartPosition.RowNum != row)
+				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref start_position);
+				if (null == symbol)
 				{
+					break;
+				}
+				else if (symbol.StartPosition.RowNum != row)
+				{
+					// 注意有续行符的情况
 					break;
 				}
 				else if (Common.IsCommentStart(symbol.TextStr))
 				{
-					search_pos = CommentProc(symbol);									// 注释
+					comment_pos = CommentProc(symbol);									// 注释
+					start_position = new CodePosition(comment_pos);
 				}
-				else if (Common.IsStandardIdentifier(symbol.TextStr))
+				else
 				{
-					if (string.IsNullOrEmpty(macro_name))
-					{
-						macro_name = symbol.TextStr;
-					}
+					ret_list.Add(symbol);
 				}
 			}
-			CodePosition line_end = new CodePosition(row,
-													this.CodeLineList[row].Length - 1);	// 行末尾
-			return Common.GetNextPosN(this.CodeLineList, line_end, 1);					// 下一行开头
+			CodeSymbol last_symbol = ret_list.Last();
+			// 位置定位到末尾
+			start_position = Common.GetNextPosN(this.CodeLineList,
+												last_symbol.StartPosition,
+												last_symbol.TextStr.Length);
+			if (null != comment_pos
+				&& CodePosition.Compare(comment_pos, start_position) > 0)
+			{
+				// 如果以注释结尾,要定位到注释结束
+				start_position = new CodePosition(comment_pos);
+			}
+			return ret_list;
 		}
 	}
 

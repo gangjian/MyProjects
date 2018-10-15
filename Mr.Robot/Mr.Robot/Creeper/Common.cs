@@ -61,6 +61,11 @@ namespace Mr.Robot.Creeper
 					return new CodeSymbol(in_list[cur_pos.RowNum].Substring(cur_pos.ColNum, len), cur_pos);
 				}
 				// 字符串,字符
+				else if (ch.Equals('"')
+					|| ch.Equals('\''))
+				{
+
+				}
 				// 数字
 				// 运算符
 

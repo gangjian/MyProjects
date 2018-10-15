@@ -43,6 +43,33 @@ namespace Mr.Robot
 			this.RowNum += 1;
 			this.ColNum = 0;
 		}
+
+		public static int Compare(CodePosition pos_1, CodePosition pos_2)
+		{
+			if (pos_1.RowNum < pos_2.RowNum)
+			{
+				return (-1);
+			}
+			else if (pos_1.RowNum > pos_2.RowNum)
+			{
+				return 1;
+			}
+			else
+			{
+				if (pos_1.ColNum < pos_2.ColNum)
+				{
+					return (-1);
+				}
+				else if (pos_1.ColNum > pos_2.ColNum)
+				{
+					return 1;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+		}
 	}
 
 	public class CodeScope
