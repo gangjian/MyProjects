@@ -90,6 +90,69 @@ namespace Mr.Robot.Creeper
 			}
 		}
 
+		CodeElement GetNextElement(ref CodePosition start_pos)
+		{
+			CodePosition cur_pos = new CodePosition(start_pos);
+			while (true)
+			{
+				char ch = this.CodeLineList[cur_pos.RowNum][cur_pos.ColNum];
+				if (char.IsWhiteSpace(ch))
+				{
+					// 白空格
+				}
+				else if (ch.Equals('/'))
+				{
+					string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
+					if (line_str.StartsWith("//"))
+					{
+						// 行注释
+					}
+					else if (line_str.StartsWith("/*"))
+					{
+						// 块注释
+					}
+				}
+				else if (ch.Equals('#'))
+				{
+					string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
+					// 预编译命令
+					if (line_str.StartsWith("#include"))
+					{
+						// 头文件包含
+					}
+					else if (line_str.StartsWith("#define"))
+					{
+						// 宏定义
+					}
+					else if (Common.IsConditionalComilationStart(line_str))
+					{
+						// 条件编译
+					}
+				}
+				// 标识符
+				else if (Char.IsLetter(ch) || ch.Equals('_'))
+				{
+					int len = Common.GetIdentifierLength(this.CodeLineList[cur_pos.RowNum], cur_pos.ColNum);
+					start_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, len);
+				}
+				// 字符串,字符
+				else if (ch.Equals('"')
+					|| ch.Equals('\''))
+				{
+
+				}
+				// 数字
+				// 运算符
+
+				cur_pos = Common.GetNextPos(this.CodeLineList, cur_pos);
+				if (null == cur_pos)
+				{
+					break;
+				}
+			}
+			return null;
+		}
+
 		CodePosition CommentProc(CodeSymbol symbol)
 		{
 			Trace.Assert(Common.IsCommentStart(symbol.TextStr));
@@ -201,34 +264,5 @@ namespace Mr.Robot.Creeper
 		{
 			this.ElementsList.Add(element);
 		}
-	}
-
-	class CodeElement
-	{
-		CodeScope Scope = null;
-		CodeElementType Type = CodeElementType.None;
-		public CodeElement(CodeElementType type, CodePosition start_pos, CodePosition end_pos)
-		{
-			this.Type = type;
-			this.Scope = new CodeScope(start_pos, end_pos);
-		}
-	}
-
-	enum CodeElementType
-	{
-		None,
-		Invalid,				// 被编译开关注掉的无效内容
-		BlockComments,			// 块注释
-		LineComments,			// 行注释
-		ReservedWord,			// 保留字
-		String,					// 字符串
-		Charactor,				// 字符
-		Number,					// 数字常量
-		Identifier,				// 标识符
-		BaseType,				// 基本类型
-		UserDefType,			// 用户定义类型
-		Variable,				// 变量
-		FunctionName,			// 函数名
-		MacroName,				// 宏名
 	}
 }
