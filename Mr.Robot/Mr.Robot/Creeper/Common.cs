@@ -9,75 +9,6 @@ namespace Mr.Robot.Creeper
 {
 	public class Common
 	{
-		public static CodeSymbol GetNextSymbol(List<string> code_list, ref CodePosition start_pos)
-		{
-			CodePosition cur_pos = new CodePosition(start_pos);
-			while (true)
-			{
-				char ch = code_list[cur_pos.RowNum][cur_pos.ColNum];
-				if (char.IsWhiteSpace(ch))
-				{
-					// 白空格
-				}
-				else if (ch.Equals('/'))
-				{
-					string line_str = code_list[cur_pos.RowNum].Substring(cur_pos.ColNum);
-					if (line_str.StartsWith("//")
-						 || line_str.StartsWith("/*"))
-					{
-						// 注释开头
-						start_pos = GetNextPosN(code_list, cur_pos, 2);
-						return new CodeSymbol(line_str.Substring(0, 2), cur_pos);
-					}
-				}
-				else if (ch.Equals('#'))
-				{
-					string line_str = code_list[cur_pos.RowNum].Substring(cur_pos.ColNum);
-					// 预编译命令
-					if (line_str.StartsWith("#include"))
-					{
-						// 头文件包含
-						int len = "#include".Length;
-						start_pos = GetNextPosN(code_list, cur_pos, len);
-						return new CodeSymbol(line_str.Substring(0, len), cur_pos);
-					}
-					else if (line_str.StartsWith("#define"))
-					{
-						// 宏定义
-						int len = "#define".Length;
-						start_pos = GetNextPosN(code_list, cur_pos, len);
-						return new CodeSymbol(line_str.Substring(0, len), cur_pos);
-					}
-					else if (IsConditionalComilationStart(line_str))
-					{
-						// 条件编译
-					}
-				}
-				// 标识符
-				else if (Char.IsLetter(ch) || ch.Equals('_'))
-				{
-					int len = GetIdentifierLength(code_list[cur_pos.RowNum], cur_pos.ColNum);
-					start_pos = GetNextPosN(code_list, cur_pos, len);
-					return new CodeSymbol(code_list[cur_pos.RowNum].Substring(cur_pos.ColNum, len), cur_pos);
-				}
-				// 字符串,字符
-				else if (ch.Equals('"')
-					|| ch.Equals('\''))
-				{
-
-				}
-				// 数字
-				// 运算符
-
-				cur_pos = GetNextPos(code_list, cur_pos);
-				if (null == cur_pos)
-				{
-					break;
-				}
-			}
-			return null;
-		}
-
 		public static CodePosition GetNextPos(List<string> in_list, CodePosition in_pos)
 		{
 			if (   null == in_list
@@ -160,19 +91,6 @@ namespace Mr.Robot.Creeper
 			foreach (var item in dirs)
 			{
 				GetCodeFileList(item, source_list, header_list);
-			}
-		}
-
-		public static bool IsCommentStart(string symbol_str)
-		{
-			if (symbol_str.Equals("/*")
-				|| symbol_str.Equals("//"))
-			{
-				return true;
-			}
-			else
-			{
-				return false;
 			}
 		}
 
@@ -283,26 +201,16 @@ namespace Mr.Robot.Creeper
 		}
 	}
 
-	public class CodeSymbol
-	{
-		public string TextStr = null;
-		public CodePosition StartPosition = null;
-
-		public CodeSymbol(string symbol_str, CodePosition start_pos)
-		{
-			this.TextStr = symbol_str;
-			this.StartPosition = start_pos;
-		}
-	}
-
 	class CodeElement
 	{
-		CodeScope Scope = null;
-		CodeElementType Type = CodeElementType.None;
-		public CodeElement(CodeElementType type, CodePosition start_pos, CodePosition end_pos)
+		public string TextStr = null;
+		public CodeScope Scope = null;
+		public CodeElementType Type = CodeElementType.None;
+		public CodeElement(CodeElementType type, CodePosition start_pos, CodePosition end_pos, string text_str)
 		{
 			this.Type = type;
 			this.Scope = new CodeScope(start_pos, end_pos);
+			this.TextStr = text_str;
 		}
 	}
 

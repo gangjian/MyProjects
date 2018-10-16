@@ -65,34 +65,31 @@ namespace Mr.Robot.Creeper
 			}
 		}
 
+		CodePosition m_CurrentPosition = null;
 		public void GoProbe()
 		{
-			CodePosition probe_pos = new CodePosition(0, 0);
+			this.m_CurrentPosition = new CodePosition(0, 0);
 			while (true)
 			{
-				if (null == probe_pos)
+				if (null == this.m_CurrentPosition)
 				{
 					break;
 				}
-				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref probe_pos);
-				if (null == symbol)
+				CodeElement element = GetNextElement();
+				if (null == element)
 				{
 					break;
 				}
-				if (Common.IsCommentStart(symbol.TextStr))
+				else if (Common.IsDefineStart(element.TextStr))
 				{
-					probe_pos = CommentProc(symbol);									// 注释
-				}
-				else if (Common.IsDefineStart(symbol.TextStr))
-				{
-					probe_pos = DefineProc(symbol);										// 宏定义
+					this.m_CurrentPosition = DefineProc(element);										// 宏定义
 				}
 			}
 		}
 
-		CodeElement GetNextElement(ref CodePosition start_pos)
+		CodeElement GetNextElement()
 		{
-			CodePosition cur_pos = new CodePosition(start_pos);
+			CodePosition cur_pos = new CodePosition(this.m_CurrentPosition);
 			while (true)
 			{
 				char ch = this.CodeLineList[cur_pos.RowNum][cur_pos.ColNum];
@@ -102,15 +99,8 @@ namespace Mr.Robot.Creeper
 				}
 				else if (ch.Equals('/'))
 				{
-					string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
-					if (line_str.StartsWith("//"))
-					{
-						// 行注释
-					}
-					else if (line_str.StartsWith("/*"))
-					{
-						// 块注释
-					}
+					// 注释
+					cur_pos = CommentProc(cur_pos);
 				}
 				else if (ch.Equals('#'))
 				{
@@ -123,6 +113,11 @@ namespace Mr.Robot.Creeper
 					else if (line_str.StartsWith("#define"))
 					{
 						// 宏定义
+						CodePosition end_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, "#define".Length - 1);
+						CodeElement ret_element
+							= new CodeElement(CodeElementType.ReservedWord, cur_pos, end_pos, "#define");
+						this.m_CurrentPosition = end_pos;
+						return ret_element;
 					}
 					else if (Common.IsConditionalComilationStart(line_str))
 					{
@@ -132,8 +127,13 @@ namespace Mr.Robot.Creeper
 				// 标识符
 				else if (Char.IsLetter(ch) || ch.Equals('_'))
 				{
-					int len = Common.GetIdentifierLength(this.CodeLineList[cur_pos.RowNum], cur_pos.ColNum);
-					start_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, len);
+					string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
+					int len = Common.GetIdentifierLength(line_str, 0);
+					CodePosition end_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, len - 1);
+					CodeElement ret_element
+						= new CodeElement(CodeElementType.Identifier, cur_pos, end_pos, line_str.Substring(0, len));
+					this.m_CurrentPosition = end_pos;
+					return ret_element;
 				}
 				// 字符串,字符
 				else if (ch.Equals('"')
@@ -153,20 +153,31 @@ namespace Mr.Robot.Creeper
 			return null;
 		}
 
-		CodePosition CommentProc(CodeSymbol symbol)
+		CodePosition CommentProc(CodePosition cur_pos)
 		{
-			Trace.Assert(Common.IsCommentStart(symbol.TextStr));
-			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList, symbol.StartPosition, 2);
-			if (symbol.TextStr.Equals("/*"))
+			string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
+			if (line_str.StartsWith("//"))
 			{
-				CodePosition end_pos = Common.FindStrPosition(this.CodeLineList, search_pos, "*/");
+				// 行注释
+				int row = cur_pos.RowNum;
+				int col = this.CodeLineList[row].Length - 1;
+				CodePosition end_pos = new CodePosition(row, col);
+				CodeElement comment_element
+								= new CodeElement(CodeElementType.LineComments, cur_pos, end_pos, null);
+				this.LineProbeInfoList[row].AddElement(comment_element);
+				cur_pos = end_pos;
+			}
+			else if (line_str.StartsWith("/*"))
+			{
+				// 块注释
+				CodePosition end_pos = Common.FindStrPosition(this.CodeLineList, cur_pos, "*/");
 				Trace.Assert(null != end_pos);
-				for (int row = symbol.StartPosition.RowNum; row <= end_pos.RowNum; row++)
+				for (int row = cur_pos.RowNum; row <= end_pos.RowNum; row++)
 				{
 					int start_col, end_col;
-					if (row == symbol.StartPosition.RowNum)
+					if (row == cur_pos.RowNum)
 					{
-						start_col = symbol.StartPosition.ColNum;
+						start_col = cur_pos.ColNum;
 					}
 					else
 					{
@@ -180,79 +191,31 @@ namespace Mr.Robot.Creeper
 					{
 						end_col = this.CodeLineList[row].Length - 1;
 					}
-					CodeElement comment_element	= new CodeElement(
-														CodeElementType.BlockComments,
-														new CodePosition(row, start_col),
-														new CodePosition(row, end_col));
+					CodePosition s_pos = new CodePosition(row, start_col);
+					CodePosition e_pos = new CodePosition(row, end_col);
+					CodeElement comment_element
+									= new CodeElement(CodeElementType.BlockComments, s_pos, e_pos, null);
 					this.LineProbeInfoList[row].AddElement(comment_element);
 				}
-				return Common.GetNextPosN(this.CodeLineList, end_pos, 2);
+				cur_pos = Common.GetNextPosN(this.CodeLineList, end_pos, 1);
 			}
-			else if (symbol.TextStr.Equals("//"))
-			{
-				int row = symbol.StartPosition.RowNum;
-				int col = this.CodeLineList[row].Length - 1;
-				CodePosition end_pos = new CodePosition(row, col);
-				CodeElement comment_element = new CodeElement(CodeElementType.LineComments,
-																search_pos, end_pos);
-				this.LineProbeInfoList[row].AddElement(comment_element);
-				return Common.GetNextPosN(this.CodeLineList, end_pos, 1);
-			}
-			else
-			{
-				return null;
-			}
+			return cur_pos;
 		}
 
-		CodePosition DefineProc(CodeSymbol def_symbol)
+		CodePosition DefineProc(CodeElement def_element)
 		{
-			Trace.Assert(Common.IsDefineStart(def_symbol.TextStr));
+			Trace.Assert(Common.IsDefineStart(def_element.TextStr));
 			// 定位到"#define"后
 			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList,
-											def_symbol.StartPosition, "#define".Length);
-			int row = def_symbol.StartPosition.RowNum;
-			List<CodeSymbol> symbol_list = GetDefineSymbolList(ref search_pos);
+											def_element.Scope.Start, "#define".Length);
+			int row = def_element.Scope.Start.RowNum;
+			List<CodeElement> symbol_list = GetDefineElementList(ref search_pos);
 			return search_pos;
 		}
 
-		List<CodeSymbol> GetDefineSymbolList(ref CodePosition start_position)
+		List<CodeElement> GetDefineElementList(ref CodePosition start_position)
 		{
-			List<CodeSymbol> ret_list = new List<CodeSymbol>();
-			int row = start_position.RowNum;
-			CodePosition comment_pos = null;
-			while (true)
-			{
-				CodeSymbol symbol = Common.GetNextSymbol(this.CodeLineList, ref start_position);
-				if (null == symbol)
-				{
-					break;
-				}
-				else if (symbol.StartPosition.RowNum != row)
-				{
-					// 注意有续行符的情况
-					break;
-				}
-				else if (Common.IsCommentStart(symbol.TextStr))
-				{
-					comment_pos = CommentProc(symbol);									// 注释
-					start_position = new CodePosition(comment_pos);
-				}
-				else
-				{
-					ret_list.Add(symbol);
-				}
-			}
-			CodeSymbol last_symbol = ret_list.Last();
-			// 位置定位到末尾
-			start_position = Common.GetNextPosN(this.CodeLineList,
-												last_symbol.StartPosition,
-												last_symbol.TextStr.Length);
-			if (null != comment_pos
-				&& CodePosition.Compare(comment_pos, start_position) > 0)
-			{
-				// 如果以注释结尾,要定位到注释结束
-				start_position = new CodePosition(comment_pos);
-			}
+			List<CodeElement> ret_list = new List<CodeElement>();
 			return ret_list;
 		}
 	}
