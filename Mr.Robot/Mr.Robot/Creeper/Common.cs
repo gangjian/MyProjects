@@ -118,7 +118,7 @@ namespace Mr.Robot.Creeper
 			}
 		}
 
-		public static int GetIdentifierLength(string line_str, int start_offet)
+		public static int GetIdentifierStrLength(string line_str, int start_offet)
 		{
 			Trace.Assert(	!string.IsNullOrEmpty(line_str)
 							&& start_offet >=0
@@ -148,7 +148,7 @@ namespace Mr.Robot.Creeper
 			{
 				return false;
 			}
-			if (0 != GetIdentifierLength(str, 0))
+			if (0 != GetIdentifierStrLength(str, 0))
 			{
 				return true;
 			}
@@ -158,46 +158,67 @@ namespace Mr.Robot.Creeper
 			}
 		}
 
-		public static bool IsConditionalComilationStart(string line_str)
+		public static bool IsConditionalComilationStart(string line_str, out int len)
 		{
-			if (string.IsNullOrEmpty(line_str))
+			len = 0;
+			if (string.IsNullOrEmpty(line_str)
+				|| !line_str.StartsWith("#"))
 			{
 				return false;
 			}
+			len = GetIdentifierStrLength(line_str, 1) + 1;
+			string cc_str = line_str.Substring(0, len);
 			// 注意还有"defined"
-			if (line_str.StartsWith("#if"))
+			if (cc_str.Equals("#if"))
 			{
-				
 			}
-			else if (line_str.StartsWith("#ifdef"))
+			else if (cc_str.Equals("#ifdef"))
 			{
-				
 			}
-			else if (line_str.StartsWith("#ifndef"))
+			else if (cc_str.Equals("#ifndef"))
 			{
-
 			}
-			else if (line_str.StartsWith("#elif"))
+			else if (cc_str.Equals("#elif"))
 			{
-
 			}
-			else if (line_str.StartsWith("#else"))
+			else if (cc_str.Equals("#else"))
 			{
-
 			}
-			else if (line_str.StartsWith("#endif"))
+			else if (cc_str.Equals("#endif"))
 			{
-
 			}
-			else if (line_str.StartsWith("#pragma"))
+			else if (cc_str.Equals("#pragma"))
 			{
-				
 			}
 			else
 			{
 				return false;
 			}
 			return true;
+		}
+
+		public static int GetNumberStrLength(string line_str, int start_offet)
+		{
+			Trace.Assert(	!string.IsNullOrEmpty(line_str)
+							&& start_offet >= 0
+							&& start_offet < line_str.Length);
+			int ret_len = 0;
+			for (int i = start_offet; i < line_str.Length; i++)
+			{
+				char ch = line_str[i];
+				if (Char.IsDigit(ch) || ch.Equals('.'))
+				{
+				}
+				else if (Char.IsLetter(ch) && i != start_offet)
+				{
+				}
+				else
+				{
+					break;
+				}
+				ret_len += 1;
+			}
+			return ret_len;
 		}
 	}
 
@@ -222,7 +243,7 @@ namespace Mr.Robot.Creeper
 		LineComments,			// 行注释
 		ReservedWord,			// 保留字
 		String,					// 字符串
-		Charactor,				// 字符
+		Letter,					// 字符
 		Number,					// 数字常量
 		Identifier,				// 标识符
 		BaseType,				// 基本类型
@@ -230,5 +251,6 @@ namespace Mr.Robot.Creeper
 		Variable,				// 变量
 		FunctionName,			// 函数名
 		MacroName,				// 宏名
+		Symbol,					// 符号(运算符,标点)
 	}
 }

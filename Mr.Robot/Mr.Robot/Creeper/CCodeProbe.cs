@@ -82,7 +82,7 @@ namespace Mr.Robot.Creeper
 				}
 				else if (Common.IsDefineStart(element.TextStr))
 				{
-					this.m_CurrentPosition = DefineProc(element);										// 宏定义
+					DefineProc(element);												// 宏定义
 				}
 			}
 		}
@@ -105,6 +105,7 @@ namespace Mr.Robot.Creeper
 				else if (ch.Equals('#'))
 				{
 					string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
+					int len;
 					// 预编译命令
 					if (line_str.StartsWith("#include"))
 					{
@@ -116,23 +117,28 @@ namespace Mr.Robot.Creeper
 						CodePosition end_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, "#define".Length - 1);
 						CodeElement ret_element
 							= new CodeElement(CodeElementType.ReservedWord, cur_pos, end_pos, "#define");
-						this.m_CurrentPosition = end_pos;
+						this.m_CurrentPosition = Common.GetNextPos(this.CodeLineList, end_pos);
 						return ret_element;
 					}
-					else if (Common.IsConditionalComilationStart(line_str))
+					else if (Common.IsConditionalComilationStart(line_str, out len))
 					{
 						// 条件编译
+						CodePosition end_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, len - 1);
+						CodeElement ret_element
+							= new CodeElement(CodeElementType.ReservedWord, cur_pos, end_pos, line_str.Substring(0, len));
+						this.m_CurrentPosition = Common.GetNextPos(this.CodeLineList, end_pos);
+						return ret_element;
 					}
 				}
 				// 标识符
 				else if (Char.IsLetter(ch) || ch.Equals('_'))
 				{
 					string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
-					int len = Common.GetIdentifierLength(line_str, 0);
+					int len = Common.GetIdentifierStrLength(line_str, 0);
 					CodePosition end_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, len - 1);
 					CodeElement ret_element
 						= new CodeElement(CodeElementType.Identifier, cur_pos, end_pos, line_str.Substring(0, len));
-					this.m_CurrentPosition = end_pos;
+					this.m_CurrentPosition = Common.GetNextPos(this.CodeLineList, end_pos);
 					return ret_element;
 				}
 				// 字符串,字符
@@ -142,7 +148,32 @@ namespace Mr.Robot.Creeper
 
 				}
 				// 数字
+				else if (Char.IsDigit(ch))
+				{
+					string line_str = this.CodeLineList[cur_pos.RowNum].Substring(cur_pos.ColNum);
+					int len = Common.GetNumberStrLength(line_str, 0);
+					CodePosition end_pos = Common.GetNextPosN(this.CodeLineList, cur_pos, len - 1);
+					CodeElement ret_element
+						= new CodeElement(CodeElementType.Number, cur_pos, end_pos, line_str.Substring(0, len));
+					this.m_CurrentPosition = Common.GetNextPos(this.CodeLineList, end_pos);
+					return ret_element;
+				}
 				// 运算符
+				else if (Char.IsSymbol(ch))
+				{
+					CodeElement ret_element
+						= new CodeElement(CodeElementType.Symbol, cur_pos, cur_pos, ch.ToString());
+					this.m_CurrentPosition = Common.GetNextPos(this.CodeLineList, cur_pos);
+					return ret_element;
+				}
+				// 标点
+				else if (Char.IsPunctuation(ch))
+				{
+					CodeElement ret_element
+						= new CodeElement(CodeElementType.Symbol, cur_pos, cur_pos, ch.ToString());
+					this.m_CurrentPosition = Common.GetNextPos(this.CodeLineList, cur_pos);
+					return ret_element;
+				}
 
 				cur_pos = Common.GetNextPos(this.CodeLineList, cur_pos);
 				if (null == cur_pos)
@@ -202,20 +233,39 @@ namespace Mr.Robot.Creeper
 			return cur_pos;
 		}
 
-		CodePosition DefineProc(CodeElement def_element)
+		void DefineProc(CodeElement def_element)
 		{
 			Trace.Assert(Common.IsDefineStart(def_element.TextStr));
 			// 定位到"#define"后
-			CodePosition search_pos = Common.GetNextPosN(this.CodeLineList,
+			CodePosition start_pos = Common.GetNextPosN(this.CodeLineList,
 											def_element.Scope.Start, "#define".Length);
 			int row = def_element.Scope.Start.RowNum;
-			List<CodeElement> symbol_list = GetDefineElementList(ref search_pos);
-			return search_pos;
+			List<CodeElement> symbol_list = GetDefineElementList(row, ref start_pos);
 		}
 
-		List<CodeElement> GetDefineElementList(ref CodePosition start_position)
+		List<CodeElement> GetDefineElementList(int row, ref CodePosition start_position)
 		{
+			string line_str = this.CodeLineList[start_position.RowNum].Substring(start_position.ColNum);
 			List<CodeElement> ret_list = new List<CodeElement>();
+			while (true)
+			{
+				CodeElement element = GetNextElement();
+				if (row != element.Scope.Start.RowNum)
+				{
+					if (0 != ret_list.Count
+						&& ret_list.Last().TextStr.Equals("\\"))
+					{
+						row = element.Scope.Start.RowNum;
+						ret_list.RemoveAt(ret_list.Count - 1);
+					}
+					else
+					{
+						this.m_CurrentPosition = Common.GetNextPos(this.CodeLineList, ret_list.Last().Scope.End);
+						break;
+					}
+				}
+				ret_list.Add(element);
+			}
 			return ret_list;
 		}
 	}
