@@ -46,11 +46,11 @@ namespace SourceOutsight
 				}
 				else if (tag.Type.Equals(TagType.Include))
 				{
-					
+					IncludeProc(tag);
 				}
 				else if (tag.Type.Equals(TagType.PrecompileSwitch))
 				{
-
+					PrecompileSwitchProc(tag);
 				}
 			}
 		}
@@ -112,14 +112,24 @@ namespace SourceOutsight
 				else if (Char.IsDigit(ch))
 				{
 					// 数字
+					string line_str = this.m_LineInfoList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					int len = SO_Common.GetNumberStrLength(line_str, 0);
+					CodeTag ret_tag = new CodeTag(TagType.Number, cur_pos, len);
+					this.m_CurrentPosition = GetNextPosN(cur_pos, len);
+					return ret_tag;
 				}
 				else if (Char.IsSymbol(ch))
 				{
 					// 运算符
+					CodeTag ret_tag = new CodeTag(TagType.Symbol, cur_pos, 1);
+					this.m_CurrentPosition = GetNextPos(cur_pos);
+					return ret_tag;
 				}
 				else if (Char.IsPunctuation(ch))
 				{
-					// 标点
+					CodeTag ret_tag = new CodeTag(TagType.Punctuation, cur_pos, 1);
+					this.m_CurrentPosition = GetNextPos(cur_pos);
+					return ret_tag;
 				}
 				cur_pos = GetNextPos(cur_pos);
 				if (null == cur_pos)
@@ -176,13 +186,59 @@ namespace SourceOutsight
 			}
 			return cur_pos;
 		}
+
 		void DefineProc(CodeTag def_tag)
 		{
-			CodeTag macro_tag = GetNextTag();											// 取得宏名
-			Trace.Assert(macro_tag.Type == TagType.Identifier);
+			string line_str = this.m_LineInfoList[def_tag.Row].TextStr.Substring(def_tag.Offset);
+			List<string> text_list = null;
+			List<CodeTag> tag_list = GetDefTagList(def_tag, out text_list);
+			Trace.Assert(0 != tag_list.Count && tag_list.First().Type == TagType.Identifier);
 			// 添加宏名到标识符树形列表
 			// 判断有无参数
 			// 标记宏体直到行末(注意续行符)
+		}
+		List<CodeTag> GetDefTagList(CodeTag def_tag, out List<string> text_list)
+		{
+			List<CodeTag> ret_list = new List<CodeTag>();
+			text_list = new List<string>();
+			int row = def_tag.Row;
+			while (true)
+			{
+				CodeTag tag = GetNextTag();
+				if (tag.Row != row)
+				{
+					if (GetTagTextStr(ret_list.Last()).Equals("\\"))
+					{
+						// 续行符
+						row = tag.Row;
+					}
+					else
+					{
+						// 回到#define行末尾
+						int last_row = ret_list.Last().Row;
+						int last_col = ret_list.Last().Offset + ret_list.Last().Len - 1;
+						CodePosition last_pos = new CodePosition(last_row, last_col);
+						this.m_CurrentPosition = GetNextPos(last_pos);
+						break;
+					}
+				}
+				else
+				{
+					ret_list.Add(tag);
+					text_list.Add(GetTagTextStr(tag));
+				}
+			}
+			return ret_list;
+		}
+
+		void IncludeProc(CodeTag include_tag)
+		{
+
+		}
+
+		void PrecompileSwitchProc(CodeTag precompileswitch_tag)
+		{
+
 		}
 
 		CodePosition GetNextPos(CodePosition cur_pos)
@@ -242,11 +298,28 @@ namespace SourceOutsight
 			}
 			return null;
 		}
+		string GetTagTextStr(CodeTag tag)
+		{
+			if (tag.Row < this.m_LineInfoList.Count)
+			{
+				string line_str = this.m_LineInfoList[tag.Row].TextStr;
+				if (tag.Offset + tag.Len <= line_str.Length)
+				{
+					return line_str.Substring(tag.Offset, tag.Len);
+				}
+			}
+			return null;
+		}
 	}
 
 	class SO_IdentifierTable
 	{
 		List<IDTreeNode> IdTreeList = new List<IDTreeNode>();
+		IDTreeNode m_CurrentNode = null;
+		public void AddMacro(CodeTag macro_tag)
+		{
+
+		}
 	}
 
 	class IDTreeNode
@@ -328,9 +401,9 @@ namespace SourceOutsight
 	class CodeTag
 	{
 		public TagType Type = TagType.Unknown;
-		int Row = -1;
-		int Offset = -1;
-		int Len = 0;
+		public int Row = -1;
+		public int Offset = -1;
+		public int Len = 0;
 		public CodeTag(TagType type, CodePosition start_pos, int len)
 		{
 			this.Type = type;

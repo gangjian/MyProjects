@@ -96,5 +96,29 @@ namespace SourceOutsight
 			}
 			return true;
 		}
+
+		public static int GetNumberStrLength(string line_str, int start_offet)
+		{
+			Trace.Assert(!string.IsNullOrEmpty(line_str)
+							&& start_offet >= 0
+							&& start_offet < line_str.Length);
+			int ret_len = 0;
+			for (int i = start_offet; i < line_str.Length; i++)
+			{
+				char ch = line_str[i];
+				if (Char.IsDigit(ch) || ch.Equals('.'))
+				{
+				}
+				else if (Char.IsLetter(ch) && i != start_offet)
+				{
+				}
+				else
+				{
+					break;
+				}
+				ret_len += 1;
+			}
+			return ret_len;
+		}
 	}
 }
