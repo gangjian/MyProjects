@@ -24,7 +24,7 @@ namespace SourceOutsight
 			DoParse();
 		}
 
-		SO_IdentifierTable IDTable = new SO_IdentifierTable();
+		IDTreeTable IDTable = new IDTreeTable();
 		CodePosition m_CurrentPosition = new CodePosition(0, 0);
 		void DoParse()
 		{
@@ -190,17 +190,14 @@ namespace SourceOutsight
 		void DefineProc(CodeTag def_tag)
 		{
 			string line_str = this.m_LineInfoList[def_tag.Row].TextStr.Substring(def_tag.Offset);
-			List<string> text_list = null;
-			List<CodeTag> tag_list = GetDefTagList(def_tag, out text_list);
-			Trace.Assert(0 != tag_list.Count && tag_list.First().Type == TagType.Identifier);
+			List<CodeTag> tag_list = GetDefTagList(def_tag);
+			IDTreeNode macro_node = CreateMacroIDTreeNode(def_tag, tag_list);
 			// 添加宏名到标识符树形列表
-			// 判断有无参数
-			// 标记宏体直到行末(注意续行符)
+			this.IDTable.Add(macro_node);
 		}
-		List<CodeTag> GetDefTagList(CodeTag def_tag, out List<string> text_list)
+		List<CodeTag> GetDefTagList(CodeTag def_tag)
 		{
 			List<CodeTag> ret_list = new List<CodeTag>();
-			text_list = new List<string>();
 			int row = def_tag.Row;
 			while (true)
 			{
@@ -225,10 +222,37 @@ namespace SourceOutsight
 				else
 				{
 					ret_list.Add(tag);
-					text_list.Add(GetTagTextStr(tag));
 				}
 			}
 			return ret_list;
+		}
+		IDTreeNode CreateMacroIDTreeNode(CodeTag def_tag, List<CodeTag> tag_list)
+		{
+			Trace.Assert(0 != tag_list.Count && tag_list.First().Type == TagType.Identifier);
+			CodeTag macro_tag = tag_list.First();
+			string macro_name = GetTagTextStr(macro_tag);
+			CodeScope scope = new CodeScope(def_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
+			IDNodeType type = IDNodeType.MacroDef;
+			// 判断是否为宏函数
+			if (IsMacroFunction(tag_list))
+			{
+				type = IDNodeType.MacroFunc;
+			}
+			IDTreeNode ret_node = new IDTreeNode(macro_name, null, new CodePosition(macro_tag.Row, macro_tag.Offset), scope, type);
+			return ret_node;
+		}
+		bool IsMacroFunction(List<CodeTag> tag_list)
+		{
+			if (tag_list.Count > 2
+				&& GetTagTextStr(tag_list[1]).Equals("(")
+				&& tag_list[1].Offset == tag_list[0].GetEndPosition().Col + 1)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		void IncludeProc(CodeTag include_tag)
@@ -312,32 +336,6 @@ namespace SourceOutsight
 		}
 	}
 
-	class SO_IdentifierTable
-	{
-		List<IDTreeNode> IdTreeList = new List<IDTreeNode>();
-		IDTreeNode m_CurrentNode = null;
-		public void AddMacro(CodeTag macro_tag)
-		{
-
-		}
-	}
-
-	class IDTreeNode
-	{
-		public string TextStr = null;
-		public CodePosition Position = null;
-		public CodeScope AffectScope = null;											// 作用域
-		public IDNodeType Type = IDNodeType.Unknown;
-
-		IDTreeNode ParentRef = null;
-	}
-
-	class PrecompileTreeNode : IDTreeNode
-	{
-		public string ExpressionStr = null;
-		List<IDTreeNode> ChildList = new List<IDTreeNode>();
-	}
-
 	class CodePosition
 	{
 		public int Row = -1;
@@ -363,23 +361,6 @@ namespace SourceOutsight
 			this.Start = start;
 			this.End = end;
 		}
-	}
-
-	enum IDNodeType
-	{
-		Unknown,
-		PrecompileSwitch,
-		IncludeHeader,
-		MacroDef,
-		MacroFunc,
-		StructType,
-		UnionType,
-		MemberVar,
-		Typedef,
-		GlobalExtern,
-		GlobalDef,
-		FuncExtern,
-		FuncDef,
 	}
 
 	class SO_CodeLineInfo
@@ -410,6 +391,15 @@ namespace SourceOutsight
 			this.Row = start_pos.Row;
 			this.Offset = start_pos.Col;
 			this.Len = len;
+		}
+
+		public CodePosition GetStartPosition()
+		{
+			return new CodePosition(this.Row, this.Offset);
+		}
+		public CodePosition GetEndPosition()
+		{
+			return new CodePosition(this.Row, this.Offset + this.Len - 1);
 		}
 	}
 
