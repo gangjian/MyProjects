@@ -11,7 +11,7 @@ namespace SourceOutsight
 	class SO_File
 	{
 		public string FullName = null;
-		List<SO_CodeLineInfo> m_LineInfoList = new List<SO_CodeLineInfo>();
+		List<SO_CodeLineInfo> CodeList = new List<SO_CodeLineInfo>();
 		public SO_File(string path)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
@@ -19,19 +19,19 @@ namespace SourceOutsight
 			List<string> code_list = File.ReadAllLines(path).ToList();
 			foreach (var item in code_list)
 			{
-				this.m_LineInfoList.Add(new SO_CodeLineInfo(item));
+				this.CodeList.Add(new SO_CodeLineInfo(item));
 			}
 			DoParse();
 		}
 
 		IDTreeTable IDTable = new IDTreeTable();
-		CodePosition m_CurrentPosition = new CodePosition(0, 0);
+		CodePosition CurrentPosition = new CodePosition(0, 0);
 		void DoParse()
 		{
-			this.m_CurrentPosition = new CodePosition(0, 0);
+			this.CurrentPosition = new CodePosition(0, 0);
 			while (true)
 			{
-				if (null == this.m_CurrentPosition)
+				if (null == this.CurrentPosition)
 				{
 					break;
 				}
@@ -57,10 +57,10 @@ namespace SourceOutsight
 
 		CodeTag GetNextTag()
 		{
-			CodePosition cur_pos = new CodePosition(this.m_CurrentPosition);
+			CodePosition cur_pos = new CodePosition(this.CurrentPosition);
 			while (true)
 			{
-				char ch = this.m_LineInfoList[cur_pos.Row].TextStr[cur_pos.Col];
+				char ch = this.CodeList[cur_pos.Row].TextStr[cur_pos.Col];
 				if (char.IsWhiteSpace(ch))
 				{
 					// 白空格
@@ -72,37 +72,37 @@ namespace SourceOutsight
 				}
 				else if (ch.Equals('#'))
 				{
-					string line_str = this.m_LineInfoList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
 					int len;
 					if (line_str.StartsWith("#include"))
 					{
 						// 头文件包含
 						CodeTag inc_tag = new CodeTag(TagType.Include, cur_pos, "#include".Length);
-						this.m_CurrentPosition = GetNextPosN(cur_pos, "#include".Length);
+						this.CurrentPosition = GetNextPosN(cur_pos, "#include".Length);
 						return inc_tag;
 					}
 					else if (line_str.StartsWith("#define"))
 					{
 						// 宏定义
 						CodeTag def_tag = new CodeTag(TagType.Define, cur_pos, "#define".Length);
-						this.m_CurrentPosition = GetNextPosN(cur_pos, "#define".Length);
+						this.CurrentPosition = GetNextPosN(cur_pos, "#define".Length);
 						return def_tag;
 					}
 					else if (SO_Common.IsConditionalComilationStart(line_str, out len))
 					{
 						// 条件编译
 						CodeTag ret_tag = new CodeTag(TagType.PrecompileSwitch, cur_pos, len);
-						this.m_CurrentPosition = GetNextPosN(cur_pos, len);
+						this.CurrentPosition = GetNextPosN(cur_pos, len);
 						return ret_tag;
 					}
 				}
 				else if (Char.IsLetter(ch) || ch.Equals('_'))
 				{
 					// 标识符
-					string line_str = this.m_LineInfoList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
 					int len = SO_Common.GetIdentifierStringLength(line_str, 0);
 					CodeTag ret_tag = new CodeTag(TagType.Identifier, cur_pos, len);
-					this.m_CurrentPosition = GetNextPosN(cur_pos, len);
+					this.CurrentPosition = GetNextPosN(cur_pos, len);
 					return ret_tag;
 				}
 				else if (ch.Equals('"') || ch.Equals('\''))
@@ -112,23 +112,23 @@ namespace SourceOutsight
 				else if (Char.IsDigit(ch))
 				{
 					// 数字
-					string line_str = this.m_LineInfoList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
 					int len = SO_Common.GetNumberStrLength(line_str, 0);
 					CodeTag ret_tag = new CodeTag(TagType.Number, cur_pos, len);
-					this.m_CurrentPosition = GetNextPosN(cur_pos, len);
+					this.CurrentPosition = GetNextPosN(cur_pos, len);
 					return ret_tag;
 				}
 				else if (Char.IsSymbol(ch))
 				{
 					// 运算符
 					CodeTag ret_tag = new CodeTag(TagType.Symbol, cur_pos, 1);
-					this.m_CurrentPosition = GetNextPos(cur_pos);
+					this.CurrentPosition = GetNextPos(cur_pos);
 					return ret_tag;
 				}
 				else if (Char.IsPunctuation(ch))
 				{
 					CodeTag ret_tag = new CodeTag(TagType.Punctuation, cur_pos, 1);
-					this.m_CurrentPosition = GetNextPos(cur_pos);
+					this.CurrentPosition = GetNextPos(cur_pos);
 					return ret_tag;
 				}
 				cur_pos = GetNextPos(cur_pos);
@@ -142,15 +142,15 @@ namespace SourceOutsight
 
 		CodePosition CommentProc(CodePosition cur_pos)
 		{
-			string line_str = this.m_LineInfoList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+			string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
 			if (line_str.StartsWith("//"))
 			{
 				// 行注释
 				int row = cur_pos.Row;
-				int end_col = this.m_LineInfoList[row].TextStr.Length - 1;
+				int end_col = this.CodeList[row].TextStr.Length - 1;
 				int len = end_col - cur_pos.Col + 1;
 				CodeTag comment_tag = new CodeTag(TagType.Comments, cur_pos, len);
-				this.m_LineInfoList[row].AddTag(comment_tag);
+				this.CodeList[row].AddTag(comment_tag);
 				cur_pos = GetNextPosN(cur_pos, len);
 			}
 			else if (line_str.StartsWith("/*"))
@@ -175,12 +175,12 @@ namespace SourceOutsight
 					}
 					else
 					{
-						end_col = this.m_LineInfoList[row].TextStr.Length - 1;
+						end_col = this.CodeList[row].TextStr.Length - 1;
 					}
 					CodePosition s_pos = new CodePosition(row, start_col);
 					int len = end_col - start_col + 1;
 					CodeTag comment_tag = new CodeTag(TagType.Comments, new CodePosition(row, start_col), len);
-					this.m_LineInfoList[row].AddTag(comment_tag);
+					this.CodeList[row].AddTag(comment_tag);
 				}
 				cur_pos = GetNextPosN(end_pos, 1);
 			}
@@ -189,48 +189,19 @@ namespace SourceOutsight
 
 		void DefineProc(CodeTag def_tag)
 		{
-			string line_str = this.m_LineInfoList[def_tag.Row].TextStr.Substring(def_tag.Offset);
-			List<CodeTag> tag_list = GetDefTagList(def_tag);
-			IDTreeNode macro_node = CreateMacroIDTreeNode(def_tag, tag_list);
+			string line_str = this.CodeList[def_tag.Row].TextStr.Substring(def_tag.Offset);
+			List<CodeTag> tag_list = GetLineTagList(def_tag.GetStartPosition());
+			IDTreeNode macro_node = MakeMacroIDTreeNode(tag_list);
 			// 添加宏名到标识符树形列表
 			this.IDTable.Add(macro_node);
 		}
-		List<CodeTag> GetDefTagList(CodeTag def_tag)
+		IDTreeNode MakeMacroIDTreeNode(List<CodeTag> tag_list)
 		{
-			List<CodeTag> ret_list = new List<CodeTag>();
-			int row = def_tag.Row;
-			while (true)
-			{
-				CodeTag tag = GetNextTag();
-				if (tag.Row != row)
-				{
-					if (GetTagTextStr(ret_list.Last()).Equals("\\"))
-					{
-						// 续行符
-						row = tag.Row;
-					}
-					else
-					{
-						// 回到#define行末尾
-						int last_row = ret_list.Last().Row;
-						int last_col = ret_list.Last().Offset + ret_list.Last().Len - 1;
-						CodePosition last_pos = new CodePosition(last_row, last_col);
-						this.m_CurrentPosition = GetNextPos(last_pos);
-						break;
-					}
-				}
-				else
-				{
-					ret_list.Add(tag);
-				}
-			}
-			return ret_list;
-		}
-		IDTreeNode CreateMacroIDTreeNode(CodeTag def_tag, List<CodeTag> tag_list)
-		{
-			Trace.Assert(0 != tag_list.Count && tag_list.First().Type == TagType.Identifier);
-			CodeTag macro_tag = tag_list.First();
-			string macro_name = GetTagTextStr(macro_tag);
+			Trace.Assert(tag_list.Count >= 2);
+			CodeTag def_tag = tag_list.First();
+			CodeTag macro_tag = tag_list[1];
+			Trace.Assert(macro_tag.Type == TagType.Identifier);
+			string macro_name = macro_tag.ToString(this.CodeList);
 			CodeScope scope = new CodeScope(def_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
 			IDNodeType type = IDNodeType.MacroDef;
 			// 判断是否为宏函数
@@ -238,14 +209,14 @@ namespace SourceOutsight
 			{
 				type = IDNodeType.MacroFunc;
 			}
-			IDTreeNode ret_node = new IDTreeNode(macro_name, null, new CodePosition(macro_tag.Row, macro_tag.Offset), scope, type);
+			IDTreeNode ret_node = new IDTreeNode(macro_name, null, macro_tag.GetStartPosition(), scope, type);
 			return ret_node;
 		}
 		bool IsMacroFunction(List<CodeTag> tag_list)
 		{
-			if (tag_list.Count > 2
-				&& GetTagTextStr(tag_list[1]).Equals("(")
-				&& tag_list[1].Offset == tag_list[0].GetEndPosition().Col + 1)
+			if (tag_list.Count > 3
+				&& tag_list[2].ToString(this.CodeList).Equals("(")
+				&& tag_list[2].CloseTo(tag_list[1]))
 			{
 				return true;
 			}
@@ -257,23 +228,40 @@ namespace SourceOutsight
 
 		void IncludeProc(CodeTag include_tag)
 		{
-
+			string line_str = this.CodeList[include_tag.Row].TextStr.Substring(include_tag.Offset);
+			List<CodeTag> tag_list = GetLineTagList(include_tag.GetStartPosition());
 		}
 
 		void PrecompileSwitchProc(CodeTag precompileswitch_tag)
 		{
-
+			string line_str = this.CodeList[precompileswitch_tag.Row].TextStr.Substring(precompileswitch_tag.Offset);
+			List<CodeTag> tag_list = GetLineTagList(precompileswitch_tag.GetStartPosition());
+		}
+		IDTreeNode MakePrecompileSwitchIDTreeNode(List<CodeTag> tag_list)
+		{
+			Trace.Assert(tag_list.Count > 0);
+			CodeTag switch_tag = tag_list.First();
+			string expression_str = null;
+			if (tag_list.Count > 1)
+			{
+				tag_list.RemoveAt(0);
+				expression_str = TagListStrCat(tag_list);
+			}
+			CodeScope scope = new CodeScope(switch_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
+			IDNodeType type = IDNodeType.PrecompileSwitch;
+			IDTreeNode ret_node = new IDTreeNode(switch_tag.ToString(this.CodeList), expression_str, switch_tag.GetStartPosition(), scope, type);
+			return ret_node;
 		}
 
 		CodePosition GetNextPos(CodePosition cur_pos)
 		{
 			if (null == cur_pos
-				|| cur_pos.Row >= this.m_LineInfoList.Count
-				|| cur_pos.Col >= this.m_LineInfoList[cur_pos.Row].TextStr.Length)
+				|| cur_pos.Row >= this.CodeList.Count
+				|| cur_pos.Col >= this.CodeList[cur_pos.Row].TextStr.Length)
 			{
 				return null;
 			}
-			if (cur_pos.Col < this.m_LineInfoList[cur_pos.Row].TextStr.Length - 1)
+			if (cur_pos.Col < this.CodeList[cur_pos.Row].TextStr.Length - 1)
 			{
 				// 非最后一列, 返回同行下一列的位置
 				return new CodePosition(cur_pos.Row, cur_pos.Col + 1);
@@ -282,9 +270,9 @@ namespace SourceOutsight
 			{
 				// 最后一列, 返回下一非空行的开头
 				int row = cur_pos.Row + 1;
-				while (row < this.m_LineInfoList.Count)
+				while (row < this.CodeList.Count)
 				{
-					if (0 != this.m_LineInfoList[row].TextStr.Length)
+					if (0 != this.CodeList[row].TextStr.Length)
 					{
 						return new CodePosition(row, 0);
 					}
@@ -314,7 +302,7 @@ namespace SourceOutsight
 				{
 					break;
 				}
-				if (this.m_LineInfoList[cur_pos.Row].TextStr.Substring(cur_pos.Col).StartsWith(find_str))
+				if (this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col).StartsWith(find_str))
 				{
 					return cur_pos;
 				}
@@ -322,17 +310,64 @@ namespace SourceOutsight
 			}
 			return null;
 		}
-		string GetTagTextStr(CodeTag tag)
+		/// <summary>
+		/// 取得一行内的tag_list
+		/// </summary>
+		List<CodeTag> GetLineTagList(CodePosition start_position)
 		{
-			if (tag.Row < this.m_LineInfoList.Count)
+			List<CodeTag> ret_list = new List<CodeTag>();
+			int row = start_position.Row;
+			this.CurrentPosition = start_position;
+			while (true)
 			{
-				string line_str = this.m_LineInfoList[tag.Row].TextStr;
-				if (tag.Offset + tag.Len <= line_str.Length)
+				CodeTag tag = GetNextTag();
+				if (tag.Row != row)
 				{
-					return line_str.Substring(tag.Offset, tag.Len);
+					if (ret_list.Last().ToString(this.CodeList).Equals("\\"))
+					{
+						// 续行符
+						row = tag.Row;
+					}
+					else
+					{
+						// 回到行末尾
+						int last_row = ret_list.Last().Row;
+						int last_col = ret_list.Last().Offset + ret_list.Last().Len - 1;
+						CodePosition last_pos = new CodePosition(last_row, last_col);
+						this.CurrentPosition = GetNextPos(last_pos);
+						break;
+					}
+				}
+				else
+				{
+					ret_list.Add(tag);
 				}
 			}
-			return null;
+			return ret_list;
+		}
+		/// <summary>
+		/// 把一个tag_list拼接成一个字符串
+		/// </summary>
+		string TagListStrCat(List<CodeTag> tag_list)
+		{
+			string ret_str = string.Empty;
+			for (int i = 0; i < tag_list.Count; i++)
+			{
+				ret_str += tag_list[i].ToString(this.CodeList);
+				if (i != tag_list.Count - 1)
+				{
+					if (tag_list[i].CloseTo(tag_list[i + 1]))
+					{
+						// 如果跟下一个tag紧邻,就直接连接
+					}
+					else
+					{
+						// 否则就加入一个空格
+						ret_str += " ";
+					}
+				}
+			}
+			return ret_str;
 		}
 	}
 
@@ -400,6 +435,39 @@ namespace SourceOutsight
 		public CodePosition GetEndPosition()
 		{
 			return new CodePosition(this.Row, this.Offset + this.Len - 1);
+		}
+		public string ToString(List<SO_CodeLineInfo> code_line_list)
+		{
+			Trace.Assert(null != code_line_list);
+			if (this.Row < code_line_list.Count)
+			{
+				string line_str = code_line_list[this.Row].TextStr;
+				if (this.Offset + this.Len <= line_str.Length)
+				{
+					return line_str.Substring(this.Offset, this.Len);
+				}
+			}
+			return null;
+		}
+		/// <summary>
+		/// 判断两个tag是否紧邻
+		/// </summary>
+		public bool CloseTo(CodeTag another_tag)
+		{
+			if (this.Row == another_tag.Row)
+			{
+				if (this.Offset < another_tag.Offset
+					&& this.Offset + this.Len == another_tag.Offset)
+				{
+					return true;
+				}
+				else if (this.Offset > another_tag.Offset
+					&& another_tag.Offset + another_tag.Len == this.Offset)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 

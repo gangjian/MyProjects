@@ -115,7 +115,11 @@ namespace SourceOutsight
 
 		public IDTreeNode(string id_str, string exp_str, CodePosition pos, CodeScope scope, IDNodeType type)
 		{
-
+			this.IDStr = id_str;
+			this.ExpressionStr = exp_str;
+			this.Position = pos;
+			this.AffectScope = scope;
+			this.Type = type;
 		}
 
 		public bool IsPrecompileSwitchNode()
