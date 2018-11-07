@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace SourceOutsight
 {
-	class IDTreeTable
+	public class IDTreeTable
 	{
 		List<IDTreeNode> IDTreeList = new List<IDTreeNode>();
 		IDTreeNode CurrentBranchNode = null;
@@ -49,18 +49,32 @@ namespace SourceOutsight
 				}
 			}
 			else if (add_node.IDStr.Equals("#elif")
-					 || add_node.IDStr.Equals("else"))
+					 || add_node.IDStr.Equals("#else"))
 			{
-				Trace.Assert(null != this.CurrentBranchNode && null != this.CurrentBranchNode.ParentRef);
+				Trace.Assert(null != this.CurrentBranchNode);
 				add_node.ParentRef = this.CurrentBranchNode.ParentRef;
-				this.CurrentBranchNode.ParentRef.ChildList.Add(add_node);
+				if (null != this.CurrentBranchNode.ParentRef)
+				{
+					this.CurrentBranchNode.ParentRef.ChildList.Add(add_node);
+				}
+				else
+				{
+					this.IDTreeList.Add(add_node);
+				}
 				this.CurrentBranchNode = add_node;
 			}
-			else if (add_node.IDStr.Equals("endif"))
+			else if (add_node.IDStr.Equals("#endif"))
 			{
-				Trace.Assert(null != this.CurrentBranchNode && null != this.CurrentBranchNode.ParentRef);
+				Trace.Assert(null != this.CurrentBranchNode);
 				add_node.ParentRef = this.CurrentBranchNode.ParentRef;
-				this.CurrentBranchNode.ParentRef.ChildList.Add(add_node);
+				if (null != this.CurrentBranchNode.ParentRef)
+				{
+					this.CurrentBranchNode.ParentRef.ChildList.Add(add_node);
+				}
+				else
+				{
+					this.IDTreeList.Add(add_node);
+				}
 				this.CurrentBranchNode = add_node.ParentRef;
 			}
 			else
@@ -102,7 +116,7 @@ namespace SourceOutsight
 		}
 	}
 
-	class IDTreeNode
+	public class IDTreeNode
 	{
 		public string IDStr = null;
 		public string ExpressionStr = null;
@@ -244,7 +258,7 @@ namespace SourceOutsight
 		}
 	}
 
-	enum IDNodeType
+	public enum IDNodeType
 	{
 		Unknown,
 		PrecompileSwitch,
