@@ -152,11 +152,13 @@ namespace SourceOutsight
 			if (this.Type == IDNodeType.IncludeHeader
 				|| this.Type == IDNodeType.MacroDef
 				|| this.Type == IDNodeType.MacroFunc
+				|| this.Type == IDNodeType.Undef
 				|| this.Type == IDNodeType.GlobalDef
 				|| this.Type == IDNodeType.GlobalExtern
 				|| this.Type == IDNodeType.FuncDef
 				|| this.Type == IDNodeType.FuncExtern
-				|| this.Type == IDNodeType.Typedef)
+				|| this.Type == IDNodeType.Typedef
+				|| this.Type == IDNodeType.PrecompileCommand)
 			{
 				return true;
 			}
@@ -241,6 +243,10 @@ namespace SourceOutsight
 				case IDNodeType.FuncDef:
 					icon_str = "<F_D>";
 					break;
+				case IDNodeType.Undef:
+				case IDNodeType.PrecompileCommand:
+					icon_str = "<#_y>";
+					break;
 				default:
 					Trace.Assert(false);
 					break;
@@ -262,9 +268,11 @@ namespace SourceOutsight
 	{
 		Unknown,
 		PrecompileSwitch,
+		PrecompileCommand,
 		IncludeHeader,
 		MacroDef,
 		MacroFunc,
+		Undef,
 		StructType,
 		UnionType,
 		MemberVar,

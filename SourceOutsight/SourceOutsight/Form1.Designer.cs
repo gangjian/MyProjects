@@ -52,6 +52,7 @@
 			this.tbxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
 			this.tbxLog.Size = new System.Drawing.Size(408, 402);
 			this.tbxLog.TabIndex = 1;
+			this.tbxLog.WordWrap = false;
 			// 
 			// btnOpen
 			// 

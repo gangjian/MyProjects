@@ -44,6 +44,14 @@ namespace SourceOutsight
 				{
 					DefineProc(tag);
 				}
+				else if (tag.Type.Equals(TagType.Undefine))
+				{
+					UndefProc(tag);
+				}
+				else if (tag.Type.Equals(TagType.PrecompileCommand))
+				{
+					PrecompileCommandProc(tag);
+				}
 				else if (tag.Type.Equals(TagType.Include))
 				{
 					IncludeProc(tag);
@@ -104,10 +112,8 @@ namespace SourceOutsight
 
 		void DefineProc(CodeTag def_tag)
 		{
-			string line_str = this.CodeList[def_tag.Row].TextStr.Substring(def_tag.Offset);
 			List<CodeTag> tag_list = GetLineTagList(def_tag.GetStartPosition());
 			IDTreeNode macro_node = MakeMacroIDTreeNode(tag_list);
-			// 添加宏名到标识符树形列表
 			this.IDTable.Add(macro_node);
 		}
 		IDTreeNode MakeMacroIDTreeNode(List<CodeTag> tag_list)
@@ -140,10 +146,27 @@ namespace SourceOutsight
 				return false;
 			}
 		}
+		void UndefProc(CodeTag undef_tag)
+		{
+			List<CodeTag> tag_list = GetLineTagList(undef_tag.GetStartPosition());
+			IDTreeNode macro_node = MakeUndefIDTreeNode(tag_list);
+			this.IDTable.Add(macro_node);
+		}
+		IDTreeNode MakeUndefIDTreeNode(List<CodeTag> tag_list)
+		{
+			Trace.Assert(tag_list.Count == 2);
+			CodeTag undef_tag = tag_list.First();
+			CodeTag macro_tag = tag_list[1];
+			Trace.Assert(macro_tag.Type == TagType.Identifier);
+			string macro_name = macro_tag.ToString(this.CodeList);
+			CodeScope scope = new CodeScope(undef_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
+			IDNodeType type = IDNodeType.Undef;
+			IDTreeNode ret_node = new IDTreeNode(undef_tag.ToString(this.CodeList), macro_name, macro_tag.GetStartPosition(), scope, type);
+			return ret_node;
+		}
 
 		void IncludeProc(CodeTag include_tag)
 		{
-			string line_str = this.CodeList[include_tag.Row].TextStr.Substring(include_tag.Offset);
 			List<CodeTag> tag_list = GetLineTagList(include_tag.GetStartPosition());
 			IDTreeNode include_node = MakeIncludeIDTreeNode(tag_list);
 			this.IDTable.Add(include_node);
@@ -164,7 +187,6 @@ namespace SourceOutsight
 
 		void PrecompileSwitchProc(CodeTag precompileswitch_tag)
 		{
-			string line_str = this.CodeList[precompileswitch_tag.Row].TextStr.Substring(precompileswitch_tag.Offset);
 			List<CodeTag> tag_list = GetLineTagList(precompileswitch_tag.GetStartPosition());
 			IDTreeNode precompileswitch_node = MakePrecompileSwitchIDTreeNode(tag_list);
 			this.IDTable.Add(precompileswitch_node);
@@ -185,6 +207,11 @@ namespace SourceOutsight
 			return ret_node;
 		}
 
+		void PrecompileCommandProc(CodeTag precompilecommand_tag)
+		{
+
+		}
+
 		CodeTag GetNextTag()
 		{
 			CodePosition cur_pos = new CodePosition(this.CurrentPosition);
@@ -202,42 +229,7 @@ namespace SourceOutsight
 				}
 				else if (ch.Equals('#'))
 				{
-					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
-					int len = SO_Common.GetIdentifierStringLength(line_str, 1);
-					string tag_str = line_str.Substring(0, len + 1);
-					if (tag_str.Equals("#include"))
-					{
-						// 头文件包含
-						CodeTag inc_tag = new CodeTag(TagType.Include, cur_pos, "#include".Length);
-						this.CurrentPosition = GetNextPosN(cur_pos, "#include".Length);
-						return inc_tag;
-					}
-					else if (tag_str.Equals("#define"))
-					{
-						// 宏定义
-						CodeTag def_tag = new CodeTag(TagType.Define, cur_pos, "#define".Length);
-						this.CurrentPosition = GetNextPosN(cur_pos, "#define".Length);
-						return def_tag;
-					}
-					else if (SO_Common.IsConditionalComilationStart(tag_str))
-					{
-						// 条件编译
-						CodeTag ret_tag = new CodeTag(TagType.PrecompileSwitch, cur_pos, tag_str.Length);
-						this.CurrentPosition = GetNextPosN(cur_pos, tag_str.Length);
-						return ret_tag;
-					}
-					else if (tag_str.Equals("#error"))
-					{
-						
-					}
-					else if (tag_str.Equals("#undef"))
-					{
-
-					}
-					else
-					{
-						Trace.Assert(false);
-					}
+					return GetPrecompileTag(cur_pos);
 				}
 				else if (Char.IsLetter(ch) || ch.Equals('_'))
 				{
@@ -281,6 +273,45 @@ namespace SourceOutsight
 				}
 			}
 			return null;
+		}
+		CodeTag GetPrecompileTag(CodePosition cur_pos)
+		{
+			string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+			int len = SO_Common.GetIdentifierStringLength(line_str, 1);
+			string tag_str = line_str.Substring(0, len + 1);
+			TagType tag_type = TagType.Unknown;
+			if (tag_str.Equals("#include"))
+			{
+				// 头文件包含
+				tag_type = TagType.Include;
+			}
+			else if (tag_str.Equals("#define"))
+			{
+				// 宏定义
+				tag_type = TagType.Define;
+			}
+			else if (tag_str.Equals("#undef"))
+			{
+				tag_type = TagType.Undefine;
+			}
+			else if (SO_Common.IsConditionalComilationStart(tag_str))
+			{
+				// 条件编译
+				tag_type = TagType.PrecompileSwitch;
+			}
+			else if (tag_str.Equals("#error")
+					 || tag_str.Equals("#warning")
+					 || tag_str.Equals("#line"))
+			{
+				tag_type = TagType.PrecompileCommand;
+			}
+			else
+			{
+				Trace.Assert(false);
+			}
+			CodeTag ret_tag = new CodeTag(tag_type, cur_pos, tag_str.Length);
+			this.CurrentPosition = GetNextPosN(cur_pos, tag_str.Length);
+			return ret_tag;
 		}
 		CodePosition GetNextPos(CodePosition cur_pos)
 		{
@@ -510,8 +541,10 @@ namespace SourceOutsight
 		Identifier,
 		Comments,
 		Define,
+		Undefine,
 		Include,
 		PrecompileSwitch,
+		PrecompileCommand,
 		ReservedWord,
 		HeaderName,
 		Macro,
