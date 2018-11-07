@@ -209,11 +209,32 @@ namespace SourceOutsight
 
 		void PrecompileCommandProc(CodeTag precompilecommand_tag)
 		{
-
+			List<CodeTag> tag_list = GetLineTagList(precompilecommand_tag.GetStartPosition());
+			IDTreeNode precompilecommand_node = MakePrecompileCommandIDTreeNode(tag_list);
+			this.IDTable.Add(precompilecommand_node);
+		}
+		IDTreeNode MakePrecompileCommandIDTreeNode(List<CodeTag> tag_list)
+		{
+			Trace.Assert(tag_list.Count > 0);
+			CodeTag command_tag = tag_list.First();
+			string expression_str = null;
+			if (tag_list.Count > 1)
+			{
+				tag_list.RemoveAt(0);
+				expression_str = TagListStrCat(tag_list);
+			}
+			CodeScope scope = new CodeScope(command_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
+			IDNodeType type = IDNodeType.PrecompileCommand;
+			IDTreeNode ret_node = new IDTreeNode(command_tag.ToString(this.CodeList), expression_str, command_tag.GetStartPosition(), scope, type);
+			return ret_node;
 		}
 
 		CodeTag GetNextTag()
 		{
+			if (null == this.CurrentPosition)
+			{
+				return null;
+			}
 			CodePosition cur_pos = new CodePosition(this.CurrentPosition);
 			while (true)
 			{
@@ -240,9 +261,28 @@ namespace SourceOutsight
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
 					return ret_tag;
 				}
-				else if (ch.Equals('"') || ch.Equals('\''))
+				else if (ch.Equals('"'))
 				{
-					// 字符串,字符
+					// 字符串
+					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					int idx = line_str.IndexOf('"');
+					Trace.Assert(-1 != idx);
+					int len = idx + 1;
+					CodeTag ret_tag = new CodeTag(TagType.String, cur_pos, len);
+					this.CurrentPosition = GetNextPosN(cur_pos, len);
+					return ret_tag;
+				}
+				else if (ch.Equals('\''))
+				{
+					// 字符
+					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					int idx = line_str.IndexOf('\'');
+					Trace.Assert(-1 != idx);
+					int len = idx + 1;
+					Trace.Assert(3 == len);
+					CodeTag ret_tag = new CodeTag(TagType.Char, cur_pos, len);
+					this.CurrentPosition = GetNextPosN(cur_pos, len);
+					return ret_tag;
 				}
 				else if (Char.IsDigit(ch))
 				{
