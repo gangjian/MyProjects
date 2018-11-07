@@ -31,10 +31,6 @@ namespace SourceOutsight
 			this.CurrentPosition = new CodePosition(0, 0);
 			while (true)
 			{
-				if (null == this.CurrentPosition)
-				{
-					break;
-				}
 				CodeTag tag = GetNextTag();
 				if (null == tag)
 				{
