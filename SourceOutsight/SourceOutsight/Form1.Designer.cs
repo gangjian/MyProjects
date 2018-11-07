@@ -39,7 +39,7 @@
 			this.tbxPath.Location = new System.Drawing.Point(12, 12);
 			this.tbxPath.Name = "tbxPath";
 			this.tbxPath.ReadOnly = true;
-			this.tbxPath.Size = new System.Drawing.Size(408, 22);
+			this.tbxPath.Size = new System.Drawing.Size(755, 22);
 			this.tbxPath.TabIndex = 0;
 			this.tbxPath.TabStop = false;
 			// 
@@ -50,13 +50,13 @@
 			this.tbxLog.Name = "tbxLog";
 			this.tbxLog.ReadOnly = true;
 			this.tbxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.tbxLog.Size = new System.Drawing.Size(408, 402);
+			this.tbxLog.Size = new System.Drawing.Size(755, 596);
 			this.tbxLog.TabIndex = 1;
 			this.tbxLog.WordWrap = false;
 			// 
 			// btnOpen
 			// 
-			this.btnOpen.Location = new System.Drawing.Point(426, 11);
+			this.btnOpen.Location = new System.Drawing.Point(773, 11);
 			this.btnOpen.Name = "btnOpen";
 			this.btnOpen.Size = new System.Drawing.Size(75, 23);
 			this.btnOpen.TabIndex = 2;
@@ -65,7 +65,7 @@
 			// 
 			// btnStart
 			// 
-			this.btnStart.Location = new System.Drawing.Point(426, 40);
+			this.btnStart.Location = new System.Drawing.Point(773, 40);
 			this.btnStart.Name = "btnStart";
 			this.btnStart.Size = new System.Drawing.Size(75, 37);
 			this.btnStart.TabIndex = 2;
@@ -77,7 +77,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(510, 454);
+			this.ClientSize = new System.Drawing.Size(860, 648);
 			this.Controls.Add(this.btnStart);
 			this.Controls.Add(this.btnOpen);
 			this.Controls.Add(this.tbxLog);
