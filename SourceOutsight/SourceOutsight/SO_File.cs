@@ -36,26 +36,30 @@ namespace SourceOutsight
 				{
 					break;
 				}
-				else if (tag.Type.Equals(TagType.Define))
-				{
-					DefineProc(tag);
-				}
-				else if (tag.Type.Equals(TagType.Undefine))
-				{
-					UndefProc(tag);
-				}
-				else if (tag.Type.Equals(TagType.PrecompileCommand))
-				{
-					PrecompileCommandProc(tag);
-				}
-				else if (tag.Type.Equals(TagType.Include))
-				{
-					IncludeProc(tag);
-				}
-				else if (tag.Type.Equals(TagType.PrecompileSwitch))
-				{
-					PrecompileSwitchProc(tag);
-				}
+				CodeTagProc(tag);
+			}
+		}
+		void CodeTagProc(CodeTag tag)
+		{
+			if (tag.Type.Equals(TagType.Define))
+			{
+				DefineProc(tag);
+			}
+			else if (tag.Type.Equals(TagType.Undefine))
+			{
+				UndefProc(tag);
+			}
+			else if (tag.Type.Equals(TagType.PrecompileCommand))
+			{
+				PrecompileCommandProc(tag);
+			}
+			else if (tag.Type.Equals(TagType.Include))
+			{
+				IncludeProc(tag);
+			}
+			else if (tag.Type.Equals(TagType.PrecompileSwitch))
+			{
+				PrecompileSwitchProc(tag);
 			}
 		}
 
