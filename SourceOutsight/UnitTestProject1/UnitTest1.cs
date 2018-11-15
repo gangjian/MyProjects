@@ -10,7 +10,7 @@ namespace UnitTestProject1
 		[TestMethod]
 		public void TestMethod1()
 		{
-			string prj_dir = "C:\\Users\\GangJian\\03_work\\github\\MyProjects\\Mr.Robot\\TestSrc\\swc_in_oilp";
+			string prj_dir = "C:\\Users\\GangJian\\03_work\\99_Data\\MTbot_TestData\\Honda18HMI_soft\\software\\src\\AnlysSprtTask";
 			SO_Project so_prj = new SO_Project(prj_dir);
 		}
 	}

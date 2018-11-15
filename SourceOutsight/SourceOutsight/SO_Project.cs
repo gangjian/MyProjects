@@ -22,6 +22,14 @@ namespace SourceOutsight
 			Init(prj_dir);
 			DoParse();
 		}
+		public List<SO_File> GetSourceInfoList()
+		{
+			return this.SourceInfoList;
+		}
+		public List<SO_File> GetHeaderInfoList()
+		{
+			return this.HeaderInfoList;
+		}
 		public SO_File GetFileInfo(string path)
 		{
 			foreach (var item in this.SourceInfoList)
@@ -40,7 +48,6 @@ namespace SourceOutsight
 			}
 			return null;
 		}
-
 		void Init(string prj_dir)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(prj_dir) && Directory.Exists(prj_dir));
