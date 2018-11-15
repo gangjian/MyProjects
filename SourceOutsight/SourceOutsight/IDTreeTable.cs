@@ -77,6 +77,10 @@ namespace SourceOutsight
 				}
 				this.CurrentBranchNode = add_node.ParentRef;
 			}
+			else if (add_node.IDStr.Equals("#pragma"))
+			{
+				AddNormalNode(add_node);
+			}
 			else
 			{
 				Trace.Assert(false);
@@ -120,7 +124,7 @@ namespace SourceOutsight
 	{
 		public string IDStr = null;
 		public string ExpressionStr = null;
-		public CodePosition Position = null;
+		public CodePosition Position = null;											// 标识符的开始位置
 		public CodeScope AffectScope = null;											// 作用域
 		public IDNodeType Type = IDNodeType.Unknown;
 

@@ -16,7 +16,8 @@ namespace SourceOutsight
 		public Form1()
 		{
 			InitializeComponent();
-			this.tbxPath.Text = "C:\\Users\\GangJian\\03_work\\99_Data\\MTbot_TestData\\Honda18HMI_soft";
+			this.tbxPath.Text = "C:\\Users\\GangJian\\03_work\\github\\MyProjects\\Mr.Robot\\TestSrc\\swc_in_oilp";
+			//this.tbxPath.Text = "C:\\Users\\GangJian\\03_work\\99_Data\\MTbot_TestData\\Honda18HMI_soft";
 		}
 
 		private void btnStart_Click(object sender, EventArgs e)

@@ -28,7 +28,7 @@ namespace SourceOutsight
 		CodePosition CurrentPosition = new CodePosition(0, 0);
 		void DoParse()
 		{
-			this.CurrentPosition = new CodePosition(0, 0);
+			this.CurrentPosition = GetFileStartPosition();
 			while (true)
 			{
 				CodeTag tag = GetNextTag();
@@ -36,8 +36,24 @@ namespace SourceOutsight
 				{
 					break;
 				}
+				//if (this.FullName.EndsWith("AmigoSscCd_ConvEvent.c")
+				//	&& tag.Row > 224)
+				//{
+				//	Trace.WriteLine("WTF");
+				//}
 				CodeTagProc(tag);
 			}
+		}
+		CodePosition GetFileStartPosition()
+		{
+			for (int i = 0; i < this.CodeList.Count; i++)
+			{
+				if (!string.IsNullOrEmpty(this.CodeList[i].TextStr))
+				{
+					return new CodePosition(i, 0);
+				} 
+			}
+			return null;
 		}
 		void CodeTagProc(CodeTag tag)
 		{
@@ -74,7 +90,7 @@ namespace SourceOutsight
 				int len = end_col - cur_pos.Col + 1;
 				CodeTag comment_tag = new CodeTag(TagType.Comments, cur_pos, len);
 				this.CodeList[row].AddTag(comment_tag);
-				cur_pos = GetNextPosN(cur_pos, len);
+				cur_pos = GetNextPosN(cur_pos, len - 1);
 			}
 			else if (line_str.StartsWith("/*"))
 			{
@@ -203,7 +219,10 @@ namespace SourceOutsight
 			}
 			CodeScope scope = new CodeScope(switch_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
 			IDNodeType type = IDNodeType.PrecompileSwitch;
-			IDTreeNode ret_node = new IDTreeNode(switch_tag.ToString(this.CodeList), expression_str, switch_tag.GetStartPosition(), scope, type);
+			string id_str = switch_tag.ToString(this.CodeList);
+			Trace.Assert(id_str.StartsWith("#"));
+			id_str = "#" + id_str.Substring(1).Trim();	// 这样做是为了防止'#'后面有空格,比如"# if"
+			IDTreeNode ret_node = new IDTreeNode(id_str, expression_str, switch_tag.GetStartPosition(), scope, type);
 			return ret_node;
 		}
 
@@ -250,7 +269,11 @@ namespace SourceOutsight
 				}
 				else if (ch.Equals('#'))
 				{
-					return GetPrecompileTag(cur_pos);
+					CodeTag ret_tag = GetPrecompileTag(cur_pos);
+					if (null != ret_tag)
+					{
+						return ret_tag;
+					}
 				}
 				else if (Char.IsLetter(ch) || ch.Equals('_'))
 				{
@@ -276,10 +299,10 @@ namespace SourceOutsight
 				{
 					// 字符
 					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
-					int idx = line_str.IndexOf('\'');
+					int idx = line_str.IndexOf('\'', 1);
 					Trace.Assert(-1 != idx);
 					int len = idx + 1;
-					Trace.Assert(3 == len);
+					//Trace.Assert(3 == len);	// 可能会有像'\n'这样转义字符的情况
 					CodeTag ret_tag = new CodeTag(TagType.Char, cur_pos, len);
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
 					return ret_tag;
@@ -316,9 +339,11 @@ namespace SourceOutsight
 		}
 		CodeTag GetPrecompileTag(CodePosition cur_pos)
 		{
-			string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
-			int len = SO_Common.GetIdentifierStringLength(line_str, 1);
-			string tag_str = line_str.Substring(0, len + 1);
+			string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1).Trim();
+			int keyword_len = SO_Common.GetIdentifierStringLength(line_str, 0);
+			string keyword = line_str.Substring(0, keyword_len);
+			string tag_str = "#" + keyword;
+			int keyword_idx = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1).IndexOf(keyword);
 			TagType tag_type = TagType.Unknown;
 			if (tag_str.Equals("#include"))
 			{
@@ -347,10 +372,13 @@ namespace SourceOutsight
 			}
 			else
 			{
-				Trace.Assert(false);
+				//Trace.Assert(false);
+				// 函数体内嵌汇编代码中可能有'#',因为暂时还没对应函数体处理,所以暂时忽略
+				return null;
 			}
-			CodeTag ret_tag = new CodeTag(tag_type, cur_pos, tag_str.Length);
-			this.CurrentPosition = GetNextPosN(cur_pos, tag_str.Length);
+			int len = keyword_idx + keyword_len + 1;
+			CodeTag ret_tag = new CodeTag(tag_type, cur_pos, len);
+			this.CurrentPosition = GetNextPosN(cur_pos, len);
 			return ret_tag;
 		}
 		CodePosition GetNextPos(CodePosition cur_pos)
