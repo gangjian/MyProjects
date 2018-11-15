@@ -189,10 +189,9 @@ namespace SourceOutsight
 		}
 		IDTreeNode MakeIncludeIDTreeNode(List<CodeTag> tag_list)
 		{
-			Trace.Assert(tag_list.Count > 3);
 			CodeTag include_tag = tag_list.First();
-			string left_quote = tag_list[1].ToString(this.CodeList);
-			string right_quote = tag_list.Last().ToString(this.CodeList);
+			//string left_quote = tag_list[1].ToString(this.CodeList);
+			//string right_quote = tag_list.Last().ToString(this.CodeList);
 			tag_list.RemoveAt(0);
 			string header_name_str = TagListStrCat(tag_list);
 			CodeScope scope = new CodeScope(include_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
@@ -287,10 +286,10 @@ namespace SourceOutsight
 				else if (ch.Equals('"'))
 				{
 					// 字符串
-					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
-					int idx = line_str.IndexOf('"');
+					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1);
+					int idx = GetNextQuoteIndex('"', line_str);
 					Trace.Assert(-1 != idx);
-					int len = idx + 1;
+					int len = idx + 2;
 					CodeTag ret_tag = new CodeTag(TagType.String, cur_pos, len);
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
 					return ret_tag;
@@ -298,10 +297,10 @@ namespace SourceOutsight
 				else if (ch.Equals('\''))
 				{
 					// 字符
-					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
-					int idx = line_str.IndexOf('\'', 1);
+					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1);
+					int idx = GetNextQuoteIndex('\'', line_str);
 					Trace.Assert(-1 != idx);
-					int len = idx + 1;
+					int len = idx + 2;
 					//Trace.Assert(3 == len);	// 可能会有像'\n'这样转义字符的情况
 					CodeTag ret_tag = new CodeTag(TagType.Char, cur_pos, len);
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
@@ -336,6 +335,38 @@ namespace SourceOutsight
 				}
 			}
 			return null;
+		}
+		int GetNextQuoteIndex(char left_quote, string line_str)
+		{
+			char right_quote = '\'';
+			if (left_quote.Equals('\''))
+			{
+				right_quote = '\'';
+			}
+			else if (left_quote.Equals('\"'))
+			{
+				right_quote = '\"';
+			}
+			else
+			{
+				Trace.Assert(false);
+			}
+			for (int i = 0; i < line_str.Length; i++)
+			{
+				if (line_str[i].Equals(right_quote))
+				{
+					if (0 != i && line_str[i - 1].Equals('\\'))
+					{
+						// 例如'\'', "\"": 如果前面一个字符是反斜线时表示是转义字符,不是右引号
+						continue;
+					}
+					else
+					{
+						return i;
+					}
+				}
+			}
+			return -1;
 		}
 		CodeTag GetPrecompileTag(CodePosition cur_pos)
 		{

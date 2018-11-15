@@ -56,10 +56,13 @@ namespace SourceOutsight
 		}
 		void DoParse()
 		{
+			int cnt = 0;
 			foreach (var src_path in this.SourcePathList)
 			{
 				SO_File src_info = new SO_File(src_path);
 				this.SourceInfoList.Add(src_info);
+				cnt++;
+				Trace.WriteLine(src_path + " - " + cnt.ToString() + "/" + this.SourcePathList.Count.ToString());
 			}
 			foreach (var hd_path in this.HeaderPathList)
 			{
@@ -67,6 +70,7 @@ namespace SourceOutsight
 				{
 					SO_File hd_info = new SO_File(hd_path);
 					this.HeaderInfoList.Add(hd_info);
+					Trace.WriteLine(hd_path);
 				}
 			}
 		}
