@@ -56,34 +56,32 @@ namespace SourceOutsight
 		}
 		void DoParse()
 		{
+			int total = this.SourcePathList.Count + this.HeaderPathList.Count;
 			int cnt = 0;
+			Stopwatch sw = new Stopwatch();
 			foreach (var src_path in this.SourcePathList)
 			{
+				sw.Restart();
 				SO_File src_info = new SO_File(src_path);
-				this.SourceInfoList.Add(src_info);
+				//this.SourceInfoList.Add(src_info);
 				cnt++;
-				Trace.WriteLine(src_path + " - " + cnt.ToString() + "/" + this.SourcePathList.Count.ToString());
+				sw.Stop();
+				LogOut(src_path, cnt, total, sw.Elapsed);
 			}
 			foreach (var hd_path in this.HeaderPathList)
 			{
-				if (!HeaderInfoExists(hd_path))
-				{
-					SO_File hd_info = new SO_File(hd_path);
-					this.HeaderInfoList.Add(hd_info);
-					Trace.WriteLine(hd_path);
-				}
+				sw.Restart();
+				SO_File hd_info = new SO_File(hd_path);
+				//this.HeaderInfoList.Add(hd_info);
+				cnt++;
+				sw.Stop();
+				LogOut(hd_path, cnt, total, sw.Elapsed);
 			}
 		}
-		bool HeaderInfoExists(string path)
+		void LogOut(string path, int count, int total, TimeSpan time)
 		{
-			foreach (var item in this.HeaderInfoList)
-			{
-				if (item.FullName.Equals(path))
-				{
-					return true;
-				}
-			}
-			return false;
+			string log = string.Format("{1}/{2} : {3}ms : {0}", path, count, total, time.TotalMilliseconds);
+			Trace.WriteLine(log);
 		}
 	}
 }

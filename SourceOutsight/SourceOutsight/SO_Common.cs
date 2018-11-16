@@ -58,33 +58,33 @@ namespace SourceOutsight
 			return ret_len;
 		}
 
-		public static bool IsConditionalComilationStart(string tag_str)
+		public static bool IsConditionalComilationStart(string element_str)
 		{
-			if (string.IsNullOrEmpty(tag_str)
-				|| !tag_str.StartsWith("#"))
+			if (string.IsNullOrEmpty(element_str)
+				|| !element_str.StartsWith("#"))
 			{
 				return false;
 			}
 			// 注意还有"defined"
-			if (tag_str.Equals("#if"))
+			if (element_str.Equals("#if"))
 			{
 			}
-			else if (tag_str.Equals("#ifdef"))
+			else if (element_str.Equals("#ifdef"))
 			{
 			}
-			else if (tag_str.Equals("#ifndef"))
+			else if (element_str.Equals("#ifndef"))
 			{
 			}
-			else if (tag_str.Equals("#elif"))
+			else if (element_str.Equals("#elif"))
 			{
 			}
-			else if (tag_str.Equals("#else"))
+			else if (element_str.Equals("#else"))
 			{
 			}
-			else if (tag_str.Equals("#endif"))
+			else if (element_str.Equals("#endif"))
 			{
 			}
-			else if (tag_str.Equals("#pragma"))
+			else if (element_str.Equals("#pragma"))
 			{
 			}
 			else

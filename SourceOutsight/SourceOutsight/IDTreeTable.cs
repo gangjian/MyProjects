@@ -7,11 +7,11 @@ using System.Diagnostics;
 
 namespace SourceOutsight
 {
-	public class IDTreeTable
+	public class TagTreeTable
 	{
-		List<IDTreeNode> IDTreeList = new List<IDTreeNode>();
-		IDTreeNode CurrentBranchNode = null;
-		public void Add(IDTreeNode add_node)
+		List<TagTreeNode> TagTreeList = new List<TagTreeNode>();
+		TagTreeNode CurrentBranchNode = null;
+		public void Add(TagTreeNode add_node)
 		{
 			if (add_node.IsPrecompileSwitchNode())
 			{
@@ -30,15 +30,15 @@ namespace SourceOutsight
 				Trace.Assert(false);
 			}
 		}
-		void AddPrecompileSwitchNode(IDTreeNode add_node)
+		void AddPrecompileSwitchNode(TagTreeNode add_node)
 		{
-			if (add_node.IDStr.Equals("#if")
-				|| add_node.IDStr.Equals("#ifdef")
-				|| add_node.IDStr.Equals("#ifndef"))
+			if (add_node.TagStr.Equals("#if")
+				|| add_node.TagStr.Equals("#ifdef")
+				|| add_node.TagStr.Equals("#ifndef"))
 			{
 				if (null == this.CurrentBranchNode)
 				{
-					this.IDTreeList.Add(add_node);
+					this.TagTreeList.Add(add_node);
 					this.CurrentBranchNode = add_node;
 				}
 				else
@@ -48,8 +48,8 @@ namespace SourceOutsight
 					this.CurrentBranchNode = add_node;
 				}
 			}
-			else if (add_node.IDStr.Equals("#elif")
-					 || add_node.IDStr.Equals("#else"))
+			else if (add_node.TagStr.Equals("#elif")
+					 || add_node.TagStr.Equals("#else"))
 			{
 				Trace.Assert(null != this.CurrentBranchNode);
 				add_node.ParentRef = this.CurrentBranchNode.ParentRef;
@@ -59,11 +59,11 @@ namespace SourceOutsight
 				}
 				else
 				{
-					this.IDTreeList.Add(add_node);
+					this.TagTreeList.Add(add_node);
 				}
 				this.CurrentBranchNode = add_node;
 			}
-			else if (add_node.IDStr.Equals("#endif"))
+			else if (add_node.TagStr.Equals("#endif"))
 			{
 				Trace.Assert(null != this.CurrentBranchNode);
 				add_node.ParentRef = this.CurrentBranchNode.ParentRef;
@@ -73,11 +73,11 @@ namespace SourceOutsight
 				}
 				else
 				{
-					this.IDTreeList.Add(add_node);
+					this.TagTreeList.Add(add_node);
 				}
 				this.CurrentBranchNode = add_node.ParentRef;
 			}
-			else if (add_node.IDStr.Equals("#pragma"))
+			else if (add_node.TagStr.Equals("#pragma"))
 			{
 				AddNormalNode(add_node);
 			}
@@ -86,22 +86,22 @@ namespace SourceOutsight
 				Trace.Assert(false);
 			}
 		}
-		void AddNormalNode(IDTreeNode add_node)
+		void AddNormalNode(TagTreeNode add_node)
 		{
 			if (null == this.CurrentBranchNode)
 			{
-				this.IDTreeList.Add(add_node);
+				this.TagTreeList.Add(add_node);
 			}
 			else
 			{
 				this.CurrentBranchNode.ChildList.Add(add_node);
 			}
 		}
-		void AddStructureNode(IDTreeNode add_node)
+		void AddStructureNode(TagTreeNode add_node)
 		{
 			if (null == this.CurrentBranchNode)
 			{
-				this.IDTreeList.Add(add_node);
+				this.TagTreeList.Add(add_node);
 			}
 			else
 			{
@@ -112,7 +112,7 @@ namespace SourceOutsight
 		public List<string> ToStringList()
 		{
 			List<string> ret_list = new List<string>();
-			foreach (var node_item in this.IDTreeList)
+			foreach (var node_item in this.TagTreeList)
 			{
 				ret_list.AddRange(node_item.ToStringList(0));
 			}
@@ -120,20 +120,20 @@ namespace SourceOutsight
 		}
 	}
 
-	public class IDTreeNode
+	public class TagTreeNode
 	{
-		public string IDStr = null;
+		public string TagStr = null;
 		public string ExpressionStr = null;
 		public CodePosition Position = null;											// 标识符的开始位置
 		public CodeScope AffectScope = null;											// 作用域
-		public IDNodeType Type = IDNodeType.Unknown;
+		public TagNodeType Type = TagNodeType.Unknown;
 
-		public IDTreeNode ParentRef = null;
-		public List<IDTreeNode> ChildList = new List<IDTreeNode>();
+		public TagTreeNode ParentRef = null;
+		public List<TagTreeNode> ChildList = new List<TagTreeNode>();
 
-		public IDTreeNode(string id_str, string exp_str, CodePosition pos, CodeScope scope, IDNodeType type)
+		public TagTreeNode(string tag_str, string exp_str, CodePosition pos, CodeScope scope, TagNodeType type)
 		{
-			this.IDStr = id_str;
+			this.TagStr = tag_str;
 			this.ExpressionStr = exp_str;
 			this.Position = pos;
 			this.AffectScope = scope;
@@ -142,7 +142,7 @@ namespace SourceOutsight
 
 		public bool IsPrecompileSwitchNode()
 		{
-			if (this.Type == IDNodeType.PrecompileSwitch)
+			if (this.Type == TagNodeType.PrecompileSwitch)
 			{
 				return true;
 			}
@@ -153,16 +153,16 @@ namespace SourceOutsight
 		}
 		public bool IsNormalNode()
 		{
-			if (this.Type == IDNodeType.IncludeHeader
-				|| this.Type == IDNodeType.MacroDef
-				|| this.Type == IDNodeType.MacroFunc
-				|| this.Type == IDNodeType.Undef
-				|| this.Type == IDNodeType.GlobalDef
-				|| this.Type == IDNodeType.GlobalExtern
-				|| this.Type == IDNodeType.FuncDef
-				|| this.Type == IDNodeType.FuncExtern
-				|| this.Type == IDNodeType.Typedef
-				|| this.Type == IDNodeType.PrecompileCommand)
+			if (this.Type == TagNodeType.IncludeHeader
+				|| this.Type == TagNodeType.MacroDef
+				|| this.Type == TagNodeType.MacroFunc
+				|| this.Type == TagNodeType.Undef
+				|| this.Type == TagNodeType.GlobalDef
+				|| this.Type == TagNodeType.GlobalExtern
+				|| this.Type == TagNodeType.FuncDef
+				|| this.Type == TagNodeType.FuncExtern
+				|| this.Type == TagNodeType.Typedef
+				|| this.Type == TagNodeType.PrecompileCommand)
 			{
 				return true;
 			}
@@ -173,8 +173,8 @@ namespace SourceOutsight
 		}
 		public bool IsStructureNode()
 		{
-			if (this.Type == IDNodeType.StructType
-				|| this.Type == IDNodeType.UnionType)
+			if (this.Type == TagNodeType.StructType
+				|| this.Type == TagNodeType.UnionType)
 			{
 				return true;
 			}
@@ -196,7 +196,7 @@ namespace SourceOutsight
 		}
 		string ToString(int level)
 		{
-			string ret_str = GetBranchString(level) + GetIconString() + " " + this.IDStr;
+			string ret_str = GetBranchString(level) + GetIconString() + " " + this.TagStr;
 			if (!string.IsNullOrEmpty(this.ExpressionStr))
 			{
 				ret_str += (" " + this.ExpressionStr);
@@ -208,47 +208,47 @@ namespace SourceOutsight
 			string icon_str = null;
 			switch (this.Type)
 			{
-				case IDNodeType.Unknown:
+				case TagNodeType.Unknown:
 					Trace.Assert(false);
 					break;
-				case IDNodeType.PrecompileSwitch:
+				case TagNodeType.PrecompileSwitch:
 					icon_str = "<#_y>";
 					break;
-				case IDNodeType.IncludeHeader:
+				case TagNodeType.IncludeHeader:
 					icon_str = "<#_y>";
 					break;
-				case IDNodeType.MacroDef:
+				case TagNodeType.MacroDef:
 					icon_str = "<#_r>";
 					break;
-				case IDNodeType.MacroFunc:
+				case TagNodeType.MacroFunc:
 					icon_str = "<M>";
 					break;
-				case IDNodeType.StructType:
+				case TagNodeType.StructType:
 					icon_str = "<S>";
 					break;
-				case IDNodeType.UnionType:
+				case TagNodeType.UnionType:
 					icon_str = "<U>";
 					break;
-				case IDNodeType.MemberVar:
+				case TagNodeType.MemberVar:
 					icon_str = "<m>";
 					break;
-				case IDNodeType.Typedef:
+				case TagNodeType.Typedef:
 					icon_str = "<T>";
 					break;
-				case IDNodeType.GlobalExtern:
+				case TagNodeType.GlobalExtern:
 					icon_str = "<G_E>";
 					break;
-				case IDNodeType.GlobalDef:
+				case TagNodeType.GlobalDef:
 					icon_str = "<G_D>";
 					break;
-				case IDNodeType.FuncExtern:
+				case TagNodeType.FuncExtern:
 					icon_str = "<F_E>";
 					break;
-				case IDNodeType.FuncDef:
+				case TagNodeType.FuncDef:
 					icon_str = "<F_D>";
 					break;
-				case IDNodeType.Undef:
-				case IDNodeType.PrecompileCommand:
+				case TagNodeType.Undef:
+				case TagNodeType.PrecompileCommand:
 					icon_str = "<#_y>";
 					break;
 				default:
@@ -268,7 +268,7 @@ namespace SourceOutsight
 		}
 	}
 
-	public enum IDNodeType
+	public enum TagNodeType
 	{
 		Unknown,
 		PrecompileSwitch,

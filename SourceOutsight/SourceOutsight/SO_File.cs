@@ -24,24 +24,24 @@ namespace SourceOutsight
 			DoParse();
 		}
 
-		public IDTreeTable IDTable = new IDTreeTable();
+		public TagTreeTable TagTable = new TagTreeTable();
 		CodePosition CurrentPosition = new CodePosition(0, 0);
 		void DoParse()
 		{
 			this.CurrentPosition = GetFileStartPosition();
 			while (true)
 			{
-				CodeTag tag = GetNextTag();
-				if (null == tag)
+				CodeElement element = GetNextElement();
+				if (null == element)
 				{
 					break;
 				}
 				//if (this.FullName.EndsWith("AmigoSscCd_ConvEvent.c")
-				//	&& tag.Row > 224)
+				//	&& element.Row > 224)
 				//{
 				//	Trace.WriteLine("WTF");
 				//}
-				CodeTagProc(tag);
+				CodeElementProc(element);
 			}
 		}
 		CodePosition GetFileStartPosition()
@@ -55,27 +55,27 @@ namespace SourceOutsight
 			}
 			return null;
 		}
-		void CodeTagProc(CodeTag tag)
+		void CodeElementProc(CodeElement element)
 		{
-			if (tag.Type.Equals(TagType.Define))
+			if (element.Type.Equals(ElementType.Define))
 			{
-				DefineProc(tag);
+				DefineProc(element);
 			}
-			else if (tag.Type.Equals(TagType.Undefine))
+			else if (element.Type.Equals(ElementType.Undefine))
 			{
-				UndefProc(tag);
+				UndefProc(element);
 			}
-			else if (tag.Type.Equals(TagType.PrecompileCommand))
+			else if (element.Type.Equals(ElementType.PrecompileCommand))
 			{
-				PrecompileCommandProc(tag);
+				PrecompileCommandProc(element);
 			}
-			else if (tag.Type.Equals(TagType.Include))
+			else if (element.Type.Equals(ElementType.Include))
 			{
-				IncludeProc(tag);
+				IncludeProc(element);
 			}
-			else if (tag.Type.Equals(TagType.PrecompileSwitch))
+			else if (element.Type.Equals(ElementType.PrecompileSwitch))
 			{
-				PrecompileSwitchProc(tag);
+				PrecompileSwitchProc(element);
 			}
 		}
 
@@ -88,8 +88,8 @@ namespace SourceOutsight
 				int row = cur_pos.Row;
 				int end_col = this.CodeList[row].TextStr.Length - 1;
 				int len = end_col - cur_pos.Col + 1;
-				CodeTag comment_tag = new CodeTag(TagType.Comments, cur_pos, len);
-				this.CodeList[row].AddTag(comment_tag);
+				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, len);
+				this.CodeList[row].AddElement(comment_element);
 				cur_pos = GetNextPosN(cur_pos, len - 1);
 			}
 			else if (line_str.StartsWith("/*"))
@@ -118,42 +118,42 @@ namespace SourceOutsight
 					}
 					CodePosition s_pos = new CodePosition(row, start_col);
 					int len = end_col - start_col + 1;
-					CodeTag comment_tag = new CodeTag(TagType.Comments, new CodePosition(row, start_col), len);
-					this.CodeList[row].AddTag(comment_tag);
+					CodeElement comment_element = new CodeElement(ElementType.Comments, new CodePosition(row, start_col), len);
+					this.CodeList[row].AddElement(comment_element);
 				}
 				cur_pos = GetNextPosN(end_pos, 1);
 			}
 			return cur_pos;
 		}
 
-		void DefineProc(CodeTag def_tag)
+		void DefineProc(CodeElement def_element)
 		{
-			List<CodeTag> tag_list = GetLineTagList(def_tag.GetStartPosition());
-			IDTreeNode macro_node = MakeMacroIDTreeNode(tag_list);
-			this.IDTable.Add(macro_node);
+			List<CodeElement> element_list = GetLineElementList(def_element.GetStartPosition());
+			TagTreeNode macro_node = MakeMacroTagTreeNode(element_list);
+			this.TagTable.Add(macro_node);
 		}
-		IDTreeNode MakeMacroIDTreeNode(List<CodeTag> tag_list)
+		TagTreeNode MakeMacroTagTreeNode(List<CodeElement> element_list)
 		{
-			Trace.Assert(tag_list.Count >= 2);
-			CodeTag def_tag = tag_list.First();
-			CodeTag macro_tag = tag_list[1];
-			Trace.Assert(macro_tag.Type == TagType.Identifier);
-			string macro_name = macro_tag.ToString(this.CodeList);
-			CodeScope scope = new CodeScope(def_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
-			IDNodeType type = IDNodeType.MacroDef;
+			Trace.Assert(element_list.Count >= 2);
+			CodeElement def_element = element_list.First();
+			CodeElement macro_element = element_list[1];
+			Trace.Assert(macro_element.Type == ElementType.Identifier);
+			string macro_name = macro_element.ToString(this.CodeList);
+			CodeScope scope = new CodeScope(def_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			TagNodeType type = TagNodeType.MacroDef;
 			// 判断是否为宏函数
-			if (IsMacroFunction(tag_list))
+			if (IsMacroFunction(element_list))
 			{
-				type = IDNodeType.MacroFunc;
+				type = TagNodeType.MacroFunc;
 			}
-			IDTreeNode ret_node = new IDTreeNode(macro_name, null, macro_tag.GetStartPosition(), scope, type);
+			TagTreeNode ret_node = new TagTreeNode(macro_name, null, macro_element.GetStartPosition(), scope, type);
 			return ret_node;
 		}
-		bool IsMacroFunction(List<CodeTag> tag_list)
+		bool IsMacroFunction(List<CodeElement> element_list)
 		{
-			if (tag_list.Count > 3
-				&& tag_list[2].ToString(this.CodeList).Equals("(")
-				&& tag_list[2].CloseTo(tag_list[1]))
+			if (element_list.Count > 3
+				&& element_list[2].ToString(this.CodeList).Equals("(")
+				&& element_list[2].CloseTo(element_list[1]))
 			{
 				return true;
 			}
@@ -162,92 +162,90 @@ namespace SourceOutsight
 				return false;
 			}
 		}
-		void UndefProc(CodeTag undef_tag)
+		void UndefProc(CodeElement undef_element)
 		{
-			List<CodeTag> tag_list = GetLineTagList(undef_tag.GetStartPosition());
-			IDTreeNode macro_node = MakeUndefIDTreeNode(tag_list);
-			this.IDTable.Add(macro_node);
+			List<CodeElement> element_list = GetLineElementList(undef_element.GetStartPosition());
+			TagTreeNode macro_node = MakeUndefTagTreeNode(element_list);
+			this.TagTable.Add(macro_node);
 		}
-		IDTreeNode MakeUndefIDTreeNode(List<CodeTag> tag_list)
+		TagTreeNode MakeUndefTagTreeNode(List<CodeElement> element_list)
 		{
-			Trace.Assert(tag_list.Count == 2);
-			CodeTag undef_tag = tag_list.First();
-			CodeTag macro_tag = tag_list[1];
-			Trace.Assert(macro_tag.Type == TagType.Identifier);
-			string macro_name = macro_tag.ToString(this.CodeList);
-			CodeScope scope = new CodeScope(undef_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
-			IDNodeType type = IDNodeType.Undef;
-			IDTreeNode ret_node = new IDTreeNode(undef_tag.ToString(this.CodeList), macro_name, macro_tag.GetStartPosition(), scope, type);
+			Trace.Assert(element_list.Count == 2);
+			CodeElement undef_element = element_list.First();
+			CodeElement macro_element = element_list[1];
+			Trace.Assert(macro_element.Type == ElementType.Identifier);
+			string macro_name = macro_element.ToString(this.CodeList);
+			CodeScope scope = new CodeScope(undef_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			TagNodeType type = TagNodeType.Undef;
+			TagTreeNode ret_node = new TagTreeNode(undef_element.ToString(this.CodeList), macro_name, macro_element.GetStartPosition(), scope, type);
 			return ret_node;
 		}
 
-		void IncludeProc(CodeTag include_tag)
+		void IncludeProc(CodeElement include_element)
 		{
-			List<CodeTag> tag_list = GetLineTagList(include_tag.GetStartPosition());
-			IDTreeNode include_node = MakeIncludeIDTreeNode(tag_list);
-			this.IDTable.Add(include_node);
+			List<CodeElement> element_list = GetLineElementList(include_element.GetStartPosition());
+			TagTreeNode include_node = MakeIncludeTagTreeNode(element_list);
+			this.TagTable.Add(include_node);
 		}
-		IDTreeNode MakeIncludeIDTreeNode(List<CodeTag> tag_list)
+		TagTreeNode MakeIncludeTagTreeNode(List<CodeElement> element_list)
 		{
-			CodeTag include_tag = tag_list.First();
-			//string left_quote = tag_list[1].ToString(this.CodeList);
-			//string right_quote = tag_list.Last().ToString(this.CodeList);
-			tag_list.RemoveAt(0);
-			string header_name_str = TagListStrCat(tag_list);
-			CodeScope scope = new CodeScope(include_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
-			IDNodeType type = IDNodeType.IncludeHeader;
-			IDTreeNode ret_node = new IDTreeNode(include_tag.ToString(this.CodeList), header_name_str, include_tag.GetStartPosition(), scope, type);
+			CodeElement include_element = element_list.First();
+			element_list.RemoveAt(0);
+			string header_name_str = ElementListStrCat(element_list);
+			CodeScope scope = new CodeScope(include_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			TagNodeType type = TagNodeType.IncludeHeader;
+			TagTreeNode ret_node = new TagTreeNode(include_element.ToString(this.CodeList), header_name_str, include_element.GetStartPosition(), scope, type);
 			return ret_node;
 		}
 
-		void PrecompileSwitchProc(CodeTag precompileswitch_tag)
+		void PrecompileSwitchProc(CodeElement precompileswitch_element)
 		{
-			List<CodeTag> tag_list = GetLineTagList(precompileswitch_tag.GetStartPosition());
-			IDTreeNode precompileswitch_node = MakePrecompileSwitchIDTreeNode(tag_list);
-			this.IDTable.Add(precompileswitch_node);
+			List<CodeElement> element_list = GetLineElementList(precompileswitch_element.GetStartPosition());
+			TagTreeNode precompileswitch_node = MakePrecompileSwitchTagTreeNode(element_list);
+			this.TagTable.Add(precompileswitch_node);
 		}
-		IDTreeNode MakePrecompileSwitchIDTreeNode(List<CodeTag> tag_list)
+		TagTreeNode MakePrecompileSwitchTagTreeNode(List<CodeElement> element_list)
 		{
-			Trace.Assert(tag_list.Count > 0);
-			CodeTag switch_tag = tag_list.First();
+			Trace.Assert(element_list.Count > 0);
+			CodeElement switch_element = element_list.First();
 			string expression_str = null;
-			if (tag_list.Count > 1)
+			if (element_list.Count > 1)
 			{
-				tag_list.RemoveAt(0);
-				expression_str = TagListStrCat(tag_list);
+				element_list.RemoveAt(0);
+				expression_str = ElementListStrCat(element_list);
 			}
-			CodeScope scope = new CodeScope(switch_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
-			IDNodeType type = IDNodeType.PrecompileSwitch;
-			string id_str = switch_tag.ToString(this.CodeList);
-			Trace.Assert(id_str.StartsWith("#"));
-			id_str = "#" + id_str.Substring(1).Trim();	// 这样做是为了防止'#'后面有空格,比如"# if"
-			IDTreeNode ret_node = new IDTreeNode(id_str, expression_str, switch_tag.GetStartPosition(), scope, type);
+			CodeScope scope = new CodeScope(switch_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			TagNodeType type = TagNodeType.PrecompileSwitch;
+			string tag_str = switch_element.ToString(this.CodeList);
+			Trace.Assert(tag_str.StartsWith("#"));
+			tag_str = "#" + tag_str.Substring(1).Trim();	// 这样做是为了防止'#'后面有空格,比如"# if"
+			TagTreeNode ret_node = new TagTreeNode(tag_str, expression_str, switch_element.GetStartPosition(), scope, type);
 			return ret_node;
 		}
 
-		void PrecompileCommandProc(CodeTag precompilecommand_tag)
+		void PrecompileCommandProc(CodeElement precompilecommand_element)
 		{
-			List<CodeTag> tag_list = GetLineTagList(precompilecommand_tag.GetStartPosition());
-			IDTreeNode precompilecommand_node = MakePrecompileCommandIDTreeNode(tag_list);
-			this.IDTable.Add(precompilecommand_node);
+			List<CodeElement> element_list = GetLineElementList(precompilecommand_element.GetStartPosition());
+			TagTreeNode precompilecommand_node = MakePrecompileCommandTagTreeNode(element_list);
+			this.TagTable.Add(precompilecommand_node);
 		}
-		IDTreeNode MakePrecompileCommandIDTreeNode(List<CodeTag> tag_list)
+		TagTreeNode MakePrecompileCommandTagTreeNode(List<CodeElement> element_list)
 		{
-			Trace.Assert(tag_list.Count > 0);
-			CodeTag command_tag = tag_list.First();
+			Trace.Assert(element_list.Count > 0);
+			CodeElement command_element = element_list.First();
 			string expression_str = null;
-			if (tag_list.Count > 1)
+			if (element_list.Count > 1)
 			{
-				tag_list.RemoveAt(0);
-				expression_str = TagListStrCat(tag_list);
+				element_list.RemoveAt(0);
+				expression_str = ElementListStrCat(element_list);
 			}
-			CodeScope scope = new CodeScope(command_tag.GetStartPosition(), tag_list.Last().GetEndPosition());
-			IDNodeType type = IDNodeType.PrecompileCommand;
-			IDTreeNode ret_node = new IDTreeNode(command_tag.ToString(this.CodeList), expression_str, command_tag.GetStartPosition(), scope, type);
+			CodeScope scope = new CodeScope(command_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			TagNodeType type = TagNodeType.PrecompileCommand;
+			TagTreeNode ret_node = new TagTreeNode(command_element.ToString(this.CodeList), expression_str, command_element.GetStartPosition(), scope, type);
 			return ret_node;
 		}
 
-		CodeTag GetNextTag()
+		CodeElement GetNextElement()
 		{
 			if (null == this.CurrentPosition)
 			{
@@ -268,10 +266,10 @@ namespace SourceOutsight
 				}
 				else if (ch.Equals('#'))
 				{
-					CodeTag ret_tag = GetPrecompileTag(cur_pos);
-					if (null != ret_tag)
+					CodeElement ret_element = GetPrecompileElement(cur_pos);
+					if (null != ret_element)
 					{
-						return ret_tag;
+						return ret_element;
 					}
 				}
 				else if (Char.IsLetter(ch) || ch.Equals('_'))
@@ -279,9 +277,9 @@ namespace SourceOutsight
 					// 标识符
 					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
 					int len = SO_Common.GetIdentifierStringLength(line_str, 0);
-					CodeTag ret_tag = new CodeTag(TagType.Identifier, cur_pos, len);
+					CodeElement ret_element = new CodeElement(ElementType.Identifier, cur_pos, len);
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
-					return ret_tag;
+					return ret_element;
 				}
 				else if (ch.Equals('"'))
 				{
@@ -290,9 +288,9 @@ namespace SourceOutsight
 					int idx = GetNextQuoteIndex('"', line_str);
 					Trace.Assert(-1 != idx);
 					int len = idx + 2;
-					CodeTag ret_tag = new CodeTag(TagType.String, cur_pos, len);
+					CodeElement ret_element = new CodeElement(ElementType.String, cur_pos, len);
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
-					return ret_tag;
+					return ret_element;
 				}
 				else if (ch.Equals('\''))
 				{
@@ -302,31 +300,31 @@ namespace SourceOutsight
 					Trace.Assert(-1 != idx);
 					int len = idx + 2;
 					//Trace.Assert(3 == len);	// 可能会有像'\n'这样转义字符的情况
-					CodeTag ret_tag = new CodeTag(TagType.Char, cur_pos, len);
+					CodeElement ret_element = new CodeElement(ElementType.Char, cur_pos, len);
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
-					return ret_tag;
+					return ret_element;
 				}
 				else if (Char.IsDigit(ch))
 				{
 					// 数字
 					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
 					int len = SO_Common.GetNumberStrLength(line_str, 0);
-					CodeTag ret_tag = new CodeTag(TagType.Number, cur_pos, len);
+					CodeElement ret_element = new CodeElement(ElementType.Number, cur_pos, len);
 					this.CurrentPosition = GetNextPosN(cur_pos, len);
-					return ret_tag;
+					return ret_element;
 				}
 				else if (Char.IsSymbol(ch))
 				{
 					// 运算符
-					CodeTag ret_tag = new CodeTag(TagType.Symbol, cur_pos, 1);
+					CodeElement ret_element = new CodeElement(ElementType.Symbol, cur_pos, 1);
 					this.CurrentPosition = GetNextPos(cur_pos);
-					return ret_tag;
+					return ret_element;
 				}
 				else if (Char.IsPunctuation(ch))
 				{
-					CodeTag ret_tag = new CodeTag(TagType.Punctuation, cur_pos, 1);
+					CodeElement ret_element = new CodeElement(ElementType.Punctuation, cur_pos, 1);
 					this.CurrentPosition = GetNextPos(cur_pos);
-					return ret_tag;
+					return ret_element;
 				}
 				cur_pos = GetNextPos(cur_pos);
 				if (null == cur_pos)
@@ -368,38 +366,38 @@ namespace SourceOutsight
 			}
 			return -1;
 		}
-		CodeTag GetPrecompileTag(CodePosition cur_pos)
+		CodeElement GetPrecompileElement(CodePosition cur_pos)
 		{
 			string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1).Trim();
 			int keyword_len = SO_Common.GetIdentifierStringLength(line_str, 0);
 			string keyword = line_str.Substring(0, keyword_len);
-			string tag_str = "#" + keyword;
+			string element_str = "#" + keyword;
 			int keyword_idx = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1).IndexOf(keyword);
-			TagType tag_type = TagType.Unknown;
-			if (tag_str.Equals("#include"))
+			ElementType element_type = ElementType.Unknown;
+			if (element_str.Equals("#include"))
 			{
 				// 头文件包含
-				tag_type = TagType.Include;
+				element_type = ElementType.Include;
 			}
-			else if (tag_str.Equals("#define"))
+			else if (element_str.Equals("#define"))
 			{
 				// 宏定义
-				tag_type = TagType.Define;
+				element_type = ElementType.Define;
 			}
-			else if (tag_str.Equals("#undef"))
+			else if (element_str.Equals("#undef"))
 			{
-				tag_type = TagType.Undefine;
+				element_type = ElementType.Undefine;
 			}
-			else if (SO_Common.IsConditionalComilationStart(tag_str))
+			else if (SO_Common.IsConditionalComilationStart(element_str))
 			{
 				// 条件编译
-				tag_type = TagType.PrecompileSwitch;
+				element_type = ElementType.PrecompileSwitch;
 			}
-			else if (tag_str.Equals("#error")
-					 || tag_str.Equals("#warning")
-					 || tag_str.Equals("#line"))
+			else if (element_str.Equals("#error")
+					 || element_str.Equals("#warning")
+					 || element_str.Equals("#line"))
 			{
-				tag_type = TagType.PrecompileCommand;
+				element_type = ElementType.PrecompileCommand;
 			}
 			else
 			{
@@ -408,9 +406,9 @@ namespace SourceOutsight
 				return null;
 			}
 			int len = keyword_idx + keyword_len + 1;
-			CodeTag ret_tag = new CodeTag(tag_type, cur_pos, len);
+			CodeElement ret_element = new CodeElement(element_type, cur_pos, len);
 			this.CurrentPosition = GetNextPosN(cur_pos, len);
-			return ret_tag;
+			return ret_element;
 		}
 		CodePosition GetNextPos(CodePosition cur_pos)
 		{
@@ -470,26 +468,26 @@ namespace SourceOutsight
 			return null;
 		}
 		/// <summary>
-		/// 取得一行内的tag_list
+		/// 取得一行内的element_list
 		/// </summary>
-		List<CodeTag> GetLineTagList(CodePosition start_position)
+		List<CodeElement> GetLineElementList(CodePosition start_position)
 		{
-			List<CodeTag> ret_list = new List<CodeTag>();
+			List<CodeElement> ret_list = new List<CodeElement>();
 			int row = start_position.Row;
 			this.CurrentPosition = start_position;
 			while (true)
 			{
-				CodeTag tag = GetNextTag();
-				if (null == tag)
+				CodeElement element = GetNextElement();
+				if (null == element)
 				{
 					break;
 				}
-				else if (tag.Row != row)
+				else if (element.Row != row)
 				{
 					if (ret_list.Last().ToString(this.CodeList).Equals("\\"))
 					{
 						// 续行符
-						row = tag.Row;
+						row = element.Row;
 					}
 					else
 					{
@@ -503,25 +501,25 @@ namespace SourceOutsight
 				}
 				else
 				{
-					ret_list.Add(tag);
+					ret_list.Add(element);
 				}
 			}
 			return ret_list;
 		}
 		/// <summary>
-		/// 把一个tag_list拼接成一个字符串
+		/// 把一个element_list拼接成一个字符串
 		/// </summary>
-		string TagListStrCat(List<CodeTag> tag_list)
+		string ElementListStrCat(List<CodeElement> element_list)
 		{
 			string ret_str = string.Empty;
-			for (int i = 0; i < tag_list.Count; i++)
+			for (int i = 0; i < element_list.Count; i++)
 			{
-				ret_str += tag_list[i].ToString(this.CodeList);
-				if (i != tag_list.Count - 1)
+				ret_str += element_list[i].ToString(this.CodeList);
+				if (i != element_list.Count - 1)
 				{
-					if (tag_list[i].CloseTo(tag_list[i + 1]))
+					if (element_list[i].CloseTo(element_list[i + 1]))
 					{
-						// 如果跟下一个tag紧邻,就直接连接
+						// 如果跟下一个element紧邻,就直接连接
 					}
 					else
 					{
@@ -564,26 +562,26 @@ namespace SourceOutsight
 	class SO_CodeLineInfo
 	{
 		public string TextStr = null;
-		List<CodeTag> TagList = new List<CodeTag>();
+		List<CodeElement> ElementList = new List<CodeElement>();
 
 		public SO_CodeLineInfo(string code_line_str)
 		{
 			this.TextStr = code_line_str;
 		}
 
-		public void AddTag(CodeTag mark)
+		public void AddElement(CodeElement mark)
 		{
-			this.TagList.Add(mark);
+			this.ElementList.Add(mark);
 		}
 	}
 
-	class CodeTag
+	class CodeElement
 	{
-		public TagType Type = TagType.Unknown;
+		public ElementType Type = ElementType.Unknown;
 		public int Row = -1;
 		public int Offset = -1;
 		public int Len = 0;
-		public CodeTag(TagType type, CodePosition start_pos, int len)
+		public CodeElement(ElementType type, CodePosition start_pos, int len)
 		{
 			this.Type = type;
 			this.Row = start_pos.Row;
@@ -613,19 +611,19 @@ namespace SourceOutsight
 			return null;
 		}
 		/// <summary>
-		/// 判断两个tag是否紧邻
+		/// 判断两个element的位置是否紧邻
 		/// </summary>
-		public bool CloseTo(CodeTag another_tag)
+		public bool CloseTo(CodeElement another_element)
 		{
-			if (this.Row == another_tag.Row)
+			if (this.Row == another_element.Row)
 			{
-				if (this.Offset < another_tag.Offset
-					&& this.Offset + this.Len == another_tag.Offset)
+				if (this.Offset < another_element.Offset
+					&& this.Offset + this.Len == another_element.Offset)
 				{
 					return true;
 				}
-				else if (this.Offset > another_tag.Offset
-					&& another_tag.Offset + another_tag.Len == this.Offset)
+				else if (this.Offset > another_element.Offset
+					&& another_element.Offset + another_element.Len == this.Offset)
 				{
 					return true;
 				}
@@ -634,7 +632,7 @@ namespace SourceOutsight
 		}
 	}
 
-	enum TagType
+	enum ElementType
 	{
 		Unknown,
 		Identifier,

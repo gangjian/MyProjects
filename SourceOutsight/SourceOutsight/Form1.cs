@@ -23,18 +23,18 @@ namespace SourceOutsight
 		private void btnStart_Click(object sender, EventArgs e)
 		{
 			string prj_dir = this.tbxPath.Text;
-			List<string> prj_id_tree_list = GetPrjectIDTreeList(prj_dir);
+			List<string> prj_tag_tree_list = GetPrjectTagTreeList(prj_dir);
 
 			this.tbxLog.Clear();
 			StringBuilder sb = new StringBuilder();
-			foreach (var item in prj_id_tree_list)
+			foreach (var item in prj_tag_tree_list)
 			{
 				sb.AppendLine(item);
 			}
 			this.tbxLog.AppendText(sb.ToString());
 		}
 
-		List<string> GetPrjectIDTreeList(string prj_dir)
+		List<string> GetPrjectTagTreeList(string prj_dir)
 		{
 			List<string> ret_list = new List<string>();
 			ret_list.Add(MakeNameCommentsLineString(prj_dir));
@@ -44,16 +44,16 @@ namespace SourceOutsight
 			List<SO_File> src_list = so_prj.GetSourceInfoList();
 			foreach (var item in src_list)
 			{
-				ret_list.AddRange(GetFileIDTreeList(item, prj_dir));
+				ret_list.AddRange(GetFileTagTreeList(item, prj_dir));
 			}
 			List<SO_File> hd_list = so_prj.GetHeaderInfoList();
 			foreach (var item in hd_list)
 			{
-				ret_list.AddRange(GetFileIDTreeList(item, prj_dir));
+				ret_list.AddRange(GetFileTagTreeList(item, prj_dir));
 			}
 			return ret_list;
 		}
-		List<string> GetFileIDTreeList(SO_File file_info, string prj_dir)
+		List<string> GetFileTagTreeList(SO_File file_info, string prj_dir)
 		{
 			List<string> ret_list = new List<string>();
 			string file_name = file_info.FullName;
@@ -63,7 +63,7 @@ namespace SourceOutsight
 				file_name = file_name.Substring(prj_dir.Length);
 			}
 			ret_list.Add(MakeNameCommentsLineString(file_name));
-			ret_list.AddRange(file_info.IDTable.ToStringList());
+			ret_list.AddRange(file_info.TagTable.ToStringList());
 			return ret_list;
 		}
 		const int NAME_COMMENTS_LEN = 80;
