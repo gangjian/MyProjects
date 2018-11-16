@@ -11,16 +11,13 @@ namespace SourceOutsight
 	public class SO_File
 	{
 		public string FullName = null;
-		List<SO_CodeLineInfo> CodeList = new List<SO_CodeLineInfo>();
+		List<string> CodeList = new List<string>();
+		List<CodeElement> ElementList = new List<CodeElement>();
 		public SO_File(string path)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
 			this.FullName = path;
-			List<string> code_list = File.ReadAllLines(path).ToList();
-			foreach (var item in code_list)
-			{
-				this.CodeList.Add(new SO_CodeLineInfo(item));
-			}
+			this.CodeList = File.ReadAllLines(path).ToList();
 			DoParse();
 		}
 
@@ -48,7 +45,7 @@ namespace SourceOutsight
 		{
 			for (int i = 0; i < this.CodeList.Count; i++)
 			{
-				if (!string.IsNullOrEmpty(this.CodeList[i].TextStr))
+				if (!string.IsNullOrEmpty(this.CodeList[i]))
 				{
 					return new CodePosition(i, 0);
 				} 
@@ -81,16 +78,16 @@ namespace SourceOutsight
 
 		CodePosition CommentProc(CodePosition cur_pos)
 		{
-			string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+			string line_str = this.CodeList[cur_pos.Row].Substring(cur_pos.Col);
 			if (line_str.StartsWith("//"))
 			{
 				// 行注释
 				int row = cur_pos.Row;
-				int end_col = this.CodeList[row].TextStr.Length - 1;
+				int end_col = this.CodeList[row].Length - 1;
 				int len = end_col - cur_pos.Col + 1;
 				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, len);
-				this.CodeList[row].AddElement(comment_element);
-				cur_pos = GetNextPosN(cur_pos, len - 1);
+				this.ElementList.Add(comment_element);
+				cur_pos = cur_pos.GetNextPosN(this.CodeList, len - 1);
 			}
 			else if (line_str.StartsWith("/*"))
 			{
@@ -114,14 +111,14 @@ namespace SourceOutsight
 					}
 					else
 					{
-						end_col = this.CodeList[row].TextStr.Length - 1;
+						end_col = this.CodeList[row].Length - 1;
 					}
 					CodePosition s_pos = new CodePosition(row, start_col);
 					int len = end_col - start_col + 1;
 					CodeElement comment_element = new CodeElement(ElementType.Comments, new CodePosition(row, start_col), len);
-					this.CodeList[row].AddElement(comment_element);
+					this.ElementList.Add(comment_element);
 				}
-				cur_pos = GetNextPosN(end_pos, 1);
+				cur_pos = end_pos.GetNextPosN(this.CodeList, 1);
 			}
 			return cur_pos;
 		}
@@ -139,7 +136,7 @@ namespace SourceOutsight
 			CodeElement macro_element = element_list[1];
 			Trace.Assert(macro_element.Type == ElementType.Identifier);
 			string macro_name = macro_element.ToString(this.CodeList);
-			CodeScope scope = new CodeScope(def_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			CodeScope scope = new CodeScope(def_element.GetStartPosition(), element_list.Last().EndPos);
 			TagNodeType type = TagNodeType.MacroDef;
 			// 判断是否为宏函数
 			if (IsMacroFunction(element_list))
@@ -153,7 +150,7 @@ namespace SourceOutsight
 		{
 			if (element_list.Count > 3
 				&& element_list[2].ToString(this.CodeList).Equals("(")
-				&& element_list[2].CloseTo(element_list[1]))
+				&& element_list[2].CloseTo(element_list[1], this.CodeList))
 			{
 				return true;
 			}
@@ -175,7 +172,7 @@ namespace SourceOutsight
 			CodeElement macro_element = element_list[1];
 			Trace.Assert(macro_element.Type == ElementType.Identifier);
 			string macro_name = macro_element.ToString(this.CodeList);
-			CodeScope scope = new CodeScope(undef_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			CodeScope scope = new CodeScope(undef_element.GetStartPosition(), element_list.Last().EndPos);
 			TagNodeType type = TagNodeType.Undef;
 			TagTreeNode ret_node = new TagTreeNode(undef_element.ToString(this.CodeList), macro_name, macro_element.GetStartPosition(), scope, type);
 			return ret_node;
@@ -192,7 +189,7 @@ namespace SourceOutsight
 			CodeElement include_element = element_list.First();
 			element_list.RemoveAt(0);
 			string header_name_str = ElementListStrCat(element_list);
-			CodeScope scope = new CodeScope(include_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			CodeScope scope = new CodeScope(include_element.GetStartPosition(), element_list.Last().EndPos);
 			TagNodeType type = TagNodeType.IncludeHeader;
 			TagTreeNode ret_node = new TagTreeNode(include_element.ToString(this.CodeList), header_name_str, include_element.GetStartPosition(), scope, type);
 			return ret_node;
@@ -214,7 +211,7 @@ namespace SourceOutsight
 				element_list.RemoveAt(0);
 				expression_str = ElementListStrCat(element_list);
 			}
-			CodeScope scope = new CodeScope(switch_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			CodeScope scope = new CodeScope(switch_element.GetStartPosition(), element_list.Last().EndPos);
 			TagNodeType type = TagNodeType.PrecompileSwitch;
 			string tag_str = switch_element.ToString(this.CodeList);
 			Trace.Assert(tag_str.StartsWith("#"));
@@ -239,7 +236,7 @@ namespace SourceOutsight
 				element_list.RemoveAt(0);
 				expression_str = ElementListStrCat(element_list);
 			}
-			CodeScope scope = new CodeScope(command_element.GetStartPosition(), element_list.Last().GetEndPosition());
+			CodeScope scope = new CodeScope(command_element.GetStartPosition(), element_list.Last().EndPos);
 			TagNodeType type = TagNodeType.PrecompileCommand;
 			TagTreeNode ret_node = new TagTreeNode(command_element.ToString(this.CodeList), expression_str, command_element.GetStartPosition(), scope, type);
 			return ret_node;
@@ -254,7 +251,7 @@ namespace SourceOutsight
 			CodePosition cur_pos = new CodePosition(this.CurrentPosition);
 			while (true)
 			{
-				char ch = this.CodeList[cur_pos.Row].TextStr[cur_pos.Col];
+				char ch = this.CodeList[cur_pos.Row][cur_pos.Col];
 				if (char.IsWhiteSpace(ch))
 				{
 					// 白空格
@@ -275,58 +272,53 @@ namespace SourceOutsight
 				else if (Char.IsLetter(ch) || ch.Equals('_'))
 				{
 					// 标识符
-					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					string line_str = this.CodeList[cur_pos.Row].Substring(cur_pos.Col);
 					int len = SO_Common.GetIdentifierStringLength(line_str, 0);
 					CodeElement ret_element = new CodeElement(ElementType.Identifier, cur_pos, len);
-					this.CurrentPosition = GetNextPosN(cur_pos, len);
+					this.CurrentPosition = cur_pos.GetNextPosN(this.CodeList, len);
 					return ret_element;
 				}
 				else if (ch.Equals('"'))
 				{
 					// 字符串
-					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1);
-					int idx = GetNextQuoteIndex('"', line_str);
-					Trace.Assert(-1 != idx);
-					int len = idx + 2;
-					CodeElement ret_element = new CodeElement(ElementType.String, cur_pos, len);
-					this.CurrentPosition = GetNextPosN(cur_pos, len);
+					CodePosition right_quote_pos = GetNextQuotePosition(cur_pos, this.CodeList);
+					Trace.Assert(null != right_quote_pos);
+					CodeElement ret_element = new CodeElement(ElementType.String, cur_pos, right_quote_pos);
+					this.CurrentPosition = right_quote_pos.GetNextPos(this.CodeList);
 					return ret_element;
 				}
 				else if (ch.Equals('\''))
 				{
 					// 字符
-					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1);
-					int idx = GetNextQuoteIndex('\'', line_str);
-					Trace.Assert(-1 != idx);
-					int len = idx + 2;
-					//Trace.Assert(3 == len);	// 可能会有像'\n'这样转义字符的情况
-					CodeElement ret_element = new CodeElement(ElementType.Char, cur_pos, len);
-					this.CurrentPosition = GetNextPosN(cur_pos, len);
+					CodePosition right_quote_pos = GetNextQuotePosition(cur_pos, this.CodeList);
+					Trace.Assert(null != right_quote_pos);
+					CodeElement ret_element = new CodeElement(ElementType.Char, cur_pos, right_quote_pos);
+					this.CurrentPosition = right_quote_pos.GetNextPos(this.CodeList);
 					return ret_element;
 				}
 				else if (Char.IsDigit(ch))
 				{
 					// 数字
-					string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col);
+					string line_str = this.CodeList[cur_pos.Row].Substring(cur_pos.Col);
 					int len = SO_Common.GetNumberStrLength(line_str, 0);
 					CodeElement ret_element = new CodeElement(ElementType.Number, cur_pos, len);
-					this.CurrentPosition = GetNextPosN(cur_pos, len);
+					this.CurrentPosition = cur_pos.GetNextPosN(this.CodeList, len);
 					return ret_element;
 				}
 				else if (Char.IsSymbol(ch))
 				{
 					// 运算符
 					CodeElement ret_element = new CodeElement(ElementType.Symbol, cur_pos, 1);
-					this.CurrentPosition = GetNextPos(cur_pos);
+					this.CurrentPosition = cur_pos.GetNextPos(this.CodeList);
 					return ret_element;
 				}
 				else if (Char.IsPunctuation(ch))
 				{
 					CodeElement ret_element = new CodeElement(ElementType.Punctuation, cur_pos, 1);
-					this.CurrentPosition = GetNextPos(cur_pos);
+					this.CurrentPosition = cur_pos.GetNextPos(this.CodeList);
 					return ret_element;
 				}
-				cur_pos = GetNextPos(cur_pos);
+				cur_pos = cur_pos.GetNextPos(this.CodeList);
 				if (null == cur_pos)
 				{
 					break;
@@ -366,13 +358,67 @@ namespace SourceOutsight
 			}
 			return -1;
 		}
+		CodePosition GetNextQuotePosition(CodePosition first_quote_pos, List<string> code_list)
+		{
+			Trace.Assert(first_quote_pos.Valid(code_list));
+			CodePosition cur_pos = first_quote_pos;
+			char left_quote = code_list[cur_pos.Row][cur_pos.Col];
+			char right_quote = '\'';
+			if (left_quote.Equals('\''))
+			{
+				right_quote = '\'';
+			}
+			else if (left_quote.Equals('\"'))
+			{
+				right_quote = '\"';
+			}
+			else
+			{
+				Trace.Assert(false);
+			}
+			while (true)
+			{
+				cur_pos = cur_pos.GetNextPos(code_list);
+				if (null == cur_pos)
+				{
+					break;
+				}
+				char ch = code_list[cur_pos.Row][cur_pos.Col];
+				if (ch.Equals(right_quote))
+				{
+					if (0 != cur_pos.Col
+						&& code_list[cur_pos.Row][cur_pos.Col - 1].Equals('\\'))
+					{
+						// 如果前面一个字符是反斜线时表示是转义字符,不是右引号(例如'\'', "\"")
+					}
+					else
+					{
+						return cur_pos;
+					}
+				}
+				if (cur_pos.Col == code_list[cur_pos.Row].Length - 1)
+				{
+					// 到达行末
+					if (ch.Equals('\\'))
+					{
+						// 如果是续行符,就继续
+						continue;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+			return null;
+		}
 		CodeElement GetPrecompileElement(CodePosition cur_pos)
 		{
-			string line_str = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1).Trim();
+			string line_str = this.CodeList[cur_pos.Row].Substring(cur_pos.Col + 1).Trim();
 			int keyword_len = SO_Common.GetIdentifierStringLength(line_str, 0);
 			string keyword = line_str.Substring(0, keyword_len);
 			string element_str = "#" + keyword;
-			int keyword_idx = this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col + 1).IndexOf(keyword);
+			int keyword_idx = this.CodeList[cur_pos.Row].Substring(cur_pos.Col + 1).IndexOf(keyword);
 			ElementType element_type = ElementType.Unknown;
 			if (element_str.Equals("#include"))
 			{
@@ -407,47 +453,8 @@ namespace SourceOutsight
 			}
 			int len = keyword_idx + keyword_len + 1;
 			CodeElement ret_element = new CodeElement(element_type, cur_pos, len);
-			this.CurrentPosition = GetNextPosN(cur_pos, len);
+			this.CurrentPosition = cur_pos.GetNextPosN(this.CodeList, len);
 			return ret_element;
-		}
-		CodePosition GetNextPos(CodePosition cur_pos)
-		{
-			if (null == cur_pos
-				|| cur_pos.Row >= this.CodeList.Count
-				|| cur_pos.Col >= this.CodeList[cur_pos.Row].TextStr.Length)
-			{
-				return null;
-			}
-			if (cur_pos.Col < this.CodeList[cur_pos.Row].TextStr.Length - 1)
-			{
-				// 非最后一列, 返回同行下一列的位置
-				return new CodePosition(cur_pos.Row, cur_pos.Col + 1);
-			}
-			else
-			{
-				// 最后一列, 返回下一非空行的开头
-				int row = cur_pos.Row + 1;
-				while (row < this.CodeList.Count)
-				{
-					if (0 != this.CodeList[row].TextStr.Length)
-					{
-						return new CodePosition(row, 0);
-					}
-					else
-					{
-						row += 1;
-					}
-				}
-				return null;
-			}
-		}
-		CodePosition GetNextPosN(CodePosition cur_pos, int count)
-		{
-			for (int i = 0; i < count; i++)
-			{
-				cur_pos = GetNextPos(cur_pos);
-			}
-			return cur_pos;
 		}
 		CodePosition FindStrPosition(CodePosition start_pos, string find_str)
 		{
@@ -459,11 +466,11 @@ namespace SourceOutsight
 				{
 					break;
 				}
-				if (this.CodeList[cur_pos.Row].TextStr.Substring(cur_pos.Col).StartsWith(find_str))
+				if (this.CodeList[cur_pos.Row].Substring(cur_pos.Col).StartsWith(find_str))
 				{
 					return cur_pos;
 				}
-				cur_pos = GetNextPos(cur_pos);
+				cur_pos = cur_pos.GetNextPos(this.CodeList);
 			}
 			return null;
 		}
@@ -491,11 +498,7 @@ namespace SourceOutsight
 					}
 					else
 					{
-						// 回到行末尾
-						int last_row = ret_list.Last().Row;
-						int last_col = ret_list.Last().Offset + ret_list.Last().Len - 1;
-						CodePosition last_pos = new CodePosition(last_row, last_col);
-						this.CurrentPosition = GetNextPos(last_pos);
+						this.CurrentPosition = element.GetStartPosition();
 						break;
 					}
 				}
@@ -517,7 +520,7 @@ namespace SourceOutsight
 				ret_str += element_list[i].ToString(this.CodeList);
 				if (i != element_list.Count - 1)
 				{
-					if (element_list[i].CloseTo(element_list[i + 1]))
+					if (element_list[i].CloseTo(element_list[i + 1], this.CodeList))
 					{
 						// 如果跟下一个element紧邻,就直接连接
 					}
@@ -532,106 +535,73 @@ namespace SourceOutsight
 		}
 	}
 
-	public class CodePosition
-	{
-		public int Row = -1;
-		public int Col = -1;
-		public CodePosition(int row, int col)
-		{
-			this.Row = row;
-			this.Col = col;
-		}
-		public CodePosition(CodePosition pos)
-		{
-			this.Row = pos.Row;
-			this.Col = pos.Col;
-		}
-	}
-
-	public class CodeScope
-	{
-		public CodePosition Start = null;
-		public CodePosition End = null;
-		public CodeScope(CodePosition start, CodePosition end)
-		{
-			this.Start = start;
-			this.End = end;
-		}
-	}
-
-	class SO_CodeLineInfo
-	{
-		public string TextStr = null;
-		List<CodeElement> ElementList = new List<CodeElement>();
-
-		public SO_CodeLineInfo(string code_line_str)
-		{
-			this.TextStr = code_line_str;
-		}
-
-		public void AddElement(CodeElement mark)
-		{
-			this.ElementList.Add(mark);
-		}
-	}
-
 	class CodeElement
 	{
 		public ElementType Type = ElementType.Unknown;
 		public int Row = -1;
 		public int Offset = -1;
-		public int Len = 0;
+		public CodePosition EndPos = null;
 		public CodeElement(ElementType type, CodePosition start_pos, int len)
 		{
 			this.Type = type;
 			this.Row = start_pos.Row;
 			this.Offset = start_pos.Col;
-			this.Len = len;
+			this.EndPos = new CodePosition(this.Row, this.Offset + len - 1);
+		}
+		public CodeElement(ElementType type, CodePosition start_pos, CodePosition end_pos)
+		{
+			this.Type = type;
+			this.Row = start_pos.Row;
+			this.Offset = start_pos.Col;
+			this.EndPos = end_pos;
 		}
 
 		public CodePosition GetStartPosition()
 		{
 			return new CodePosition(this.Row, this.Offset);
 		}
-		public CodePosition GetEndPosition()
-		{
-			return new CodePosition(this.Row, this.Offset + this.Len - 1);
-		}
-		public string ToString(List<SO_CodeLineInfo> code_line_list)
+		public string ToString(List<string> code_line_list)
 		{
 			Trace.Assert(null != code_line_list);
-			if (this.Row < code_line_list.Count)
+			Trace.Assert(this.Row < code_line_list.Count);
+			string ret_str = string.Empty;
+			for (int i = this.Row; i <= this.EndPos.Row; i++)
 			{
-				string line_str = code_line_list[this.Row].TextStr;
-				if (this.Offset + this.Len <= line_str.Length)
+				int start_idx = 0;
+				if (this.Row == i)
 				{
-					return line_str.Substring(this.Offset, this.Len);
+					start_idx = this.Offset;
 				}
+				int end_idx = code_line_list[i].Length - 1;
+				if (this.EndPos.Row == i)
+				{
+					end_idx = this.EndPos.Col;
+				}
+				ret_str += code_line_list[i].Substring(start_idx, end_idx - start_idx + 1);
 			}
-			return null;
+			return ret_str;
 		}
 		/// <summary>
 		/// 判断两个element的位置是否紧邻
 		/// </summary>
-		public bool CloseTo(CodeElement another_element)
+		public bool CloseTo(CodeElement another_element, List<string> code_list)
 		{
-			if (this.Row == another_element.Row)
+			if (this.EndPos.CompareTo(another_element.GetStartPosition()) < 0
+				&& this.EndPos.CloseTo(another_element.GetStartPosition(), code_list))
 			{
-				if (this.Offset < another_element.Offset
-					&& this.Offset + this.Len == another_element.Offset)
-				{
-					return true;
-				}
-				else if (this.Offset > another_element.Offset
-					&& another_element.Offset + another_element.Len == this.Offset)
-				{
-					return true;
-				}
+				return true;
 			}
-			return false;
+			else if (this.GetStartPosition().CompareTo(another_element.EndPos) > 0
+					 && this.GetStartPosition().CloseTo(another_element.EndPos, code_list))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}
-
 	enum ElementType
 	{
 		Unknown,
