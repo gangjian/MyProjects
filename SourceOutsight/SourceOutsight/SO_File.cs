@@ -33,8 +33,8 @@ namespace SourceOutsight
 				{
 					break;
 				}
-				//if (this.FullName.EndsWith("AmigoSscCd_ConvEvent.c")
-				//	&& element.Row > 224)
+				//if (this.FullName.EndsWith("\\gbdlist.h")
+				//	&& element.Row >= 0)
 				//{
 				//	Trace.WriteLine("WTF");
 				//}
@@ -491,10 +491,22 @@ namespace SourceOutsight
 				}
 				else if (element.Row != row)
 				{
-					if (ret_list.Last().ToString(this.CodeList).Equals("\\"))
+					CodeElement last_element = ret_list.Last();
+					if (last_element.ToString(this.CodeList).Equals("\\"))
 					{
 						// 续行符
-						row = element.Row;
+						ret_list.Remove(last_element);									// 去掉续行符
+						if (element.Row == last_element.Row + 1)
+						{
+							row = element.Row;
+							ret_list.Add(element);
+						}
+						else
+						{
+							// 超过一行,说明隔了空行
+							this.CurrentPosition = element.GetStartPosition();
+							break;
+						}
 					}
 					else
 					{
