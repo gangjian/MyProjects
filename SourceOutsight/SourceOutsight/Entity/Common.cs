@@ -192,5 +192,36 @@ namespace SourceOutsight
 			}
 			return null;
 		}
+		public static CodePosition FindStrPosition(CodePosition start_pos, string find_str, List<string> code_list)
+		{
+			Trace.Assert(null != start_pos && !string.IsNullOrEmpty(find_str));
+			CodePosition cur_pos = start_pos;
+			while (true)
+			{
+				if (null == cur_pos)
+				{
+					break;
+				}
+				if (code_list[cur_pos.Row].Substring(cur_pos.Col).StartsWith(find_str))
+				{
+					return cur_pos;
+				}
+				cur_pos = cur_pos.GetNextPos(code_list);
+			}
+			return null;
+		}
+		public static bool IsCommentStart(CodePosition cur_pos, List<string> code_list)
+		{
+			string line_str = code_list[cur_pos.Row].Substring(cur_pos.Col);
+			if (line_str.StartsWith("//")
+				|| line_str.StartsWith("/*"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	}
 }

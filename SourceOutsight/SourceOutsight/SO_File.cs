@@ -92,33 +92,11 @@ namespace SourceOutsight
 			else if (line_str.StartsWith("/*"))
 			{
 				// 块注释
-				CodePosition end_pos = FindStrPosition(cur_pos, "*/");
+				CodePosition end_pos = Common.FindStrPosition(cur_pos, "*/", this.CodeList);
 				Trace.Assert(null != end_pos);
-				for (int row = cur_pos.Row; row <= end_pos.Row; row++)
-				{
-					int start_col, end_col;
-					if (row == cur_pos.Row)
-					{
-						start_col = cur_pos.Col;
-					}
-					else
-					{
-						start_col = 0;
-					}
-					if (row == end_pos.Row)
-					{
-						end_col = end_pos.Col;
-					}
-					else
-					{
-						end_col = code_list[row].Length - 1;
-					}
-					CodePosition s_pos = new CodePosition(row, start_col);
-					int len = end_col - start_col + 1;
-					CodeElement comment_element = new CodeElement(ElementType.Comments, new CodePosition(row, start_col), len);
-					this.ElementList.Add(comment_element);
-				}
-				cur_pos = end_pos.GetNextPosN(code_list, 1);
+				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, end_pos);
+				this.ElementList.Add(comment_element);
+				cur_pos = end_pos.GetNextPos(code_list);
 			}
 			return cur_pos;
 		}
@@ -126,12 +104,14 @@ namespace SourceOutsight
 		void DefineProc(CodeElement def_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(def_element.GetStartPosition());
+			this.ElementList.AddRange(element_list);
 			TagTreeNode macro_node = MacroProc.MakeDefTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(macro_node);
 		}
 		void UndefProc(CodeElement undef_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(undef_element.GetStartPosition());
+			this.ElementList.AddRange(element_list);
 			TagTreeNode macro_node = MacroProc.MakeUndefTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(macro_node);
 		}
@@ -139,6 +119,7 @@ namespace SourceOutsight
 		void IncludeProc(CodeElement include_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(include_element.GetStartPosition());
+			this.ElementList.AddRange(element_list);
 			TagTreeNode include_node = IncProc.MakeIncludeTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(include_node);
 		}
@@ -146,6 +127,7 @@ namespace SourceOutsight
 		void PrecompileSwitchProc(CodeElement precompileswitch_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(precompileswitch_element.GetStartPosition());
+			this.ElementList.AddRange(element_list);
 			TagTreeNode precompileswitch_node = PrecompileProc.MakePrecompileSwitchTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(precompileswitch_node);
 		}
@@ -153,6 +135,7 @@ namespace SourceOutsight
 		void PrecompileCommandProc(CodeElement precompilecommand_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(precompilecommand_element.GetStartPosition());
+			this.ElementList.AddRange(element_list);
 			TagTreeNode precompilecommand_node = PrecompileProc.MakePrecompileCommandTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(precompilecommand_node);
 		}
@@ -172,7 +155,7 @@ namespace SourceOutsight
 					// 白空格
 				}
 				else if (ch.Equals('/')
-						 && IsCommentStart(cur_pos, this.CodeList))
+						 && Common.IsCommentStart(cur_pos, this.CodeList))
 				{
 					// 注释
 					cur_pos = CommentProc(cur_pos, this.CodeList);
@@ -242,19 +225,6 @@ namespace SourceOutsight
 			}
 			return null;
 		}
-		bool IsCommentStart(CodePosition cur_pos, List<string> code_list)
-		{
-			string line_str = code_list[cur_pos.Row].Substring(cur_pos.Col);
-			if (line_str.StartsWith("//")
-				|| line_str.StartsWith("/*"))
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
 		CodeElement GetPrecompileElement(CodePosition cur_pos)
 		{
 			string line_str = this.CodeList[cur_pos.Row].Substring(cur_pos.Col + 1).Trim();
@@ -298,24 +268,6 @@ namespace SourceOutsight
 			CodeElement ret_element = new CodeElement(element_type, cur_pos, len);
 			this.CurrentPosition = cur_pos.GetNextPosN(this.CodeList, len);
 			return ret_element;
-		}
-		CodePosition FindStrPosition(CodePosition start_pos, string find_str)
-		{
-			Trace.Assert(null != start_pos && !string.IsNullOrEmpty(find_str));
-			CodePosition cur_pos = start_pos;
-			while (true)
-			{
-				if (null == cur_pos)
-				{
-					break;
-				}
-				if (this.CodeList[cur_pos.Row].Substring(cur_pos.Col).StartsWith(find_str))
-				{
-					return cur_pos;
-				}
-				cur_pos = cur_pos.GetNextPos(this.CodeList);
-			}
-			return null;
 		}
 		/// <summary>
 		/// 取得一行内的element_list
