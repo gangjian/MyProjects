@@ -52,7 +52,7 @@ namespace SourceOutsight
 		{
 			Trace.Assert(!string.IsNullOrEmpty(prj_dir) && Directory.Exists(prj_dir));
 			this.ProjectPath = prj_dir;
-			SO_Common.GetCodeFileList(this.ProjectPath, this.SourcePathList, this.HeaderPathList);
+			Common.GetCodeFileList(this.ProjectPath, this.SourcePathList, this.HeaderPathList);
 		}
 		void DoParse()
 		{

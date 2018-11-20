@@ -131,6 +131,8 @@ namespace SourceOutsight
 		public TagTreeNode ParentRef = null;
 		public List<TagTreeNode> ChildList = new List<TagTreeNode>();
 
+		public object InfoRef = null;
+
 		public TagTreeNode(string tag_str, string exp_str, CodePosition pos, CodeScope scope, TagNodeType type)
 		{
 			this.TagStr = tag_str;
