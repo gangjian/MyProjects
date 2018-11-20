@@ -76,18 +76,18 @@ namespace SourceOutsight
 			}
 		}
 
-		CodePosition CommentProc(CodePosition cur_pos)
+		CodePosition CommentProc(CodePosition cur_pos, List<string> code_list)
 		{
-			string line_str = this.CodeList[cur_pos.Row].Substring(cur_pos.Col);
+			string line_str = code_list[cur_pos.Row].Substring(cur_pos.Col);
 			if (line_str.StartsWith("//"))
 			{
 				// 行注释
 				int row = cur_pos.Row;
-				int end_col = this.CodeList[row].Length - 1;
+				int end_col = code_list[row].Length - 1;
 				int len = end_col - cur_pos.Col + 1;
 				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, len);
 				this.ElementList.Add(comment_element);
-				cur_pos = cur_pos.GetNextPosN(this.CodeList, len - 1);
+				cur_pos = cur_pos.GetNextPosN(code_list, len - 1);
 			}
 			else if (line_str.StartsWith("/*"))
 			{
@@ -111,14 +111,14 @@ namespace SourceOutsight
 					}
 					else
 					{
-						end_col = this.CodeList[row].Length - 1;
+						end_col = code_list[row].Length - 1;
 					}
 					CodePosition s_pos = new CodePosition(row, start_col);
 					int len = end_col - start_col + 1;
 					CodeElement comment_element = new CodeElement(ElementType.Comments, new CodePosition(row, start_col), len);
 					this.ElementList.Add(comment_element);
 				}
-				cur_pos = end_pos.GetNextPosN(this.CodeList, 1);
+				cur_pos = end_pos.GetNextPosN(code_list, 1);
 			}
 			return cur_pos;
 		}
@@ -171,10 +171,11 @@ namespace SourceOutsight
 				{
 					// 白空格
 				}
-				else if (ch.Equals('/'))
+				else if (ch.Equals('/')
+						 && IsCommentStart(cur_pos, this.CodeList))
 				{
 					// 注释
-					cur_pos = CommentProc(cur_pos);
+					cur_pos = CommentProc(cur_pos, this.CodeList);
 				}
 				else if (ch.Equals('#'))
 				{
@@ -240,6 +241,19 @@ namespace SourceOutsight
 				}
 			}
 			return null;
+		}
+		bool IsCommentStart(CodePosition cur_pos, List<string> code_list)
+		{
+			string line_str = code_list[cur_pos.Row].Substring(cur_pos.Col);
+			if (line_str.StartsWith("//")
+				|| line_str.StartsWith("/*"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 		CodeElement GetPrecompileElement(CodePosition cur_pos)
 		{

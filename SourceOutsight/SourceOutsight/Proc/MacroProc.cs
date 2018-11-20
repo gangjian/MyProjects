@@ -19,24 +19,51 @@ namespace SourceOutsight
 			CodeScope scope = new CodeScope(def_element.GetStartPosition(), element_list.Last().EndPos);
 			TagNodeType type = TagNodeType.MacroDef;
 			// 判断是否为宏函数
-			if (IsMacroFunction(element_list, code_list))
+			List<string> paras = GetParaList(ref element_list, code_list);
+			if (null != paras)
 			{
 				type = TagNodeType.MacroFunc;
 			}
+			string val_str = Common.ElementListStrCat(element_list, code_list);
+			DefInfo def_info = new DefInfo(macro_name, val_str);
+			def_info.Paras = paras;
 			TagTreeNode ret_node = new TagTreeNode(macro_name, null, macro_element.GetStartPosition(), scope, type);
+			ret_node.InfoRef = def_info;
 			return ret_node;
 		}
-		static bool IsMacroFunction(List<CodeElement> element_list, List<string> code_list)
+		static List<string> GetParaList(ref List<CodeElement> element_list, List<string> code_list)
 		{
 			if (element_list.Count > 3
 				&& element_list[2].ToString(code_list).Equals("(")
 				&& element_list[2].CloseTo(element_list[1], code_list))
 			{
-				return true;
+				List<CodeElement> para_list = new List<CodeElement>();
+				for (int i = 3; i < element_list.Count; i++)
+				{
+					if (element_list[i].ToString(code_list).Equals(")"))
+					{
+						string para_str = Common.ElementListStrCat(para_list, code_list);
+						string[] arr = para_str.Split(',');
+						List<string> paras = new List<string>();
+						foreach (var item in arr)
+						{
+							paras.Add(item.Trim());
+						}
+						element_list.RemoveRange(0, i + 1);
+						return paras;
+					}
+					else
+					{
+						para_list.Add(element_list[i]);
+					}
+				}
+				Trace.Assert(false);
+				return null;
 			}
 			else
 			{
-				return false;
+				element_list.RemoveRange(0, 2);
+				return null;
 			}
 		}
 		public static TagTreeNode MakeUndefTagTreeNode(List<CodeElement> element_list, List<string> code_list)
