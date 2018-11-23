@@ -55,6 +55,7 @@
     <Compile Include="Proc\IncProc.cs" />
     <Compile Include="Proc\MacroProc.cs" />
     <Compile Include="Proc\PrecompileProc.cs" />
+    <Compile Include="Table\CodeElementTable.cs" />
     <Compile Include="Table\TagTreeTable.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

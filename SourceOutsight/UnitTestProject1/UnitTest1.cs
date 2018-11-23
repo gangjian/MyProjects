@@ -62,5 +62,27 @@ namespace UnitTestProject1
 			sw.Stop();
 			Trace.WriteLine("Total Elapsed Time: " + sw.Elapsed.ToString());
 		}
+
+		[TestMethod]
+		public void TestMethod_swc_in_oilp()
+		{
+			string prj_dir = "C:\\Users\\GangJian\\03_work\\github\\MyProjects\\Mr.Robot\\TestSrc\\swc_in_oilp";
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+			SO_Project so_prj = new SO_Project(prj_dir);
+			sw.Stop();
+			Trace.WriteLine("Total Elapsed Time: " + sw.Elapsed.ToString());
+		}
+
+		[TestMethod]
+		public void TestMethod_swc_in_trcta()
+		{
+			string prj_dir = "C:\\Users\\GangJian\\03_work\\github\\MyProjects\\Mr.Robot\\TestSrc\\swc_in_trcta";
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+			SO_Project so_prj = new SO_Project(prj_dir);
+			sw.Stop();
+			Trace.WriteLine("Total Elapsed Time: " + sw.Elapsed.ToString());
+		}
 	}
 }

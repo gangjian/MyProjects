@@ -12,16 +12,22 @@ namespace SourceOutsight
 	{
 		public string FullName = null;
 		List<string> CodeList = new List<string>();
-		List<CodeElement> ElementList = new List<CodeElement>();
-		public SO_File(string path)
+		SO_Project ProjectRef = null;													// 所属工程的引用
+
+		public SO_File(string path, SO_Project prj_ref)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
+			Trace.Assert(!prj_ref.ParseFileStack.Contains(path));
+			prj_ref.ParseFileStack.Push(path);
 			this.FullName = path;
 			this.CodeList = File.ReadAllLines(path).ToList();
+			this.ProjectRef = prj_ref;
 			DoParse();
+			prj_ref.ParseFileStack.Pop();
 		}
 
 		public TagTreeTable TagTable = new TagTreeTable();
+		public CodeElementTable ElementTable = new CodeElementTable();
 		CodePosition CurrentPosition = new CodePosition(0, 0);
 		void DoParse()
 		{
@@ -86,7 +92,7 @@ namespace SourceOutsight
 				int end_col = code_list[row].Length - 1;
 				int len = end_col - cur_pos.Col + 1;
 				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, len);
-				this.ElementList.Add(comment_element);
+				this.ElementTable.Add(comment_element);
 				cur_pos = cur_pos.GetNextPosN(code_list, len - 1);
 			}
 			else if (line_str.StartsWith("/*"))
@@ -95,7 +101,7 @@ namespace SourceOutsight
 				CodePosition end_pos = Common.FindStrPosition(cur_pos, "*/", this.CodeList);
 				Trace.Assert(null != end_pos);
 				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, end_pos);
-				this.ElementList.Add(comment_element);
+				this.ElementTable.Add(comment_element);
 				cur_pos = end_pos.GetNextPos(code_list);
 			}
 			return cur_pos;
@@ -104,14 +110,14 @@ namespace SourceOutsight
 		void DefineProc(CodeElement def_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(def_element.GetStartPosition());
-			this.ElementList.AddRange(element_list);
+			this.ElementTable.AddRange(element_list);
 			TagTreeNode macro_node = MacroProc.MakeDefTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(macro_node);
 		}
 		void UndefProc(CodeElement undef_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(undef_element.GetStartPosition());
-			this.ElementList.AddRange(element_list);
+			this.ElementTable.AddRange(element_list);
 			TagTreeNode macro_node = MacroProc.MakeUndefTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(macro_node);
 		}
@@ -119,15 +125,15 @@ namespace SourceOutsight
 		void IncludeProc(CodeElement include_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(include_element.GetStartPosition());
-			this.ElementList.AddRange(element_list);
-			TagTreeNode include_node = IncProc.MakeIncludeTagTreeNode(element_list, this.CodeList);
+			this.ElementTable.AddRange(element_list);
+			TagTreeNode include_node = IncProc.MakeIncludeTagTreeNode(element_list, this.CodeList, this.ProjectRef);
 			this.TagTable.Add(include_node);
 		}
 
 		void PrecompileSwitchProc(CodeElement precompileswitch_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(precompileswitch_element.GetStartPosition());
-			this.ElementList.AddRange(element_list);
+			this.ElementTable.AddRange(element_list);
 			TagTreeNode precompileswitch_node = PrecompileProc.MakePrecompileSwitchTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(precompileswitch_node);
 		}
@@ -135,7 +141,7 @@ namespace SourceOutsight
 		void PrecompileCommandProc(CodeElement precompilecommand_element)
 		{
 			List<CodeElement> element_list = GetLineElementList(precompilecommand_element.GetStartPosition());
-			this.ElementList.AddRange(element_list);
+			this.ElementTable.AddRange(element_list);
 			TagTreeNode precompilecommand_node = PrecompileProc.MakePrecompileCommandTagTreeNode(element_list, this.CodeList);
 			this.TagTable.Add(precompilecommand_node);
 		}

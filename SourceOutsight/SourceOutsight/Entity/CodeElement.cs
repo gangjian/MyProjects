@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace SourceOutsight
 {
-	class CodeElement
+	public class CodeElement
 	{
 		public ElementType Type = ElementType.Unknown;
 		public int Row = -1;
@@ -74,7 +74,7 @@ namespace SourceOutsight
 			}
 		}
 	}
-	enum ElementType
+	public enum ElementType
 	{
 		Unknown,
 		Identifier,

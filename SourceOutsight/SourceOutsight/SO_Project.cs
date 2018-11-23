@@ -17,6 +17,8 @@ namespace SourceOutsight
 		List<SO_File> SourceInfoList = new List<SO_File>();
 		List<SO_File> HeaderInfoList = new List<SO_File>();
 
+		public Stack<string> ParseFileStack = new Stack<string>();
+
 		public SO_Project(string prj_dir)
 		{
 			Init(prj_dir);
@@ -30,18 +32,38 @@ namespace SourceOutsight
 		{
 			return this.HeaderInfoList;
 		}
+		public void AddHeaderInfo(SO_File header_info)
+		{
+			this.HeaderInfoList.Add(header_info);
+		}
 		public SO_File GetFileInfo(string path)
 		{
-			foreach (var item in this.SourceInfoList)
+			List<SO_File> file_list = new List<SO_File>();
+			file_list.AddRange(this.SourceInfoList);
+			file_list.AddRange(this.HeaderInfoList);
+			foreach (var item in file_list)
 			{
 				if (item.FullName.Equals(path))
 				{
 					return item;
 				}
 			}
-			foreach (var item in this.HeaderInfoList)
+			return null;
+		}
+		public string GetFileFullPath(string file_name)
+		{
+			List<string> path_list = new List<string>();
+			path_list.AddRange(this.HeaderPathList);
+			path_list.AddRange(this.SourcePathList);
+			foreach (var item in path_list)
 			{
-				if (item.FullName.Equals(path))
+				string name = item;
+				int idx = name.LastIndexOf('\\');
+				if (-1 != idx)
+				{
+					name = name.Substring(idx + 1);
+				}
+				if (name.Equals(file_name))
 				{
 					return item;
 				}
@@ -59,23 +81,17 @@ namespace SourceOutsight
 			int total = this.SourcePathList.Count + this.HeaderPathList.Count;
 			int cnt = 0;
 			Stopwatch sw = new Stopwatch();
-			foreach (var src_path in this.SourcePathList)
+			List<string> path_list = new List<string>();
+			path_list.AddRange(this.SourcePathList);
+			path_list.AddRange(this.HeaderPathList);
+			foreach (var path in path_list)
 			{
 				sw.Restart();
-				SO_File src_info = new SO_File(src_path);
-				//this.SourceInfoList.Add(src_info);
+				SO_File file_info = new SO_File(path, this);
+				//this.SourceInfoList.Add(file_info);
 				cnt++;
 				sw.Stop();
-				LogOut(src_path, cnt, total, sw.Elapsed);
-			}
-			foreach (var hd_path in this.HeaderPathList)
-			{
-				sw.Restart();
-				SO_File hd_info = new SO_File(hd_path);
-				//this.HeaderInfoList.Add(hd_info);
-				cnt++;
-				sw.Stop();
-				LogOut(hd_path, cnt, total, sw.Elapsed);
+				LogOut(path, cnt, total, sw.Elapsed);
 			}
 		}
 		void LogOut(string path, int count, int total, TimeSpan time)
