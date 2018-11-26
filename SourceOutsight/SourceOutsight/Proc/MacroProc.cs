@@ -28,7 +28,7 @@ namespace SourceOutsight
 			DefInfo def_info = new DefInfo(macro_name, val_str);
 			def_info.Paras = paras;
 			TagTreeNode ret_node = new TagTreeNode(macro_name, null, macro_element.GetStartPosition(), scope, type);
-			ret_node.InfoRef = def_info;
+			ret_node.Info.DataRef = def_info;
 			return ret_node;
 		}
 		static List<string> GetParaList(ref List<CodeElement> element_list, List<string> code_list)

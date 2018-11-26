@@ -140,9 +140,6 @@ namespace SourceOutsight
 		public TagInfo Info = null;
 		public TagTreeNode ParentRef = null;
 		List<TagTreeNode> ChildList = new List<TagTreeNode>();
-
-		public object InfoRef = null;
-
 		public TagTreeNode(string tag_str, string exp_str, CodePosition pos, CodeScope scope, TagNodeType type)
 		{
 			this.Info = new TagInfo(tag_str, exp_str, pos, scope, type);
@@ -301,6 +298,7 @@ namespace SourceOutsight
 		public CodePosition Position = null;											// 标识符的开始位置
 		public CodeScope AffectScope = null;											// 作用域
 		public TagNodeType Type = TagNodeType.Unknown;
+		public object DataRef = null;
 		public TagInfo(string tag_str, string exp_str, CodePosition pos, CodeScope scope, TagNodeType type)
 		{
 			this.TagStr = tag_str;

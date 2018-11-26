@@ -23,7 +23,7 @@ namespace SourceOutsight
 													header_name_str,
 													include_element.GetStartPosition(),
 													scope, type);
-			ret_node.InfoRef = header_info;
+			ret_node.Info.DataRef = header_info;
 			return ret_node;
 		}
 

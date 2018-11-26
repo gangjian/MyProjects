@@ -108,24 +108,37 @@ namespace SourceOutsight
 			Trace.WriteLine(log);
 		}
 
-		public List<string> SearchTag(string tag_str)
+		public List<SearchTagResult> SearchTag(string tag_str)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(tag_str));
-			List<string> ret_list = new List<string>();
+			List<SearchTagResult> ret_list = new List<SearchTagResult>();
 			List<SO_File> file_list = new List<SO_File>();
 			file_list.AddRange(this.HeaderInfoList);
 			file_list.AddRange(this.SourceInfoList);
 			foreach (var f in file_list)
 			{
 				List<TagTreeNode> tag_node_list = f.SearchTag(tag_str);
-				foreach (var tag_node in tag_node_list)
+				if (0 != tag_node_list.Count)
 				{
-					ret_list.Add(tag_str + "," + f.FullName + "," + "line: "
-						+ tag_node.Info.Position.Row.ToString() + ", Col: "
-						+ tag_node.Info.Position.Col.ToString());
+					SearchTagResult result = new SearchTagResult(f.FullName);
+					foreach (var tag_node in tag_node_list)
+					{
+						result.TagInfoList.Add(tag_node.Info);
+					}
+					ret_list.Add(result);
 				}
 			}
 			return ret_list;
+		}
+	}
+
+	public class SearchTagResult
+	{
+		public string Path;
+		public List<TagInfo> TagInfoList = new List<TagInfo>();
+		public SearchTagResult(string path)
+		{
+			this.Path = path;
 		}
 	}
 }

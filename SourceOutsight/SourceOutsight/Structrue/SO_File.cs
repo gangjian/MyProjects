@@ -82,6 +82,10 @@ namespace SourceOutsight
 			{
 				PrecompileSwitchProc(element);
 			}
+			else if (element.Type.Equals(ElementType.Identifier))
+			{
+				//this.ProjectRef.SearchTag(element.ToString(this.CodeList));
+			}
 		}
 
 		CodePosition CommentProc(CodePosition cur_pos, List<string> code_list)
@@ -333,6 +337,21 @@ namespace SourceOutsight
 		public List<TagTreeNode> SearchTag(string tag_str)
 		{
 			return this.TagTable.SearchTag(tag_str);
+		}
+
+		bool IsMacro(CodeElement element)
+		{
+			if (element.Type.Equals(ElementType.Identifier))
+			{
+				string id_str = element.ToString(this.CodeList);
+				List<SearchTagResult> result_list = this.ProjectRef.SearchTag(id_str);
+				if (0 != result_list.Count
+					&& result_list[0].TagInfoList[0].Type == TagNodeType.MacroDef)
+				{
+
+				}
+			}
+			return false;
 		}
 	}
 }
