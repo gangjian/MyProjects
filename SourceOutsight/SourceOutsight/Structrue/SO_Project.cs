@@ -22,7 +22,7 @@ namespace SourceOutsight
 		public SO_Project(string prj_dir)
 		{
 			Init(prj_dir);
-			DoParse();
+			ParseAll();
 		}
 		public List<SO_File> GetSourceInfoList()
 		{
@@ -76,7 +76,7 @@ namespace SourceOutsight
 			this.ProjectPath = prj_dir;
 			Common.GetCodeFileList(this.ProjectPath, this.SourcePathList, this.HeaderPathList);
 		}
-		void DoParse()
+		void ParseAll()
 		{
 			int total = this.SourcePathList.Count + this.HeaderPathList.Count;
 			int cnt = 0;
@@ -86,18 +86,46 @@ namespace SourceOutsight
 			path_list.AddRange(this.HeaderPathList);
 			foreach (var path in path_list)
 			{
-				sw.Restart();
-				SO_File file_info = new SO_File(path, this);
-				//this.SourceInfoList.Add(file_info);
-				cnt++;
-				sw.Stop();
-				LogOut(path, cnt, total, sw.Elapsed);
+				if (null == this.GetFileInfo(path))
+				{
+					sw.Restart();
+					SO_File file_info = new SO_File(path, this);
+					this.SourceInfoList.Add(file_info);
+					sw.Stop();
+					cnt++;
+					LogOut(path, cnt, total, sw.Elapsed);
+				}
+				else
+				{
+					cnt++;
+					Trace.WriteLine(path + "***Already Exists!***");
+				}
 			}
 		}
 		void LogOut(string path, int count, int total, TimeSpan time)
 		{
 			string log = string.Format("{1}/{2} : {3}ms : {0}", path, count, total, time.TotalMilliseconds);
 			Trace.WriteLine(log);
+		}
+
+		public List<string> SearchTag(string tag_str)
+		{
+			Trace.Assert(!string.IsNullOrEmpty(tag_str));
+			List<string> ret_list = new List<string>();
+			List<SO_File> file_list = new List<SO_File>();
+			file_list.AddRange(this.HeaderInfoList);
+			file_list.AddRange(this.SourceInfoList);
+			foreach (var f in file_list)
+			{
+				List<TagTreeNode> tag_node_list = f.SearchTag(tag_str);
+				foreach (var tag_node in tag_node_list)
+				{
+					ret_list.Add(tag_str + "," + f.FullName + "," + "line: "
+						+ tag_node.Info.Position.Row.ToString() + ", Col: "
+						+ tag_node.Info.Position.Col.ToString());
+				}
+			}
+			return ret_list;
 		}
 	}
 }

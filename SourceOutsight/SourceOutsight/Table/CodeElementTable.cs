@@ -17,5 +17,9 @@ namespace SourceOutsight
 		{
 			this.ElementList.AddRange(element_list);
 		}
+		public void Clear()
+		{
+			this.ElementList.Clear();
+		}
 	}
 }

@@ -63,7 +63,7 @@ namespace SourceOutsight
 				file_name = file_name.Substring(prj_dir.Length);
 			}
 			ret_list.Add(MakeNameCommentsLineString(file_name));
-			ret_list.AddRange(file_info.TagTable.ToStringList());
+			ret_list.AddRange(file_info.GetTagTreeStringList());
 			return ret_list;
 		}
 		const int NAME_COMMENTS_LEN = 80;

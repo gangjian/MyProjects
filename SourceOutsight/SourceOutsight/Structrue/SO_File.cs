@@ -18,16 +18,18 @@ namespace SourceOutsight
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
 			Trace.Assert(!prj_ref.ParseFileStack.Contains(path));
-			prj_ref.ParseFileStack.Push(path);
 			this.FullName = path;
 			this.CodeList = File.ReadAllLines(path).ToList();
 			this.ProjectRef = prj_ref;
+			prj_ref.ParseFileStack.Push(path);
 			DoParse();
 			prj_ref.ParseFileStack.Pop();
+			this.CodeList.Clear();
+			this.ElementTable.Clear();
 		}
 
-		public TagTreeTable TagTable = new TagTreeTable();
-		public CodeElementTable ElementTable = new CodeElementTable();
+		TagTreeTable TagTable = new TagTreeTable();
+		CodeElementTable ElementTable = new CodeElementTable();
 		CodePosition CurrentPosition = new CodePosition(0, 0);
 		void DoParse()
 		{
@@ -321,6 +323,16 @@ namespace SourceOutsight
 				}
 			}
 			return ret_list;
+		}
+
+		public List<string> GetTagTreeStringList()
+		{
+			return this.TagTable.ToStringList();
+		}
+
+		public List<TagTreeNode> SearchTag(string tag_str)
+		{
+			return this.TagTable.SearchTag(tag_str);
 		}
 	}
 }

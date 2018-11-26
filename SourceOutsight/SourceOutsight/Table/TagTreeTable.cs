@@ -32,9 +32,9 @@ namespace SourceOutsight
 		}
 		void AddPrecompileSwitchNode(TagTreeNode add_node)
 		{
-			if (add_node.TagStr.Equals("#if")
-				|| add_node.TagStr.Equals("#ifdef")
-				|| add_node.TagStr.Equals("#ifndef"))
+			if (add_node.Info.TagStr.Equals("#if")
+				|| add_node.Info.TagStr.Equals("#ifdef")
+				|| add_node.Info.TagStr.Equals("#ifndef"))
 			{
 				if (null == this.CurrentBranchNode)
 				{
@@ -44,18 +44,18 @@ namespace SourceOutsight
 				else
 				{
 					add_node.ParentRef = this.CurrentBranchNode;
-					this.CurrentBranchNode.ChildList.Add(add_node);
+					this.CurrentBranchNode.AddChild(add_node);
 					this.CurrentBranchNode = add_node;
 				}
 			}
-			else if (add_node.TagStr.Equals("#elif")
-					 || add_node.TagStr.Equals("#else"))
+			else if (add_node.Info.TagStr.Equals("#elif")
+					 || add_node.Info.TagStr.Equals("#else"))
 			{
 				Trace.Assert(null != this.CurrentBranchNode);
 				add_node.ParentRef = this.CurrentBranchNode.ParentRef;
 				if (null != this.CurrentBranchNode.ParentRef)
 				{
-					this.CurrentBranchNode.ParentRef.ChildList.Add(add_node);
+					this.CurrentBranchNode.ParentRef.AddChild(add_node);
 				}
 				else
 				{
@@ -63,13 +63,13 @@ namespace SourceOutsight
 				}
 				this.CurrentBranchNode = add_node;
 			}
-			else if (add_node.TagStr.Equals("#endif"))
+			else if (add_node.Info.TagStr.Equals("#endif"))
 			{
 				Trace.Assert(null != this.CurrentBranchNode);
 				add_node.ParentRef = this.CurrentBranchNode.ParentRef;
 				if (null != this.CurrentBranchNode.ParentRef)
 				{
-					this.CurrentBranchNode.ParentRef.ChildList.Add(add_node);
+					this.CurrentBranchNode.ParentRef.AddChild(add_node);
 				}
 				else
 				{
@@ -77,7 +77,7 @@ namespace SourceOutsight
 				}
 				this.CurrentBranchNode = add_node.ParentRef;
 			}
-			else if (add_node.TagStr.Equals("#pragma"))
+			else if (add_node.Info.TagStr.Equals("#pragma"))
 			{
 				AddNormalNode(add_node);
 			}
@@ -94,7 +94,7 @@ namespace SourceOutsight
 			}
 			else
 			{
-				this.CurrentBranchNode.ChildList.Add(add_node);
+				this.CurrentBranchNode.AddChild(add_node);
 			}
 		}
 		void AddStructureNode(TagTreeNode add_node)
@@ -105,7 +105,7 @@ namespace SourceOutsight
 			}
 			else
 			{
-				this.CurrentBranchNode.ChildList.Add(add_node);
+				this.CurrentBranchNode.AddChild(add_node);
 			}
 		}
 
@@ -118,33 +118,39 @@ namespace SourceOutsight
 			}
 			return ret_list;
 		}
+
+		public List<TagTreeNode> SearchTag(string tag_str)
+		{
+			Trace.Assert(!string.IsNullOrEmpty(tag_str));
+			List<TagTreeNode> ret_list = new List<TagTreeNode>();
+			foreach (var node in this.TagTreeList)
+			{
+				if (node.Info.TagStr.Equals(tag_str))
+				{
+					ret_list.Add(node);
+				}
+				ret_list.AddRange(node.SearchTag(tag_str));
+			}
+			return ret_list;
+		}
 	}
 
 	public class TagTreeNode
 	{
-		public string TagStr = null;
-		public string ExpressionStr = null;
-		public CodePosition Position = null;											// 标识符的开始位置
-		public CodeScope AffectScope = null;											// 作用域
-		public TagNodeType Type = TagNodeType.Unknown;
-
+		public TagInfo Info = null;
 		public TagTreeNode ParentRef = null;
-		public List<TagTreeNode> ChildList = new List<TagTreeNode>();
+		List<TagTreeNode> ChildList = new List<TagTreeNode>();
 
 		public object InfoRef = null;
 
 		public TagTreeNode(string tag_str, string exp_str, CodePosition pos, CodeScope scope, TagNodeType type)
 		{
-			this.TagStr = tag_str;
-			this.ExpressionStr = exp_str;
-			this.Position = pos;
-			this.AffectScope = scope;
-			this.Type = type;
+			this.Info = new TagInfo(tag_str, exp_str, pos, scope, type);
 		}
 
 		public bool IsPrecompileSwitchNode()
 		{
-			if (this.Type == TagNodeType.PrecompileSwitch)
+			if (this.Info.Type == TagNodeType.PrecompileSwitch)
 			{
 				return true;
 			}
@@ -155,16 +161,16 @@ namespace SourceOutsight
 		}
 		public bool IsNormalNode()
 		{
-			if (this.Type == TagNodeType.IncludeHeader
-				|| this.Type == TagNodeType.MacroDef
-				|| this.Type == TagNodeType.MacroFunc
-				|| this.Type == TagNodeType.Undef
-				|| this.Type == TagNodeType.GlobalDef
-				|| this.Type == TagNodeType.GlobalExtern
-				|| this.Type == TagNodeType.FuncDef
-				|| this.Type == TagNodeType.FuncExtern
-				|| this.Type == TagNodeType.Typedef
-				|| this.Type == TagNodeType.PrecompileCommand)
+			if (this.Info.Type == TagNodeType.IncludeHeader
+				|| this.Info.Type == TagNodeType.MacroDef
+				|| this.Info.Type == TagNodeType.MacroFunc
+				|| this.Info.Type == TagNodeType.Undef
+				|| this.Info.Type == TagNodeType.GlobalDef
+				|| this.Info.Type == TagNodeType.GlobalExtern
+				|| this.Info.Type == TagNodeType.FuncDef
+				|| this.Info.Type == TagNodeType.FuncExtern
+				|| this.Info.Type == TagNodeType.Typedef
+				|| this.Info.Type == TagNodeType.PrecompileCommand)
 			{
 				return true;
 			}
@@ -175,8 +181,8 @@ namespace SourceOutsight
 		}
 		public bool IsStructureNode()
 		{
-			if (this.Type == TagNodeType.StructType
-				|| this.Type == TagNodeType.UnionType)
+			if (this.Info.Type == TagNodeType.StructType
+				|| this.Info.Type == TagNodeType.UnionType)
 			{
 				return true;
 			}
@@ -198,17 +204,17 @@ namespace SourceOutsight
 		}
 		string ToString(int level)
 		{
-			string ret_str = GetBranchString(level) + GetIconString() + " " + this.TagStr;
-			if (!string.IsNullOrEmpty(this.ExpressionStr))
+			string ret_str = GetBranchString(level) + GetIconString() + " " + this.Info.TagStr;
+			if (!string.IsNullOrEmpty(this.Info.ExpressionStr))
 			{
-				ret_str += (" " + this.ExpressionStr);
+				ret_str += (" " + this.Info.ExpressionStr);
 			}
 			return ret_str;
 		}
 		string GetIconString()
 		{
 			string icon_str = null;
-			switch (this.Type)
+			switch (this.Info.Type)
 			{
 				case TagNodeType.Unknown:
 					Trace.Assert(false);
@@ -267,6 +273,41 @@ namespace SourceOutsight
 				ret_str += "\t";
 			}
 			return ret_str;
+		}
+		public void AddChild(TagTreeNode add_node)
+		{
+			this.ChildList.Add(add_node);
+		}
+
+		public List<TagTreeNode> SearchTag(string tag_str)
+		{
+			List<TagTreeNode> ret_list = new List<TagTreeNode>();
+			foreach (var child in this.ChildList)
+			{
+				if (child.Info.TagStr.Equals(tag_str))
+				{
+					ret_list.Add(child);
+				}
+				ret_list.AddRange(child.SearchTag(tag_str));
+			}
+			return ret_list;
+		}
+	}
+
+	public class TagInfo
+	{
+		public string TagStr = null;
+		public string ExpressionStr = null;
+		public CodePosition Position = null;											// 标识符的开始位置
+		public CodeScope AffectScope = null;											// 作用域
+		public TagNodeType Type = TagNodeType.Unknown;
+		public TagInfo(string tag_str, string exp_str, CodePosition pos, CodeScope scope, TagNodeType type)
+		{
+			this.TagStr = tag_str;
+			this.ExpressionStr = exp_str;
+			this.Position = pos;
+			this.AffectScope = scope;
+			this.Type = type;
 		}
 	}
 
