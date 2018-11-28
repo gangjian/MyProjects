@@ -59,12 +59,12 @@ namespace SourceOutsight
 		public bool CloseTo(CodeElement another_element, List<string> code_list)
 		{
 			if (this.EndPos.CompareTo(another_element.GetStartPosition()) < 0
-				&& this.EndPos.CloseTo(another_element.GetStartPosition(), code_list))
+				&& this.EndPos.IsCloseTo(another_element.GetStartPosition(), code_list))
 			{
 				return true;
 			}
 			else if (this.GetStartPosition().CompareTo(another_element.EndPos) > 0
-					 && this.GetStartPosition().CloseTo(another_element.EndPos, code_list))
+					 && this.GetStartPosition().IsCloseTo(another_element.EndPos, code_list))
 			{
 				return true;
 			}

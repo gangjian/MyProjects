@@ -158,7 +158,7 @@ namespace SourceOutsight
 			{
 				return null;
 			}
-			CodePosition cur_pos = new CodePosition(this.CurrentPosition);
+			CodePosition cur_pos = new CodePosition(this.CurrentPosition.Row, this.CurrentPosition.Col);
 			while (true)
 			{
 				char ch = this.CodeList[cur_pos.Row][cur_pos.Col];

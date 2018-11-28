@@ -16,11 +16,6 @@ namespace SourceOutsight
 			this.Row = row;
 			this.Col = col;
 		}
-		public CodePosition(CodePosition pos)
-		{
-			this.Row = pos.Row;
-			this.Col = pos.Col;
-		}
 		/// <summary>
 		/// 比较两个位置先后
 		/// </summary>
@@ -53,11 +48,11 @@ namespace SourceOutsight
 		/// <summary>
 		/// 判断两个位置是否紧邻
 		/// </summary>
-		public bool CloseTo(CodePosition another_pos, List<string> code_list)
+		public bool IsCloseTo(CodePosition another_pos, List<string> code_list)
 		{
 			Trace.Assert(null != code_list);
-			Trace.Assert(this.Valid(code_list));
-			Trace.Assert(another_pos.Valid(code_list));
+			Trace.Assert(this.IsValid(code_list));
+			Trace.Assert(another_pos.IsValid(code_list));
 			if (this.Row == another_pos.Row)
 			{
 				if (this.Col == another_pos.Col + 1
@@ -98,7 +93,7 @@ namespace SourceOutsight
 
 			}
 		}
-		public bool Valid(List<string> code_list)
+		public bool IsValid(List<string> code_list)
 		{
 			Trace.Assert(null != code_list);
 			if (this.Row < code_list.Count
@@ -114,7 +109,7 @@ namespace SourceOutsight
 		public CodePosition GetNextPos(List<string> code_list)
 		{
 			Trace.Assert(null != code_list);
-			Trace.Assert(this.Valid(code_list));
+			Trace.Assert(this.IsValid(code_list));
 			if (this.Col < code_list[this.Row].Length - 1)
 			{
 				// 非最后一列, 返回同行下一列的位置

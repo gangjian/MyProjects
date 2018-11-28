@@ -140,7 +140,7 @@ namespace SourceOutsight
 		}
 		public static CodePosition GetNextQuotePosition(CodePosition first_quote_pos, List<string> code_list)
 		{
-			Trace.Assert(first_quote_pos.Valid(code_list));
+			Trace.Assert(first_quote_pos.IsValid(code_list));
 			CodePosition cur_pos = first_quote_pos;
 			char left_quote = code_list[cur_pos.Row][cur_pos.Col];
 			char right_quote = '\'';
