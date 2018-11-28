@@ -36,10 +36,13 @@ namespace SourceOutsight
 				header_name = header_name.Substring(1, header_name.Length - 2).Trim();
 			}
 			string full_name = prj_ref.GetFileFullPath(header_name);
-			if (string.IsNullOrEmpty(full_name)
-				|| prj_ref.ParseFileStack.Contains(full_name))
+			if (string.IsNullOrEmpty(full_name))
 			{
 				// 尖括号括起的系统头文件会返回null
+				return null;
+			}
+			else if (prj_ref.ParseFileStack.Contains(full_name))
+			{
 				// 用堆栈防止互相包含
 				return null;
 			}
