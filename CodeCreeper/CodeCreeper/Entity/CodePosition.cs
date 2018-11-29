@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace CodeCreeper
 {
-	class CodePosition
+	public class CodePosition
 	{
 		public int Row = -1;
 		public int Col = -1;
@@ -15,6 +15,11 @@ namespace CodeCreeper
 		{
 			this.Row = row;
 			this.Col = col;
+		}
+		public CodePosition(CodePosition another)
+		{
+			this.Row = another.Row;
+			this.Col = another.Col;
 		}
 		/// <summary>
 		/// 比较两个位置先后
@@ -141,17 +146,6 @@ namespace CodeCreeper
 				ret_pos = ret_pos.GetNextPosition(code_list);
 			}
 			return ret_pos;
-		}
-		public static CodePosition GetFileStartPosition(List<string> code_list)
-		{
-			for (int i = 0; i < code_list.Count; i++)
-			{
-				if (!string.IsNullOrEmpty(code_list[i]))
-				{
-					return new CodePosition(i, 0);
-				}
-			}
-			return null;
 		}
 	}
 

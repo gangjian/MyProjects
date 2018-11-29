@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeCreeper", "CodeCreeper\CodeCreeper.csproj", "{D1557FF4-5C49-4856-A5E8-3085337B97C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject1", "UnitTestProject1\UnitTestProject1.csproj", "{CFD82DA0-BFB9-4CF5-9EE0-FE22B439C032}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{D1557FF4-5C49-4856-A5E8-3085337B97C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1557FF4-5C49-4856-A5E8-3085337B97C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1557FF4-5C49-4856-A5E8-3085337B97C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFD82DA0-BFB9-4CF5-9EE0-FE22B439C032}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFD82DA0-BFB9-4CF5-9EE0-FE22B439C032}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFD82DA0-BFB9-4CF5-9EE0-FE22B439C032}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFD82DA0-BFB9-4CF5-9EE0-FE22B439C032}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,10 +8,9 @@ using System.IO;
 
 namespace CodeCreeper
 {
-	class Creeper
+	public class Creeper
 	{
 		CodeProjectInfo prjRef = null;
-		CodePosition currentPosition = null;
 		public Creeper(CodeProjectInfo prj_info)
 		{
 			Trace.Assert(null != prj_info);
@@ -29,23 +28,14 @@ namespace CodeCreeper
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
 			CodeFileInfo fi = new CodeFileInfo(path);
-			this.currentPosition = CodePosition.GetFileStartPosition(fi.CodeList);
 			while (true)
 			{
-				CodeElement element = GetNextElement();
+				CodeElement element = fi.GetNextElement();
 				if (null == element)
 				{
 					break;
 				}
 			}
-		}
-		CodeElement GetNextElement()
-		{
-			if (null == this.currentPosition)
-			{
-				return null;
-			}
-			return null;
 		}
 	}
 }

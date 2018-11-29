@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace CodeCreeper
 {
-	class CodeProjectInfo
+	public class CodeProjectInfo
 	{
 		List<string> sourcePathList = null;
 		List<string> headerPathList = null;
