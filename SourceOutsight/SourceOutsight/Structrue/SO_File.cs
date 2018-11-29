@@ -88,18 +88,18 @@ namespace SourceOutsight
 			}
 		}
 
-		CodePosition CommentProc(CodePosition cur_pos, List<string> code_list)
+		CodePosition CommentProc(CodePosition cur_pos)
 		{
-			string line_str = code_list[cur_pos.Row].Substring(cur_pos.Col);
+			string line_str = this.CodeList[cur_pos.Row].Substring(cur_pos.Col);
 			if (line_str.StartsWith("//"))
 			{
 				// 行注释
 				int row = cur_pos.Row;
-				int end_col = code_list[row].Length - 1;
+				int end_col = this.CodeList[row].Length - 1;
 				int len = end_col - cur_pos.Col + 1;
 				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, len);
 				this.ElementTable.Add(comment_element);
-				cur_pos = cur_pos.GetNextPosN(code_list, len - 1);
+				cur_pos = cur_pos.GetNextPosN(this.CodeList, len - 1);
 			}
 			else if (line_str.StartsWith("/*"))
 			{
@@ -108,7 +108,7 @@ namespace SourceOutsight
 				Trace.Assert(null != end_pos);
 				CodeElement comment_element = new CodeElement(ElementType.Comments, cur_pos, end_pos);
 				this.ElementTable.Add(comment_element);
-				cur_pos = end_pos.GetNextPos(code_list);
+				cur_pos = end_pos.GetNextPos(this.CodeList);
 			}
 			return cur_pos;
 		}
@@ -170,7 +170,7 @@ namespace SourceOutsight
 						 && Common.IsCommentStart(cur_pos, this.CodeList))
 				{
 					// 注释
-					cur_pos = CommentProc(cur_pos, this.CodeList);
+					cur_pos = CommentProc(cur_pos);
 				}
 				else if (ch.Equals('#'))
 				{
