@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Creeper\RouteTree.cs" />
     <Compile Include="Entity\CodeElement.cs" />
     <Compile Include="ProjectFile\CodeFileInfo.cs" />
     <Compile Include="Creeper\Creeper.cs" />
