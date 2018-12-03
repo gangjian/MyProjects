@@ -8,7 +8,7 @@ using System.IO;
 
 namespace CodeCreeper
 {
-	public class Creeper
+	public partial class Creeper
 	{
 		CodeProjectInfo prjRef = null;
 		public Creeper(CodeProjectInfo prj_info)

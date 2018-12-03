@@ -10,34 +10,33 @@ namespace CodeCreeper
 {
 	class CommProc
 	{
-		public static void GetCodeFileList(string path, List<string> source_list, List<string> header_list)
+		public static void GetCodeFileList(string dir, List<string> src_list, List<string> hd_list)
 		{
-			Trace.Assert(!string.IsNullOrEmpty(path) && Directory.Exists(path));
-			source_list = new List<string>();
-			header_list = new List<string>();
-			string[] files = Directory.GetFiles(path);
+			Trace.Assert(!string.IsNullOrEmpty(dir) && Directory.Exists(dir));
+			src_list = new List<string>();
+			hd_list = new List<string>();
+			string[] files = Directory.GetFiles(dir);
 			foreach (var item in files)
 			{
 				FileInfo fi = new FileInfo(item);
 				if (fi.Extension.ToLower().Equals(".c"))
 				{
-					source_list.Add(item);
+					src_list.Add(item);
 				}
 				else if (fi.Extension.ToLower().Equals(".h"))
 				{
-					header_list.Add(item);
+					hd_list.Add(item);
 				}
 			}
-			string[] dirs = Directory.GetDirectories(path);
+			string[] dirs = Directory.GetDirectories(dir);
 			foreach (var item in dirs)
 			{
-				GetCodeFileList(item, source_list, header_list);
+				GetCodeFileList(item, src_list, hd_list);
 			}
 		}
-		public static bool IsCommentStart(CodePosition cur_pos, List<string> code_list)
+		public static bool IsCommentStart(string line_str)
 		{
-			Trace.Assert(cur_pos.IsValid(code_list));
-			string line_str = code_list[cur_pos.Row].Substring(cur_pos.Col);
+			Trace.Assert(!string.IsNullOrEmpty(line_str));
 			if (line_str.StartsWith("//")
 				|| line_str.StartsWith("/*"))
 			{
@@ -48,23 +47,63 @@ namespace CodeCreeper
 				return false;
 			}
 		}
-		public static CodePosition FindStrPosition(CodePosition start_pos, string find_str, List<string> code_list)
+		public static int GetIdentifierStringLength(string line_str, int start_offet)
 		{
-			Trace.Assert(null != start_pos && !string.IsNullOrEmpty(find_str));
-			CodePosition cur_pos = start_pos;
-			while (true)
+			Trace.Assert(!string.IsNullOrEmpty(line_str)
+							&& start_offet >= 0
+							&& start_offet < line_str.Length);
+			int ret_len = 0;
+			for (int i = start_offet; i < line_str.Length; i++)
 			{
-				if (null == cur_pos)
+				char ch = line_str[i];
+				if (Char.IsLetter(ch) || ch.Equals('_'))
+				{
+				}
+				else if (Char.IsDigit(ch) && i != start_offet)
+				{
+				}
+				else
 				{
 					break;
 				}
-				if (code_list[cur_pos.Row].Substring(cur_pos.Col).StartsWith(find_str))
-				{
-					return cur_pos;
-				}
-				cur_pos = cur_pos.GetNextPosition(code_list);
+				ret_len += 1;
 			}
-			return null;
+			return ret_len;
+		}
+		public static bool IsPrecompileStart(string element_str)
+		{
+			if (string.IsNullOrEmpty(element_str)
+				|| !element_str.StartsWith("#"))
+			{
+				return false;
+			}
+			// 注意还有"defined"
+			if (element_str.Equals("#if"))
+			{
+			}
+			else if (element_str.Equals("#ifdef"))
+			{
+			}
+			else if (element_str.Equals("#ifndef"))
+			{
+			}
+			else if (element_str.Equals("#elif"))
+			{
+			}
+			else if (element_str.Equals("#else"))
+			{
+			}
+			else if (element_str.Equals("#endif"))
+			{
+			}
+			else if (element_str.Equals("#pragma"))
+			{
+			}
+			else
+			{
+				return false;
+			}
+			return true;
 		}
 	}
 }
