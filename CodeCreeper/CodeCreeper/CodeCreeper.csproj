@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Creeper\RouteTree.cs" />
     <Compile Include="Entity\CodeElement.cs" />
+    <Compile Include="Info\DefineInfo.cs" />
     <Compile Include="ProjectFile\CodeFileInfo.cs" />
     <Compile Include="Creeper\Creeper.cs" />
     <Compile Include="Entity\CodePosition.cs" />

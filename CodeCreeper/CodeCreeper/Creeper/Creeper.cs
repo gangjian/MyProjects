@@ -11,6 +11,7 @@ namespace CodeCreeper
 	public partial class Creeper
 	{
 		CodeProjectInfo prjRef = null;
+		RouteTree routTreeObj = new RouteTree();
 		public Creeper(CodeProjectInfo prj_info)
 		{
 			Trace.Assert(null != prj_info);
@@ -19,6 +20,7 @@ namespace CodeCreeper
 
 		public void CreepAll()
 		{
+			this.routTreeObj = new RouteTree();
 			foreach (var src_path in this.prjRef.GetSourcePathList())
 			{
 				CreepFile(src_path);
@@ -35,7 +37,45 @@ namespace CodeCreeper
 				{
 					break;
 				}
+				else
+				{
+					CodeElementProc(element, fi);
+				}
 			}
+		}
+
+		void CodeElementProc(CodeElement element, CodeFileInfo file_info)
+		{
+			if (element.Type.Equals(ElementType.Define))
+			{
+				DefineProc(element, file_info);
+			}
+			else if (element.Type.Equals(ElementType.Undefine))
+			{
+				//UndefProc(element);
+			}
+			else if (element.Type.Equals(ElementType.PrecompileCommand))
+			{
+				//PrecompileCommandProc(element);
+			}
+			else if (element.Type.Equals(ElementType.Include))
+			{
+				//IncludeProc(element);
+			}
+			else if (element.Type.Equals(ElementType.PrecompileSwitch))
+			{
+				//PrecompileSwitchProc(element);
+			}
+			else if (element.Type.Equals(ElementType.Identifier))
+			{
+				//this.ProjectRef.SearchTag(element.ToString(this.CodeList));
+			}
+		}
+
+		void DefineProc(CodeElement def_element, CodeFileInfo file_info)
+		{
+			DefineInfo def_info = DefineInfo.TryParse(def_element, file_info);
+			this.routTreeObj.AddNormalNode("#define", def_info.Name, def_info);
 		}
 	}
 }

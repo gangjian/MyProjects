@@ -71,6 +71,55 @@ namespace CodeCreeper
 						return ret_element;
 					}
 				}
+				else if (Char.IsLetter(ch) || ch.Equals('_'))
+				{
+					// 标识符
+					string line_str = GetCurrentLineString();
+					int len = CommProc.GetIdentifierStringLength(line_str, 0);
+					CodeElement ret_element = new CodeElement(ElementType.Identifier, this.currentPosition, len);
+					this.currentPosition = this.currentPosition.GetNextPositionN(this.CodeList, len);
+					return ret_element;
+				}
+				else if (ch.Equals('"'))
+				{
+					// 字符串
+					CodePosition right_quote_pos = CommProc.GetNextQuotePosition(this.currentPosition, this.CodeList);
+					Trace.Assert(null != right_quote_pos);
+					CodeElement ret_element = new CodeElement(ElementType.String, this.currentPosition, right_quote_pos);
+					this.currentPosition = right_quote_pos.GetNextPosition(this.CodeList);
+					return ret_element;
+				}
+				else if (ch.Equals('\''))
+				{
+					// 字符
+					CodePosition right_quote_pos = CommProc.GetNextQuotePosition(this.currentPosition, this.CodeList);
+					Trace.Assert(null != right_quote_pos);
+					CodeElement ret_element = new CodeElement(ElementType.Char, this.currentPosition, right_quote_pos);
+					this.currentPosition = right_quote_pos.GetNextPosition(this.CodeList);
+					return ret_element;
+				}
+				else if (Char.IsDigit(ch))
+				{
+					// 数字
+					string line_str = GetCurrentLineString();
+					int len = CommProc.GetNumberStrLength(line_str, 0);
+					CodeElement ret_element = new CodeElement(ElementType.Number, this.currentPosition, len);
+					this.currentPosition = this.currentPosition.GetNextPositionN(this.CodeList, len);
+					return ret_element;
+				}
+				else if (Char.IsSymbol(ch))
+				{
+					// 运算符
+					CodeElement ret_element = new CodeElement(ElementType.Symbol, this.currentPosition, 1);
+					this.currentPosition = this.currentPosition.GetNextPosition(this.CodeList);
+					return ret_element;
+				}
+				else if (Char.IsPunctuation(ch))
+				{
+					CodeElement ret_element = new CodeElement(ElementType.Punctuation, this.currentPosition, 1);
+					this.currentPosition = this.currentPosition.GetNextPosition(this.CodeList);
+					return ret_element;
+				}
 				this.currentPosition = this.currentPosition.GetNextPosition(this.CodeList);
 			}
 			return null;
@@ -103,7 +152,6 @@ namespace CodeCreeper
 			}
 			return null;
 		}
-
 		CodeElement CommentProc()
 		{
 			string line_str = GetCurrentLineString();
@@ -114,7 +162,7 @@ namespace CodeCreeper
 				int end_col = this.CodeList[row].Length - 1;
 				int len = end_col - this.currentPosition.Col + 1;
 				CodeElement comment_element = new CodeElement(ElementType.Comments, this.currentPosition, len);
-				this.currentPosition = this.currentPosition.GetNextPositionN(this.CodeList, len - 1);
+				this.currentPosition = this.currentPosition.GetNextPositionN(this.CodeList, len);
 				return comment_element;
 			}
 			else if (line_str.StartsWith("/*"))
@@ -123,7 +171,7 @@ namespace CodeCreeper
 				CodePosition end_pos = FindStringPosition(this.currentPosition, "*/");
 				Trace.Assert(null != end_pos);
 				CodeElement comment_element = new CodeElement(ElementType.Comments, this.currentPosition, end_pos);
-				this.currentPosition = end_pos.GetNextPosition(this.CodeList);
+				this.currentPosition = end_pos.GetNextPositionN(this.CodeList, 2);
 				return comment_element;
 			}
 			else
@@ -131,7 +179,6 @@ namespace CodeCreeper
 				return null;
 			}
 		}
-
 		CodeElement GetPrecompileElement()
 		{
 			string line_str = this.CodeList[this.currentPosition.Row].Substring(this.currentPosition.Col + 1).Trim();
@@ -175,6 +222,54 @@ namespace CodeCreeper
 			CodeElement ret_element = new CodeElement(element_type, this.currentPosition, len);
 			this.currentPosition = this.currentPosition.GetNextPositionN(this.CodeList, len);
 			return ret_element;
+		}
+
+		/// <summary>
+		/// 取得从指定位置开始一行内的所有element列表
+		/// </summary>
+		public List<CodeElement> GetLineElementList(CodePosition start_position)
+		{
+			List<CodeElement> ret_list = new List<CodeElement>();
+			int row = start_position.Row;
+			this.currentPosition = start_position;
+			while (true)
+			{
+				CodeElement element = GetNextElement();
+				if (null == element)
+				{
+					break;
+				}
+				else if (element.Row != row)
+				{
+					CodeElement last_element = ret_list.Last();
+					if (last_element.ToString(this.CodeList).Equals("\\"))
+					{
+						// 续行符
+						ret_list.Remove(last_element);									// 去掉续行符
+						if (element.Row == last_element.Row + 1)
+						{
+							row = element.Row;
+							ret_list.Add(element);
+						}
+						else
+						{
+							// 超过一行,说明隔了空行
+							this.currentPosition = element.GetStartPosition();
+							break;
+						}
+					}
+					else
+					{
+						this.currentPosition = element.GetStartPosition();
+						break;
+					}
+				}
+				else
+				{
+					ret_list.Add(element);
+				}
+			}
+			return ret_list;
 		}
 	}
 }

@@ -12,9 +12,9 @@ namespace CodeCreeper
 		List<Node> nodeList = new List<Node>();
 		BranchNode currentBranch = null;
 
-		public void AddSwitchNode(string first_branch_key, string first_branch_expression)
+		public void AddSwitchNode(string first_branch_tag, string first_branch_expression)
 		{
-			SwitchNode switch_node = new SwitchNode(first_branch_key, first_branch_expression);
+			SwitchNode switch_node = new SwitchNode(first_branch_tag, first_branch_expression);
 			switch_node.ParentRef = this.currentBranch;
 			if (null == this.currentBranch)
 			{
@@ -26,18 +26,19 @@ namespace CodeCreeper
 			}
 			this.currentBranch = switch_node.BranchList.First();
 		}
-		public void AddBranchNode(string branch_key, string branch_expression)
+		public void AddBranchNode(string branch_tag, string branch_expression)
 		{
 			Trace.Assert(null != this.currentBranch);
 			Trace.Assert(null != this.currentBranch.ParentRef);
-			BranchNode add_branch = new BranchNode(branch_key, branch_expression);
+			BranchNode add_branch = new BranchNode(branch_tag, branch_expression);
 			SwitchNode parent_switch = this.currentBranch.ParentRef as SwitchNode;
 			parent_switch.BranchList.Add(add_branch);
 			this.currentBranch = add_branch;
 		}
-		public void AddNormalNode(string key, string expression, object info)
+		public void AddNormalNode(string tag, string expression, object info)
 		{
-			Node add_node = new Node(key, expression);
+			Node add_node = new Node(tag, expression);
+			add_node.InfoRef = info;
 			if (null != this.currentBranch)
 			{
 				this.currentBranch.ChildList.Add(add_node);
@@ -62,11 +63,11 @@ namespace CodeCreeper
 
 	class Node
 	{
-		string keyStr = null;
-		public string KeyStr
+		string tagStr = null;
+		public string TagStr
 		{
-			get { return keyStr; }
-			set { keyStr = value; }
+			get { return tagStr; }
+			set { tagStr = value; }
 		}
 		string expressionStr = null;
 		public string ExpressionStr
@@ -85,9 +86,9 @@ namespace CodeCreeper
 		public Node()
 		{
 		}
-		public Node(string key_str, string expression_str)
+		public Node(string tag_str, string expression_str)
 		{
-			this.KeyStr = key_str;
+			this.TagStr = tag_str;
 			this.ExpressionStr = expression_str;
 		}
 	}
@@ -100,9 +101,9 @@ namespace CodeCreeper
 			set { branchList = value; }
 		}
 
-		public SwitchNode(string first_branch_key, string first_branch_expression)
+		public SwitchNode(string first_branch_tag, string first_branch_expression)
 		{
-			BranchNode first_branch = new BranchNode(first_branch_key, first_branch_expression);
+			BranchNode first_branch = new BranchNode(first_branch_tag, first_branch_expression);
 			this.BranchList.Add(first_branch);
 		}
 	}
@@ -114,7 +115,7 @@ namespace CodeCreeper
 			get { return childList; }
 			set { childList = value; }
 		}
-		public BranchNode(string key_str, string expression_str) : base(key_str, expression_str)
+		public BranchNode(string tag_str, string expression_str) : base(tag_str, expression_str)
 		{
 		}
 	}
