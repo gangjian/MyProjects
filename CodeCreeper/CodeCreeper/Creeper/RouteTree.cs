@@ -55,9 +55,10 @@ namespace CodeCreeper
 			this.currentBranch = this.currentBranch.ParentRef.ParentRef as BranchNode;
 		}
 
-		public void PrintSelf()
+		public List<string> PrintSelf()
 		{
-
+			List<string> ret_list = new List<string>();
+			return ret_list;
 		}
 	}
 
@@ -104,6 +105,7 @@ namespace CodeCreeper
 		public SwitchNode(string first_branch_tag, string first_branch_expression)
 		{
 			BranchNode first_branch = new BranchNode(first_branch_tag, first_branch_expression);
+			first_branch.ParentRef = this;
 			this.BranchList.Add(first_branch);
 		}
 	}
