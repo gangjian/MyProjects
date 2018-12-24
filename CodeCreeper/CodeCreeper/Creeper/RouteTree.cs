@@ -33,6 +33,7 @@ namespace CodeCreeper
 			BranchNode add_branch = new BranchNode(branch_tag, branch_expression);
 			SwitchNode parent_switch = this.currentBranch.ParentRef as SwitchNode;
 			parent_switch.BranchList.Add(add_branch);
+			add_branch.ParentRef = parent_switch;
 			this.currentBranch = add_branch;
 		}
 		public void AddNormalNode(string tag, string expression, object info)
@@ -55,9 +56,13 @@ namespace CodeCreeper
 			this.currentBranch = this.currentBranch.ParentRef.ParentRef as BranchNode;
 		}
 
-		public List<string> PrintSelf()
+		public List<string> ToStringList()
 		{
 			List<string> ret_list = new List<string>();
+			foreach (var node in this.nodeList)
+			{
+				ret_list.AddRange(node.ToStringList(0));
+			}
 			return ret_list;
 		}
 	}
@@ -92,6 +97,26 @@ namespace CodeCreeper
 			this.TagStr = tag_str;
 			this.ExpressionStr = expression_str;
 		}
+		public virtual List<string> ToStringList(int level)
+		{
+			List<string> ret_list = new List<string>();
+			ret_list.Add(this.ToString(level));
+			return ret_list;
+		}
+		protected string ToString(int level)
+		{
+			string ret_str = GetIndentStr(level) + this.TagStr + " : " + this.ExpressionStr;
+			return ret_str;
+		}
+		string GetIndentStr(int level)
+		{
+			string ret_str = string.Empty;
+			for (int i = 0; i < level; i++)
+			{
+				ret_str += "\t";
+			}
+			return ret_str;
+		}
 	}
 	class SwitchNode : Node
 	{
@@ -108,6 +133,15 @@ namespace CodeCreeper
 			first_branch.ParentRef = this;
 			this.BranchList.Add(first_branch);
 		}
+		public override List<string> ToStringList(int level)
+		{
+			List<string> ret_list = new List<string>();
+			foreach (var branch in this.BranchList)
+			{
+				ret_list.AddRange(branch.ToStringList(level));
+			}
+			return ret_list;
+		}
 	}
 	class BranchNode : Node
 	{
@@ -119,6 +153,16 @@ namespace CodeCreeper
 		}
 		public BranchNode(string tag_str, string expression_str) : base(tag_str, expression_str)
 		{
+		}
+		public override List<string> ToStringList(int level)
+		{
+			List<string> ret_list = new List<string>();
+			ret_list.Add(this.ToString(level));
+			foreach (var item in this.ChildList)
+			{
+				ret_list.AddRange(item.ToStringList(level + 1));
+			}
+			return ret_list;
 		}
 	}
 }

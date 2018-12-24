@@ -124,7 +124,7 @@ namespace CodeCreeper
 
 		public List<string> GetRouteTreePrintList()
 		{
-			return this.routTreeObj.PrintSelf();
+			return this.routTreeObj.ToStringList();
 		}
 	}
 }
