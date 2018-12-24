@@ -34,7 +34,7 @@ namespace CodeCreeper
 				GetCodeFileList(item, src_list, hd_list);
 			}
 		}
-		public static bool IsCommentStart(string line_str)
+		public static bool IsAnnotationStart(string line_str)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(line_str));
 			if (line_str.StartsWith("//")

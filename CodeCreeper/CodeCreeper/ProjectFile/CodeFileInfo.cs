@@ -58,10 +58,10 @@ namespace CodeCreeper
 					// 白空格
 				}
 				else if (ch.Equals('/')
-						 && CommProc.IsCommentStart(GetCurrentLineString()))
+						 && CommProc.IsAnnotationStart(GetCurrentLineString()))
 				{
 					// 注释
-					return CommentProc();
+					return AnnotationProc();
 				}
 				else if (ch.Equals('#'))
 				{
@@ -152,7 +152,7 @@ namespace CodeCreeper
 			}
 			return null;
 		}
-		CodeElement CommentProc()
+		CodeElement AnnotationProc()
 		{
 			string line_str = GetCurrentLineString();
 			if (line_str.StartsWith("//"))
@@ -161,18 +161,18 @@ namespace CodeCreeper
 				int row = this.currentPosition.Row;
 				int end_col = this.CodeList[row].Length - 1;
 				int len = end_col - this.currentPosition.Col + 1;
-				CodeElement comment_element = new CodeElement(ElementType.Comments, this.currentPosition, len);
+				CodeElement annotation_element = new CodeElement(ElementType.Annotation, this.currentPosition, len);
 				this.currentPosition = this.currentPosition.GetNextPositionN(this.CodeList, len);
-				return comment_element;
+				return annotation_element;
 			}
 			else if (line_str.StartsWith("/*"))
 			{
 				// 块注释
 				CodePosition end_pos = FindStringPosition(this.currentPosition, "*/");
 				Trace.Assert(null != end_pos);
-				CodeElement comment_element = new CodeElement(ElementType.Comments, this.currentPosition, end_pos);
+				CodeElement annotation_element = new CodeElement(ElementType.Annotation, this.currentPosition, end_pos);
 				this.currentPosition = end_pos.GetNextPositionN(this.CodeList, 2);
-				return comment_element;
+				return annotation_element;
 			}
 			else
 			{

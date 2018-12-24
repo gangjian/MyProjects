@@ -11,7 +11,7 @@ namespace CodeCreeper
 	public partial class Creeper
 	{
 		CodeProjectInfo prjRef = null;
-		RouteTree routTreeObj = new RouteTree();
+		SyntaxTree routTreeObj = new SyntaxTree();
 		public Creeper(CodeProjectInfo prj_info)
 		{
 			Trace.Assert(null != prj_info);
@@ -20,7 +20,7 @@ namespace CodeCreeper
 
 		public void CreepAll()
 		{
-			this.routTreeObj = new RouteTree();
+			this.routTreeObj = new SyntaxTree();
 			foreach (var src_path in this.prjRef.GetSourcePathList())
 			{
 				CreepFile(src_path);
@@ -75,7 +75,9 @@ namespace CodeCreeper
 		void DefineProc(CodeElement def_element, CodeFileInfo file_info)
 		{
 			DefineInfo def_info = DefineInfo.TryParse(def_element, file_info);
-			this.routTreeObj.AddNormalNode("#define", def_info.Name, def_info);
+			SyntaxNode add_node = new SyntaxNode("#define", def_info.Name);
+			add_node.InfoRef = def_info;
+			this.routTreeObj.AddNormalNode(add_node);
 		}
 		void PrecompileSwitchProc(CodeElement element, CodeFileInfo file_info)
 		{
@@ -86,17 +88,22 @@ namespace CodeCreeper
 				|| tag_str.Equals("#ifndef"))
 			{
 				string expression_str = GetBranchExpressionStr(element, file_info);
-				this.routTreeObj.AddSwitchNode(tag_str, expression_str);
+				PrecompileBranchNode first_branch_node
+					= new PrecompileBranchNode(tag_str, expression_str);
+				PrecompileSwitchNode switch_node = new PrecompileSwitchNode(first_branch_node);
+				this.routTreeObj.AddSwitchNode(switch_node);
 			}
 			// #else, #elif			-> new Branch
 			else if (tag_str.Equals("#else"))
 			{
-				this.routTreeObj.AddBranchNode(tag_str, null);
+				PrecompileBranchNode branch_node = new PrecompileBranchNode(tag_str, null);
+				this.routTreeObj.AddBranchNode(branch_node);
 			}
 			else if (tag_str.Equals("#elif"))
 			{
 				string expression_str = GetBranchExpressionStr(element, file_info);
-				this.routTreeObj.AddBranchNode(tag_str, expression_str);
+				PrecompileBranchNode branch_node = new PrecompileBranchNode(tag_str, expression_str);
+				this.routTreeObj.AddBranchNode(branch_node);
 			}
 			// #endif				-> finish Node
 			else if (tag_str.Equals("#endif"))

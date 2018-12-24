@@ -69,7 +69,7 @@ namespace CodeCreeper
 			Trace.Assert(null != file_info);
 			List<CodeElement> element_list
 						= file_info.GetLineElementList(def_element.GetStartPosition());
-			element_list = RemoveComments(element_list);
+			element_list = RemoveAnnotations(element_list);
 			Trace.Assert(element_list.Count >= 2);
 			CodeElement macro_element = element_list[1];
 			Trace.Assert(macro_element.Type == ElementType.Identifier);
@@ -82,12 +82,12 @@ namespace CodeCreeper
 													scope, file_info.FullName, paras);
 			return ret_info;
 		}
-		static List<CodeElement> RemoveComments(List<CodeElement> element_list)
+		static List<CodeElement> RemoveAnnotations(List<CodeElement> element_list)
 		{
 			List<CodeElement> ret_list = new List<CodeElement>();
 			foreach (var item in element_list)
 			{
-				if (item.Type != ElementType.Comments)
+				if (item.Type != ElementType.Annotation)
 				{
 					ret_list.Add(item);
 				}

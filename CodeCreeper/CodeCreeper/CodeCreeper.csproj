@@ -41,7 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Creeper\RouteTree.cs" />
+    <Compile Include="SyntaxTree\PrecompileNode.cs" />
+    <Compile Include="SyntaxTree\SyntaxNode.cs" />
+    <Compile Include="SyntaxTree\SyntaxTree.cs" />
     <Compile Include="Entity\CodeElement.cs" />
     <Compile Include="Info\DefineInfo.cs" />
     <Compile Include="ProjectFile\CodeFileInfo.cs" />
