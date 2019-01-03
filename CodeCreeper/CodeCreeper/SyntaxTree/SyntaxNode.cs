@@ -42,9 +42,13 @@ namespace CodeCreeper
 			ret_list.Add(this.ToString(level));
 			return ret_list;
 		}
-		protected string ToString(int level)
+		public string ToString(int level)
 		{
-			string ret_str = GetIndentStr(level) + this.TagStr + " / " + this.ExpressionStr;
+			string ret_str = GetIndentStr(level) + this.TagStr;
+			if (!string.IsNullOrEmpty(this.ExpressionStr))
+			{
+				ret_str += " / " + this.ExpressionStr;
+			}
 			return ret_str;
 		}
 		string GetIndentStr(int level)

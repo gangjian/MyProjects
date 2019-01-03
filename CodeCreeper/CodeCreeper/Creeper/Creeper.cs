@@ -115,7 +115,7 @@ namespace CodeCreeper
 			// #endif				-> finish Node
 			else if (tag_str.Equals("#endif"))
 			{
-				return new EndIfNode();
+				return new PrecompileEndIfNode();
 			}
 			else
 			{

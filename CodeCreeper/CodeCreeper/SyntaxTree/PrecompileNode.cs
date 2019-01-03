@@ -15,6 +15,7 @@ namespace CodeCreeper
 			get { return branchList; }
 			set { branchList = value; }
 		}
+		PrecompileEndIfNode endIfNode = null;
 
 		public PrecompileSwitchNode(PrecompileBranchNode first_branch_node)
 		{
@@ -29,7 +30,14 @@ namespace CodeCreeper
 			{
 				ret_list.AddRange(branch.ToStringList(level));
 			}
+			ret_list.Add(this.endIfNode.ToString(level));
 			return ret_list;
+		}
+		public void AddEndIfNode(PrecompileEndIfNode end_if_node)
+		{
+			Trace.Assert(null == this.endIfNode);
+			Trace.Assert(null != end_if_node);
+			this.endIfNode = end_if_node;
 		}
 	}
 	class PrecompileBranchNode : SyntaxNode
@@ -56,7 +64,11 @@ namespace CodeCreeper
 		}
 	}
 
-	class EndIfNode : SyntaxNode
+	class PrecompileEndIfNode : SyntaxNode
 	{
+		public PrecompileEndIfNode()
+			: base("#endif", null)
+		{
+		}
 	}
 }

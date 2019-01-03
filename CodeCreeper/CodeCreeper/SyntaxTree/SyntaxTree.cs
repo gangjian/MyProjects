@@ -30,7 +30,7 @@ namespace CodeCreeper
 			{
 				this.AddBranchNode((PrecompileBranchNode)add_node);
 			}
-			else if (add_node.GetType() == typeof(EndIfNode))
+			else if (add_node.GetType() == typeof(PrecompileEndIfNode))
 			{
 				this.AddEndIf();
 			}
@@ -75,7 +75,9 @@ namespace CodeCreeper
 		{
 			Trace.Assert(null != this.currentBranch);
 			Trace.Assert(null != this.currentBranch.ParentRef);
-			this.currentBranch = this.currentBranch.ParentRef.ParentRef as PrecompileBranchNode;
+			PrecompileSwitchNode parent_switch = this.currentBranch.ParentRef as PrecompileSwitchNode;
+			parent_switch.AddEndIfNode(new PrecompileEndIfNode());
+			this.currentBranch = parent_switch.ParentRef as PrecompileBranchNode;
 		}
 
 		public List<string> ToStringList()
