@@ -94,7 +94,7 @@ namespace CodeCreeper
 	{
 		Unknown,
 		Identifier,
-		Annotation,
+		Comments,
 		Define,
 		Undefine,
 		Include,
