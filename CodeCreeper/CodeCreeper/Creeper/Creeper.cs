@@ -30,6 +30,7 @@ namespace CodeCreeper
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
 			CodeFileInfo fi = new CodeFileInfo(path);
+			SyntaxNode ret_node = null;
 			while (true)
 			{
 				CodeElement element = fi.GetNextElement();
@@ -39,16 +40,21 @@ namespace CodeCreeper
 				}
 				else
 				{
-					CodeElementProc(element, fi);
+					ret_node = CodeElementProc(element, fi);
+					if (null != ret_node)
+					{
+						this.routTreeObj.AddNode(ret_node);
+					}
 				}
 			}
 		}
 
-		void CodeElementProc(CodeElement element, CodeFileInfo file_info)
+		SyntaxNode CodeElementProc(CodeElement element, CodeFileInfo file_info)
 		{
+			SyntaxNode ret_node = null;
 			if (element.Type.Equals(ElementType.Define))
 			{
-				DefineProc(element, file_info);
+				ret_node = DefineProc(element, file_info);
 			}
 			else if (element.Type.Equals(ElementType.Undefine))
 			{
@@ -64,22 +70,23 @@ namespace CodeCreeper
 			}
 			else if (element.Type.Equals(ElementType.PrecompileSwitch))
 			{
-				PrecompileSwitchProc(element, file_info);
+				ret_node = PrecompileSwitchProc(element, file_info);
 			}
 			else if (element.Type.Equals(ElementType.Identifier))
 			{
 				//this.ProjectRef.SearchTag(element.ToString(this.CodeList));
 			}
+			return ret_node;
 		}
 
-		void DefineProc(CodeElement def_element, CodeFileInfo file_info)
+		SyntaxNode DefineProc(CodeElement def_element, CodeFileInfo file_info)
 		{
 			DefineInfo def_info = DefineInfo.TryParse(def_element, file_info);
-			SyntaxNode add_node = new SyntaxNode("#define", def_info.Name);
-			add_node.InfoRef = def_info;
-			this.routTreeObj.AddNormalNode(add_node);
+			SyntaxNode def_node = new SyntaxNode("#define", def_info.Name);
+			def_node.InfoRef = def_info;
+			return def_node;
 		}
-		void PrecompileSwitchProc(CodeElement element, CodeFileInfo file_info)
+		SyntaxNode PrecompileSwitchProc(CodeElement element, CodeFileInfo file_info)
 		{
 			string tag_str = element.ToString(file_info.CodeList);
 			// #if, #ifdef, #ifndef -> new Switch Node
@@ -91,28 +98,29 @@ namespace CodeCreeper
 				PrecompileBranchNode first_branch_node
 					= new PrecompileBranchNode(tag_str, expression_str);
 				PrecompileSwitchNode switch_node = new PrecompileSwitchNode(first_branch_node);
-				this.routTreeObj.AddSwitchNode(switch_node);
+				return switch_node;
 			}
 			// #else, #elif			-> new Branch
 			else if (tag_str.Equals("#else"))
 			{
 				PrecompileBranchNode branch_node = new PrecompileBranchNode(tag_str, null);
-				this.routTreeObj.AddBranchNode(branch_node);
+				return branch_node;
 			}
 			else if (tag_str.Equals("#elif"))
 			{
 				string expression_str = GetBranchExpressionStr(element, file_info);
 				PrecompileBranchNode branch_node = new PrecompileBranchNode(tag_str, expression_str);
-				this.routTreeObj.AddBranchNode(branch_node);
+				return branch_node;
 			}
 			// #endif				-> finish Node
 			else if (tag_str.Equals("#endif"))
 			{
-				this.routTreeObj.AddEndIf();
+				return new EndIfNode();
 			}
 			else
 			{
 				Trace.Assert(false);
+				return null;
 			}
 		}
 		string GetBranchExpressionStr(CodeElement element, CodeFileInfo file_info)

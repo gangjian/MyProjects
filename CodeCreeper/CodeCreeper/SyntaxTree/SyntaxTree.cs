@@ -12,7 +12,30 @@ namespace CodeCreeper
 		List<SyntaxNode> nodeList = new List<SyntaxNode>();
 		PrecompileBranchNode currentBranch = null;
 
-		public void AddSwitchNode(PrecompileSwitchNode switch_node)
+		public void AddNode(SyntaxNode add_node)
+		{
+			if (null == add_node)
+			{
+				return;
+			}
+			if (add_node.GetType() == typeof(SyntaxNode))
+			{
+				this.AddNormalNode(add_node);
+			}
+			else if (add_node.GetType() == typeof(PrecompileSwitchNode))
+			{
+				this.AddSwitchNode((PrecompileSwitchNode)add_node);
+			}
+			else if (add_node.GetType() == typeof(PrecompileBranchNode))
+			{
+				this.AddBranchNode((PrecompileBranchNode)add_node);
+			}
+			else if (add_node.GetType() == typeof(EndIfNode))
+			{
+				this.AddEndIf();
+			}
+		}
+		void AddSwitchNode(PrecompileSwitchNode switch_node)
 		{
 			Trace.Assert(null != switch_node);
 			switch_node.ParentRef = this.currentBranch;
@@ -26,7 +49,7 @@ namespace CodeCreeper
 			}
 			this.currentBranch = switch_node.BranchList.First();
 		}
-		public void AddBranchNode(PrecompileBranchNode add_branch)
+		void AddBranchNode(PrecompileBranchNode add_branch)
 		{
 			Trace.Assert(null != this.currentBranch);
 			Trace.Assert(null != this.currentBranch.ParentRef);
@@ -36,7 +59,7 @@ namespace CodeCreeper
 			add_branch.ParentRef = parent_switch;
 			this.currentBranch = add_branch;
 		}
-		public void AddNormalNode(SyntaxNode add_node)
+		void AddNormalNode(SyntaxNode add_node)
 		{
 			Trace.Assert(null != add_node);
 			if (null != this.currentBranch)
@@ -48,7 +71,7 @@ namespace CodeCreeper
 				this.nodeList.Add(add_node);
 			}
 		}
-		public void AddEndIf()
+		void AddEndIf()
 		{
 			Trace.Assert(null != this.currentBranch);
 			Trace.Assert(null != this.currentBranch.ParentRef);
