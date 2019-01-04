@@ -227,7 +227,8 @@ namespace CodeCreeper
 		/// <summary>
 		/// 取得从指定位置开始一行内的所有element列表
 		/// </summary>
-		public List<CodeElement> GetLineElementList(CodePosition start_position)
+		public List<CodeElement> GetLineElementList(CodePosition start_position,
+													bool remove_comments = true)
 		{
 			List<CodeElement> ret_list = new List<CodeElement>();
 			int row = start_position.Row;
@@ -269,7 +270,23 @@ namespace CodeCreeper
 					ret_list.Add(element);
 				}
 			}
-			return ret_list;
+			if (remove_comments)
+			{
+				List<CodeElement> tmp_list = new List<CodeElement>();
+				// 过滤注释
+				foreach (var item in ret_list)
+				{
+					if (item.Type != ElementType.Comments)
+					{
+						tmp_list.Add(item);
+					}
+				}
+				return tmp_list;
+			}
+			else
+			{
+				return ret_list;
+			}
 		}
 	}
 }

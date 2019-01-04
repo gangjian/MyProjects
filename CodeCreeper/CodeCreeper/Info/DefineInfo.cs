@@ -9,11 +9,9 @@ namespace CodeCreeper
 {
 	class DefineInfo
 	{
-		string name = null;
-		public string Name
-		{
-			get { return name; }
-		}
+		CodeElement DefElement = null;
+
+		public DefName DefName = null;
 
 		List<string> paras = new List<string>();
 		public List<string> Paras
@@ -43,16 +41,18 @@ namespace CodeCreeper
 			get { return filePath; }
 		}
 
-		public DefineInfo(	string name, string val_str,
+		public DefineInfo(	CodeElement def_element, DefName def_name, string val_str,
 							CodePosition pos, CodeScope scope, string path,
 							List<string> paras = null)
 		{
-			Trace.Assert(!string.IsNullOrEmpty(name));
+			Trace.Assert(null != def_element);
+			Trace.Assert(null != def_name);
 			Trace.Assert(null != val_str);
 			Trace.Assert(null != pos);
 			Trace.Assert(null != scope);
 			Trace.Assert(!string.IsNullOrEmpty(path));
-			this.name = name;
+			this.DefElement = def_element;
+			this.DefName = def_name;
 			this.valueStr = val_str;
 			this.namePosition = pos;
 			this.scope = scope;
@@ -69,30 +69,17 @@ namespace CodeCreeper
 			Trace.Assert(null != file_info);
 			List<CodeElement> element_list
 						= file_info.GetLineElementList(def_element.GetStartPosition());
-			element_list = RemoveComments(element_list);
 			Trace.Assert(element_list.Count >= 2);
 			CodeElement macro_element = element_list[1];
 			Trace.Assert(macro_element.Type == ElementType.Identifier);
-			string macro_name = macro_element.ToString(file_info.CodeList);
+			DefName def_name = new DefName(macro_element, file_info.CodeList);
 			CodeScope scope = new CodeScope(def_element.GetStartPosition(), element_list.Last().EndPos);
 			List<string> paras = GetParaList(ref element_list, file_info.CodeList);
 			string val_str = CommProc.ElementListStrCat(element_list, file_info.CodeList);
-			DefineInfo ret_info = new DefineInfo(	macro_name, val_str,
+			DefineInfo ret_info = new DefineInfo(	def_element, def_name, val_str,
 													macro_element.GetStartPosition(),
 													scope, file_info.FullName, paras);
 			return ret_info;
-		}
-		static List<CodeElement> RemoveComments(List<CodeElement> element_list)
-		{
-			List<CodeElement> ret_list = new List<CodeElement>();
-			foreach (var item in element_list)
-			{
-				if (item.Type != ElementType.Comments)
-				{
-					ret_list.Add(item);
-				}
-			}
-			return ret_list;
 		}
 		static List<string> GetParaList(ref List<CodeElement> element_list, List<string> code_list)
 		{
@@ -129,5 +116,41 @@ namespace CodeCreeper
 				return null;
 			}
 		}
+	}
+
+	class DefName
+	{
+		string Name = null;
+		CodePosition Pos = null;
+		public DefName(CodeElement name_element, List<string> code_list)
+		{
+			Trace.Assert(null != name_element);
+			Trace.Assert(null != code_list);
+			Trace.Assert(name_element.Type == ElementType.Identifier);
+			this.Name = name_element.ToString(code_list);
+			this.Pos = new CodePosition(name_element.Row, name_element.Offset);
+		}
+		public string GetName()
+		{
+			return Name;
+		}
+	}
+
+	class DefParas
+	{
+		CodePosition LeftBrace = null;
+		CodePosition RightBrace = null;
+		List<DefPara> Paras = new List<DefPara>();
+	}
+
+	class DefPara
+	{
+		CodePosition Pos = null;
+		int Len = 0;
+	}
+
+	class DefValue
+	{
+		CodeScope Scope = null;
 	}
 }
