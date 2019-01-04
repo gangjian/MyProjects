@@ -13,11 +13,7 @@ namespace CodeCreeper
 
 		public DefName DefName = null;
 
-		List<string> paras = new List<string>();
-		public List<string> Paras
-		{
-			get { return paras; }
-		}
+		DefParas Paras = null;
 
 		string valueStr = null;
 		public string ValueStr
@@ -42,8 +38,7 @@ namespace CodeCreeper
 		}
 
 		public DefineInfo(	CodeElement def_element, DefName def_name, string val_str,
-							CodePosition pos, CodeScope scope, string path,
-							List<string> paras = null)
+							CodePosition pos, CodeScope scope, string path, DefParas paras)
 		{
 			Trace.Assert(null != def_element);
 			Trace.Assert(null != def_name);
@@ -57,10 +52,7 @@ namespace CodeCreeper
 			this.namePosition = pos;
 			this.scope = scope;
 			this.filePath = path;
-			if (null != paras)
-			{
-				this.paras = paras;
-			}
+			this.Paras = paras;
 		}
 
 		public static DefineInfo TryParse(CodeElement def_element, CodeFileInfo file_info)
@@ -74,33 +66,46 @@ namespace CodeCreeper
 			Trace.Assert(macro_element.Type == ElementType.Identifier);
 			DefName def_name = new DefName(macro_element, file_info.CodeList);
 			CodeScope scope = new CodeScope(def_element.GetStartPosition(), element_list.Last().EndPos);
-			List<string> paras = GetParaList(ref element_list, file_info.CodeList);
+			DefParas paras = GetParas(ref element_list, file_info.CodeList);
 			string val_str = CommProc.ElementListStrCat(element_list, file_info.CodeList);
 			DefineInfo ret_info = new DefineInfo(	def_element, def_name, val_str,
 													macro_element.GetStartPosition(),
 													scope, file_info.FullName, paras);
 			return ret_info;
 		}
-		static List<string> GetParaList(ref List<CodeElement> element_list, List<string> code_list)
+		static DefParas GetParas(ref List<CodeElement> element_list, List<string> code_list)
 		{
 			if (element_list.Count > 3
 				&& element_list[2].ToString(code_list).Equals("(")
 				&& element_list[2].CloseTo(element_list[1], code_list))
 			{
+				CodePosition left_pos = new CodePosition(element_list[2].GetStartPosition());
 				List<CodeElement> para_list = new List<CodeElement>();
 				for (int i = 3; i < element_list.Count; i++)
 				{
 					if (element_list[i].ToString(code_list).Equals(")"))
 					{
-						string para_str = CommProc.ElementListStrCat(para_list, code_list);
-						string[] arr = para_str.Split(',');
-						List<string> paras = new List<string>();
-						foreach (var item in arr)
+						CodePosition right_pos = new CodePosition(element_list[i].GetStartPosition());
+						List<DefPara> paras = new List<DefPara>();
+						for (int j = 0; j < para_list.Count; j++)
 						{
-							paras.Add(item.Trim());
+							CodeElement item = para_list[j];
+							if (item.Type == ElementType.Identifier)
+							{
+								if (j < para_list.Count - 1)
+								{
+									Trace.Assert(para_list[j + 1].ToString(code_list).Equals(","));
+								}
+								DefPara para = new DefPara(item.GetStartPosition(), item.GetLen());
+								paras.Add(para);
+							}
+							else
+							{
+								Trace.Assert(item.ToString(code_list).Equals(","));
+							}
 						}
 						element_list.RemoveRange(0, i + 1);
-						return paras;
+						return new DefParas(left_pos, right_pos, paras);
 					}
 					else
 					{
@@ -141,12 +146,28 @@ namespace CodeCreeper
 		CodePosition LeftBrace = null;
 		CodePosition RightBrace = null;
 		List<DefPara> Paras = new List<DefPara>();
+		public DefParas(CodePosition left_brace, CodePosition right_brace, List<DefPara> para_list)
+		{
+			Trace.Assert(null != left_brace);
+			Trace.Assert(null != right_brace);
+			Trace.Assert(null != para_list);
+			this.LeftBrace = left_brace;
+			this.RightBrace = right_brace;
+			this.Paras = para_list;
+		}
 	}
 
 	class DefPara
 	{
 		CodePosition Pos = null;
 		int Len = 0;
+		public DefPara(CodePosition pos, int len)
+		{
+			Trace.Assert(null != pos);
+			Trace.Assert(len > 0);
+			this.Pos = pos;
+			this.Len = len;
+		}
 	}
 
 	class DefValue

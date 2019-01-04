@@ -48,6 +48,11 @@ namespace CodeCreeper
 		{
 			return new CodePosition(this.row, this.offset);
 		}
+		public int GetLen()
+		{
+			Trace.Assert(this.Row == this.EndPos.Row);
+			return this.EndPos.Col - this.Offset;
+		}
 		public string ToString(List<string> code_line_list)
 		{
 			Trace.Assert(null != code_line_list);
