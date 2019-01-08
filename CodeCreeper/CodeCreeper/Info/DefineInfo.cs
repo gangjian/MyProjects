@@ -11,51 +11,32 @@ namespace CodeCreeper
 	{
 		CodeElement DefElement = null;
 
-		public DefName DefName = null;
+		public DefineName DefName = null;
 
-		DefParas Paras = null;
+		DefineParas Paras = null;
 
-		string valueStr = null;
-		public string ValueStr
-		{
-			get { return valueStr; }
-		}
+		DefineValue Value = null;
 
-		CodePosition namePosition = null;
-		public CodePosition NamePosition
-		{
-			get { return namePosition; }
-		}
-		CodeScope scope = null;
-		public CodeScope Scope
-		{
-			get { return scope; }
-		}
 		string filePath = null;
 		public string FilePath
 		{
 			get { return filePath; }
 		}
 
-		public DefineInfo(	CodeElement def_element, DefName def_name, string val_str,
-							CodePosition pos, CodeScope scope, string path, DefParas paras)
+		public DefineInfo(	CodeElement def_element, DefineName def_name,
+							DefineValue def_val, DefineParas paras, string path)
 		{
 			Trace.Assert(null != def_element);
 			Trace.Assert(null != def_name);
-			Trace.Assert(null != val_str);
-			Trace.Assert(null != pos);
-			Trace.Assert(null != scope);
 			Trace.Assert(!string.IsNullOrEmpty(path));
 			this.DefElement = def_element;
 			this.DefName = def_name;
-			this.valueStr = val_str;
-			this.namePosition = pos;
-			this.scope = scope;
+			this.Value = def_val;
 			this.filePath = path;
 			this.Paras = paras;
 		}
 
-		public static DefineInfo TryParse(CodeElement def_element, CodeFileInfo file_info)
+		public static DefineInfo Parse(CodeElement def_element, CodeFileInfo file_info)
 		{
 			Trace.Assert(null != def_element);
 			Trace.Assert(null != file_info);
@@ -64,16 +45,20 @@ namespace CodeCreeper
 			Trace.Assert(element_list.Count >= 2);
 			CodeElement macro_element = element_list[1];
 			Trace.Assert(macro_element.Type == ElementType.Identifier);
-			DefName def_name = new DefName(macro_element, file_info.CodeList);
-			CodeScope scope = new CodeScope(def_element.GetStartPosition(), element_list.Last().EndPos);
-			DefParas paras = GetParas(ref element_list, file_info.CodeList);
-			string val_str = CommProc.ElementListStrCat(element_list, file_info.CodeList);
-			DefineInfo ret_info = new DefineInfo(	def_element, def_name, val_str,
-													macro_element.GetStartPosition(),
-													scope, file_info.FullName, paras);
+			DefineName def_name = new DefineName(macro_element, file_info.CodeList);
+			DefineParas def_paras = GetParas(ref element_list, file_info.CodeList);
+			DefineValue def_val = null;
+			if (0 != element_list.Count)
+			{
+				CodeScope val_scope = new CodeScope(element_list.First().GetStartPosition(),
+													element_list.Last().EndPos);
+				def_val = new DefineValue(val_scope);
+			}
+			DefineInfo ret_info = new DefineInfo(	def_element, def_name, def_val,
+													def_paras, file_info.FullName);
 			return ret_info;
 		}
-		static DefParas GetParas(ref List<CodeElement> element_list, List<string> code_list)
+		static DefineParas GetParas(ref List<CodeElement> element_list, List<string> code_list)
 		{
 			if (element_list.Count > 3
 				&& element_list[2].ToString(code_list).Equals("(")
@@ -105,7 +90,7 @@ namespace CodeCreeper
 							}
 						}
 						element_list.RemoveRange(0, i + 1);
-						return new DefParas(left_pos, right_pos, paras);
+						return new DefineParas(left_pos, right_pos, paras);
 					}
 					else
 					{
@@ -123,11 +108,11 @@ namespace CodeCreeper
 		}
 	}
 
-	class DefName
+	class DefineName
 	{
 		string Name = null;
 		CodePosition Pos = null;
-		public DefName(CodeElement name_element, List<string> code_list)
+		public DefineName(CodeElement name_element, List<string> code_list)
 		{
 			Trace.Assert(null != name_element);
 			Trace.Assert(null != code_list);
@@ -141,12 +126,12 @@ namespace CodeCreeper
 		}
 	}
 
-	class DefParas
+	class DefineParas
 	{
 		CodePosition LeftBrace = null;
 		CodePosition RightBrace = null;
 		List<DefPara> Paras = new List<DefPara>();
-		public DefParas(CodePosition left_brace, CodePosition right_brace, List<DefPara> para_list)
+		public DefineParas(CodePosition left_brace, CodePosition right_brace, List<DefPara> para_list)
 		{
 			Trace.Assert(null != left_brace);
 			Trace.Assert(null != right_brace);
@@ -170,8 +155,13 @@ namespace CodeCreeper
 		}
 	}
 
-	class DefValue
+	class DefineValue
 	{
 		CodeScope Scope = null;
+		public DefineValue(CodeScope scope)
+		{
+			Trace.Assert(null != scope);
+			this.Scope = scope;
+		}
 	}
 }

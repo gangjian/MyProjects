@@ -81,7 +81,7 @@ namespace CodeCreeper
 
 		SyntaxNode DefineProc(CodeElement def_element, CodeFileInfo file_info)
 		{
-			DefineInfo def_info = DefineInfo.TryParse(def_element, file_info);
+			DefineInfo def_info = DefineInfo.Parse(def_element, file_info);
 			SyntaxNode def_node = new SyntaxNode("#define", def_info.DefName.GetName());
 			def_node.InfoRef = def_info;
 			return def_node;
