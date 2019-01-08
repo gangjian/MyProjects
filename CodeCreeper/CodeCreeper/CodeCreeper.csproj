@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Info\IncludeInfo.cs" />
     <Compile Include="Info\UndefineInfo.cs" />
     <Compile Include="SyntaxTree\PrecompileNode.cs" />
     <Compile Include="SyntaxTree\SyntaxNode.cs" />
