@@ -58,7 +58,7 @@ namespace CodeCreeper
 			}
 			else if (element.Type.Equals(ElementType.Undefine))
 			{
-				//UndefProc(element);
+				ret_node = UndefProc(element, file_info);
 			}
 			else if (element.Type.Equals(ElementType.PrecompileCommand))
 			{
@@ -85,6 +85,13 @@ namespace CodeCreeper
 			SyntaxNode def_node = new SyntaxNode("#define", def_info.DefName.GetName());
 			def_node.InfoRef = def_info;
 			return def_node;
+		}
+		SyntaxNode UndefProc(CodeElement undef_element, CodeFileInfo file_info)
+		{
+			UndefineInfo undef_info = UndefineInfo.Parse(undef_element, file_info);
+			SyntaxNode undef_node = new SyntaxNode("#undef", undef_info.UndefName.GetName());
+			undef_node.InfoRef = undef_info;
+			return undef_node;
 		}
 		SyntaxNode PrecompileSwitchProc(CodeElement element, CodeFileInfo file_info)
 		{

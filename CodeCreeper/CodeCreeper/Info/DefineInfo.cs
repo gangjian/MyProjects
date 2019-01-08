@@ -10,21 +10,17 @@ namespace CodeCreeper
 	class DefineInfo
 	{
 		CodeElement DefElement = null;
-
-		public DefineName DefName = null;
-
+		public NameInfo DefName = null;
 		DefineParas Paras = null;
-
 		DefineValue Value = null;
-
 		string filePath = null;
 		public string FilePath
 		{
 			get { return filePath; }
 		}
 
-		public DefineInfo(	CodeElement def_element, DefineName def_name,
-							DefineValue def_val, DefineParas paras, string path)
+		DefineInfo(	CodeElement def_element, NameInfo def_name,
+					DefineValue def_val, DefineParas paras, string path)
 		{
 			Trace.Assert(null != def_element);
 			Trace.Assert(null != def_name);
@@ -45,7 +41,7 @@ namespace CodeCreeper
 			Trace.Assert(element_list.Count >= 2);
 			CodeElement macro_element = element_list[1];
 			Trace.Assert(macro_element.Type == ElementType.Identifier);
-			DefineName def_name = new DefineName(macro_element, file_info.CodeList);
+			NameInfo def_name = new NameInfo(macro_element, file_info.CodeList);
 			DefineParas def_paras = GetParas(ref element_list, file_info.CodeList);
 			DefineValue def_val = null;
 			if (0 != element_list.Count)
@@ -108,11 +104,11 @@ namespace CodeCreeper
 		}
 	}
 
-	class DefineName
+	class NameInfo
 	{
 		string Name = null;
 		CodePosition Pos = null;
-		public DefineName(CodeElement name_element, List<string> code_list)
+		public NameInfo(CodeElement name_element, List<string> code_list)
 		{
 			Trace.Assert(null != name_element);
 			Trace.Assert(null != code_list);
