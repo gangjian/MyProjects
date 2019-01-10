@@ -28,7 +28,7 @@ namespace CreeperGUI
 			CodeProjectInfo prj_info = new CodeProjectInfo(prj_dir);
 			Creeper code_creeper = new Creeper(prj_info);
 			code_creeper.CreepFile(prj_dir + "\\" + file_name);
-			var print_list = code_creeper.GetRouteTreePrintList();
+			var print_list = code_creeper.GetSyntaxTreePrintList();
 			foreach (var item in print_list)
 			{
 				this.tbxLog.AppendText(item + System.Environment.NewLine);

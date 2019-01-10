@@ -11,7 +11,7 @@ namespace CodeCreeper
 	public partial class Creeper
 	{
 		CodeProjectInfo prjRef = null;
-		SyntaxTree routTreeObj = new SyntaxTree();
+		SyntaxTree syntaxTreeObj = new SyntaxTree();
 		public Creeper(CodeProjectInfo prj_info)
 		{
 			Trace.Assert(null != prj_info);
@@ -20,7 +20,7 @@ namespace CodeCreeper
 
 		public void CreepAll()
 		{
-			this.routTreeObj = new SyntaxTree();
+			this.syntaxTreeObj = new SyntaxTree();
 			foreach (var src_path in this.prjRef.GetSourcePathList())
 			{
 				CreepFile(src_path);
@@ -43,7 +43,7 @@ namespace CodeCreeper
 					ret_node = CodeElementProc(element, fi);
 					if (null != ret_node)
 					{
-						this.routTreeObj.AddNode(ret_node);
+						this.syntaxTreeObj.AddNode(ret_node);
 					}
 				}
 			}
@@ -66,7 +66,7 @@ namespace CodeCreeper
 			}
 			else if (element.Type.Equals(ElementType.Include))
 			{
-				//IncludeProc(element);
+				ret_node = IncludeProc(element, file_info);
 			}
 			else if (element.Type.Equals(ElementType.PrecompileSwitch))
 			{
@@ -92,6 +92,13 @@ namespace CodeCreeper
 			SyntaxNode undef_node = new SyntaxNode("#undef", undef_info.UndefName.GetName());
 			undef_node.InfoRef = undef_info;
 			return undef_node;
+		}
+		SyntaxNode IncludeProc(CodeElement inc_element, CodeFileInfo file_info)
+		{
+			IncludeInfo inc_info = IncludeInfo.Parse(inc_element, file_info);
+			SyntaxNode inc_node = new SyntaxNode("include", inc_info.GetName());
+			inc_node.InfoRef = inc_info;
+			return inc_node;
 		}
 		SyntaxNode PrecompileSwitchProc(CodeElement element, CodeFileInfo file_info)
 		{
@@ -144,9 +151,9 @@ namespace CodeCreeper
 			}
 		}
 
-		public List<string> GetRouteTreePrintList()
+		public List<string> GetSyntaxTreePrintList()
 		{
-			return this.routTreeObj.ToStringList();
+			return this.syntaxTreeObj.ToStringList();
 		}
 	}
 }
