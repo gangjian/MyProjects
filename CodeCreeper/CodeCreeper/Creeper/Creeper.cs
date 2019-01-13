@@ -62,7 +62,7 @@ namespace CodeCreeper
 			}
 			else if (element.Type.Equals(ElementType.PrecompileCommand))
 			{
-				//PrecompileCommandProc(element);
+				ret_node = PrecompileCommandProc(element, file_info);
 			}
 			else if (element.Type.Equals(ElementType.Include))
 			{
@@ -149,6 +149,12 @@ namespace CodeCreeper
 			{
 				return string.Empty;
 			}
+		}
+		SyntaxNode PrecompileCommandProc(CodeElement element, CodeFileInfo file_info)
+		{
+			PrecompileCmdInfo precompile_cmd_info = PrecompileCmdInfo.Parse(element, file_info);
+			//SyntaxNode precompile_cmd_node = new SyntaxNode(precompile_cmd_info.CmdName, )
+			return null;
 		}
 
 		public List<string> GetSyntaxTreePrintList()
