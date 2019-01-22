@@ -18,7 +18,7 @@ namespace CreeperGUI
 		{
 			InitializeComponent();
 			this.tbxPrjPath.Text = "C:\\Users\\GangJian\\03_work\\github\\MyProjects\\Mr.Robot\\TestSrc\\swc_in_oilp";
-			this.tbxFileName.Text = "swc_in_oilp_MemMap.h";
+			this.tbxFileName.Text = "Compiler_Cfg.h";
 		}
 
 		private void btnStart_Click(object sender, EventArgs e)

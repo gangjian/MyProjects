@@ -70,6 +70,21 @@ namespace CodeCreeper
 			}
 			return ret_len;
 		}
+		public static bool IsStringIdentifier(string str)
+		{
+			if (string.IsNullOrEmpty(str))
+			{
+				return false;
+			}
+			if (CommProc.GetIdentifierStringLength(str, 0) == str.Length)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 		public static bool IsPrecompileStart(string element_str)
 		{
 			if (string.IsNullOrEmpty(element_str)
