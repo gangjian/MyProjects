@@ -11,7 +11,9 @@ namespace CodeCreeper
 	public partial class Creeper
 	{
 		CodeProjectInfo prjRef = null;
-		SyntaxTree syntaxTreeObj = new SyntaxTree();
+		SyntaxTree syntaxTreeObj = null;
+		RunContext myContext = null;
+
 		public Creeper(CodeProjectInfo prj_info)
 		{
 			Trace.Assert(null != prj_info);
@@ -20,7 +22,6 @@ namespace CodeCreeper
 
 		public void CreepAll()
 		{
-			this.syntaxTreeObj = new SyntaxTree();
 			foreach (var src_path in this.prjRef.GetSourcePathList())
 			{
 				CreepFile(src_path);
@@ -29,24 +30,47 @@ namespace CodeCreeper
 		public void CreepFile(string path)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
+			this.syntaxTreeObj = new SyntaxTree();
+			this.myContext = new RunContext();
 			CodeFileInfo fi = new CodeFileInfo(path);
-			SyntaxNode ret_node = null;
+
 			while (true)
 			{
-				CodeElement element = fi.GetNextElement();
+				SyntaxNode node = GetNextSyntaxNode(fi);
+				if (null == node)
+				{
+					break;
+				}
+				else
+				{
+					SyntaxNodeProc(node);
+				}
+			}
+		}
+		void SyntaxNodeProc(SyntaxNode node)
+		{
+			Trace.Assert(null != node);
+			this.syntaxTreeObj.AddNode(node);
+		}
+		SyntaxNode GetNextSyntaxNode(CodeFileInfo file_info)
+		{
+			while (true)
+			{
+				CodeElement element = file_info.GetNextElement();
 				if (null == element)
 				{
 					break;
 				}
 				else
 				{
-					ret_node = CodeElementProc(element, fi);
+					SyntaxNode ret_node = CodeElementProc(element, file_info);
 					if (null != ret_node)
 					{
-						this.syntaxTreeObj.AddNode(ret_node);
+						return ret_node;
 					}
 				}
 			}
+			return null;
 		}
 
 		SyntaxNode CodeElementProc(CodeElement element, CodeFileInfo file_info)
