@@ -48,9 +48,16 @@ namespace CodeCreeper
 			get { return childList; }
 			set { childList = value; }
 		}
+
+		public bool EnterFlag
+		{
+			get; set;
+		}
+
 		public PrecompileBranchNode(string tag_str, string expression_str)
 			: base(tag_str, expression_str)
 		{
+			this.EnterFlag = false;
 		}
 		public override List<string> ToStringList(int level)
 		{

@@ -11,7 +11,7 @@ namespace CodeCreeper
 	{
 		Dictionary<string, DefineInfo> DefDic = new Dictionary<string, DefineInfo>();
 
-		public bool IfDef(string macro_name)
+		bool IfDef(string macro_name)
 		{
 			Trace.Assert(CommProc.IsStringIdentifier(macro_name));
 			if (this.DefDic.ContainsKey(macro_name))
@@ -23,7 +23,7 @@ namespace CodeCreeper
 				return false;
 			}
 		}
-		public bool IfNDef(string macro_name)
+		bool IfNDef(string macro_name)
 		{
 			Trace.Assert(CommProc.IsStringIdentifier(macro_name));
 			if (this.DefDic.ContainsKey(macro_name))
@@ -34,6 +34,24 @@ namespace CodeCreeper
 			{
 				return true;
 			}
+		}
+
+		public bool JudgeBrachEnter(string tag_str, string exp_str)
+		{
+			bool ret = false;
+			switch (tag_str)
+			{
+				case "#ifdef":
+					ret = IfDef(exp_str);
+					break;
+				case "#ifndef":
+					ret = IfNDef(exp_str);
+					break;
+				default:
+					Trace.Assert(false);
+					break;
+			}
+			return ret;
 		}
 	}
 }

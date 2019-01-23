@@ -50,6 +50,32 @@ namespace CodeCreeper
 		void SyntaxNodeProc(SyntaxNode node)
 		{
 			Trace.Assert(null != node);
+			if (node.GetType() == typeof(PrecompileSwitchNode))
+			{
+				PrecompileSwitchNode pcs_node = node as PrecompileSwitchNode;
+				// 取得第一个branch
+				PrecompileBranchNode brach_node = pcs_node.BranchList.First();
+				bool enter = this.myContext.JudgeBrachEnter(brach_node.TagStr,
+															brach_node.ExpressionStr);
+				// 在节点上标记进入标志
+				brach_node.EnterFlag = enter;
+				// 在上下文中记录当前branch
+			}
+			else if (node.GetType() == typeof(PrecompileBranchNode))
+			{
+				PrecompileBranchNode brach_node = node as PrecompileBranchNode;
+				bool enter = this.myContext.JudgeBrachEnter(brach_node.TagStr,
+															brach_node.ExpressionStr);
+				brach_node.EnterFlag = enter;
+			}
+			else if (node.GetType() == typeof(PrecompileEndIfNode))
+			{
+				
+			}
+			else
+			{
+				Trace.Assert(node.GetType() == typeof(SyntaxNode));
+			}
 			this.syntaxTreeObj.AddNode(node);
 		}
 		SyntaxNode GetNextSyntaxNode(CodeFileInfo file_info)
