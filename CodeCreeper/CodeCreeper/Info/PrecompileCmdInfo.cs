@@ -11,7 +11,7 @@ namespace CodeCreeper
 	{
 		CodeElement CmdElement = null;
 		public string CmdName = null;
-		CodeScope ContentsScope = null;
+		public CodeScope ContentsScope = null;
 		public string FilePath = null;
 
 		PrecompileCmdInfo(CodeElement cmd_element, string cmd_name, CodeScope scope, string path)

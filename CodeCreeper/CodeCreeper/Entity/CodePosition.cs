@@ -158,5 +158,30 @@ namespace CodeCreeper
 			this.Start = start;
 			this.End = end;
 		}
+		public string ToString(List<string> code_line_list)
+		{
+			Trace.Assert(null != code_line_list);
+			Trace.Assert(this.End.Row < code_line_list.Count);
+			StringBuilder sb = new StringBuilder();
+			for (int r = this.Start.Row; r <= this.End.Row; r++)
+			{
+				int start_idx = 0;
+				if (r == this.Start.Row)
+				{
+					start_idx = this.Start.Col;
+				}
+				int end_idx = code_line_list[r].Length - 1;
+				if (r == this.End.Row)
+				{
+					end_idx = this.End.Col;
+				}
+				sb.Append(code_line_list[r].Substring(start_idx, end_idx - start_idx + 1));
+				if (r != this.End.Row)
+				{
+					sb.Append(Environment.NewLine);
+				}
+			}
+			return sb.ToString();
+		}
 	}
 }

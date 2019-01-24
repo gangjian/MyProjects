@@ -9,8 +9,17 @@ namespace CodeCreeper
 {
 	class RunContext
 	{
+		SyntaxTree syntaxTreeObj = new SyntaxTree();
 		Dictionary<string, DefineInfo> DefDic = new Dictionary<string, DefineInfo>();
 
+		public void AddSyntaxTreeNode(SyntaxNode node)
+		{
+			this.syntaxTreeObj.AddNode(node);
+		}
+		public List<string> GetSyntaxTreeStringList()
+		{
+			return this.syntaxTreeObj.ToStringList();
+		}
 		bool IfDef(string macro_name)
 		{
 			Trace.Assert(CommProc.IsStringIdentifier(macro_name));
