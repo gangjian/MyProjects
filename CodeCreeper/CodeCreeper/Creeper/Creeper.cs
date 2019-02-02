@@ -52,19 +52,19 @@ namespace CodeCreeper
 			{
 				PrecompileSwitchNode pcs_node = node as PrecompileSwitchNode;
 				// 取得第一个branch
-				PrecompileBranchNode brach_node = pcs_node.BranchList.First();
-				//bool enter = this.myContext.JudgePrecompileBranchEnter(brach_node.TagStr,
-				//											brach_node.ExpressionStr);
+				PrecompileBranchNode branch_node = pcs_node.BranchList.First();
+				//bool enter = this.myContext.JudgePrecompileBranchEnter(branch_node.TagStr,
+				//											branch_node.ExpressionStr);
 				//// 在节点上标记进入标志
-				//brach_node.EnterFlag = enter;
+				//branch_node.EnterFlag = enter;
 				// 在上下文中记录当前branch
 			}
 			else if (node.GetType() == typeof(PrecompileBranchNode))
 			{
-				PrecompileBranchNode brach_node = node as PrecompileBranchNode;
-				bool enter = this.myContext.JudgePrecompileBranchEnter(brach_node.TagStr,
-															brach_node.ExpressionStr);
-				brach_node.EnterFlag = enter;
+				PrecompileBranchNode branch_node = node as PrecompileBranchNode;
+				bool enter = this.myContext.JudgePrecompileBranchEnter(branch_node.TagStr,
+															branch_node.ExpressionStr);
+				branch_node.EnterFlag = enter;
 			}
 			else if (node.GetType() == typeof(PrecompileEndIfNode))
 			{
