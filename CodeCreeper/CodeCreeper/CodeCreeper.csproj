@@ -41,7 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Creeper\RunContext.cs" />
+    <Compile Include="Creeper\CreeperContext.cs" />
+    <Compile Include="Entity\Expression.cs" />
     <Compile Include="Info\IncludeInfo.cs" />
     <Compile Include="Info\PrecompileCmdInfo.cs" />
     <Compile Include="Info\UndefineInfo.cs" />

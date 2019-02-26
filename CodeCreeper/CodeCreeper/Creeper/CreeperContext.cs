@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace CodeCreeper
 {
-	class RunContext
+	class CreeperContext
 	{
 		SyntaxTree syntaxTreeObj = new SyntaxTree();
 		MacroDefManager macroDefManager = new MacroDefManager();

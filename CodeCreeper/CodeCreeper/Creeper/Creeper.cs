@@ -11,7 +11,7 @@ namespace CodeCreeper
 	public partial class Creeper
 	{
 		CodeProjectInfo prjRef = null;
-		RunContext myContext = null;
+		CreeperContext myContext = null;
 
 		public Creeper(CodeProjectInfo prj_info)
 		{
@@ -29,7 +29,7 @@ namespace CodeCreeper
 		public void CreepFile(string path)
 		{
 			Trace.Assert(!string.IsNullOrEmpty(path) && File.Exists(path));
-			this.myContext = new RunContext();
+			this.myContext = new CreeperContext();
 			CodeFileInfo fi = new CodeFileInfo(path);
 
 			while (true)
@@ -53,10 +53,10 @@ namespace CodeCreeper
 				PrecompileSwitchNode pcs_node = node as PrecompileSwitchNode;
 				// 取得第一个branch
 				PrecompileBranchNode branch_node = pcs_node.BranchList.First();
-				//bool enter = this.myContext.JudgePrecompileBranchEnter(branch_node.TagStr,
-				//											branch_node.ExpressionStr);
+				bool enter = this.myContext.JudgePrecompileBranchEnter(branch_node.TagStr,
+															branch_node.ExpressionStr);
 				//// 在节点上标记进入标志
-				//branch_node.EnterFlag = enter;
+				branch_node.EnterFlag = enter;
 				// 在上下文中记录当前branch
 			}
 			else if (node.GetType() == typeof(PrecompileBranchNode))
