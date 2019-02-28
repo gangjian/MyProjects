@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CodeCreeper
 {
-	class SyntaxNode
+	public class SyntaxNode
 	{
 		string tagStr = null;
 		public string TagStr

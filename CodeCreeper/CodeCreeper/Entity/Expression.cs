@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace CodeCreeper
 {
-	class Expression
+	public class Expression
 	{
 		CreeperContext _ContextRef = null;
 		public Expression(CreeperContext ctx)
@@ -21,6 +21,7 @@ namespace CodeCreeper
 		/// </summary>
 		public object Evaluate(string expression_str)
 		{
+			List<CodeComponent> cpnt_list = GetComponents(expression_str);
 			return null;
 		}
 
@@ -68,6 +69,18 @@ namespace CodeCreeper
 						if (curChar.Equals('.'))
 						{
 							// 小数点?成员变量?
+						}
+						else if (curChar.Equals('"'))
+						{
+							s_pos = offset;
+							e_pos = exp_str.Substring(s_pos + 1).IndexOf('"');
+							Trace.Assert(-1 != e_pos);
+						}
+						else if (curChar.Equals('\''))
+						{
+							s_pos = offset;
+							e_pos = exp_str.Substring(s_pos + 1).IndexOf('\'');
+							Trace.Assert(-1 != e_pos);
 						}
 						else
 						{
@@ -145,6 +158,43 @@ namespace CodeCreeper
 				return E_CHAR_TYPE.Unknown;
 			}
 		}
+		int GetOperatorLength(string exp_str, int offset, out int priority)
+		{
+			priority = -1;
+			char ch = exp_str[offset];
+			if (!char.IsSymbol(ch))
+			{
+				return 0;
+			}
+			char? next_ch = null;
+			if (offset != exp_str.Length - 1)
+			{
+				next_ch = exp_str[offset + 1];
+			}
+			switch (ch)
+			{
+				case '(':
+				case ')':
+				case '[':
+				case ']':
+				case '.':
+					priority = 1;
+					break;
+				case '=':
+					if (next_ch == '=')
+					{
+						// "==" : 等于
+					}
+					else
+					{
+						// "=" : 赋值
+					}
+					break;
+				default:
+					break;
+			}
+			return 0;
+		}
 	}
 
 	enum ComponentType
@@ -156,6 +206,7 @@ namespace CodeCreeper
 		Char,                   // 字符
 		FunctionName,		    // 函数名
 		Operator,               // 运算符
+		Punctuation,			// 标点符号
 	}
 
 	class CodeComponent
@@ -183,6 +234,36 @@ namespace CodeCreeper
 		public CodeComponent(string str)
 		{
 			Text = str;
+		}
+		void SetComponetType()
+		{
+			if (this.Type == ComponentType.Operator)
+			{
+			}
+			else if (this.Text.StartsWith("\"") && this.Text.EndsWith("\""))
+			{
+				this.Type = ComponentType.String;
+			}
+			else if (this.Text.StartsWith("\'") && this.Text.EndsWith("\'"))
+			{
+				this.Type = ComponentType.Char;
+			}
+			else if (CommProc.GetNumberStrLength(this.Text, 0) == this.Text.Length)
+			{
+				this.Type = ComponentType.ConstantNumber;
+			}
+			else if (CommProc.GetIdentifierStringLength(this.Text, 0) == this.Text.Length)
+			{
+				this.Type = ComponentType.Identifier;
+			}
+			else if (1 == this.Text.Length && char.IsPunctuation(this.Text[0]))
+			{
+				this.Type = ComponentType.Punctuation;
+			}
+			else
+			{
+
+			}
 		}
 	}
 

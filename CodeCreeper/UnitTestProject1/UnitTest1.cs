@@ -18,5 +18,13 @@ namespace UnitTestProject1
 			code_creeper.CreepFile(prj_dir + "\\" + file_name);
 			var print_list = code_creeper.GetSyntaxTreePrintList();
 		}
+
+		[TestMethod]
+		public void TestExpression()
+		{
+			CreeperContext ctx = new CreeperContext();
+			Expression exp = new Expression(ctx);
+			exp.Evaluate(";");
+		}
 	}
 }
