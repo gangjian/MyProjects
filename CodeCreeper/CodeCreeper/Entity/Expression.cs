@@ -100,6 +100,8 @@ namespace CodeCreeper
 						{
 							s_pos = offset;
 							e_pos = offset;
+							CodeComponent oprt_cpnt = GetOperatorComponent(exp_str, ref offset);
+							return oprt_cpnt;
 						}
 						else
 						{
@@ -158,7 +160,7 @@ namespace CodeCreeper
 				return E_CHAR_TYPE.Unknown;
 			}
 		}
-		CodeComponent GetOperatorComponent(string exp_str, int offset)
+		CodeComponent GetOperatorComponent(string exp_str, ref int offset)
 		{
 			int priority = -1;
 			int operand_cnt = 0;
@@ -221,8 +223,8 @@ namespace CodeCreeper
 					}
 					else
 					{
-						// "+", "-" : 加, 减
-						priority = 4;
+						// "+", "-" : 加, 减(优先级4), 也有可能是正负号(优先级2)
+						priority = -1;
 						operand_cnt = 2;
 					}
 					break;
@@ -237,9 +239,14 @@ namespace CodeCreeper
 					}
 					else
 					{
-						// 乘除(优先级3), 也可能是指针运算符(优先级2)
+						// 乘除(优先级3), 也可能是指针取值运算符(优先级2)
 						priority = 3;
 						operand_cnt = 2;
+						if ('*' == ch)
+						{
+							priority = -1;
+							operand_cnt = 0;
+						}
 					}
 					break;
 				case '>':
@@ -282,24 +289,109 @@ namespace CodeCreeper
 					break;
 				case '&':
 				case '|':
+					if (next_ch == ch)
+					{
+						// "&&", "||" : 逻辑与, 逻辑或
+						if ('&' == ch)
+						{
+							priority = 11;
+						}
+						else
+						{
+							priority = 12;
+						}
+						operand_cnt = 2;
+						len = 2;
+					}
+					else if ('=' == next_ch)
+					{
+						// "&=", "|=" : 位运算赋值
+						priority = 14;
+						operand_cnt = 2;
+						len = 2;
+					}
+					else
+					{
+						// "&", "|" : 位与, 位或
+						if ('&' == ch)
+						{
+							// 不确定, 可能是双目位与&(优先级8),也可能是取地址符&(优先级2)
+							priority = -1;
+						}
+						else
+						{
+							priority = 10;
+							operand_cnt = 2;
+						}
+					}
 					break;
 				case '!':
+					if ('=' == next_ch)
+					{
+						// "!=" : 不等于
+						priority = 7;
+						operand_cnt = 2;
+						len = 2;
+					}
+					else
+					{
+						// "!" : 逻辑非
+						priority = 2;
+						operand_cnt = 1;
+					}
 					break;
 				case '~':
+					// "~" : 按位取反
+					priority = 2;
+					operand_cnt = 1;
 					break;
 				case '%':
+					if ('=' == next_ch)
+					{
+						// "%=" : 取余赋值
+						priority = 14;
+						operand_cnt = 2;
+						len = 2;
+					}
+					else
+					{
+						// "%" : 取余
+						priority = 3;
+						operand_cnt = 2;
+					}
 					break;
 				case '^':
+					if ('=' == next_ch)
+					{
+						// "^=" : 位异或赋值
+						priority = 14;
+						operand_cnt = 2;
+						len = 2;
+					}
+					else
+					{
+						// "^" : 位异或
+						priority = 9;
+						operand_cnt = 2;
+					}
 					break;
 				case ',':
+					// "," : 逗号
+					priority = 15;
+					operand_cnt = 2;
 					break;
 				case '?':
 				case ':':
+					// "?:" : 条件(三目)
+					priority = 13;
+					operand_cnt = 3;
 					break;
 				default:
+					Trace.Assert(false);
 					break;
 			}
 			string oprt_txt = exp_str.Substring(offset, len);
+			offset += len;
 			CodeComponent ret_cpnt = new CodeComponent(oprt_txt);
 			ret_cpnt.Priority = priority;
 			ret_cpnt.OperandCount = operand_cnt;
