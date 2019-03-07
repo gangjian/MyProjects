@@ -24,7 +24,7 @@ namespace UnitTestProject1
 		{
 			CreeperContext ctx = new CreeperContext();
 			Expression exp = new Expression(ctx);
-			exp.Evaluate(";");
+			exp.Evaluate("(a + b) * c - d");
 		}
 	}
 }

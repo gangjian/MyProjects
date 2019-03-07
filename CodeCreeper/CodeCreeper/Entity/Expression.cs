@@ -66,11 +66,8 @@ namespace CodeCreeper
 						}
 						break;
 					case E_CHAR_TYPE.Punctuation:
-						if (curChar.Equals('.'))
-						{
-							// 小数点?成员变量?
-						}
-						else if (curChar.Equals('"'))
+					case E_CHAR_TYPE.SYMBOL:
+						if (curChar.Equals('"'))
 						{
 							s_pos = offset;
 							e_pos = exp_str.Substring(s_pos + 1).IndexOf('"');
@@ -88,24 +85,13 @@ namespace CodeCreeper
 							{
 								s_pos = offset;
 								e_pos = offset;
+								CodeComponent oprt_cpnt = GetOperatorComponent(exp_str, ref offset);
+								return oprt_cpnt;
 							}
 							else
 							{
 								e_pos = offset - 1;
 							}
-						}
-						break;
-					case E_CHAR_TYPE.SYMBOL:
-						if (-1 == s_pos)
-						{
-							s_pos = offset;
-							e_pos = offset;
-							CodeComponent oprt_cpnt = GetOperatorComponent(exp_str, ref offset);
-							return oprt_cpnt;
-						}
-						else
-						{
-							e_pos = offset - 1;
 						}
 						break;
 					default:
@@ -115,7 +101,9 @@ namespace CodeCreeper
 				if (-1 != s_pos && -1 != e_pos)
 				{
 					string cpnt_txt = exp_str.Substring(s_pos, e_pos - s_pos + 1);
-					return new CodeComponent(cpnt_txt);
+					offset = e_pos + 1;
+					CodeComponent cpnt = new CodeComponent(cpnt_txt);
+					return cpnt;
 				}
 			}
 			if (-1 != s_pos && -1 == e_pos)
@@ -166,7 +154,9 @@ namespace CodeCreeper
 			int operand_cnt = 0;
 			int len = 1;
 			char ch = exp_str[offset];
-			if (!char.IsSymbol(ch))
+			ComponentType type = ComponentType.Operator;
+			if (!char.IsSymbol(ch)
+				&& !char.IsPunctuation(ch))
 			{
 				return null;
 			}
@@ -387,7 +377,7 @@ namespace CodeCreeper
 					operand_cnt = 3;
 					break;
 				default:
-					Trace.Assert(false);
+					type = ComponentType.Punctuation;
 					break;
 			}
 			string oprt_txt = exp_str.Substring(offset, len);
@@ -395,7 +385,7 @@ namespace CodeCreeper
 			CodeComponent ret_cpnt = new CodeComponent(oprt_txt);
 			ret_cpnt.Priority = priority;
 			ret_cpnt.OperandCount = operand_cnt;
-			ret_cpnt.Type = ComponentType.Operator;
+			ret_cpnt.Type = type;
 			return ret_cpnt;
 		}
 	}
@@ -437,13 +427,11 @@ namespace CodeCreeper
 		public CodeComponent(string str)
 		{
 			Text = str;
+			SetComponetType();
 		}
 		void SetComponetType()
 		{
-			if (this.Type == ComponentType.Operator)
-			{
-			}
-			else if (this.Text.StartsWith("\"") && this.Text.EndsWith("\""))
+			if (this.Text.StartsWith("\"") && this.Text.EndsWith("\""))
 			{
 				this.Type = ComponentType.String;
 			}
@@ -465,7 +453,6 @@ namespace CodeCreeper
 			}
 			else
 			{
-
 			}
 		}
 	}
